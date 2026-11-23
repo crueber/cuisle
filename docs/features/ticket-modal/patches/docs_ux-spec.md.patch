@@ -1,0 +1,260 @@
+diff --git a/docs/ux-spec.md b/docs/ux-spec.md
+index 2a1ad88..4f0e952 100644
+--- a/docs/ux-spec.md
++++ b/docs/ux-spec.md
+@@ -18,6 +18,7 @@ content column (window minus rail minus horizontal padding). Tokens are named as
+ | Configure | `configure-1920x1080.png`, `configure-1440x900.png`, `configure-1280x720.png`, `configure-1024x640.png` |
+ | Configure: new standup | `configure-new-standup-1920x1080.png` |
+ | Connect (first run) | not mocked; see §9.7 |
++| Ticket modal (§14) | `ticket-1920x1080.png`, `ticket-1440x900.png`, `ticket-1280x720.png`, `ticket-1024x640.png`, `ticket-edit-states-1920x1080.png`, `ticket-lightbox-1920x1080.png` |
+ 
+ ## 2. Frame (standup screen)
+ 
+@@ -136,7 +137,7 @@ Groups appear in **walk order** (only lanes that have tickets), then **Done** la
+ | Pulse track | Track width × row height (§7) |
+ | Days chip | 48px wide, mono 14 bold, centred, "6d" (minimum "1d"). Over limit or blocked: `--color-alert-bg/fg`. Otherwise muted text on no background. Done: `--color-done-fg`. |
+ | Done rows | Same anatomy, text in `--color-done-fg`. The track shows segments only (no marks): earlier lanes in `--color-lane-done-history`, the Done segment in `--color-lane-done`. |
+-| Interaction | The whole row is a button; Enter or click calls `OpenIssue(key)`. Hover/focus shows a `--color-rule-soft` background. |
++| Interaction | The whole row is a button; Enter or click opens the ticket modal (§14). Hover/focus shows a `--color-rail-bg` background. |
+ 
+ ### 5.5 Density ladder (`layout/density.ts: chooseDensity`)
+ 
+@@ -262,7 +263,7 @@ if those sections start below the fold.
+ | `,` | Open Configure | |
+ | `?` | Key legend popover (keys + pulse legend) | |
+ | `Esc` | Close popover or menu. In Configure with no popup open, the same as Done. | |
+-| `Enter` | On a focused ticket, open it in Jira | |
++| `Enter` | On a focused ticket, open the ticket modal (§14) | `O` in the modal opens Jira |
+ 
+ Global keys are ignored while focus is in an `input`, `textarea` or `[role=combobox]`.
+ 
+@@ -315,7 +316,7 @@ Status mapping · Export · Display · Connection) sits under the title. Section
+ | **Whole board** | Done window: Sprint / 14 days / Since yesterday (Sprint is disabled on Kanban). Backlog rows: Stepper 0–50, with the hint "top of the ranked backlog · 0 turns it off". |
+ | **Display** *(app-wide)* | Theme: Light / Dark / System. Text size: Standard / Large (TV). Sync on open: When stale / Always / Never, plus "Stale after" Stepper in hours (1–48, default 6), shown only when *When stale* is selected. |
+ | **Export** *(per standup)* | One row per destination scoped to this standup or to all standups: name, kind ("File (JSON)"), destination detail (folder path, mono 13, middle-ellipsis), *Send on* Segmented (Manual / After each sync), **Send now**, and a status line ("Delivered 2 min ago · cuisle-SVC-2026-11-23.json", or "Failed · Retry" in alert text). **+ Add destination** opens a Combobox of sink kinds (v1: File (JSON)), then the kind's fields, rendered from its `ConfigSchema` (folder uses the OS folder picker). Everything autosaves. Delete uses Undo. |
+-| **Connection** *(app-wide)* | Site, account email, "Connected" tag, **Reconnect** (opens the Connect form inline) and **Disconnect** (confirm). |
++| **Connection** *(app-wide)* | Site, account email, "Connected" tag, **Reconnect** (opens the Connect form inline) and **Disconnect** (confirm; offers to delete synced content only past the storage cap, §14.11). |
+ 
+ ### 9.5 Behaviour
+ - **Autosave:** every control commits on change (Segmented, Switch, Stepper, Checkbox, Combobox select, list move).
+@@ -377,3 +378,220 @@ window at Large behaves like a 1536 window at Standard.
+ | No Connection section | Configure → Connection (app-wide), plus the first-run Connect screen |
+ | No Export section | Configure → Export (per standup), §9.4 |
+ | Footer hint "press D or K to open them" (old round) | Removed; lists are always drawn |
++| Ticket modal background shows the old "STANDUP" mockup | Real app behind the scrim (§14) |
++
++## 14. Ticket modal ("Docket")
++
++Opens any ticket inside Cuisle (F12, ADR 0015). Mockups: `ticket-1920x1080.png`, `ticket-1440x900.png`,
++`ticket-1280x720.png`, `ticket-1024x640.png`, `ticket-edit-states-1920x1080.png`, `ticket-lightbox-1920x1080.png`.
++This is the only layout. A side sheet and a three-column variant were explored and rejected as too busy (Chris,
++2026-11-23); don't build or add a wide breakpoint for them.
++
++### 14.1 Opening, stepping, closing
++- **Open:** click a ticket row or lane row, or `Enter` on a focused row, in the person view, whole board, Done list or
++  backlog. Rows show a hover/focus affordance (`--color-rail-bg` fill, cursor pointer).
++- **Step:** `J`/`K` and `→`/`←` step through the tickets in the current view's order without closing the modal.
++  - Person view: walk order, then Done.
++  - Whole board: lane order, then Done, then backlog.
++  - Stepping never changes speaker, and it stops at the ends. The header stepper shows `7 / 20`.
++- **Inline cards:** an inline card or link to another synced issue opens that issue in the modal with a back stack
++  ("← MOB-1421", `Backspace`). Any other link opens the browser.
++- **Esc unwinds one layer at a time:** combobox or lightbox, then composer blur (the draft is kept), then the modal.
++  Focus returns to the row that opened it.
++- **Edits update the screen behind the modal live:** the row's lane, pulse and blocked tag change at once.
++
++### 14.2 Geometry
++A centred modal with `--color-bg`, a 3px `--color-rule` border and radius 4. There is no shadow or blur. The scrim is
++`--color-scrim` (light `rgba(22,24,29,.55)`, dark `rgba(0,0,0,.65)`).
++
++| Window | Modal | Content column | Field rail | Body text | Header |
++|---|---|---|---|---|---|
++| 1920×1080 | 1320×1000 | 880 | rest (≈432) | 18/28 | tall |
++| 1440×900 | 1240×836 | 840 | rest | 18/28 | tall |
++| 1280×720 | 1216×672 | 836 | rest | 17/26 | short, no footer |
++| 1024×640 | 1000×616 | 700 | rest (≈292), labels stacked | 17/26 | short, no footer |
++
++- **Sizing rule:** modal = `min(1320, vw − 2·margin)` × `min(1000, vh − 2·margin)`, with a margin of 40 / 32 / 24 / 12
++  at the four sizes.
++- **Content column:** `min(880, modal − 380)`.
++- **Short mode:** applies when `vh < 800`.
++- **Under 900 CSS px wide** (1024 at Large): the State group (Status / Assignee / Flag) becomes a 44px strip pinned under
++  the header, and the remaining fields become the first section of the content column.
++- **Scrolling:** the header is sticky, and the content column and rail scroll independently.
++
++### 14.3 Header (3px ink rule below)
++1. **Row 1, 52px (44 short).**
++   - Left: type icon 22, key mono 22 bold (click copies the key), then `in ⚡ MOB-1200 Recipe units v2` (mono 13 muted;
++     parent name dropped below 1280).
++   - Right: `as of 9:41 · synced` (mono 13 muted), a stepper `‹ 7 / 20 ›` (38px outlined buttons), Open in Jira (icon
++     only below 1280), and ✕ (44px).
++2. **Row 2:** summary 28/34 bold (22/28 short). It wraps to two lines and is never ellipsised.
++3. **Row 3, pulse strip, 40px (28 short).**
++   - Lane swatch and name (13 bold caps), then the 21-day track (600 / 440 / 440 / 300) with weekend shading.
++   - Monday labels in mono 11 sit above the track; there are no labels in short mode.
++   - The days chip sits flush against the today line and is red past the limit. A `BLOCKED 3D` lozenge shows when
++     flagged. On the right: `limit 5d · 21 days` (mono 12 muted).
++   - Status is not repeated as a lozenge; the editable Status sits at the top of the rail.
++
++### 14.4 Content column
++- **Anchor strip (32px, pinned):** `DESCRIPTION · ATTACHMENTS 5 · SUBTASKS 3/5 · LINKS 2 · COMMENTS 7` (13 bold caps,
++  mono counts). Clicking scrolls to the section, and the active section is underlined 3px. Empty sections are omitted.
++- **Order:** Description, then Attachments, Subtasks, Linked issues, Comments.
++  - Description has no section head of its own (the strip names it); the others use the Configure section head (15 bold
++    caps, mono count, 3px rule).
++  - Padding is 32 (24 at 1280, 20 at 1024).
++- **Measure:** everything (text, panels, tables, code, media) spans the full inner width of the column (at most 880
++  minus padding). There is no separate text measure.
++- **ADF rendering** (Go parses ADF into a typed node tree; Preact renders it; never `innerHTML`):
++
++| Node | Rendering |
++|---|---|
++| heading 1–3 | 26 / 22 / 19 bold; h4–h6 16 bold caps .08em |
++| paragraph, hardBreak | body size; 14px paragraph gap |
++| strong / em / strike / underline / sub / sup | native semantics |
++| textColor | hue kept, lightness clamped to ≥ 4.5:1 for the current theme |
++| link | `--color-link`, underlined |
++| code (mark) | mono 0.84em, `--color-code-bg` fill, 1px rule-mid, radius 2 |
++| codeBlock | code-bg fill, 2px rule-mid border, mono 14/22, language tab top-right (mono 11 caps); no syntax colour in v1; scrolls horizontally |
++| blockquote | 3px rule-mid left bar, muted text |
++| rule | 2px rule-soft |
++| bulletList / orderedList (nested) | 26px indent |
++| taskList | 22px read-only checkbox; done items muted (no strikethrough) |
++| decisionList | 3px `--color-type-story` left bar + "DECISION" micro caps |
++| panel info / note / success / warning / error | 4px left bar + 10% tint (14% dark) of `type-task` / `type-spike` / `type-story` / `lane-qa` / `alert-bg`; 18px icon |
++| table | 2px rule-mid outer, 1px rule-soft cells; header row/column on rail-bg, 15 bold; cells 16/22; honours colwidth, colspan, rowspan; scrolls horizontally in its own box |
++| expand / nestedExpand | 38px row, chevron + title, 2px rule-soft border; collapsed as authored; `E` toggles all |
++| status (lozenge) | mono 11 bold caps, radius 2, filled: neutral→todo, blue→prog, purple→review, yellow→qa, green→done, red→alert |
++| mention | 600 weight on a rail-bg chip; the current user's mention is inverted |
++| date | mono chip; alert-text when in the past |
++| emoji | native glyph (shortName fallback text) |
++| inlineCard / blockCard | 1px rule-mid chip: type icon, mono key, title, status lozenge when the URL is a synced issue; otherwise favicon-less host + path |
++| mediaSingle | honours `width`/`layout` up to the column width; 1px rule-mid frame on `--color-surface` (white in both themes); caption 14 muted; click opens the lightbox |
++| mediaGroup / mediaInline (files) | file card (below) |
++| unknown node | its text content + muted "unsupported block ↗" (opens in Jira) |
++
++- **Attachments section:** image thumbnails 160×100 (cover, 1px rule-mid) with name (14 semibold) and
++  `412 KB · TL · 18 Nov` (mono 12). These are followed by file cards: 240×56, 2px rule-soft, a 46px mono extension
++  block on rail-bg, name 15 semibold, and meta mono 12. Clicking a file downloads it to the OS temp folder and opens it.
++- **Subtasks and links:** 34px rows (type icon, mono key, title, status lozenge, assignee initials). Links are grouped
++  under micro caps ("IS BLOCKED BY", "BLOCKS", "RELATES TO"). Done subtasks are muted and struck through; this is a
++  list row, not a task list.
++
++### 14.5 Comments
++- **Order:** newest first by default, via a Segmented control (Newest / Oldest) that persists (app setting
++  `ticket.comment_order`). All comments are drawn; there is no "show older".
++- **Composer** at the head of the section:
++  - Initials, then a TextField (38px, grows to 120), then Send (primary, disabled when empty).
++  - `@` opens the people Combobox. `Ctrl/Cmd+Enter` sends.
++  - The draft autosaves per issue (`ticket_draft` table) and survives close/reopen and app restart.
++- **Comment:** initials, name (16 semibold), `Mon 23 Nov 09:12 · 29m` (mono 13 muted), `edited`, and the visibility tag.
++  Body is the ADF renderer at body−1. Comments are separated by 2px rule-soft rules.
++- **Restricted visibility:** a lock icon and `DEVELOPERS ONLY` (mono 11 caps, 1.5px alert outline). It is loud on purpose
++  because the screen is shared.
++- **Standup marker:** a 2px ink rule labelled `↑ 2 NEW SINCE STANDUP · FRI 20 NOV`, placed below the comments newer than
++  the previous standup ("since yesterday", D3). The arrow flips in oldest-first order.
++- **Sending:** the comment is inserted at once at 60% opacity, and `sending…` appears on the author line after 250ms.
++- **Failed:**
++  - A 3px dashed alert left border, then `Not sent · <reason>` (alert text 15 bold).
++  - Retry / Edit / Discard buttons (34px).
++  - The text is never lost, and nothing retries automatically.
++
++### 14.6 Field rail
++- **Rail:** `--color-rail-bg`, 2px rail-rule left border, padding 14/20.
++- **Row:** label in sentence case (15/500 muted), in a 132px column (120 when the rail is under 420). Value 16 semibold.
++  Rows are at least 32px with no per-row rules.
++  - Groups are separated by 2px rule-soft, and group heads are 13 bold caps in fg.
++  - Under 340px the labels stack above the values, and short values pair two-up (Priority | Points, Sprint | Due,
++    Fix version | Time).
++- **Groups, in order:**
++  1. **State (editable):** Status, Assignee, Flag. The head carries `edits go to Jira` (mono 12 muted).
++  2. **Details:** Reporter, Priority, Parent, Sprint (+ `ends 1 Dec`), Points, Due, Labels, Components, Fix version,
++     Time tracking (`14h of 24h` + a 6px bar), Environment.
++  3. **Custom fields:** order and visibility come from Configure → Ticket fields (§14.8). The default is all non-empty
++     custom fields A–Z.
++  4. **Development:** branch (mono 13), `7 commits · last 2h`, then PRs as `#418` + lozenge (OPEN prog, MERGED done,
++     DECLINED alert) + title.
++  5. **Dates:** Created, Updated, Resolved (mono), and Watchers.
++- **Empty fields** never get a row. Each group ends with one wrapping line `Not set: Environment · Original estimate`
++  (mono 13 muted). The exception is an empty Assignee, which renders as the dashed-red "Unassigned" control.
++- **Value rendering by field kind** (`model.FieldValue.Kind`):
++
++| Kind | Rendering |
++|---|---|
++| `text` (single line) | text, wraps |
++| `paragraph` (ADF) | full width under the label, 15/22, clamped to 6 lines + "Show all" |
++| `number`, `date`, `datetime`, story points | mono 15 |
++| `url` | link showing host › last path segment(s); full URL in `title` |
++| `option` (select, radio) | plain text |
++| `options` (multi-select, checkboxes), `labels`, `versions`, `components` | wrapping outlined chips (1px chip border, 14 semibold; mono for version/label-like ids) |
++| `cascade` | `Parent › Child` |
++| `user` / `users` | initials box + name; multiple users one per line |
++| `group`, `project`, `team` | icon + name |
++| `unknown` | raw value, mono 14 |
++
++- **Editable fields:**
++  - **Status** and **Assignee** are real 38px Combobox fields: white, 2px rule-mid border (ink when open), chevron. They
++    are the only white boxes on the rail, and that is the affordance.
++  - **Flag** is a 44×24 Switch. On, it is alert-filled and shows the `BLOCKED` lozenge + days.
++- **Status combobox, open state:**
++  - A filter input, then the transitions as `→ In Review` with a lane swatch, max 8 rows.
++  - Transitions that need a Jira screen go below a 2px rule-soft divider. They are fully muted and marked
++    `screen · ↗ Jira`; choosing one opens the browser.
++  - Transitions are loaded when the combobox opens (spinner after 250ms). When offline, the cached list is shown
++    disabled with "Offline · open in Jira".
++- **Saving:** optimistic, with `saving…` after 250ms. On failure the field reverts and an alert-text line appears under
++  it ("Jira rejected the change: <reason>") with Retry.
++
++### 14.7 Lightbox
++- **Background:** the scrim is `rgba(22,24,29,.92)`.
++- **Top bar:** solid 64px `--color-fg`. It holds:
++  - key, then filename (mono)
++  - `412 KB · 1200×720 · Wren Kowalski · 18 Nov`
++  - zoom readout (`100%` or `fit 62%`)
++  - `1 / 2`
++  - Open file
++  - ✕
++- **Image:** never upscaled; shown at natural size or fit, centred.
++- **Navigation:** ← → step through the ticket's images (56px outlined buttons at the edges). The caption sits centred at
++  the bottom. `Esc` returns to the ticket.
++
++### 14.8 Configure → Ticket fields (per connection)
++- **Location:** a section under Connection.
++- **Contents:** a Combobox to add fields ("Pin a field…"), then a reorderable list of pinned custom fields with a hide
++  toggle each. Hidden fields go into a collapsed "Hidden (n)" list.
++- **Defaults:** nothing pinned and nothing hidden, so all non-empty custom fields show A–Z.
++- **Saving:** autosaves (ADR 0005).
++
++### 14.9 Updated under the reader
++If a Resync lands while the modal is open and this issue changed, a 36px bar appears under the anchor strip:
++`Updated in Jira · Reload` (the 3 changed fields are named). The content never reflows under the reader; edits the
++user made in Cuisle apply immediately.
++
++### 14.10 Keyboard (inside the modal)
++| Key | Action |
++|---|---|
++| `J` / `→`, `K` / `←` | Next / previous ticket in view order |
++| `C` | Focus the comment composer |
++| `S` / `A` | Open the Status / Assignee combobox |
++| `F` | Toggle flag |
++| `O` | Open in Jira |
++| `E` | Expand/collapse all expand blocks |
++| `Backspace` | Back to the previous ticket in the inline-card stack |
++| `Ctrl/Cmd+Enter` | Send comment |
++| `Esc` | Unwind one layer (§14.1) |
++
++The footer (30px, `vh ≥ 800` only) lists `J K step · C comment · S status · A assignee · F flag · O open in Jira · Esc
++close`. In short mode these hints live in the `?` popover.
++
++### 14.11 Storage and Disconnect
++- **Display → Storage** shows local content size: the database plus the media cache (`1.2 GB · images 640 MB`). It has
++  **Clear image cache** and a **Cleanup offer above** number field in GB.
++  - That field is the app setting `storage.cleanup_offer_mb`, default 2048.
++  - The setting autosaves.
++- **Disconnect** always keeps synced content by default (history, ADR 0011), and the keychain item is always removed.
++  - **Under the cap:** the confirm offers no deletion.
++  - **Over the cap:** the confirm adds one **unchecked** checkbox, "Also delete synced content (2.4 GB): descriptions,
++    comments and images. History of status, assignee and flags is kept."
++  - Checking it deletes `issue_content` rows, comment bodies (bodies only; the comment rows stay), field values,
++    transition caches, drafts, and the media cache for that connection. Then it runs `VACUUM`.
++- There is no automatic deletion anywhere, and no prompt outside Disconnect.

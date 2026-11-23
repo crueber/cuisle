@@ -1,0 +1,257 @@
+diff --git a/docs/data-model.md b/docs/data-model.md
+index 8740c27..fd4a5b5 100644
+--- a/docs/data-model.md
++++ b/docs/data-model.md
+@@ -7,12 +7,17 @@ One SQLite file, `cuisle.db` (location: `architecture.md` §6.4). Driver `modern
+ - All tables `STRICT`. Timestamps: `INTEGER` Unix **milliseconds UTC**. Booleans: `INTEGER` 0/1 with `CHECK`.
+ - Lane ids: `backlog | todo | prog | review | qa | done | hidden`. "Working lanes" = `todo, prog, review, qa`.
+ - Three families of tables:
+-  - **Config** (`app_setting`, `ui_state`, `standup*` settings tables, `sink`): user-authored, precious, migrated carefully.
++  - **Config** (`app_setting`, `ui_state`, `standup*` settings tables, `sink`, `ticket_field_pref`, `ticket_draft`):
++    user-authored, precious, migrated carefully.
+   - **Record** (`issue`, `*_change`, `comment`, `dev_*`, `person`, `sprint`, `standup_issue_span`,
+     `standup_config_history`): the provider-neutral store of synced facts. **Append-only in spirit and never pruned**
+     (ADR 0011): it is what a future "as of" view is rebuilt from, and old facts cannot be re-fetched faithfully once the
+     source moves on. Current-state tables (`standup_issue`) are derived conveniences.
+-  - **Operational** (`space`, `board*` autocomplete caches, `sync_run`, `sync_log`, `sink_outbox`): trimmed.
++  - **Content** (ADR 0015; `issue_content`, `issue_field_value`, `issue_link`, `attachment`, `field_def`, and the
++    `comment` body columns): what the ticket modal renders. Stored locally, **current value only** (rewritten when the
++    issue is re-hydrated; not historised, like `issue.summary`), never pruned by age, never exported or logged.
++    Comments are the exception: rows append, an edit updates the body and `updated_at`.
++  - **Operational** (`space`, `board*` autocomplete caches, `sync_run`, `sync_log`, `sink_outbox`, `transition_cache`): trimmed.
+ - **Provider-neutral naming** (ADR 0012): tables carry no provider prefix. Every synced row hangs off a `connection`
+   whose `source` column names the provider (`jira` in v1). Reference rows are keyed `(connection_id, id)` where `id` is
+   the provider's id as `TEXT`; `issue` has a local integer `id` plus `source_id`. Provider-specific extras live in
+@@ -35,7 +40,7 @@ CREATE TABLE app_setting (
+   value      TEXT NOT NULL,
+   updated_at INTEGER NOT NULL
+ ) STRICT, WITHOUT ROWID;
+--- keys: theme, text_size, sync_on_open, sync_stale_hours  (values/defaults: architecture.md §6.4)
++-- keys: theme, text_size, sync_on_open, sync_stale_hours, ticket.comment_order, media.cache_max_mb, history_retention_days  (values/defaults: architecture.md §6.4)
+ ```
+ 
+ `ui_state` (single row: last standup, window geometry) is defined in §2.3 because it references `standup`.
+@@ -342,12 +347,17 @@ CREATE TABLE flag_change (
+   PRIMARY KEY (issue_id, history_id)
+ ) STRICT, WITHOUT ROWID;
+ 
+--- Comments: timestamp + author only. Bodies are never stored.
++-- Comments, with bodies (ADR 0015). Bodies stay local: never in exports, logs or diagnostics.
+ CREATE TABLE comment (
+   issue_id          INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE,
+   comment_id        TEXT    NOT NULL,
+   author_account_id TEXT,
+   created_at        INTEGER NOT NULL,
++  updated_at        INTEGER NOT NULL,                          -- = created_at until edited; "edited" when greater
++  body_adf          TEXT,                                      -- ADF JSON as received; NULL only for rows synced before content existed / metadata-only sources
++  visibility_type   TEXT CHECK (visibility_type IN ('role','group')),   -- NULL = visible to everyone
++  visibility_value  TEXT,                                      -- e.g. 'Developers'
++  deleted_at        INTEGER,                                   -- comment no longer returned by the source: hidden from the modal, row kept (pulse marks stay)
+   PRIMARY KEY (issue_id, comment_id)
+ ) STRICT, WITHOUT ROWID;
+ CREATE INDEX comment_time ON comment(issue_id, created_at);
+@@ -383,6 +393,122 @@ window and the "as of" date; storing timestamps and bucketing at view-build time
+ timezone change, DST shift or a historical view never requires a resync, and there is no derived table to keep
+ consistent. The per-day shape exists only in the view model (`Pulse.Marks`).
+ 
++### 2.5a Ticket content (ADR 0015; current-only, stored locally)
++
++```sql
++CREATE TABLE issue_content (
++  issue_id        INTEGER PRIMARY KEY REFERENCES issue(id) ON DELETE CASCADE,
++  description_adf TEXT,                                        -- ADF JSON; NULL = empty
++  environment_adf TEXT,
++  watchers        INTEGER NOT NULL DEFAULT -1,                 -- -1 unknown
++  content_hash    TEXT    NOT NULL,                            -- sha256 over description, environment, field values, links, attachment ids
++  updated_at      INTEGER NOT NULL                             -- when this row last changed locally
++) STRICT;
++
++-- Field registry per connection (from field discovery; jira-sync.md §2.2).
++CREATE TABLE field_def (
++  connection_id INTEGER NOT NULL REFERENCES connection(id) ON DELETE CASCADE,
++  field_id      TEXT    NOT NULL,                              -- 'priority', 'customfield_10042'
++  name          TEXT    NOT NULL,
++  kind          TEXT    NOT NULL CHECK (kind IN ('text','paragraph','number','date','datetime','url','option','options','cascade',
++                  'user','users','group','groups','version','versions','component','components','labels','project','team','unknown')),
++  custom        INTEGER NOT NULL DEFAULT 0 CHECK (custom IN (0,1)),
++  custom_type   TEXT,                                          -- provider type key, e.g. com.atlassian.jira.plugin.system.customfieldtypes:select
++  schema_json   TEXT    NOT NULL DEFAULT '{}',
++  fetched_at    INTEGER NOT NULL,
++  PRIMARY KEY (connection_id, field_id)
++) STRICT, WITHOUT ROWID;
++
++-- Current value of every non-empty field not modelled as an issue column. No row = not set.
++CREATE TABLE issue_field_value (
++  issue_id   INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE,
++  field_id   TEXT    NOT NULL,
++  kind       TEXT    NOT NULL,                                 -- kind at write time (matches field_def.kind)
++  value_json TEXT    NOT NULL,                                 -- model.FieldValue as JSON: {text|number|items|users|rich|raw}
++  PRIMARY KEY (issue_id, field_id)
++) STRICT, WITHOUT ROWID;
++
++-- Issue links and subtasks (current). The other issue may or may not be synced: display snapshot is stored.
++CREATE TABLE issue_link (
++  issue_id        INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE,
++  link_id         TEXT    NOT NULL,                            -- provider link id; for subtasks 'sub:<source_id>'
++  relation        TEXT    NOT NULL CHECK (relation IN ('link','subtask')),
++  label           TEXT    NOT NULL DEFAULT '',                 -- 'is blocked by', 'blocks', 'relates to' (direction applied)
++  position        INTEGER NOT NULL DEFAULT 0,
++  other_source_id TEXT    NOT NULL,
++  other_key       TEXT    NOT NULL,
++  other_summary   TEXT    NOT NULL DEFAULT '',
++  other_status_id TEXT,
++  other_type_id   TEXT,
++  other_assignee_account_id TEXT,
++  PRIMARY KEY (issue_id, link_id)
++) STRICT, WITHOUT ROWID;
++CREATE INDEX issue_link_other ON issue_link(other_source_id);
++
++-- Attachment metadata + media-cache state. Bytes live on disk under <data dir>/media (architecture.md §2.4).
++CREATE TABLE attachment (
++  id                INTEGER PRIMARY KEY,                       -- local id; used in /media/{id}
++  issue_id          INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE,
++  source_id         TEXT    NOT NULL,                          -- provider attachment id
++  media_file_id     TEXT,                                      -- id used by ADF media nodes; NULL until resolved (jira-sync.md §2.14)
++  name              TEXT    NOT NULL,
++  mime              TEXT    NOT NULL DEFAULT 'application/octet-stream',
++  bytes             INTEGER NOT NULL DEFAULT 0,
++  author_account_id TEXT,
++  created_at        INTEGER NOT NULL,
++  is_image          INTEGER NOT NULL DEFAULT 0 CHECK (is_image IN (0,1)),  -- renderable inline (png/jpeg/gif/webp/bmp ≤ 25 MB)
++  width             INTEGER, height INTEGER,                   -- known once decoded
++  thumb_path        TEXT,                                      -- relative to the media dir; NULL = no thumbnail yet
++  file_path         TEXT,                                      -- relative; NULL = original not cached (never fetched, or evicted)
++  cached_bytes      INTEGER NOT NULL DEFAULT 0,                -- bytes of the cached original (counts against the cap); 0 when not cached
++  last_viewed_at    INTEGER,                                   -- LRU key (lightbox / inline view / open)
++  evicted_at        INTEGER,                                   -- last eviction of the original
++  fetch_error       TEXT,                                      -- last media fetch error code, NULL when fine
++  removed_at        INTEGER,                                   -- no longer on the issue: hidden; cached files deleted
++  UNIQUE (issue_id, source_id)
++) STRICT;
++CREATE INDEX attachment_media ON attachment(media_file_id) WHERE media_file_id IS NOT NULL;
++CREATE INDEX attachment_lru   ON attachment(last_viewed_at) WHERE file_path IS NOT NULL;
++
++-- Transitions offered for an issue, as last fetched when the Status combobox opened (operational).
++CREATE TABLE transition_cache (
++  issue_id   INTEGER PRIMARY KEY REFERENCES issue(id) ON DELETE CASCADE,
++  json       TEXT    NOT NULL,                                 -- []model.Transition
++  fetched_at INTEGER NOT NULL
++) STRICT;
++-- Invalidated (row deleted) whenever the issue's status changes in an apply.
++
++-- Unsent comment draft per issue (config; local only, never sent without Send).
++CREATE TABLE ticket_draft (
++  issue_id      INTEGER PRIMARY KEY REFERENCES issue(id) ON DELETE CASCADE,
++  body_text     TEXT    NOT NULL,
++  mentions_json TEXT    NOT NULL DEFAULT '[]',                 -- [{start,end,accountId,name}]
++  updated_at    INTEGER NOT NULL
++) STRICT;
++
++-- Field-rail preferences per connection (config; Configure › Ticket fields).
++CREATE TABLE ticket_field_pref (
++  connection_id INTEGER NOT NULL REFERENCES connection(id) ON DELETE CASCADE,
++  field_id      TEXT    NOT NULL,
++  position      INTEGER,                                       -- NOT NULL = pinned, in this order; NULL = not pinned
++  hidden        INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0,1)),
++  PRIMARY KEY (connection_id, field_id),
++  CHECK (position IS NOT NULL OR hidden = 1)                   -- a row exists only if pinned or hidden
++) STRICT, WITHOUT ROWID;
++```
++
++History rules (ADR 0015):
++
++| Data | Rule |
++|---|---|
++| Status, assignee, flag | fully historised (`*_change`), including changes made by Cuisle's own light writes — they arrive via the post-write refresh's changelog, never invented locally |
++| Comments | append; an edit overwrites `body_adf` and sets `updated_at`; a comment missing from a complete fetch gets `deleted_at` |
++| Description, environment, field values, links, subtasks | current value only: `issue_content`/`issue_field_value`/`issue_link` rows are replaced per issue when its `content_hash` changes |
++| Attachments | rows upserted by `source_id`; disappearing ones get `removed_at` (files deleted); cache columns are local state |
++| Drafts, field prefs | local config; drafts are deleted on successful send |
++
++A past ("as of") view therefore shows today's description/fields/comments-as-edited (same accepted limitation as summary, D10).
++
+ ### 2.6 Standup ↔ issue membership: current state + temporal spans
+ 
+ ```sql
+@@ -670,6 +796,42 @@ UPDATE standup SET rev = rev + 1, updated_at = :now WHERE id = :id AND deleted_a
+ -- 0 rows returned → apperr not_found
+ ```
+ 
++**Q9 — `cache.LoadTicket(issueID)`: everything the ticket modal needs, one reader transaction, no network**
++
++```sql
++SELECT i.*, c.description_adf, c.environment_adf, c.watchers, c.updated_at AS content_updated_at
++FROM issue i LEFT JOIN issue_content c ON c.issue_id = i.id WHERE i.id = :issue;
++
++SELECT v.field_id, v.kind, v.value_json, d.name, d.custom
++FROM issue_field_value v JOIN issue i ON i.id = v.issue_id
++LEFT JOIN field_def d ON d.connection_id = i.connection_id AND d.field_id = v.field_id
++WHERE v.issue_id = :issue;
++
++SELECT d.field_id, d.name, d.kind, d.custom, p.position, COALESCE(p.hidden, 0) AS hidden    -- registry + prefs → rows and "Not set"
++FROM field_def d JOIN issue i ON i.connection_id = d.connection_id
++LEFT JOIN ticket_field_pref p ON p.connection_id = d.connection_id AND p.field_id = d.field_id
++WHERE i.id = :issue;
++
++SELECT comment_id, author_account_id, created_at, updated_at, body_adf, visibility_type, visibility_value
++FROM comment WHERE issue_id = :issue AND deleted_at IS NULL ORDER BY created_at, comment_id;
++
++SELECT id, source_id, media_file_id, name, mime, bytes, author_account_id, created_at, is_image, width, height,
++       thumb_path IS NOT NULL AS has_thumb, file_path IS NOT NULL AS has_file
++FROM attachment WHERE issue_id = :issue AND removed_at IS NULL ORDER BY is_image DESC, created_at DESC;
++
++SELECT l.relation, l.label, l.other_key, l.other_summary, l.other_status_id, l.other_type_id, l.other_assignee_account_id,
++       o.id AS other_issue_id, o.summary AS live_summary, o.status_id AS live_status_id
++FROM issue_link l JOIN issue i ON i.id = l.issue_id
++LEFT JOIN issue o ON o.connection_id = i.connection_id AND o.source_id = l.other_source_id
++WHERE l.issue_id = :issue ORDER BY l.relation, l.label, l.position;
++
++SELECT body_text, mentions_json FROM ticket_draft WHERE issue_id = :issue;
++-- plus the per-issue forms of Q2/Q3 (status, flag, comment times, dev events) for the header pulse and the Development group.
++```
++
++Inline-card and mention resolution inside ADF use two prepared lookups (`issue` by `(connection_id, key)`, `person` by
++account id) batched per document.
++
+ **Q8 — membership and state as of `:t` (history loader; same shape feeds the same builder)**
+ 
+ ```sql
+@@ -710,6 +872,8 @@ events are never aged out, closed sprints and departed people stay.
+ | `space`, `board` (+ columns) | autocomplete caches: delete when `fetched_at` older than 30 days and not referenced by any standup |
+ | `sync_run` (+ `sync_log`) | keep the newest 50 per standup and nothing older than 90 days |
+ | `sink_outbox` | clear `payload` 30 days after delivery; delete rows older than 90 days (`dead` rows: 180 days) |
++| `transition_cache` | delete rows older than 7 days (also invalidated on status change) |
++| Media cache (files, not rows) | originals evicted least-recently-viewed (`attachment.last_viewed_at`, never-viewed first by oldest `created_at`) until `SUM(cached_bytes)` ≤ `media.cache_max_mb` (default 1024 MB); thumbnails are never evicted; "Clear image cache" removes both and nulls the path columns; orphan files (no row) are swept at startup |
+ | `standup` with `deleted_at` | **never purged** (Chris: keep synced data for a future history view). A deleted standup is archived: hidden everywhere, no sync, its spans and config history kept; restorable later (archive list is a post-v1 UI). |
+ | DB backups | keep 2 newest `cuisle.db.bak-v*` (pre-migration) and 1 `cuisle.db.bak-weekly` (rewritten at most weekly, at startup) |
+ 
+@@ -731,9 +895,20 @@ Assumptions for one busy 300-issue board: ~1 000 issues pass through per year (
+ | `dev_pr_event` | 2 500 | 110 | 0.3 |
+ | `standup_issue_span` | 4 000 (incl. backlog churn) | 90 | 0.4 |
+ | `standup_config_history` | ≤ 60 | 4 000 | 0.2 |
+-| **Total** | ≈ 32 000 | | **≈ 4–5 MB per board-year** |
+-
+-Five such standups ≈ 20–25 MB per year; ten years stays well under 300 MB, which SQLite handles without tuning. View
++| **Subtotal (history, ADR 0011)** | ≈ 32 000 | | **≈ 4–5 MB** |
++| `issue_content` (description + environment ADF) | 1 000 | 5 000 (3–8 KB typical) | 5 |
++| `comment` body columns (added to the rows above) | 6 000 | + 900 | 5.5 |
++| `issue_field_value` | 25 000 (≈ 25 non-empty fields per issue) | 120 | 3 |
++| `issue_link` | 3 000 | 200 | 0.6 |
++| `attachment` (metadata) | 1 500 | 300 | 0.5 |
++| `field_def` | ≈ 300 per connection (one-off) | 400 | 0.1 |
++| **Total (history + content, ADR 0015)** | ≈ 70 000 | | **≈ 20 MB per board-year** |
++
++Media is separate and bounded: thumbnails ≈ 15 KB each (1 500 attachments, ~60 % images → ≈ 15 MB per board-year, never
++evicted); full-size images ≈ 0.4 MB average, capped at `media.cache_max_mb` (1 GB default) across all standups.
++
++Five such standups ≈ 100 MB of database per year; ten years ≈ 1 GB, which SQLite handles without tuning (the weekly
++backup copies the DB only, never the media directory). View
+ queries are bounded by current membership (live) or by span/time indexes (as-of), so history growth does not slow the
+ live path; `BenchmarkStandupView` runs against a fixture DB carrying 3 simulated years to prove it.
+ 
+@@ -741,4 +916,4 @@ live path; `BenchmarkStandupView` runs against a fixture DB carrying 3 simulated
+ 
+ `app_setting` key `history_retention_days` (`0` = keep forever, the default and the only behaviour in v1). If a cap is
+ ever implemented it must delete whole issues only (an issue whose last span closed before the cutoff, with all its
+-change/comment/dev rows) and close-dated spans/config rows — never partial histories of issues still on a board.
++change/comment/dev/content rows and cached media) and close-dated spans/config rows — never partial histories of issues still on a board.

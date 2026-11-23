@@ -1,0 +1,15 @@
+diff --git a/docs/adr/0002-frontend-stack.md b/docs/adr/0002-frontend-stack.md
+index 6a6053d..6f97eac 100644
+--- a/docs/adr/0002-frontend-stack.md
++++ b/docs/adr/0002-frontend-stack.md
+@@ -21,6 +21,10 @@ Why not the others:
+ - Svelte 5: larger and growing runtime+compiled output for ~40 components, extra compiler in the toolchain, no measurable
+   win over signals for this UI.
+ 
++Addendum (ADR 0015): the ticket modal and the ADF renderer (`views/ticket`, `components/adf`) add roughly 20 KB gzip.
++Chris raised the all-JS budget to ≤ 70 KB gzip for this (ADR 0014, 2026-11-23). Code-splitting them into a chunk
++prefetched at idle is recommended to keep cold start flat. Still no new runtime dependency.
++
+ ## Consequences
+ - ~7 KB gzip of framework; signal-bound updates make speaker/standup switching sub-frame without virtualisation.
+ - JSX gives compile-time checking of component props and of the generated binding types.

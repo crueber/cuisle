@@ -31,7 +31,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             name: linux
-          - os: macos-14
+          - os: macos-15
             name: macos
           - os: windows-latest
             name: windows
@@ -49,7 +49,7 @@ jobs:
         shell: bash
         run: |
           WAILS=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)
-          go install github.com/wailsapp/wails/v3/cmd/wails3@"$WAILS"
+          go install -tags gtk3 github.com/wailsapp/wails/v3/cmd/wails3@"$WAILS"   # gtk3: Linux uses GTK 3 / WebKitGTK 4.1 (ADR 0001)
           go install github.com/go-task/task/v3/cmd/task@v3.54.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 

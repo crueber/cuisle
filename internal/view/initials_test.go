@@ -9,7 +9,7 @@ import (
 // Display names from real Jira sites carry suffixes like "(Contractor)" or "- Ops"; those must not become initials.
 func TestInitials_IgnoresBracketsAndPunctuation(t *testing.T) {
 	cases := map[string]string{
-		"Iris Calloway":            "IC",
+		"Iris Calloway":          "IC",
 		"Cher":                   "C",
 		"Mary Jane Watson":       "MW",
 		"Sebastian (Contractor)": "S",

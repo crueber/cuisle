@@ -1,0 +1,228 @@
+diff --git a/design/tokens.json b/design/tokens.json
+index 32263ab..8fb6a46 100644
+--- a/design/tokens.json
++++ b/design/tokens.json
+@@ -5,7 +5,11 @@
+       "sans": "'IBM Plex Sans Condensed', system-ui, sans-serif",
+       "mono": "'IBM Plex Mono', ui-monospace, monospace"
+     },
+-    "weight": { "regular": 500, "semibold": 600, "bold": 700 },
++    "weight": {
++      "regular": 500,
++      "semibold": 600,
++      "bold": 700
++    },
+     "size": {
+       "h1": "36px",
+       "h1-compact": "28px",
+@@ -32,7 +36,11 @@
+       "days-chip": "14px",
+       "days-chip-lane": "13px"
+     },
+-    "tracking": { "caps": "0.12em", "wordmark": "0.16em", "tag": "0.08em" }
++    "tracking": {
++      "caps": "0.12em",
++      "wordmark": "0.16em",
++      "tag": "0.08em"
++    }
+   },
+   "size": {
+     "header": "64px",
+@@ -41,12 +49,27 @@
+     "rail-compact": "76px",
+     "config-rail-full": "280px",
+     "config-rail-compact": "230px",
+-    "row": { "roomy": "46px", "compact": "38px", "tight": "34px" },
+-    "head": { "roomy": "40px", "compact": "32px", "side-gap": "4px" },
++    "row": {
++      "roomy": "46px",
++      "compact": "38px",
++      "tight": "34px"
++    },
++    "head": {
++      "roomy": "40px",
++      "compact": "32px",
++      "side-gap": "4px"
++    },
+     "gutter": "118px",
+-    "lane-row": { "normal": "23px", "compact": "20px" },
++    "lane-row": {
++      "normal": "23px",
++      "compact": "20px"
++    },
+     "lane-head": "30px",
+-    "track": { "wide": "600px", "medium": "440px", "narrow": "300px" },
++    "track": {
++      "wide": "600px",
++      "medium": "440px",
++      "narrow": "300px"
++    },
+     "days-chip": "48px",
+     "days-chip-lane": "36px",
+     "more-bar": "36px",
+@@ -56,13 +79,64 @@
+     "touch-min": "44px",
+     "list-row": "46px",
+     "combobox-max-rows": "8",
+-    "rule": { "heavy": "3px", "row": "2px" },
+-    "track-seg": { "roomy": "12px", "compact": "10px", "small": "8px", "lane": "11px" },
++    "rule": {
++      "heavy": "3px",
++      "row": "2px"
++    },
++    "track-seg": {
++      "roomy": "12px",
++      "compact": "10px",
++      "small": "8px",
++      "lane": "11px"
++    },
+     "tick-width": "4px",
+-    "today-line": "3px"
++    "today-line": "3px",
++    "modal": {
++      "max-w": "1320px",
++      "max-h": "1000px",
++      "margin-1920": "40px",
++      "margin-1440": "32px",
++      "margin-1280": "24px",
++      "margin-1024": "12px",
++      "content-max": "880px",
++      "rail-min": "380px",
++      "pad": "32px",
++      "pad-1280": "24px",
++      "pad-1024": "20px",
++      "header-row": "52px",
++      "header-row-short": "44px",
++      "footer": "30px",
++      "state-strip": "44px"
++    },
++    "rail-label": "132px",
++    "rail-label-narrow": "120px",
++    "anchor-strip": "32px",
++    "pulse-strip": {
++      "tall": "40px",
++      "short": "28px"
++    },
++    "file-card": {
++      "w": "240px",
++      "h": "56px",
++      "ext": "46px"
++    },
++    "thumb": {
++      "w": "160px",
++      "h": "100px"
++    },
++    "issue-row": "34px",
++    "updated-bar": "36px",
++    "lightbox-bar": "64px"
+   },
+   "space": {
+-    "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px", "10": "40px",
++    "1": "4px",
++    "2": "8px",
++    "3": "12px",
++    "4": "16px",
++    "5": "20px",
++    "6": "24px",
++    "8": "32px",
++    "10": "40px",
+     "main-pad-x-wide": "32px",
+     "main-pad-x-narrow": "20px",
+     "main-pad-top-tall": "20px",
+@@ -70,7 +144,12 @@
+     "column-gap": "40px",
+     "section-gap": "20px"
+   },
+-  "radius": { "chip": "2px", "control": "4px", "pill": "16px", "rail-item": "3px" },
++  "radius": {
++    "chip": "2px",
++    "control": "4px",
++    "pill": "16px",
++    "rail-item": "3px"
++  },
+   "breakpoint": {
+     "$comment": "Evaluated on window width (vw) or main-area width (mainW), in CSS px after zoom. See docs/ux-spec.md §3.",
+     "rail-full-min-vw": 1360,
+@@ -85,9 +164,20 @@
+     "config-three-cols-min-mainw": 1500,
+     "config-two-cols-min-mainw": 960,
+     "lists-side-by-side-min-mainw": 1140,
+-    "tall-min-vh": 800
++    "tall-min-vh": 800,
++    "modal-short-max-vh": 800,
++    "modal-strip-max-vw": 900,
++    "rail-label-narrow-max": 420,
++    "rail-stack-max": 340,
++    "modal-icon-only-max-vw": 1280
++  },
++  "motion": {
++    "fast": "80ms",
++    "base": "140ms",
++    "saving-delay": "250ms",
++    "debounce-text": "400ms",
++    "debounce-search": "150ms"
+   },
+-  "motion": { "fast": "80ms", "base": "140ms", "saving-delay": "250ms", "debounce-text": "400ms", "debounce-search": "150ms" },
+   "color": {
+     "light": {
+       "bg": "#F6F4EE",
+@@ -121,6 +211,29 @@
+       "more-bar-bg": "#16181D",
+       "more-bar-fg": "#F6F4EE",
+       "focus-ring": "#1F5FBF",
++      "scrim": "rgba(22,24,29,0.55)",
++      "scrim-lightbox": "rgba(22,24,29,0.92)",
++      "link": "#1F5FBF",
++      "code-bg": "#EDEAE1",
++      "panel-info-bg": "#E0E5E9",
++      "panel-note-bg": "#E8E2E6",
++      "panel-success-bg": "#E2E8DE",
++      "panel-warning-bg": "#F1E9DA",
++      "panel-error-bg": "#EFDFD9",
++      "lozenge": {
++        "todo-bg": "#CFCAB9",
++        "todo-fg": "#16181D",
++        "prog-bg": "#3D6FC4",
++        "prog-fg": "#FFFFFF",
++        "review-bg": "#7A55B8",
++        "review-fg": "#FFFFFF",
++        "qa-bg": "#C08A2A",
++        "qa-fg": "#16181D",
++        "done-bg": "#9DB8A4",
++        "done-fg": "#16181D",
++        "alert-bg": "#B3261E",
++        "alert-fg": "#FFFFFF"
++      },
+       "lane": {
+         "todo": "#CFCAB9",
+         "prog": "#3D6FC4",
+@@ -170,6 +283,29 @@
+       "more-bar-bg": "#ECEAE4",
+       "more-bar-fg": "#121418",
+       "focus-ring": "#7FB0FF",
++      "scrim": "rgba(0,0,0,0.65)",
++      "scrim-lightbox": "rgba(0,0,0,0.92)",
++      "link": "#7FB0FF",
++      "code-bg": "#1B1E24",
++      "panel-info-bg": "#212A38",
++      "panel-note-bg": "#292738",
++      "panel-success-bg": "#1D2B28",
++      "panel-warning-bg": "#2D281E",
++      "panel-error-bg": "#301F1F",
++      "lozenge": {
++        "todo-bg": "#4A4F57",
++        "todo-fg": "#ECEAE4",
++        "prog-bg": "#4F82D6",
++        "prog-fg": "#121418",
++        "review-bg": "#9070DC",
++        "review-fg": "#121418",
++        "qa-bg": "#D3A043",
++        "qa-fg": "#121418",
++        "done-bg": "#3F7A5B",
++        "done-fg": "#ECEAE4",
++        "alert-bg": "#E5604D",
++        "alert-fg": "#121418"
++      },
+       "lane": {
+         "todo": "#4A4F57",
+         "prog": "#4F82D6",

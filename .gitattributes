@@ -1,0 +1,9 @@
+# LF everywhere: goldens and fixtures are compared byte for byte, and Windows checkouts would otherwise get CRLF.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.syso binary

@@ -1,0 +1,477 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index eb38ad5..251d1b2 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -12,7 +12,7 @@ Conventions used below: lane ids are `backlog | todo | prog | review | qa | done
+ │                                                                                                  │
+ │  ┌─────────── internal/app (Wails v3 services = the only API the UI sees) ────────────────────┐  │
+ │  │ AppService  StandupService  ConfigService  ConnectionService  SyncService                  │  │
+-│  │ SinkService  HistoryService (placeholder, no v1 UI)                                        │  │
++│  │ TicketService  SinkService  HistoryService (placeholder, no v1 UI)                         │  │
+ │  └────┬────────────┬──────────────┬───────────────┬───────────────┬──────────────┬────────────┘  │
+ │       ▼            ▼              ▼               ▼               ▼              ▼               │
+ │   settings       view ◄── pulse   history       sync ──────► source.Source     sink.Sink        │
+@@ -51,13 +51,17 @@ the same builder (ADR 0011).
+   one "midnight" timer (re-emits `day:rolled`). No tickers, no polling.
+ - No network I/O happens unless the user (a) presses Resync, (b) opens the app with a sync-on-open policy that
+   applies, (c) changes a standup's source in Configure, (d) types in a source-backed combobox / connects, or
+-  (e) a sink delivers on an explicit trigger (manual Send, or after a successful sync when opted in).
++  (e) a sink delivers on an explicit trigger (manual Send, or after a successful sync when opted in), or
++  (f) acts on a ticket (ADR 0015): opens the Status combobox in the ticket modal (fetches transitions), sends a light
++  write (transition, assign, flag, comment — each followed by a one-issue refresh), or explicitly opens an attachment /
++  full-size image that is not in the media cache. **Opening the ticket modal itself is never a trigger.**
+ 
+ ## 2. Go module layout
+ 
+ Module path: `github.com/crueber/cuisle` (decided; referred to as `MODULE` below).
+ Go ≥ 1.24. `go.mod` pins exact versions of `github.com/wailsapp/wails/v3`, `modernc.org/sqlite`,
+-`github.com/zalando/go-keyring`. `frontend/package.json` pins the same exact `@wailsio/runtime` version as the Go module.
++`github.com/zalando/go-keyring`, `golang.org/x/image` (thumbnail scaling and WebP/BMP/TIFF decoding in `internal/media`;
++pure Go, the only added Go dependency for ADR 0015). `frontend/package.json` pins the same exact `@wailsio/runtime` version as the Go module.
+ 
+ ```
+ cuisle/
+@@ -81,7 +85,9 @@ cuisle/
+ │   ├── history/           as-of loader: LoadAsOf(standupID, t) → model.BoardSnapshot from spans + change tables (STUB in v1)
+ │   ├── sync/              sync orchestrator over source.Source: plan → fetch (memory) → atomic apply; progress; cancellation
+ │   ├── pulse/             pure functions: status segments, day buckets, days-in-lane, blocked spans, speaker order
+-│   ├── view/              builds StandupView (from a BoardSnapshot + asOf) / StandupConfig / Bootstrap
++│   ├── view/              builds StandupView and TicketDetail (from a BoardSnapshot + asOf) / StandupConfig / Bootstrap
++│   ├── adf/               rich text: parse/normalise stored ADF → typed node tree; resolve media, mentions, inline cards
++│   ├── media/             attachment cache on disk: store, thumbnails (golang.org/x/image), LRU eviction under a cap, clear
+ │   ├── export/            cuisle.export.v1 document: build from StandupView(s), JSON encoding (CSV/Markdown renderers later)
+ │   ├── sink/              outbound adapter contract: Sink interface, registry, outbox dispatcher
+ │   │   └── file/          reference sink (v1): writes the export JSON to a file
+@@ -107,7 +113,9 @@ Dependency rule (enforced with a `depguard`/`go list` check in CI):
+ | `source/jira` | `source`, `model`, `apperr` (never `cache`, `store`, `sync`) |
+ | `sync` | `source` (interface only — **never `source/jira`**), `cache`, `settings`, `secrets`, `model` |
+ | `history` | `cache`, `store`, `settings`, `model` |
+-| `view` | `model`, `cache`, `settings`, `pulse` (takes snapshots; does not import `history`) |
++| `adf` | `model` |
++| `media` | `model`, `store`, `paths`, `apperr` (never a source: bytes are handed to it) |
++| `view` | `model`, `cache`, `settings`, `pulse`, `adf` (takes snapshots; does not import `history`) |
+ | `export` | `view`, `model` |
+ | `sink`, `sink/*` | `export`, `model`, `secrets`, `store` (outbox), `apperr` |
+ | `app` | everything above except concrete adapters |
+@@ -162,14 +170,48 @@ type Issue struct {
+ type StatusChange   struct { ID string; At time.Time; From, To string }           // status ids
+ type AssigneeChange struct { ID string; At time.Time; From, To string }           // account ids, "" = unassigned
+ type FlagChange     struct { ID string; At time.Time; Flagged bool }
+-type Comment        struct { ID string; At time.Time; AuthorID string }           // metadata only, never the body
++type Comment        struct { ID string; At, UpdatedAt time.Time; AuthorID string
++                             Body RichText                     // stored locally (ADR 0015); never exported or logged
++                             Visibility *Visibility }          // nil = everyone; {Type "role"|"group", Value "Developers"}
+ type DevEvent       struct { Kind string /* "commit"|"pr" */; ID, Repo string; At time.Time; Status string /* pr: OPEN|MERGED|DECLINED */; Merge bool }
+ 
+ type IssueDetail struct {     // what Hydrate returns for one issue
+     Issue; Type IssueType; Status Status; Assignee *Person
+     StatusChanges []StatusChange; AssigneeChanges []AssigneeChange; FlagChanges []FlagChange
+-    Comments []Comment; CommentTotal int; People []Person
++    Comments []Comment; CommentTotal int; People []Person      // Comments: complete list when Capabilities.Content
++    Content  *IssueContent                                      // nil when !Capabilities.Content
+ }
++
++// ── Ticket content (ADR 0015) ──
++type RichText struct { Format string /* "adf" (the neutral rich-text format; other sources convert to it) */; Raw json.RawMessage }
++type Attachment struct { ID, Name, Mime string; Bytes int64; AuthorID string; CreatedAt time.Time
++                         MediaFileID string /* id used by rich-text media nodes; "" if unknown */; Width, Height int }
++type FieldDef   struct { ID, Name string; Kind string; Custom bool; CustomType string; Schema json.RawMessage }
++type FieldValue struct {
++    FieldID string
++    Kind    string     // text|paragraph|number|date|datetime|url|option|options|cascade|user|users|group|groups|
++                       // version|versions|component|components|labels|project|team|unknown
++    Text    string     // text, option, url, date ("YYYY-MM-DD"), datetime (RFC 3339), group/project/team/version/component name
++    Number  *float64
++    Items   []string   // options, labels, versions, components, groups; cascade = [parent, child]
++    Users   []string   // account ids (user, users)
++    Rich    *RichText  // paragraph
++    Raw     json.RawMessage // unknown: provider value verbatim
++}
++type IssueLink  struct { ID, TypeName, Label string /* "is blocked by" */; Outward bool; OtherSourceID, OtherKey, OtherSummary, OtherStatusID, OtherTypeID string }
++type IssueRef   struct { SourceID, Key, Summary, StatusID, TypeID, AssigneeID string }
++type IssueContent struct {
++    Description, Environment *RichText
++    Attachments []Attachment
++    Fields      []FieldValue      // every non-empty field value except those modelled on Issue; empties are implied by FieldDef
++    Links       []IssueLink
++    Subtasks    []IssueRef
++    Parent      *IssueRef
++    Watchers    int               // -1 unknown
++    Hash        string            // content hash; unchanged hash → no rewrite
++}
++type Transition struct { ID, Name, ToStatusID, ToStatusName string; NeedsScreen bool }
++type NewComment struct { Text string; Mentions []Mention /* {Start, End int (rune offsets into Text); AccountID, Name} */ }
+ type DevActivity struct { Fingerprint string; Changed bool; Events []DevEvent }
+ 
+ // What the view builder consumes — produced by cache.LoadCurrent or history.LoadAsOf.
+@@ -188,6 +230,8 @@ type BoardSnapshot struct {
+ ```go
+ type Capabilities struct {
+     HasSprints, HasBacklogRank, HasFlagging, HasDevActivity, HasExtraFilter, HasAssigneeHistory bool
++    Content bool            // Hydrate returns IssueContent + full comments; Fields/FetchMedia work (ADR 0015)
++    Writes  Writes          // {Transition, Assign, Flag, Comment bool}; all false = read-only source
+     FilterLanguage string   // "JQL"; shown as the Extra filter hint
+     AuthFields     []string // credential fields the Connect form needs, e.g. ["baseUrl","account","secret"]
+ }
+@@ -205,9 +249,21 @@ type Source interface {
+     ValidateFilter(ctx context.Context, expr string) (ok bool, errs []string, err error)
+     Plan(ctx context.Context, in PlanInput) ([]Query, error)                             // membership queries (opaque to the core)
+     Scan(ctx context.Context, q Query) (ScanResult, error)                               // ids + updated, in rank order
+-    Hydrate(ctx context.Context, sourceIDs []string) ([]model.IssueDetail, error)        // fields + full change history + comment meta
++    Hydrate(ctx context.Context, sourceIDs []string) ([]model.IssueDetail, error)        // fields + full change history + comments (+ content when Capabilities.Content)
+     DevActivity(ctx context.Context, sourceID, prevFingerprint string) (model.DevActivity, error) // ErrUnsupported when !HasDevActivity
+     IssueURL(key string) string
++
++    // Content (Capabilities.Content) — ADR 0015
++    Fields(ctx context.Context) ([]model.FieldDef, error)                                // field registry incl. custom fields, with Kind
++    FetchMedia(ctx context.Context, att model.Attachment, thumb bool) (MediaBlob, error) // {Body io.ReadCloser; Mime string; Bytes int64; MediaFileID string}
++    GetIssue(ctx context.Context, sourceID string) (model.IssueDetail, error)            // single-issue refresh = Hydrate of one, always complete
++
++    // Writes (Capabilities.Writes) — explicit user actions only; each returns after the provider accepted the change
++    Transitions(ctx context.Context, sourceID string) ([]model.Transition, error)
++    Transition(ctx context.Context, sourceID, transitionID string) error
++    Assign(ctx context.Context, sourceID, accountID string) error                        // "" = unassign
++    SetFlag(ctx context.Context, sourceID string, flagged bool) error
++    AddComment(ctx context.Context, sourceID string, c model.NewComment) (commentID string, err error)
+ }
+ 
+ type PlanInput struct {
+@@ -265,6 +321,70 @@ overwrite (bool, default true)}`; writes atomically (temp file + rename); `Recei
+ Planned kinds (not v1): `webhook` (POST JSON, `Idempotency-Key` header, optional bearer secret), `file` formats CSV and
+ Markdown standup notes, `linear`, `github-projects`, `asana`, `notion`, `azure-boards`.
+ 
++### 2.4 Rich text and media (`internal/adf`, `internal/media`) — ADR 0015
++
++Raw ADF is stored as received; it is parsed **at view-build time** (so renderer fixes apply to already-synced data).
++The frontend never sees raw ADF and never uses `innerHTML`.
++
++```go
++// internal/adf
++type Doc  struct { Nodes []Node `json:"c"`; Unsupported int `json:"u,omitempty"` }
++type Node struct {
++    T     string  `json:"t"`             // normalised type: p, h, text, br, ul, ol, li, task, taskItem, decision, quote, rule, code,
++                                         // panel, table, tr, th, td, expand, status, mention, date, emoji, card, media, file, unknown
++    Text  string  `json:"x,omitempty"`
++    Marks []Mark  `json:"m,omitempty"`   // {T: strong|em|strike|underline|sub|sup|code|link|color; V: href or #rrggbb}
++    A     *Attrs  `json:"a,omitempty"`
++    C     []Node  `json:"c,omitempty"`
++}
++type Attrs struct {   // flat, all optional; only the fields relevant to T are set
++    Level int; Lang, Panel /* info|note|success|warning|error */, Title string; Done, Collapsed bool
++    Order int; Colspan, Rowspan int; Colwidth []int; Header bool
++    Lozenge /* todo|prog|review|qa|done|alert */, Label string
++    AccountID string; Self bool                          // mention (Self = the connected user)
++    Date string; Past bool                               // date node, local 'YYYY-MM-DD'; Past relative to asOf
++    Emoji, ShortName string
++    URL, Host, Path string                               // card to a non-synced URL
++    IssueID int64; Key, Summary, TypeKind, StatusName, StatusLozenge string   // card resolved to a synced issue
++    AttachmentID string; Name, Mime string; Bytes int64; Width, Height int; Layout, Caption string
++    Cached string /* "full"|"thumb"|"none" */; Missing bool                   // media / file
++    Block bool                                           // blockCard, mediaSingle vs inline
++}
++type Resolver interface {    // implemented in view over the loaded ticket
++    Attachment(mediaFileID, alt string) (model.Attachment, cached string, ok bool)
++    Issue(url string) (ref ResolvedIssue, ok bool)       // synced issue for an inline/block card URL or key
++    Person(accountID string) (name string, self bool)
++    Now() time.Time
++}
++func Parse(raw model.RichText, r Resolver) Doc           // never fails: malformed input → one `unknown` node with the plain text
++func PlainText(raw model.RichText) string                // used for aria labels and tests
++func FromPlainText(c model.NewComment) model.RichText    // composer text + mentions → ADF (paragraphs, hardBreaks, mention nodes)
++
++// internal/media
++type Cache interface {
++    Put(ctx context.Context, att model.Attachment, connectionID int64, r io.Reader) (Entry, error) // stores original, derives thumb
++    PutThumb(ctx context.Context, att model.Attachment, connectionID int64, r io.Reader) error      // provider-made thumb (fallback)
++    Open(attachmentRowID int64, thumb bool) (f *os.File, mime string, err error)                     // not_found when absent; never fetches
++    Touch(attachmentRowID int64)                                // last_viewed_at = now (LRU)
++    Evict(ctx context.Context) (freedBytes int64, err error)    // originals only, least recently viewed first, until under the cap
++    Clear(ctx context.Context) error                            // "Clear image cache": removes originals AND thumbs
++    Stats(ctx context.Context) (Stats, error)                   // {Bytes, ThumbBytes, Files, CapBytes}
++}
++```
++
++- **Unknown nodes** become `{T:"unknown", Text:<concatenated text content>}` and increment `Doc.Unsupported`; unknown marks
++  are dropped. Node/mark coverage = the table in ux-spec §14.4 (golden-tested per node).
++- **Media rules**: images are `image/png|jpeg|gif|webp|bmp` up to 25 MB; everything else (incl. SVG, HEIC, PDF, video) is a
++  file card and is never rendered inline. Layout on disk: `<data dir>/media/<connection_id>/<id mod 256>/<attachment row id>`
++  (`.orig`, `.thumb.jpg`). Thumbs are 320×200 max (2× the 160×100 tile), JPEG q80, always kept; originals count against
++  the cap (`app_setting` `media.cache_max_mb`, default 1024) and are evicted least-recently-viewed after each sync's media
++  phase and after each `Put`. Decoding is bounded (max 60 MP) to avoid decompression bombs; failures → file card.
++- **Serving**: asset middleware routes `GET /media/{attachmentRowId}` and `GET /media/{attachmentRowId}/thumb` read from
++  the cache only (`Content-Type` from the stored mime, `X-Content-Type-Options: nosniff`, `Cache-Control: private,
++  max-age=31536000, immutable`); a miss is `404` and **never triggers a fetch**. The UI then shows the thumb (or a
++  placeholder frame) and fetches the original only through `TicketService.EnsureMedia` when the user opens the lightbox,
++  or `TicketService.OpenAttachment` for files.
++
+ ## 3. Wails v3 surface
+ 
+ ### 3.1 Application wiring (illustrative)
+@@ -274,11 +394,12 @@ app := application.New(application.Options{
+     Name: "Cuisle",
+     Services: []application.Service{
+         application.NewService(appSvc), application.NewService(standupSvc),
+-        application.NewService(configSvc), application.NewService(jiraSvc), application.NewService(syncSvc),
++        application.NewService(configSvc), application.NewService(connectionSvc), application.NewService(syncSvc),
++        application.NewService(ticketSvc), application.NewService(sinkSvc), application.NewService(historySvc),
+     },
+     Assets: application.AssetOptions{
+         Handler:    application.AssetFileServerFS(distFS),
+-        Middleware: bootMiddleware(viewBuilder),      // serves GET /boot.js (see §5.1)
++        Middleware: chain(bootMiddleware(viewBuilder), mediaMiddleware(mediaCache)),  // GET /boot.js (§5.1); GET /media/{id}[/thumb] (§2.4)
+     },
+     MarshalError:   apperr.Marshal,                   // typed errors → JSON (see §3.4)
+     SingleInstance: &application.SingleInstanceOptions{UniqueID: "crueber.cuisle"},
+@@ -331,7 +452,7 @@ func (s *ConfigService) RemoveSpeaker(ctx context.Context, standupID int64, acco
+ // ── ConnectionService (connection + autocomplete sources) ─────────────────────────
+ func (s *ConnectionService) Connection(ctx context.Context) (Connection, error)
+ func (s *ConnectionService) Connect(ctx context.Context, in ConnectInput) (Connection, error)   // ConnectInput{Source "jira", BaseURL, Account, Secret}
+-func (s *ConnectionService) Disconnect(ctx context.Context) error                                   // deletes keychain item; synced data kept
++func (s *ConnectionService) Disconnect(ctx context.Context, deleteContent bool) error              // deletes keychain item; synced data kept unless deleteContent (UI offers it only past storage.cleanup_offer_mb, ux-spec §14.11); record/history rows always kept
+ func (s *ConnectionService) SearchSpaces(ctx context.Context, query string) ([]SpaceOption, error)
+ func (s *ConnectionService) SearchBoards(ctx context.Context, spaceKey string, query string) ([]BoardOption, error)
+ func (s *ConnectionService) SearchUsers(ctx context.Context, standupID int64, query string) ([]UserOption, error)
+@@ -342,6 +463,28 @@ func (s *SyncService) Start(ctx context.Context, standupID int64, mode string) (
+ func (s *SyncService) Cancel(ctx context.Context, standupID int64) error
+ func (s *SyncService) Status(ctx context.Context) ([]SyncStatus, error)
+ 
++// ── TicketService (ticket modal; ADR 0015, ux-spec §14) ─────────────────────
++func (s *TicketService) Get(ctx context.Context, standupID int64, issueID int64) (TicketDetail, error)   // local only, zero network; = view.BuildTicket(...)
++func (s *TicketService) Transitions(ctx context.Context, issueID int64) (TransitionList, error)          // NETWORK (Status combobox opened); cached per issue; offline → cached list with Offline=true
++func (s *TicketService) Transition(ctx context.Context, standupID, issueID int64, transitionID string) (TicketDetail, error) // write → refresh → apply
++func (s *TicketService) Assign(ctx context.Context, standupID, issueID int64, accountID string) (TicketDetail, error)        // "" = unassign
++func (s *TicketService) SetFlag(ctx context.Context, standupID, issueID int64, flagged bool) (TicketDetail, error)
++func (s *TicketService) AddComment(ctx context.Context, standupID, issueID int64, in CommentInput) (TicketDetail, error)     // on success the draft is deleted
++func (s *TicketService) Draft(ctx context.Context, issueID int64) (CommentInput, error)
++func (s *TicketService) SaveDraft(ctx context.Context, issueID int64, in CommentInput) (SaveAck, error)  // empty text deletes the draft; autosave pipeline (§5.3), 400 ms debounce
++func (s *TicketService) EnsureMedia(ctx context.Context, attachmentID int64) (AttachmentView, error)     // NETWORK on cache miss (lightbox / "load image" click); touches LRU
++func (s *TicketService) OpenAttachment(ctx context.Context, attachmentID int64) error                    // NETWORK on miss; writes to the OS temp dir and opens with the default app
++func (s *TicketService) SearchMentions(ctx context.Context, standupID int64, query string) ([]UserOption, error) // "@" in the composer; = ConnectionService.SearchUsers, local people first
++
++// Ticket field preferences (per connection; Configure › Ticket fields, ux-spec §14.8) and media cache — on ConnectionService / AppService
++func (s *ConnectionService) TicketFields(ctx context.Context) (TicketFieldPrefs, error)                  // {Pinned []FieldPref, Hidden []FieldPref, Available []FieldOption}
++func (s *ConnectionService) PinTicketField(ctx context.Context, fieldID string) (TicketFieldPrefs, error)
++func (s *ConnectionService) UnpinTicketField(ctx context.Context, fieldID string) (TicketFieldPrefs, error)
++func (s *ConnectionService) MoveTicketField(ctx context.Context, fieldID string, toPosition int) (SaveAck, error)
++func (s *ConnectionService) SetTicketFieldHidden(ctx context.Context, fieldID string, hidden bool) (TicketFieldPrefs, error)
++func (s *AppService) MediaCache(ctx context.Context) (MediaCacheInfo, error)                             // {Bytes, ThumbBytes, Files, CapMB}; cap is app_setting media.cache_max_mb
++func (s *AppService) ClearMediaCache(ctx context.Context) (MediaCacheInfo, error)
++
+ // ── SinkService (outbound adapters; v1 = file sink only) ─────────────────────
+ func (s *SinkService) Kinds(ctx context.Context) ([]SinkKind, error)                          // registered adapters + config schema + capabilities
+ func (s *SinkService) List(ctx context.Context) ([]SinkConfig, error)
+@@ -365,6 +508,64 @@ type OutboxItem  struct { ID, SinkID, StandupID int64; Cause, PayloadKind, Statu
+ type HistoryRange struct { From, To string }
+ ```
+ 
++Ticket types (the row type inside `StandupView` keeps the name `TicketView`; the modal payload is `TicketDetail`):
++
++```go
++type TicketDetail struct {
++    IssueID int64; StandupID int64; AsOf, SyncedAt, UpdatedAt int64
++    Row        TicketView            // identical to the board row (key, summary, type, lane, days, blocked, pulse) — the modal header reuses it
++    URL        string
++    Parent     *IssueRefView         // {IssueID (0 if not synced), Key, Summary, TypeKind}
++    PulseDays  int; Axis []AxisDay; LimitDays, BlockedDays int
++    Description *adf.Doc             // nil when empty
++    Attachments []AttachmentView     // images first, then files, each by created desc
++    Subtasks   []IssueRow; SubtasksDone int
++    LinkGroups []LinkGroup           // {Label "IS BLOCKED BY", Rows []IssueRow}
++    Comments   []CommentView         // oldest first; the frontend orders per app_setting ticket.comment_order
++    NewSince   int64                 // start of the previous working day (D3) — comments at/after it are "new since standup"; 0 = none
++    Draft      CommentInput
++    Rail       []RailGroup           // state, details, custom, development, dates — in that order; empty groups omitted
++    Dev        *DevSummary           // {Branch string, Commits int, LastCommitAt int64, PRs []{ID, Title, Status}}; nil if none/unavailable
++    Can        TicketCaps            // {Transition, Assign, Flag, Comment bool; Reason string /* "offline"|"auth"|"read_only"|"" */}
++    Warnings   []string              // e.g. "media_unresolved"
++}
++type IssueRow      struct { IssueID int64 /* 0 = not synced → opens the browser */; Key, Summary, TypeKind, StatusName, StatusLozenge, AssigneeInitials, URL string; Done bool }
++type AttachmentView struct { ID int64; Name, Ext, Mime string; Bytes int64; AuthorInitials, AuthorName string; CreatedAt int64
++                             Image bool; Width, Height int; Cached string /* "full"|"thumb"|"none" */; URL, ThumbURL string /* /media/{id}, /media/{id}/thumb */ }
++type CommentView   struct { ID string; Author PersonRef /* {AccountID, Name, Initials, Self} */; CreatedAt, UpdatedAt int64; Edited bool
++                            Visibility string /* "" or e.g. "Developers only" */; Body adf.Doc }
++type CommentInput  struct { Text string; Mentions []Mention /* {Start, End int; AccountID, Name string} */ }
++type RailGroup     struct { ID, Label string; Rows []RailRow; NotSet []string /* labels of empty fields, in rail order */ }
++type RailRow       struct { FieldID, Label, Kind string; Edit string /* ""|"status"|"assignee"|"flag" */
++                            Text string; Number *float64; Items []string; Users []PersonRef; Rich *adf.Doc; Raw string
++                            Mono bool; Sub string /* e.g. "ends 1 Dec" */; Progress *float64 /* time tracking 0..1 */; URL, URLLabel string }
++type TransitionList struct { Items []TransitionOption; FetchedAt int64; Offline bool }
++type TransitionOption struct { ID, Name, ToStatusName, ToLane string; NeedsScreen bool; URL string /* issue URL for "↗ Jira" */ }
++```
++
++Rules for `view.BuildTicket(snap model.BoardSnapshot, t cache.Ticket, prefs TicketFieldPrefs, asOf time.Time) TicketDetail`:
++- `cache.LoadTicket(issueID)` returns the issue, its `IssueContent`, comments, attachments (+ cache state), link/subtask
++  targets resolved against local issues, and dev events — **one reader transaction, no network** (`data-model.md` §4.1 Q9).
++- **Rail folding is done in Go**: a field with no value never produces a row; its label goes to the group's `NotSet`
++  (ux-spec §14.6). Exception: Assignee always has a row. Group membership: *state* = status, assignee, flag; *details* =
++  reporter, priority, parent, sprint, story points, due, labels, components, fix versions, time tracking, environment;
++  *custom* = custom fields per prefs (pinned in order, then the remaining non-hidden non-empty ones A–Z); *development*
++  from dev events; *dates* = created, updated, resolved, watchers.
++- An issue that is not a member of `standupID` (reached through an inline card) is built with that standup's lane mapping
++  and an empty pulse if it has no history there.
++- `Can.*` = source capability ∧ connection state `ok`; the frontend additionally disables writes while offline.
++
++Light writes (all four share this path, in `internal/app` + `internal/sync`):
++1. Per-issue mutex; reject with `conflict` if a write for the same issue is in flight.
++2. Call the source write (`Transition`/`Assign`/`SetFlag`/`AddComment`). Failure → typed error (§3.4), **no retry**, emit
++   `ticket:write_failed`; nothing is stored.
++3. Success → `source.GetIssue` → `sync.ApplyIssue` (the same upsert code as a sync apply, one transaction: issue row,
++   change tables — so the status/assignee/flag change is **historised from the provider's changelog**, comments, content;
++   `standup.rev` bumped for every standup containing the issue) → return the rebuilt `TicketDetail`; emit `ticket:updated`
++   and `data:changed {what:"view"}`. If the refresh fails after a successful write, return `partial`-style success with
++   warning `refresh_failed` and apply the known delta locally (status/assignee/flag) so the UI does not lie; the next sync heals it.
++4. A sync apply never overwrites newer data: an incoming issue whose `updated_at` is older than the stored row is skipped.
++
+ Principal types (Go; TS types are generated from these — field names are the JSON names, lowerCamel via tags):
+ 
+ ```go
+@@ -462,10 +663,13 @@ Emitted through the Wails event bus; JS subscribes via `Events.On(name, cb)` in
+ | Event | Payload | When |
+ |---|---|---|
+ | `sync:started` | `{runId, standupId, mode, trigger}` (`trigger`: `"manual"\|"open"\|"config"`) | run accepted |
+-| `sync:progress` | `{runId, standupId, phase, done, total}`; `phase` ∈ `config\|scan\|issues\|changelog\|comments\|dev\|apply` | ≤ 10/s, coalesced |
++| `sync:progress` | `{runId, standupId, phase, done, total}`; `phase` ∈ `config\|scan\|issues\|changelog\|content\|dev\|apply\|media` (`media` runs after `sync:finished`) | ≤ 10/s, coalesced |
+ | `sync:finished` | `{runId, standupId, status, errorCode?, errorMessage?, warnings[], finishedAt, stats:{issues, requests, ms}}`; `status` ∈ `ok\|partial\|cancelled\|failed` | after the apply transaction commits (or run aborts) |
+ | `data:changed` | `{standupId, what}`; `what` ∈ `view\|config\|standups` (`standupId` 0 = all) | after any commit that changes what a screen shows and was not caused by the receiving call itself (sync apply, speaker auto-discovery, restore) |
+ | `connection:auth` | `{state}` ∈ `ok\|invalid\|missing` | on Connect/Disconnect and on any 401 |
++| `ticket:updated` | `{issueId, key, standupIds[], cause, changed[]}`; `cause` ∈ `write\|sync`; `changed` = names of changed parts (`status`, `assignee`, `flag`, `comments`, `description`, `fields`, `attachments`) | after a light write's refresh is applied, and after a sync apply for every hydrated issue (the frontend acts only if that issue's modal is open: shows "Updated in Jira · Reload", ux-spec §14.9) |
++| `ticket:write_failed` | `{issueId, key, action, errorCode, errorMessage}`; `action` ∈ `transition\|assign\|flag\|comment` | a light write was rejected or could not be sent (also returned as the call's error) |
++| `media:ready` | `{attachmentId, issueId, cached}` | an image landed in the cache after the record apply (lazy media phase, or `EnsureMedia`) |
+ | `sink:delivered` | `{outboxId, sinkId, standupId, kind, ref}` | a delivery succeeded |
+ | `sink:failed` | `{outboxId, sinkId, standupId, kind, errorCode, errorMessage, attempts, willRetry}` (`willRetry` = will be retried on the next explicit trigger) | a delivery job gave up for now |
+ | `day:rolled` | `{today}` | local midnight (single timer); UI re-requests the current view |
+@@ -488,6 +692,8 @@ type Error struct {
+ 
+ - Codes: `validation`, `not_found`, `conflict`, `auth_missing`, `auth_invalid`, `forbidden`, `offline`, `timeout`,
+   `rate_limited`, `source_http`, `filter_invalid`, `keychain_unavailable`, `sink_failed`, `unsupported` (capability absent),
++  `write_rejected` (provider refused the change; `Message` carries the provider's reason), `transition_needs_screen`,
++  `permission_denied` (403 on a write), `media_unavailable`,
+   `not_implemented`, `db`, `cancelled`, `internal`.
+ - `application.Options.MarshalError` serialises it to JSON; the frontend facade (`api/errors.ts`) converts every rejected
+   call into `AppError {code, message, detail, retryable, field}`; anything unparsable becomes `code: "internal"`.
+@@ -575,16 +781,20 @@ frontend/
+ │   │   ├── standup.ts         views cache (Map<standupId, Signal<StandupView>>), selected person, derived selectors
+ │   │   ├── config.ts          StandupConfig signal for the Configure screen
+ │   │   ├── save.ts            autosave queue + saved-indicator state (§5.3)
+-│   │   └── sync.ts            SyncStatus by standup, event handlers
++│   │   ├── sync.ts            SyncStatus by standup, event handlers
++│   │   └── ticket.ts          open ticket, step list (view order), back stack, optimistic writes, draft autosave
+ │   ├── layout/                PURE functions (unit-tested): density.ts, board.ts, tabs.ts, below.ts, track.ts
+ │   ├── views/
+ │   │   ├── standup/           StandupScreen, Header, Tabs, StandupSwitcher, Rail, PersonView, BoardView,
+ │   │   │                      TicketRow, PulseTrack, TrackBackdrop, MoreBar, Legend, DoneList, BacklogList
+ │   │   ├── configure/         ConfigureScreen, StandupList, sections/{Source,StatusMapping,PersonView,Speakers,
+ │   │   │                      Pulse,WholeBoard,Display,Connection}.tsx
+-│   │   └── connect/           ConnectScreen (first run / reconnect)
++│   │   ├── connect/           ConnectScreen (first run / reconnect)
++│   │   └── ticket/            LAZY CHUNK: TicketModal, TicketHeader, PulseStrip, AnchorStrip, Attachments, IssueRows,
++│   │                          Comments, Composer, FieldRail, RailValue, StatusField, AssigneeField, FlagField, Lightbox, UpdatedBar
+ │   ├── components/            Combobox, Segmented, Switch, Stepper, Checkbox, TextField, Toast, SavedIndicator,
+ │   │                          Icon (inline SVG sprite), KeyLegend, Banner
++│   ├── components/adf/        LAZY CHUNK (with ticket/): AdfDoc + one component per node type (ux-spec §14.4); contrast.ts
+ │   ├── keys.ts                global keyboard map (ux-spec §8: ←/→, B, 1–9, R, Shift+R, /, `,`, ?, Esc, Enter)
+ │   └── styles/                tokens.css (generated), base.css, standup.css, configure.css
+ └── tests/                     unit (Vitest), perf + a11y (Playwright against `vite preview --mode mock`)
+@@ -695,6 +905,32 @@ Behaviour (WAI-ARIA 1.2 combobox, list autocomplete, manual selection):
+   ladder: row height 46 → 38 → 34 combined with stacked or side-gutter headings, ux-spec §5.5), `belowFold(groups, density, foldY)`, `balanceLanes(lanes, cols, rowH)`, `tabMode(tabs, availW)`. They are
+   ports of the *rules* in `design/reference/prototype-logic.js`, documented in `docs/ux-spec.md`.
+ 
++### 4.9 Ticket modal and rich text (ADR 0015, ux-spec §14)
++
++- **Code-split (recommended, not required).** `views/ticket/*` and `components/adf/*` may form one lazy chunk
++  (`import('./views/ticket')`), prefetched with `requestIdleCallback` after first paint so cold start stays flat and the
++  chunk is in memory before anyone clicks. The JS budget is one all-JS number (≤ 70 KB gz, ADR 0014 as raised for F12). No new runtime dependency:
++  no Markdown/ADF library, no sanitiser (nothing is ever parsed from HTML), no image viewer.
++- **Open** = `TicketService.Get(standupId, issueId)` (local, ≤ 25 ms) → render. The step list (`J`/`K`) is computed in TS
++  from the current view's row order (person view: walk order then Done; board: lane order, Done, backlog) and neighbours
++  are prefetched (`Get` for ±1) so stepping is instant. The modal is a route overlay
++  (`route.ticket = {issueId, stack: number[]}`), not a new view; the standup screen stays mounted behind the scrim.
++- **ADF rendering**: `AdfDoc` maps `adf.Node.t` → component via a static table; unknown `t` renders the node's text plus
++  the "unsupported block ↗" link. Links render as `<a>` whose click handler calls `OpenIssue`/the OS browser — the webview
++  never navigates. Images are `<img src="/media/{id}">` with explicit `width`/`height` (no layout shift), `loading="lazy"`,
++  and an `onerror` fallback to the thumb then a placeholder frame with "Load image" (→ `EnsureMedia`).
++- **`textColor` contrast clamp is TS** (`components/adf/contrast.ts`): it depends on the active theme's background, so Go
++  passes the authored `#rrggbb` and TS adjusts lightness in OKLCH until contrast ≥ 4.5:1 (memoised per colour × theme).
++- **Optimistic writes** (`state/ticket.ts`): apply the expected change to the open `TicketDetail` **and** to the cached
++  `StandupView` row (lane from `TransitionOption.ToLane`, assignee, blocked) → call the service → replace both with the
++  authoritative result, or revert both and show the inline reason. Pending/failed comment bubbles are frontend state;
++  a failed comment's text stays in the draft (`SaveDraft`) so it survives a restart. Nothing retries by itself.
++- **Draft autosave** uses the §5.3 pipeline (key `draft:${issueId}`, 400 ms debounce, flush on blur/close/pagehide) but
++  does not drive the Configure "Saved" indicator.
++- **Esc unwinding** is a small stack in `state/ticket.ts` (combobox/lightbox → composer blur → modal); global keys in
++  `keys.ts` are suspended while the modal is open and the modal's own map (ux-spec §14.10) applies.
++- **Lightbox**: same chunk; on open it calls `EnsureMedia` for the image when `cached != "full"` (explicit network trigger).
++
+ ## 5. Key flows
+ 
+ ### 5.1 Cold start
+@@ -718,6 +954,7 @@ Behaviour (WAI-ARIA 1.2 combobox, list autocomplete, manual selection):
+ | Pulse segments (incl. pre-window state), sparse per-day marks in local time, blocked spans | Density ladder (needs measured height) |
+ | `DaysInLane`, `OverLimit`, `Blocked` | Below-the-fold summary text, "End of list" flip |
+ | Done-window filtering, backlog top-N, counts | Board lane balancing into 1–2 columns |
++| Ticket detail: ADF → typed node tree, media/card/mention resolution, field kinds, rail grouping and "Not set" folding, comment visibility labels, "new since standup" bound | ADF node → component mapping, `textColor` contrast clamp (per theme), comment order toggle, optimistic write state, step list |
+ | Effective speaking order (manual / reshuffle-daily seed / Unassigned position) | Tab collapse mode (full → keys → menu), legend mode |
+ | Axis days (weekend/Monday flags), sprint "ends today" facts | Filtering tickets by selected speaker, grouping by `view.lanes` |
+ 
+@@ -805,14 +1042,17 @@ Reference hardware: 2020-class laptop (M1 / 4-core x64, SSD). Dataset "L": 5 sta
+ | Person switch (←/→) | ≤ 32 ms (two frames), no IPC | Playwright as above; also asserts zero facade calls | fail > 32 ms |
+ | Configure field save: control → ack | ≤ 30 ms | `BenchmarkConfigUpdate` (real file DB) + e2e mark | fail if bench > 10 ms/op |
+ | Combobox keystroke → filtered list (static, 500 options) | ≤ 16 ms | Playwright | fail > 32 ms |
+-| JS bundle (all JS, gzip) | ≤ 45 KB | `size-limit` on `frontend/dist/assets/*.js` | fail |
++| JS bundle (all JS, gzip) | ≤ 70 KB (ADR 0014, raised by Chris on 2026-11-23 for F12 from 50 KB) | `size-limit` on `frontend/dist/assets/*.js` | fail |
++| Ticket modal open: click/Enter → modal painted (fixture ticket with every ADF node, 7 comments, 5 attachments) | ≤ 100 ms, **zero network** | Playwright (mock mode, 4× CPU throttle, chunk prefetched); Go side `BenchmarkTicketDetail` | fail > 100 ms; bench fail > 25 ms/op; integration test asserts an empty fake-Jira request log |
++| Ticket step (`J`/`K`) → painted | ≤ 50 ms | Playwright | fail |
++| Light write: action → optimistic UI | ≤ 32 ms (the network round trip is not budgeted) | Playwright | fail |
+ | CSS (gzip) | ≤ 12 KB | `size-limit` | fail |
+ | Fonts | ≤ 160 KB WOFF2 total | file-size check | fail |
+ | Memory: Go heap steady state | ≤ 40 MB | `runtime.ReadMemStats` in `--bench-startup` after loading 5 views | fail > 60 MB |
+ | Memory: total RSS incl. webview, steady | ≤ 300 MB | manual per release (Activity Monitor/Task Manager) | release checklist |
+ | Binary size (per arch, uncompressed) | ≤ 30 MB | `ls -l` in package job | warn |
+ | Incremental sync, nothing changed, 300-issue standup | ≤ 5 s on broadband; ≤ 6 requests + 1 per dev target | integration test against `jiratest` counts requests | fail on request-count regression |
+-| Full sync, 300 issues | ≤ 25 s | manual against a real site | release checklist |
++| Full sync, 300 issues (records incl. descriptions, fields and all comments; images land afterwards in the media phase) | ≤ 60 s | manual against a real site | release checklist |
+ 
+ Startup and interaction marks are also logged at `debug` in normal builds so regressions can be diagnosed from a user's log.
+ 
+@@ -822,7 +1062,12 @@ Startup and interaction marks are also logged at `debug` in normal builds so reg
+   `CUISLE_LOG` (`info` default, `debug`).
+ - Every sync run logs: run id, standup id, mode, per-phase durations, request count, 429 count, outcome.
+ - HTTP logging: method, path (query **values redacted** for `jql` unless `debug`), status, duration, `X-ARequestId`/`Atl-Traceid`.
+-  Never logged: `Authorization`, the token, email at `info`, issue summaries, comment content (never fetched into storage).
++  Never logged: `Authorization`, the token, email at `info`, issue summaries, **descriptions, comment bodies, field values,
++  attachment names, draft text** — at any level, including `debug` and error details. Request/response bodies are never
++  logged; write calls log method, path, status and the issue id only. A redaction test greps logs for fixture body strings.
++- **Privacy boundary (ADR 0015):** ticket content (descriptions, comment bodies, field values, images) is stored locally in
++  `cuisle.db` and the media cache, like summaries. It never leaves the machine except back to its own source: it is not in
++  `cuisle.export.v1`, logs, `Diagnostics()`, crash output or `LogClientError` payloads (the frontend strips `detail`).
+ - Frontend errors (`window.onerror`, unhandled rejections) are forwarded via `AppService.LogClientError`
+   (deduplicated, rate-limited to 20/min).
+ - `Diagnostics()` powers a "Copy diagnostics" action (version, OS, paths, schema version, last 5 sync runs; no secrets).
+@@ -849,6 +1094,7 @@ Startup and interaction marks are also logged at `debug` in normal builds so reg
+ | Windows | `%LOCALAPPDATA%\Cuisle\` | `%LOCALAPPDATA%\Cuisle\logs\` |
+ | Linux | `${XDG_DATA_HOME:-~/.local/share}/cuisle/` | `${XDG_STATE_HOME:-~/.local/state}/cuisle/` |
+ 
++Media cache: `<data dir>/media/` (inside the data dir so one folder holds everything; safe to delete — images re-download on demand).
+ `CUISLE_DATA_DIR` overrides both (used by tests, bench and `--fake-jira`). DB file: `cuisle.db`.
+ Keychain: service `crueber.cuisle`; accounts `<source>:<host>:<account>` for a connection (e.g.
+ `jira:acme.atlassian.net:me@acme.com`) and `sink:<id>` for a sink secret (macOS Keychain, Windows Credential Manager,
+@@ -863,6 +1109,8 @@ instructions; the only bypass is `CUISLE_JIRA_TOKEN` (process env, never persist
+ | `text_size` | `standard` \| `large` | `standard` |
+ | `sync_on_open` | `stale` \| `always` \| `never` | `stale` |
+ | `sync_stale_hours` | integer 1–48 | `6` |
++| `ticket.comment_order` | `newest` \| `oldest` | `newest` |
++| `media.cache_max_mb` | integer 100–20000 (cap for full-size images; thumbnails are not counted) | `1024` |
+ | `history_retention_days` | reserved; `0` = keep forever (only behaviour in v1, no UI) | `0` |
+ 
+ Sync-on-open policy: `always` → sync every configured standup at launch; `stale` → sync a standup when
+@@ -956,3 +1204,10 @@ Sync-on-open policy: `always` → sync every configured standup at launch; `stal
+ | R21 | **Provider-neutral abstraction designed against one provider.** `source.Source` and `model` are shaped by Jira (boards with columns, rank, sprints, flagging). | A second provider may force interface changes | Capabilities flags gate optional behaviour; provider extras live in `source_meta`; the interface is internal (no plugin ABI), so changing it is a refactor, not a break. |
+ | R22 | **Sink delivery without timers.** Failed deliveries wait for the next explicit trigger. | A failed after-sync export can sit unnoticed | `sink:failed` event + visible state on the sink; manual Retry; `dead` after 8 attempts. Only the file sink ships in v1, where failures are local and immediate. |
+ | R23 | **Self-signed builds.** Gatekeeper/SmartScreen warnings on install; macOS keychain prompts recur if the signing identity changes (ad-hoc builds, lost/rotated cert). | Friction for anyone but the owner | Stable self-signed cert kept by Chris and in CI secrets; first-run steps in README; revisit Developer ID / commercial cert if distribution widens (ADR 0013). |
++| R24 | **ADF media id ↔ attachment id.** ADF `media` nodes carry a media-services file id; the attachment REST API exposes numeric ids. There is no documented join. | Inline images show "attachment unavailable ↗" | Layered mapping in the Jira adapter (`jira-sync.md` §2.14): media id captured from the content redirect, then filename/alt match, then document order; unresolved nodes degrade to a link and raise warning `media_unresolved`. Verify on a real site in the first content spike. |
++| R25 | **ADF schema drift / unknown nodes** (new node types, extensions, macros from apps). | Content partially rendered | Unknown nodes degrade to text + "unsupported block ↗"; raw ADF is stored, so a renderer update fixes old tickets without a resync; golden test per node. |
++| R26 | **DB and media growth from content.** Descriptions, comments and every field value roughly triple per-issue storage; images are bounded only by the cap. | Larger DB, slower backups | Estimates in `data-model.md` §5.1; media cap + LRU + "Clear image cache"; `issue_field_value` is current-only; weekly backup excludes media. |
++| R27 | **Write permissions and workflow rules.** The user may lack transition/assign/comment permission; transitions may have validators, required screens or conditions Cuisle cannot see. | Writes rejected | Provider message surfaced verbatim (`write_rejected`/`permission_denied`); screen transitions routed to the browser; UI reverts; no auto-retry. |
++| R28 | **Write/sync races and eventual consistency.** The one-issue refresh right after a write can return stale data (search index lag does not apply to `GET /issue`, but changelog can lag). | History row for the change missing until next sync | Refresh uses the issue endpoint, not search; apply never overwrites newer `updated_at`; if the changelog lacks the change, a synthetic change row is **not** invented — the next sync merges the real one. |
++| R29 | **Sensitive content on a shared screen and on disk.** Restricted-visibility comments and attachments are now local and rendered. | Disclosure during screen share; data at rest unencrypted | Loud visibility tag (ux-spec §14.5); DB/media rely on OS disk encryption (documented); content excluded from exports/logs; whether Disconnect should offer to delete synced content is an open product question. |
++| R30 | **Sync cost.** Full comments per changed issue and image downloads add requests. | Slower first sync; rate limits | Comments only for hydrated issues; media after the record apply in a bounded pool (2), resumable, skipped when offline; budgets in `jira-sync.md` §4.3. |

@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -83,7 +84,11 @@ func TestWriteTx_PanicRollsBackAndReleasesTheWriter(t *testing.T) {
 }
 
 func TestOpen_DataFolderWithURICharacters(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "my data #1 100% ready?")
+	name := "my data #1 100% ready?"
+	if runtime.GOOS == "windows" {
+		name = "my data #1 100% ready" // '?' is not allowed in Windows file names
+	}
+	dir := filepath.Join(t.TempDir(), name)
 	db, _ := openAt(t, dir, store.Options{})
 	mustExec(t, db.W, "INSERT INTO app_setting(key,value,updated_at) VALUES ('theme','dark',1)")
 	if err := db.Close(ctx); err != nil {

@@ -1,0 +1,67 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 3b4cd4a..1de8115 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -70,14 +70,17 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
+ | Milestones and DoD | `docs/roadmap.md` |
+ | What must be tested, golden cases | `docs/testing.md` |
+ | How to split the work across agents | `docs/agent-plan.md` |
+-| Decisions already made | `docs/adr/0001…0013` |
++| Decisions already made | `docs/adr/0001…0015` |
+ 
+ ## 3. Invariants (tests and reviewers enforce these)
+ 
+ 1. **Never hide tickets to fit** (ux-spec §5.5–5.6, §6.4). Density ladder, then scroll and the more bar.
+-2. **No network without a trigger.** The only allowed triggers are: Resync, sync-on-open policy, leaving Configure after
+-   source changes, Jira-backed combobox typing, board pick and filter validation, Connect, and explicit sink sends or
+-   after-sync sends. A test asserts this with the fake Jira request log. No tickers, no polling, no retry timers.
++2. **No network without a trigger.** The only allowed triggers are:
++   - Resync, the sync-on-open policy, and leaving Configure after source changes.
++   - Jira-backed combobox typing, board pick and filter validation, and Connect.
++   - Explicit sink sends or after-sync sends.
++   - In the ticket modal: opening the Status combobox (transitions), the four writes, and opening an attachment or a
++     full image not yet cached. Opening the modal itself is offline. A test asserts this with the fake Jira request log. No tickers, no polling, no retry timers.
+ 3. **Autosave.** Every Configure control persists on change (text 400ms debounce). There's no Save button; **Done**
+    returns.
+ 4. **Every dropdown is the shared `Combobox`.** No native `<select>`.
+@@ -98,7 +101,13 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
+ 10. **Frontend runtime deps are fixed** (`preact`, `@preact/signals`, `@wailsio/runtime`). Adding one needs an ADR and
+     the 45 KB gz JS budget.
+ 11. **Tokens only.** No raw hex in components. Lane colours via `data-lane`. Sizes scale with `--scale` (Large/TV).
+-12. **Exports carry no comment bodies, emails or secrets** (`cuisle.export.v1`, additive-only within v1).
++12. **Exports, logs and crash output carry no comment bodies, emails or secrets** (`cuisle.export.v1`, additive-only
++    within v1). Comment bodies *are* stored locally (ADR 0015).
++13. **Jira writes are explicit user actions only.** The only writes are transition, assign, flag and add comment, from
++    the ticket modal. Each is sent once, optimistically, and reverted on failure, with no automatic retry. Success
++    re-fetches the one issue through the normal apply (history recorded).
++14. **Cuisle renders Jira rich text itself.** Go normalises ADF (`internal/adf`); Preact renders typed nodes. Never
++    `innerHTML` and never `renderedFields` HTML.
+ 
+ ## 4. Everyday commands
+ 
+@@ -142,7 +151,11 @@ go test ./internal/view -update               # regenerate the golden StandupVie
+ ## 7. Security checklist for any change
+ - **Secrets:** tokens and sink secrets never leave the keychain. No secret in logs (redaction test), DB bytes (scan test),
+   exports, crash output or the frontend.
+-- **Stored content:** no comment bodies are fetched into storage, and issue summaries aren't logged at `info`.
++- **Stored content:**
++  - Descriptions, comment bodies and attachment images are stored locally (ADR 0015). They never go to logs at any
++    level, crash output, exports or diagnostics.
++  - Issue summaries aren't logged at `info`.
++  - The media cache lives under the app data dir and is served only through `/media/{id}`.
+ - **The webview:** it loads only embedded assets. No remote scripts or fonts, and no `eval`.
+ - **File sink:** writes only into the user-chosen folder (clean the path, no traversal), atomically.
+ - **Error output:** user-facing messages carry no tokens and no raw HTTP bodies; raw detail goes to the log at `debug`.
+@@ -188,6 +201,12 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
+ - **Dev-status is an internal Jira API** (R2): degrade gracefully and warn.
+ - **Post-v1:** History view UI, more sinks (webhook, CSV/Markdown, Linear, GitHub Projects, Asana, Notion, Azure
+   Boards), more sources, archive/restore UI, speaker timer, working-days option, OAuth, auto-update.
++- **Decided 2026-11-23 (later):** ticket modal (F12) with full content synced up front and light writes (ADR 0015);
++  layout A "Docket" (ux-spec §14).
++- **Decided 2026-11-23:**
++  - The JS budget rises from 50 to 70 KB gz (all JS) for the ticket modal.
++  - Disconnect keeps synced content. It offers deletion only when local content is past the storage cap
++    (`storage.cleanup_offer_mb`, default 2048 MB; ux-spec §14.11).
+ - **Decided 2026-11-23:**
+   - Module `github.com/crueber/cuisle`, bundle `crueber.cuisle`.
+   - GitHub CI for 3 OSes via the Weave publish model, with Forgejo for Linux builds.

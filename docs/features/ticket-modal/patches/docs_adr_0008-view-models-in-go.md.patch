@@ -1,0 +1,15 @@
+diff --git a/docs/adr/0008-view-models-in-go.md b/docs/adr/0008-view-models-in-go.md
+index aea6edb..ad4b490 100644
+--- a/docs/adr/0008-view-models-in-go.md
++++ b/docs/adr/0008-view-models-in-go.md
+@@ -17,6 +17,10 @@ Cached Jira activity is stored as raw timestamps and bucketed at view-build time
+ The builder is `view.Build(snapshot model.BoardSnapshot, asOf time.Time)`: it never reads the DB or the clock, so the live
+ view (`cache.LoadCurrent`, now) and a future historical view (`history.LoadAsOf`, past instant) share it unchanged (ADR 0011).
+ 
++Addendum (ADR 0015): the ticket modal follows the same rule — `view.BuildTicket` returns a `TicketDetail` with ADF already
++parsed into a typed node tree (`internal/adf`), field values typed and grouped, and empty fields folded. TypeScript never
++parses raw ADF; its only content-derived computation is the per-theme `textColor` contrast clamp.
++
+ ## Consequences
+ - One tested implementation of all time/changelog logic (table-driven Go tests, golden view JSON); no date maths in JS.
+ - Timezone/DST changes and setting changes (pulse days, limits, mapping) need no resync — only a rebuild (< 15 ms).

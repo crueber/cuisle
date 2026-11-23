@@ -617,7 +617,12 @@ func TestClient_429_DefaultAllowsFiveRetries(t *testing.T) {
 
 func TestClient_429_CumulativeGateOverBudgetFailsAsRateLimited(t *testing.T) {
 	srv := newWP06Server(t, wp06Resp{Status: 429, Header: map[string]string{"Retry-After": "4"}})
-	c, _, _ := newWP06Client(t, srv.URL, PolicyOptions{MaxGate: 10 * time.Second}, nil)
+	// A strictly increasing clock: the fake sleeper does not advance time, and on Windows time.Now is coarse enough for a
+	// retry's send time to equal the previous response time, which reserveGate reads as one concurrent burst.
+	var tick atomic.Int64
+	c, _, _ := newWP06Client(t, srv.URL, PolicyOptions{MaxGate: 10 * time.Second}, func(o *ClientOptions) {
+		o.Now = func() time.Time { return time.Now().Add(time.Duration(tick.Add(1)) * time.Millisecond) }
+	})
 	err := c.GetJSON(context.Background(), "/p", nil, nil)
 	if err == nil {
 		t.Fatal("expected an error")
