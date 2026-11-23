@@ -1,0 +1,40 @@
+# Go
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+/build/bin/
+
+# Wails
+frontend/dist/*
+!frontend/dist/.keep
+frontend/node_modules
+frontend/.vite/
+frontend/test-results/
+frontend/playwright-report/
+
+
+# Local data (fake-jira dev mode, benches)
+.dev-data/
+*.db
+*.db-wal
+*.db-shm
+*.db.bak-*
+*.db.corrupt-*
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+frontend/.vitest/
+frontend/dist-mock/
+.task/
+.claude/worktrees/

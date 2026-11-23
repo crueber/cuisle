@@ -1,0 +1,5 @@
+[
+  { "name": "JS (all, gzip)", "path": "dist/assets/*.js", "limit": "50 KB", "gzip": true },
+  { "name": "CSS (all, gzip)", "path": "dist/assets/*.css", "limit": "12 KB", "gzip": true },
+  { "name": "Fonts (woff2)", "path": "dist/assets/*.woff2", "limit": "160 KB", "gzip": false, "brotli": false }
+]

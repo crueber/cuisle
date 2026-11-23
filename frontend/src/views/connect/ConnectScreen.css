@@ -1,0 +1,136 @@
+/* Connect card (ux-spec §9.7). Tokens only (AGENTS invariant 11). Styled to match Configure's field anatomy. */
+.connect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-8) var(--space-4);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+}
+
+.connect-inline {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.connect-card {
+  width: 520px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  border: 2px solid var(--color-rule-soft);
+  border-top: var(--size-rule-heavy) solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.connect-inline .connect-card {
+  width: auto;
+  padding: var(--space-4);
+}
+
+.connect-wordmark {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-wordmark);
+}
+
+.connect-value {
+  margin: 0;
+  font-size: var(--font-size-meta);
+  color: var(--color-muted);
+}
+
+.connect-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.connect-form .tf-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+
+.connect-form .tf-control {
+  min-height: var(--size-field-height);
+  font-size: var(--font-size-label);
+}
+
+.connect-help {
+  margin: calc(var(--space-2) * -1) 0 0;
+  font-size: var(--font-size-small);
+}
+
+.connect-help a {
+  color: var(--color-fg);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+}
+
+.connect-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--size-rule-heavy) solid var(--color-alert-bg);
+  font-size: var(--font-size-meta);
+  color: var(--color-alert-text);
+}
+
+.connect-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}
+
+.connect-submit {
+  min-height: var(--size-touch-min);
+  padding: 0 var(--space-8);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--color-button-bg);
+  color: var(--color-button-fg);
+  font: inherit;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.connect-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Full-screen reconnect (auth banner when standups exist): the inline form with a title and a Cancel. */
+.connect-reconnect {
+  width: 520px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.connect-reconnect-title {
+  margin: 0;
+  font-size: var(--font-size-h1-compact);
+  font-weight: var(--font-weight-bold);
+}
+
+.connect-cancel {
+  align-self: flex-start;
+  min-height: var(--size-touch-min);
+  padding: 0 var(--space-4);
+  border: 2px solid var(--color-rule-soft);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  cursor: pointer;
+}

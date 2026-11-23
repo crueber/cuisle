@@ -1,0 +1,76 @@
+/* Configure > Person view. Section frame, field rows, buttons and chevrons live in styles/configure.css. Tokens only. */
+.personview-presets {
+  justify-content: flex-end;
+}
+
+.personview-walk {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personview-row,
+.personview-done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-list-row);
+  border-bottom: var(--size-rule-row) solid var(--color-rule-soft);
+}
+
+.personview-num {
+  flex: none;
+  min-width: var(--space-4);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+}
+
+.personview-swatch {
+  flex: none;
+  width: calc(var(--scale) * 1.125rem);
+  height: calc(var(--scale) * 0.875rem);
+  border-radius: var(--radius-chip);
+  background: var(--color-lane-todo);
+}
+
+.personview-swatch[data-lane="prog"] {
+  background: var(--color-lane-prog);
+}
+
+.personview-swatch[data-lane="review"] {
+  background: var(--color-lane-review);
+}
+
+.personview-swatch[data-lane="qa"] {
+  background: var(--color-lane-qa);
+}
+
+.personview-swatch[data-lane="done"] {
+  background: var(--color-lane-done);
+}
+
+.personview-name {
+  font-size: var(--font-size-rail-name);
+  font-weight: var(--font-weight-semibold);
+}
+
+.personview-jira,
+.personview-locked {
+  margin: 0 0 0 auto;
+  min-width: 0;
+  color: var(--color-muted);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-small);
+  text-align: right;
+}
+
+.personview-locked {
+  font-family: var(--font-family-sans);
+}
+
+.personview-done {
+  color: var(--color-muted);
+  /* Aligns with the numbered rows above (number + chevron columns). */
+  padding-left: calc(var(--space-4) + var(--space-3) + var(--scale) * 1.5rem + var(--space-3));
+}

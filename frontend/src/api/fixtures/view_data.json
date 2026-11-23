@@ -1,0 +1,1737 @@
+{
+  "standupId": 3,
+  "rev": 3,
+  "generatedAt": 1795424400000,
+  "today": "2026-11-23",
+  "asOf": 1795424400000,
+  "live": true,
+  "name": "Recipe Data",
+  "spaceKey": "DATA",
+  "boardName": "DATA board",
+  "boardType": "kanban",
+  "scope": "board",
+  "sprint": null,
+  "pulseDays": 28,
+  "axis": [
+    {
+      "date": "2026-10-27",
+      "label": "27",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-28",
+      "label": "28",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-29",
+      "label": "29",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-30",
+      "label": "30",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-31",
+      "label": "31",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-01",
+      "label": "1",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-02",
+      "label": "2",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "qa",
+      "label": "QA",
+      "limitDays": 3,
+      "columns": [
+        "QA"
+      ]
+    },
+    {
+      "lane": "review",
+      "label": "In Review",
+      "limitDays": 2,
+      "columns": [
+        "Review"
+      ]
+    },
+    {
+      "lane": "prog",
+      "label": "In Progress",
+      "limitDays": 5,
+      "columns": [
+        "In Progress"
+      ]
+    },
+    {
+      "lane": "todo",
+      "label": "To Do",
+      "limitDays": 10,
+      "columns": [
+        "To Do"
+      ]
+    },
+    {
+      "lane": "done",
+      "label": "Done",
+      "limitDays": 0,
+      "columns": [
+        "Done"
+      ]
+    }
+  ],
+  "speakers": [
+    {
+      "id": "elsa",
+      "name": "Elsa Bergman",
+      "first": "Elsa",
+      "initials": "EB",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 2
+    },
+    {
+      "id": "arjun",
+      "name": "Arjun Bose",
+      "first": "Arjun",
+      "initials": "AB",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "clara",
+      "name": "Clara Voss",
+      "first": "Clara",
+      "initials": "CV",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "mateo",
+      "name": "Mateo Ruiz",
+      "first": "Mateo",
+      "initials": "MR",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "unassigned",
+      "name": "Unassigned",
+      "first": "Unassigned",
+      "initials": "··",
+      "unassigned": true,
+      "included": true,
+      "active": 1,
+      "done": 0
+    }
+  ],
+  "tickets": [
+    {
+      "id": 301,
+      "sourceId": "10300",
+      "key": "DATA-234",
+      "summary": "Backfill ingredient taxonomy",
+      "url": "https://example.atlassian.net/browse/DATA-234",
+      "type": "task",
+      "assignee": "elsa",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 21
+          },
+          {
+            "lane": "prog",
+            "from": 21,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 6 days; 13 commits, 3 PR updates, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 302,
+      "sourceId": "10301",
+      "key": "DATA-242",
+      "summary": "Validate nutrition import",
+      "url": "https://example.atlassian.net/browse/DATA-242",
+      "type": "story",
+      "assignee": "elsa",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 26
+          },
+          {
+            "lane": "prog",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 2 days, previously To Do 8 days; 14 commits, 1 PR update, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 303,
+      "sourceId": "10302",
+      "key": "DATA-245",
+      "summary": "Speed up recipe tagging",
+      "url": "https://example.atlassian.net/browse/DATA-245",
+      "type": "task",
+      "assignee": "elsa",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 10 days; 9 commits, 1 PR update, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 304,
+      "sourceId": "10303",
+      "key": "DATA-248",
+      "summary": "Document allergen rules",
+      "url": "https://example.atlassian.net/browse/DATA-248",
+      "type": "story",
+      "assignee": "elsa",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 9,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 19,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 9 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 305,
+      "sourceId": "10304",
+      "key": "DATA-252",
+      "summary": "Monitor search index",
+      "url": "https://example.atlassian.net/browse/DATA-252",
+      "type": "task",
+      "assignee": "elsa",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 6,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 6,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 8,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 306,
+      "sourceId": "10305",
+      "key": "DATA-256",
+      "summary": "Clean up image pipeline",
+      "url": "https://example.atlassian.net/browse/DATA-256",
+      "type": "bug",
+      "assignee": "elsa",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 307,
+      "sourceId": "10306",
+      "key": "DATA-264",
+      "summary": "Version duplicate detection",
+      "url": "https://example.atlassian.net/browse/DATA-264",
+      "type": "story",
+      "assignee": "arjun",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 21
+          },
+          {
+            "lane": "prog",
+            "from": 21,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "QA 2 days, previously In Review 2 days; 9 commits, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 308,
+      "sourceId": "10307",
+      "key": "DATA-265",
+      "summary": "Rebuild unit conversions",
+      "url": "https://example.atlassian.net/browse/DATA-265",
+      "type": "story",
+      "assignee": "arjun",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 9,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 9 days, previously To Do 10 days; 7 commits, 2 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 309,
+      "sourceId": "10308",
+      "key": "DATA-273",
+      "summary": "Backfill seasonality table",
+      "url": "https://example.atlassian.net/browse/DATA-273",
+      "type": "bug",
+      "assignee": "arjun",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 1 day; no activity in 28 days"
+      }
+    },
+    {
+      "id": 310,
+      "sourceId": "10309",
+      "key": "DATA-276",
+      "summary": "Validate ratings model",
+      "url": "https://example.atlassian.net/browse/DATA-276",
+      "type": "task",
+      "assignee": "arjun",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 25
+          },
+          {
+            "lane": "qa",
+            "from": 25,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 311,
+      "sourceId": "10310",
+      "key": "DATA-285",
+      "summary": "Speed up ingredient taxonomy",
+      "url": "https://example.atlassian.net/browse/DATA-285",
+      "type": "story",
+      "assignee": "clara",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 5 days; 9 commits, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 312,
+      "sourceId": "10311",
+      "key": "DATA-290",
+      "summary": "Document nutrition import",
+      "url": "https://example.atlassian.net/browse/DATA-290",
+      "type": "task",
+      "assignee": "clara",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 8 days; 18 commits, 1 PR update, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 313,
+      "sourceId": "10312",
+      "key": "DATA-291",
+      "summary": "Monitor recipe tagging",
+      "url": "https://example.atlassian.net/browse/DATA-291",
+      "type": "spike",
+      "assignee": "clara",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 9 days; 11 commits, 3 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 314,
+      "sourceId": "10313",
+      "key": "DATA-298",
+      "summary": "Clean up allergen rules",
+      "url": "https://example.atlassian.net/browse/DATA-298",
+      "type": "story",
+      "assignee": "clara",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 13
+          },
+          {
+            "lane": "prog",
+            "from": 13,
+            "to": 17
+          },
+          {
+            "lane": "review",
+            "from": 17,
+            "to": 20
+          },
+          {
+            "lane": "qa",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 9,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 315,
+      "sourceId": "10314",
+      "key": "DATA-303",
+      "summary": "Version search index",
+      "url": "https://example.atlassian.net/browse/DATA-303",
+      "type": "story",
+      "assignee": "mateo",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 17,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 5 days, previously To Do 6 days; 8 commits, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 316,
+      "sourceId": "10315",
+      "key": "DATA-310",
+      "summary": "Rebuild image pipeline",
+      "url": "https://example.atlassian.net/browse/DATA-310",
+      "type": "bug",
+      "assignee": "mateo",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 3 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 317,
+      "sourceId": "10316",
+      "key": "DATA-316",
+      "summary": "Backfill duplicate detection",
+      "url": "https://example.atlassian.net/browse/DATA-316",
+      "type": "task",
+      "assignee": "mateo",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 8,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 8 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 318,
+      "sourceId": "10317",
+      "key": "DATA-318",
+      "summary": "Validate unit conversions",
+      "url": "https://example.atlassian.net/browse/DATA-318",
+      "type": "story",
+      "assignee": "mateo",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795424400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 21
+          },
+          {
+            "lane": "review",
+            "from": 21,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "done",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 9,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 13,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 1 day ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 319,
+      "sourceId": "10318",
+      "key": "DATA-320",
+      "summary": "Speed up seasonality table",
+      "url": "https://example.atlassian.net/browse/DATA-320",
+      "type": "story",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 1 day; no activity in 28 days"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "key": "DATA-301",
+      "summary": "Clean up ingredient taxonomy",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-301"
+    },
+    {
+      "key": "DATA-304",
+      "summary": "Version nutrition import",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/DATA-304"
+    },
+    {
+      "key": "DATA-305",
+      "summary": "Rebuild recipe tagging",
+      "type": "spike",
+      "url": "https://example.atlassian.net/browse/DATA-305"
+    },
+    {
+      "key": "DATA-308",
+      "summary": "Backfill allergen rules",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-308"
+    },
+    {
+      "key": "DATA-314",
+      "summary": "Validate search index",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/DATA-314"
+    },
+    {
+      "key": "DATA-315",
+      "summary": "Speed up image pipeline",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-315"
+    },
+    {
+      "key": "DATA-319",
+      "summary": "Document duplicate detection",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/DATA-319"
+    },
+    {
+      "key": "DATA-320",
+      "summary": "Monitor unit conversions",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-320"
+    },
+    {
+      "key": "DATA-322",
+      "summary": "Clean up seasonality table",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-322"
+    },
+    {
+      "key": "DATA-328",
+      "summary": "Version ratings model",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/DATA-328"
+    },
+    {
+      "key": "DATA-334",
+      "summary": "Rebuild ingredient taxonomy",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/DATA-334"
+    },
+    {
+      "key": "DATA-339",
+      "summary": "Backfill nutrition import",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/DATA-339"
+    }
+  ],
+  "backlogTotal": 14,
+  "counts": {
+    "active": 14,
+    "unassigned": 1,
+    "done": 5,
+    "backlog": 12
+  },
+  "options": {
+    "rowsMode": "fit",
+    "showCommits": true,
+    "showPRs": true,
+    "showComments": true,
+    "shadeWeekends": true,
+    "doneWindow": "14d",
+    "doneLabel": "last 14 days",
+    "devActivity": "ok"
+  },
+  "sync": {
+    "standupId": 3,
+    "runId": 0,
+    "state": "idle",
+    "mode": "incremental",
+    "phase": "",
+    "done": 0,
+    "total": 0,
+    "lastSuccessAt": 1795424400000,
+    "lastAttemptAt": 1795424400000,
+    "lastStatus": "ok",
+    "warnings": [],
+    "errorCode": "",
+    "errorMessage": "",
+    "needsSync": false
+  },
+  "warnings": [],
+  "previewKey": "DATA-290",
+  "lastSyncedAt": 1795424400000
+}

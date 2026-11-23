@@ -1,0 +1,238 @@
+{
+  "schema": "cuisle.export.v1",
+  "generatedAt": "2026-11-23T15:04:05Z",
+  "generator": {
+    "name": "Cuisle",
+    "version": "1.0.0"
+  },
+  "kind": "current",
+  "source": {
+    "kind": "jira",
+    "baseUrl": "https://acme.atlassian.net"
+  },
+  "standup": {
+    "id": 1,
+    "name": "Saffron Mobile",
+    "space": {
+      "key": "MOB",
+      "name": "Saffron Mobile"
+    },
+    "board": {
+      "id": "12",
+      "name": "MOB board",
+      "kind": "scrum"
+    },
+    "scope": "sprint"
+  },
+  "snapshots": [
+    {
+      "asOf": "2026-11-23T15:04:05Z",
+      "date": "2026-11-23",
+      "timezone": "America/Chicago",
+      "live": true,
+      "syncedAt": "2026-11-23T15:02:10Z",
+      "sprint": {
+        "id": "42",
+        "name": "Sprint 42",
+        "startAt": "2026-11-09T15:00:00Z",
+        "endAt": "2026-11-25T23:00:00Z"
+      },
+      "pulseDays": 7,
+      "window": {
+        "from": "2026-11-17",
+        "to": "2026-11-23"
+      },
+      "lanes": [
+        {
+          "lane": "todo",
+          "label": "To do",
+          "limitDays": 0
+        },
+        {
+          "lane": "prog",
+          "label": "In progress",
+          "limitDays": 5
+        },
+        {
+          "lane": "review",
+          "label": "Review",
+          "limitDays": 2
+        },
+        {
+          "lane": "qa",
+          "label": "QA",
+          "limitDays": 3
+        },
+        {
+          "lane": "done",
+          "label": "Done",
+          "limitDays": 0
+        }
+      ],
+      "people": [
+        {
+          "id": "acc-iris",
+          "name": "Iris Calloway",
+          "included": true,
+          "active": 1,
+          "done": 1
+        },
+        {
+          "id": "unassigned",
+          "name": "Unassigned",
+          "included": true,
+          "active": 1,
+          "done": 0
+        }
+      ],
+      "tickets": [
+        {
+          "key": "MOB-1401",
+          "sourceId": "10401",
+          "url": "https://acme.atlassian.net/browse/MOB-1401",
+          "summary": "Retry webhook delivery on 5xx",
+          "type": "story",
+          "assignee": "acc-iris",
+          "lane": "done",
+          "status": "Done",
+          "daysInLane": 2,
+          "overLimit": false,
+          "blocked": false,
+          "doneAt": "2026-11-22T14:00:00Z",
+          "pulse": {
+            "segments": [
+              {
+                "lane": "todo",
+                "from": "2026-11-17",
+                "to": "2026-11-18"
+              },
+              {
+                "lane": "prog",
+                "from": "2026-11-19",
+                "to": "2026-11-21"
+              },
+              {
+                "lane": "done",
+                "from": "2026-11-22",
+                "to": "2026-11-23"
+              }
+            ],
+            "marks": [
+              {
+                "date": "2026-11-19",
+                "commits": 2,
+                "prs": 0,
+                "comments": 1
+              },
+              {
+                "date": "2026-11-21",
+                "commits": 0,
+                "prs": 1,
+                "comments": 0
+              }
+            ],
+            "blocked": []
+          }
+        },
+        {
+          "key": "MOB-1402",
+          "sourceId": "10402",
+          "url": "https://acme.atlassian.net/browse/MOB-1402",
+          "summary": "Document the export schema",
+          "type": "task",
+          "assignee": null,
+          "lane": "todo",
+          "status": "To Do",
+          "daysInLane": 7,
+          "overLimit": false,
+          "blocked": false,
+          "doneAt": null,
+          "pulse": {
+            "segments": [
+              {
+                "lane": "todo",
+                "from": "2026-11-17",
+                "to": "2026-11-23"
+              }
+            ],
+            "marks": [],
+            "blocked": []
+          }
+        },
+        {
+          "key": "MOB-1403",
+          "sourceId": "10403",
+          "url": "https://acme.atlassian.net/browse/MOB-1403",
+          "summary": "Duplicate SMS on double reassign",
+          "type": "bug",
+          "assignee": "acc-iris",
+          "lane": "prog",
+          "status": "In Progress",
+          "daysInLane": 4,
+          "overLimit": true,
+          "blocked": true,
+          "doneAt": null,
+          "pulse": {
+            "segments": [
+              {
+                "lane": "todo",
+                "from": "2026-11-17",
+                "to": "2026-11-19"
+              },
+              {
+                "lane": "prog",
+                "from": "2026-11-20",
+                "to": "2026-11-23"
+              }
+            ],
+            "marks": [
+              {
+                "date": "2026-11-22",
+                "commits": 1,
+                "prs": 1,
+                "comments": 3
+              },
+              {
+                "date": "2026-11-23",
+                "commits": 0,
+                "prs": 0,
+                "comments": 1
+              }
+            ],
+            "blocked": [
+              {
+                "from": "2026-11-20",
+                "to": "2026-11-20"
+              },
+              {
+                "from": "2026-11-22",
+                "to": "2026-11-23"
+              }
+            ]
+          }
+        }
+      ],
+      "backlog": [
+        {
+          "key": "MOB-1501",
+          "summary": "Add CSV export",
+          "type": "story",
+          "url": "https://acme.atlassian.net/browse/MOB-1501"
+        },
+        {
+          "key": "MOB-1502",
+          "summary": "Rate limit the sync endpoint",
+          "type": "task",
+          "url": "https://acme.atlassian.net/browse/MOB-1502"
+        }
+      ],
+      "counts": {
+        "active": 2,
+        "unassigned": 1,
+        "done": 1,
+        "backlog": 2,
+        "backlogTotal": 9
+      }
+    }
+  ]
+}

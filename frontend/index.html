@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cuisle</title>
+    <!-- boot.js is served by the Go asset middleware (architecture §5.1); it sets window.__CUISLE_BOOT__ (the frontend applies the theme). -->
+    <script src="/boot.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

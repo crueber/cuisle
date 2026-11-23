@@ -1,0 +1,104 @@
+/* Configure > Speakers. Section frame and shared buttons live in styles/configure.css. Tokens only (AGENTS.md invariant 11). */
+.speakers {
+  gap: var(--space-3);
+}
+
+.speakers-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.speakers-toolbar .switch-row {
+  margin-left: auto;
+}
+
+.speakers-remove {
+  min-height: var(--size-control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.speakers-note,
+.speakers-note-text,
+.speakers-footnote,
+.speakers-empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+
+.speakers-note {
+  font-family: var(--font-family-mono);
+}
+
+.speakers-note-text {
+  margin-left: auto;
+  font-family: var(--font-family-mono);
+}
+
+.speakers-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.speakers-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-list-row);
+  border-bottom: var(--size-rule-row) solid var(--color-rule-soft);
+}
+
+.speakers-row[data-included="false"] {
+  color: var(--color-muted);
+}
+
+.speakers-num {
+  flex: none;
+  min-width: var(--space-5);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+}
+
+.speakers-person {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+}
+
+.speakers-name {
+  font-size: var(--font-size-rail-name);
+  font-weight: var(--font-weight-semibold);
+}
+
+.speakers-unassigned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border: 2px dashed var(--color-unassigned-border);
+  border-radius: var(--radius-control);
+}
+
+.speakers-unassigned-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+
+.speakers-add {
+  width: 100%;
+}

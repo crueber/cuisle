@@ -1,0 +1,793 @@
+package store_test
+
+// Tests for store.Migrate and store.LoadMigrations (data-model.md §3: the test list there is mandatory).
+//
+// SPEC-NOTE: LoadMigrations parses the files that sit directly in the FS it is given (it does not descend into
+// subdirectories); Open is expected to call it on fs.Sub(Migrations, "migrations"). Tests use a root-level
+// fstest.MapFS and fs.Sub(store.Migrations, "migrations"); an implementation that also tolerates the embed root is
+// fine but not required. Files that do not match NNNN_name.sql (README.md, directories) are ignored.
+// SPEC-NOTE: Migration.Name is the text between "NNNN_" and ".sql" ("0001_init.sql" -> "init").
+// SPEC-NOTE: "non-empty DB" (backup rule) means the DB already has applied migrations (schema_migration rows). A
+// brand-new file never gets a backup. The returned backup path is filepath.Join(backupDir, "cuisle.db.bak-v<N>")
+// with N = the highest version applied before this run. "2 newest" means the two highest N; pruning touches only
+// cuisle.db.bak-v* (never cuisle.db.bak-weekly or *.corrupt-*).
+// SPEC-NOTE: testdata/v<N>.sql files are DATA ONLY and are applied on top of Migrate(list[:N]); the test loops over
+// every testdata/v*.sql, migrates to head = embedded migrations + one synthetic extra migration, and asserts counts.
+// Adding v2.sql when 0002 ships needs no test change.
+// SPEC-NOTE: a checksum mismatch never rewrites the stored checksum, and in non-Dev mode pending migrations still run.
+// SPEC-NOTE: a migration failure rolls back only that file; earlier files stay applied. The returned `applied` on
+// error is not asserted.
+
+import (
+	"database/sql"
+	"fmt"
+	"io/fs"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+	"testing/fstest"
+
+	"github.com/crueber/cuisle/internal/apperr"
+	"github.com/crueber/cuisle/internal/store"
+)
+
+const goldenPath = "testdata/schema.golden.sql"
+
+// embeddedList builds the embedded migration list by hand (independent of LoadMigrations).
+func embeddedList(t testing.TB) []store.Migration {
+	t.Helper()
+	entries, err := store.Migrations.ReadDir("migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []store.Migration
+	for _, e := range entries {
+		name := e.Name()
+		if !strings.HasSuffix(name, ".sql") || len(name) < 6 {
+			continue
+		}
+		v, err := strconv.Atoi(name[:4])
+		if err != nil {
+			continue
+		}
+		b, err := store.Migrations.ReadFile("migrations/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, store.Migration{
+			Version: v, Name: strings.TrimSuffix(name[5:], ".sql"), SQL: string(b), Checksum: sha(b),
+			FKOff: strings.HasPrefix(string(b), "-- cuisle:fk-off\n"),
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Version < out[j].Version })
+	return out
+}
+
+func migrate(t testing.TB, w *sql.DB, list []store.Migration, dir string, opts store.Options) ([]int, string, error) {
+	t.Helper()
+	if opts.Now == nil {
+		opts.Now = clockAt(fixedNow)
+	}
+	return store.Migrate(ctx, w, list, dir, opts)
+}
+
+func mustMigrate(t testing.TB, w *sql.DB, list []store.Migration, dir string) ([]int, string) {
+	t.Helper()
+	applied, backup, err := migrate(t, w, list, dir, store.Options{})
+	if err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+	return applied, backup
+}
+
+// rowCounts returns the row count of every table except the runner's schema_migration.
+func rowCounts(t testing.TB, q *sql.DB) map[string]int {
+	t.Helper()
+	m := map[string]int{}
+	for _, tb := range tableNames(t, q) {
+		if tb == "schema_migration" {
+			continue
+		}
+		m[tb] = countRows(t, q, tb)
+	}
+	return m
+}
+
+func appliedVersions(t testing.TB, q *sql.DB) []int {
+	t.Helper()
+	rows, err := q.QueryContext(ctx, "SELECT version FROM schema_migration ORDER BY version")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	var out []int
+	for rows.Next() {
+		var v int
+		if err := rows.Scan(&v); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, v)
+	}
+	return out
+}
+
+func backupFiles(t testing.TB, dir string) []string {
+	t.Helper()
+	m := glob(t, filepath.Join(dir, "cuisle.db.bak-v*"))
+	for i := range m {
+		m[i] = filepath.Base(m[i])
+	}
+	sort.Strings(m)
+	return m
+}
+
+// ---- schema golden --------------------------------------------------------------------------------------------
+
+func compareGolden(t *testing.T, got string) {
+	t.Helper()
+	if *update {
+		if err := os.WriteFile(goldenPath, []byte(got), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	wantB, err := os.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("golden missing, run `go test ./internal/store -update` (%v)", err)
+	}
+	want := string(wantB)
+	if got == want {
+		return
+	}
+	gl, wl := strings.Split(got, "\n"), strings.Split(want, "\n")
+	for i := 0; i < len(gl) || i < len(wl); i++ {
+		var g, w string
+		if i < len(gl) {
+			g = gl[i]
+		}
+		if i < len(wl) {
+			w = wl[i]
+		}
+		if g != w {
+			t.Fatalf("schema differs from %s at line %d (run -update only if the change is deliberate)\n got: %s\nwant: %s", goldenPath, i+1, g, w)
+		}
+	}
+}
+
+func TestSchema_FreshOpenMatchesGolden(t *testing.T) {
+	defer recoverStub(t)
+	db, _ := openTemp(t)
+	compareGolden(t, dumpSchema(t, db.W))
+}
+
+func TestSchema_FreshMigrateMatchesGolden(t *testing.T) {
+	defer recoverStub(t)
+	raw, _ := freshRaw(t)
+	mustMigrate(t, raw, embeddedList(t), "")
+	compareGolden(t, dumpSchema(t, raw))
+}
+
+// ---- Migrate: basics ------------------------------------------------------------------------------------------
+
+func TestMigrate_FreshDB_AppliesAllInOrderAndRecordsThem(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	list := []store.Migration{head1(t), mig2(), mig3()}
+	applied, backup, err := migrate(t, raw, list, dir, store.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(applied, []int{1, 2, 3}) {
+		t.Errorf("applied = %v, want [1 2 3]", applied)
+	}
+	if backup != "" {
+		t.Errorf("backup = %q; an empty DB must not be backed up", backup)
+	}
+	if got := appliedVersions(t, raw); !reflect.DeepEqual(got, []int{1, 2, 3}) {
+		t.Errorf("schema_migration versions = %v", got)
+	}
+	if got := scalarInt(t, raw, "PRAGMA user_version"); got != 3 {
+		t.Errorf("user_version = %d, want 3", got)
+	}
+	if v, err := store.SchemaVersion(ctx, raw); err != nil || v != 3 {
+		t.Errorf("SchemaVersion = %d, %v; want 3, nil", v, err)
+	}
+	for _, c := range []string{"note", "flag_note"} {
+		if !hasColumn(t, raw, "issue", c) {
+			t.Errorf("issue.%s missing after migration", c)
+		}
+	}
+	// Name, checksum and applied_at are stored per file.
+	var name, checksum string
+	var appliedAt int64
+	if err := raw.QueryRowContext(ctx, "SELECT name, checksum, applied_at FROM schema_migration WHERE version=2").Scan(&name, &checksum, &appliedAt); err != nil {
+		t.Fatal(err)
+	}
+	if name != "add_note" || checksum != mig2().Checksum || appliedAt != fixedNow.UnixMilli() {
+		t.Errorf("row 2 = (%q, %q, %d), want (add_note, %s, %d)", name, checksum, appliedAt, mig2().Checksum, fixedNow.UnixMilli())
+	}
+}
+
+func TestMigrate_Twice_IsANoOp(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	h := newRecHandler()
+	opts := store.Options{Logger: slog.New(h)}
+	list := []store.Migration{head1(t), mig2()}
+	if _, _, err := migrate(t, raw, list, dir, opts); err != nil {
+		t.Fatal(err)
+	}
+	seedV1(t, raw)
+	before := rowCounts(t, raw)
+	rowsBefore := countRows(t, raw, "schema_migration")
+
+	applied, backup, err := migrate(t, raw, list, dir, opts)
+	if err != nil {
+		t.Fatalf("second Migrate: %v", err)
+	}
+	if len(applied) != 0 || backup != "" {
+		t.Errorf("second Migrate = applied %v, backup %q; want nothing", applied, backup)
+	}
+	if got := rowCounts(t, raw); !reflect.DeepEqual(got, before) {
+		t.Errorf("row counts changed by a no-op Migrate:\n got %v\nwant %v", got, before)
+	}
+	if n := countRows(t, raw, "schema_migration"); n != rowsBefore {
+		t.Errorf("schema_migration rows = %d, want %d", n, rowsBefore)
+	}
+	if files := backupFiles(t, dir); len(files) != 0 {
+		t.Errorf("backup written although nothing was pending: %v", files)
+	}
+	if w := h.count(slog.LevelWarn); w != 0 {
+		t.Errorf("%d warnings logged on an untampered re-run, want 0", w)
+	}
+}
+
+func TestMigrate_AppliedAtComesFromOptionsNow(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	at := fixedNow.AddDate(0, 0, 3)
+	if _, _, err := store.Migrate(ctx, raw, []store.Migration{head1(t)}, dir, store.Options{Now: clockAt(at)}); err != nil {
+		t.Fatal(err)
+	}
+	if got := scalarInt(t, raw, "SELECT applied_at FROM schema_migration WHERE version=1"); got != at.UnixMilli() {
+		t.Errorf("applied_at = %d, want %d", got, at.UnixMilli())
+	}
+}
+
+// ---- Migrate: checksum ----------------------------------------------------------------------------------------
+
+func tampered(m store.Migration) store.Migration { m.Checksum = "0000tampered"; return m }
+
+func TestMigrate_TamperedChecksum_WarnsOutsideDev(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+
+	h := newRecHandler()
+	applied, _, err := migrate(t, raw, []store.Migration{tampered(head1(t))}, dir, store.Options{Logger: slog.New(h)})
+	if err != nil {
+		t.Fatalf("non-dev checksum mismatch must not fail: %v", err)
+	}
+	if len(applied) != 0 {
+		t.Errorf("applied = %v, want none", applied)
+	}
+	if h.count(slog.LevelWarn) < 1 {
+		t.Error("no warn-level log record for the checksum mismatch")
+	}
+	if got := scalarStr(t, raw, "SELECT checksum FROM schema_migration WHERE version=1"); got != head1(t).Checksum {
+		t.Errorf("stored checksum rewritten to %q; the original must stay", got)
+	}
+}
+
+func TestMigrate_TamperedChecksum_StillAppliesPendingOutsideDev(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	h := newRecHandler()
+	applied, _, err := migrate(t, raw, []store.Migration{tampered(head1(t)), mig2()}, dir, store.Options{Logger: slog.New(h)})
+	if err != nil || !reflect.DeepEqual(applied, []int{2}) {
+		t.Fatalf("Migrate = %v, %v; want [2], nil", applied, err)
+	}
+	if h.count(slog.LevelWarn) < 1 {
+		t.Error("no warn-level log record for the checksum mismatch")
+	}
+}
+
+func TestMigrate_TamperedChecksum_IsAnErrorInDev(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	_, _, err := migrate(t, raw, []store.Migration{tampered(head1(t)), mig2()}, dir, store.Options{Dev: true})
+	if err == nil {
+		t.Fatal("Dev=true must fail on a checksum mismatch")
+	}
+	if hasColumn(t, raw, "issue", "note") {
+		t.Error("migration 2 was applied despite the dev-mode checksum failure")
+	}
+}
+
+// ---- Migrate: newer DB ----------------------------------------------------------------------------------------
+
+func TestMigrate_DBNewerThanBinary_IsRefusedWithDBError(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t), mig2()}, dir)
+
+	_, backup, err := migrate(t, raw, []store.Migration{head1(t)}, dir, store.Options{})
+	if err == nil {
+		t.Fatal("Migrate accepted a DB whose schema is newer than the binary")
+	}
+	ae := apperr.From(err)
+	if ae.Code != apperr.DB || ae.Message != "This data was created by a newer Cuisle" {
+		t.Errorf("error = {%s, %q}, want {db, %q}", ae.Code, ae.Message, "This data was created by a newer Cuisle")
+	}
+	if backup != "" || len(backupFiles(t, dir)) != 0 {
+		t.Errorf("a refused DB must not be backed up or touched (backup %q, files %v)", backup, backupFiles(t, dir))
+	}
+	if got := appliedVersions(t, raw); !reflect.DeepEqual(got, []int{1, 2}) {
+		t.Errorf("schema_migration = %v, want [1 2] untouched", got)
+	}
+}
+
+// ---- Migrate: pre-migration backups ---------------------------------------------------------------------------
+
+func TestMigrate_PendingOnNonEmptyDB_WritesBackupOfThePreviousVersion(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	seedV1(t, raw)
+
+	applied, backup, err := migrate(t, raw, []store.Migration{head1(t), mig2()}, dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{2}) {
+		t.Fatalf("Migrate = %v, %v; want [2], nil", applied, err)
+	}
+	want := filepath.Join(dir, "cuisle.db.bak-v1")
+	if backup != want {
+		t.Fatalf("backup = %q, want %q", backup, want)
+	}
+	bak := rawDB(t, want)
+	if v, err := store.SchemaVersion(ctx, bak); err != nil || v != 1 {
+		t.Errorf("backup SchemaVersion = %d, %v; want 1 (taken BEFORE the migration)", v, err)
+	}
+	if hasColumn(t, bak, "issue", "note") {
+		t.Error("backup already contains the new column")
+	}
+	if n := countRows(t, bak, "issue"); n != 2 {
+		t.Errorf("backup has %d issues, want 2", n)
+	}
+	assertIntegrity(t, bak)
+}
+
+func TestMigrate_SeveralPending_BackupIsNamedForTheHighestAppliedVersion(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	applied, backup, err := migrate(t, raw, []store.Migration{head1(t), mig2(), mig3()}, dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{2, 3}) {
+		t.Fatalf("Migrate = %v, %v; want [2 3], nil", applied, err)
+	}
+	if want := filepath.Join(dir, "cuisle.db.bak-v1"); backup != want {
+		t.Errorf("backup = %q, want %q", backup, want)
+	}
+	if got := backupFiles(t, dir); !reflect.DeepEqual(got, []string{"cuisle.db.bak-v1"}) {
+		t.Errorf("backup files = %v, want only bak-v1 (one backup per run)", got)
+	}
+}
+
+func TestMigrate_Backups_KeepOnlyTheTwoNewestAndLeaveOtherFilesAlone(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	weekly := filepath.Join(dir, "cuisle.db.bak-weekly")
+	corrupt := filepath.Join(dir, "cuisle.db.corrupt-1700000000000")
+	for _, p := range []string{weekly, corrupt} {
+		if err := os.WriteFile(p, []byte("keep me"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	list := []store.Migration{head1(t)}
+	mustMigrate(t, raw, list, dir)
+	steps := []struct {
+		add  store.Migration
+		want []string
+	}{
+		{mig2(), []string{"cuisle.db.bak-v1"}},
+		{mig3(), []string{"cuisle.db.bak-v1", "cuisle.db.bak-v2"}},
+		{mig4(), []string{"cuisle.db.bak-v2", "cuisle.db.bak-v3"}}, // v1 pruned
+	}
+	for _, s := range steps {
+		list = append(list, s.add)
+		mustMigrate(t, raw, list, dir)
+		if got := backupFiles(t, dir); !reflect.DeepEqual(got, s.want) {
+			t.Fatalf("after migrating to v%d backups = %v, want %v", s.add.Version, got, s.want)
+		}
+	}
+	for _, p := range []string{weekly, corrupt} {
+		if b, err := os.ReadFile(p); err != nil || string(b) != "keep me" {
+			t.Errorf("%s was touched by backup pruning (err %v)", filepath.Base(p), err)
+		}
+	}
+	// The newest backup is a real v3 database.
+	bak := rawDB(t, filepath.Join(dir, "cuisle.db.bak-v3"))
+	if v, err := store.SchemaVersion(ctx, bak); err != nil || v != 3 {
+		t.Errorf("bak-v3 SchemaVersion = %d, %v; want 3", v, err)
+	}
+}
+
+func TestMigrate_ReplacesAStaleBackupOfTheSameVersion(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	stale := filepath.Join(dir, "cuisle.db.bak-v1")
+	if err := os.WriteFile(stale, []byte("stale junk from an earlier crashed attempt"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// VACUUM INTO refuses an existing target, so Migrate has to remove it first.
+	_, backup, err := migrate(t, raw, []store.Migration{head1(t), mig2()}, dir, store.Options{})
+	if err != nil || backup != stale {
+		t.Fatalf("Migrate = backup %q, %v; want %q, nil", backup, err, stale)
+	}
+	bak := rawDB(t, stale)
+	if v, err := store.SchemaVersion(ctx, bak); err != nil || v != 1 {
+		t.Errorf("replaced backup SchemaVersion = %d, %v; want 1", v, err)
+	}
+}
+
+func TestMigrate_NoBackupOnAnEmptyDB(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	_, backup, err := migrate(t, raw, []store.Migration{head1(t), mig2()}, dir, store.Options{})
+	if err != nil || backup != "" {
+		t.Fatalf("Migrate = backup %q, %v; want \"\", nil", backup, err)
+	}
+	if files := backupFiles(t, dir); len(files) != 0 {
+		t.Errorf("backup files on a brand-new DB: %v", files)
+	}
+}
+
+func TestMigrate_NoBackupWhenBackupDirIsEmpty(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, "")
+	_, backup, err := migrate(t, raw, []store.Migration{head1(t), mig2()}, "", store.Options{})
+	if err != nil || backup != "" {
+		t.Fatalf("Migrate = backup %q, %v; want \"\", nil", backup, err)
+	}
+	if files := backupFiles(t, dir); len(files) != 0 {
+		t.Errorf("backup written although backupDir == \"\": %v", files)
+	}
+	if !hasColumn(t, raw, "issue", "note") {
+		t.Error("migration 2 was not applied")
+	}
+}
+
+// ---- Migrate: atomicity ---------------------------------------------------------------------------------------
+
+func TestMigrate_FailingFile_RollsBackThatFileOnly(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t), mig2()}, dir)
+	bad := synth(3, "broken", "ALTER TABLE issue ADD COLUMN half_done TEXT;\nTHIS IS NOT SQL;\n")
+
+	_, _, err := migrate(t, raw, []store.Migration{head1(t), mig2(), bad}, dir, store.Options{})
+	if err == nil {
+		t.Fatal("Migrate succeeded on a broken migration")
+	}
+	if hasColumn(t, raw, "issue", "half_done") {
+		t.Error("the statement before the failure stayed applied; the file must be one transaction")
+	}
+	if got := appliedVersions(t, raw); !reflect.DeepEqual(got, []int{1, 2}) {
+		t.Errorf("schema_migration = %v, want [1 2]", got)
+	}
+	if got := scalarInt(t, raw, "PRAGMA user_version"); got != 2 {
+		t.Errorf("user_version = %d, want 2", got)
+	}
+	if !hasColumn(t, raw, "issue", "note") {
+		t.Error("earlier migrations must stay applied")
+	}
+	// The connection is still usable (no dangling transaction).
+	mustExec(t, raw, "INSERT INTO app_setting(key,value,updated_at) VALUES ('after','failure',1)")
+}
+
+// ---- Migrate: fk-off table rebuilds ---------------------------------------------------------------------------
+
+// A classic table rebuild of `standup`. With foreign keys ON, DROP TABLE standup cascades into every child table.
+const rebuildStandupSQL = `-- cuisle:fk-off
+CREATE TABLE standup_new (
+  id INTEGER PRIMARY KEY,
+  connection_id INTEGER REFERENCES connection(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  rev INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  deleted_at INTEGER
+) STRICT;
+INSERT INTO standup_new (id, connection_id, name, position, rev, created_at, updated_at, deleted_at)
+  SELECT id, connection_id, name, position, rev, created_at, updated_at, deleted_at FROM standup;
+DROP TABLE standup;
+ALTER TABLE standup_new RENAME TO standup;
+`
+
+func TestMigrate_FKOffRebuild_KeepsChildRowsAndRestoresForeignKeys(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	seedV1(t, raw)
+	before := rowCounts(t, raw)
+	if before["standup_settings"] != 2 || before["standup_issue_span"] != 3 {
+		t.Fatalf("fixture drift: %v", before)
+	}
+
+	rebuild := synth(2, "rebuild_standup", rebuildStandupSQL)
+	if !rebuild.FKOff {
+		t.Fatal("test fixture bug: expected FKOff")
+	}
+	applied, _, err := migrate(t, raw, []store.Migration{head1(t), rebuild}, dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{2}) {
+		t.Fatalf("Migrate = %v, %v; want [2], nil", applied, err)
+	}
+	if after := rowCounts(t, raw); !reflect.DeepEqual(after, before) {
+		t.Errorf("child rows lost in the rebuild (foreign keys were not switched off for the file):\n got %v\nwant %v", after, before)
+	}
+	if hasColumn(t, raw, "standup", "board_id") || !hasColumn(t, raw, "standup", "position") {
+		t.Errorf("standup was not rebuilt: columns %v", columnNames(t, raw, "standup"))
+	}
+	if got := scalarInt(t, raw, "PRAGMA foreign_keys"); got != 1 {
+		t.Errorf("foreign_keys = %d after an fk-off migration, want 1 (restored)", got)
+	}
+	assertIntegrity(t, raw)
+}
+
+func TestMigrate_FKOff_ViolationFailsAndRollsBack(t *testing.T) {
+	defer recoverStub(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, []store.Migration{head1(t)}, dir)
+	dangling := synth(2, "dangling", "-- cuisle:fk-off\nINSERT INTO standup_settings(standup_id) VALUES (999);\n")
+
+	_, _, err := migrate(t, raw, []store.Migration{head1(t), dangling}, dir, store.Options{})
+	if err == nil {
+		t.Fatal("an fk-off migration that leaves a dangling reference must fail (PRAGMA foreign_key_check before commit)")
+	}
+	if n := countRows(t, raw, "standup_settings"); n != 0 {
+		t.Errorf("standup_settings rows = %d, want 0 (rolled back)", n)
+	}
+	if got := appliedVersions(t, raw); !reflect.DeepEqual(got, []int{1}) {
+		t.Errorf("schema_migration = %v, want [1]", got)
+	}
+	if got := scalarInt(t, raw, "PRAGMA foreign_keys"); got != 1 {
+		t.Errorf("foreign_keys = %d after a failed fk-off migration, want 1 (restored)", got)
+	}
+}
+
+// ---- Record tables survive a migration --------------------------------------------------------------------------
+
+// Counts of the seed in testdata/v1.sql for the families that must never lose a row (hard-coded so that fixture
+// drift is noticed).
+var v1RecordCounts = map[string]int{
+	"issue": 2, "status_change": 3, "assignee_change": 2, "flag_change": 2, "comment": 3, "dev_commit": 2,
+	"dev_pr_event": 2, "standup_issue": 2, "standup_issue_span": 3, "standup_config_history": 2, "person": 2,
+	"sprint": 1, "status": 2, "issue_type": 1,
+}
+
+func seedFile(t testing.TB, q *sql.DB, path string) {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustExec(t, q, string(b))
+}
+
+func TestMigrate_RecordTablesSurviveEveryHistoricalVersion(t *testing.T) {
+	defer recoverStub(t)
+	files, err := filepath.Glob(filepath.Join("testdata", "v*.sql"))
+	if err != nil || len(files) == 0 {
+		t.Fatalf("no testdata/v<N>.sql fixtures found (%v)", err)
+	}
+	head := embeddedList(t)
+	extra := synth(len(head)+1, "add_note", addNoteSQL) // a column on `issue`, applied on top of the real head
+	full := append(append([]store.Migration{}, head...), extra)
+
+	for _, f := range files {
+		base := strings.TrimSuffix(filepath.Base(f), ".sql")
+		n, err := strconv.Atoi(strings.TrimPrefix(base, "v"))
+		if err != nil || n < 1 || n > len(head) {
+			t.Errorf("%s: bad fixture name or version beyond head", f)
+			continue
+		}
+		t.Run(base, func(t *testing.T) {
+			defer recoverStub(t)
+			raw, dir := freshRaw(t)
+			mustMigrate(t, raw, head[:n], dir)
+			seedFile(t, raw, f)
+			before := rowCounts(t, raw)
+			for tb, want := range v1RecordCounts {
+				if n == 1 && before[tb] != want {
+					t.Fatalf("fixture drift: %s has %d rows, want %d", tb, before[tb], want)
+				}
+			}
+
+			applied, backup, err := migrate(t, raw, full, dir, store.Options{})
+			if err != nil {
+				t.Fatalf("Migrate to head: %v", err)
+			}
+			if len(applied) == 0 || applied[len(applied)-1] != extra.Version {
+				t.Errorf("applied = %v, want it to end with %d", applied, extra.Version)
+			}
+			// Existing tables keep their rows; tables a later migration creates start empty.
+			after := rowCounts(t, raw)
+			for tb, n := range after {
+				if b, ok := before[tb]; (ok && n != b) || (!ok && n != 0) {
+					t.Errorf("row counts changed by migration:\n got %v\nwant %v", after, before)
+					break
+				}
+			}
+			assertIntegrity(t, raw)
+			if !hasColumn(t, raw, "issue", "note") {
+				t.Error("synthetic column missing")
+			}
+			if n := scalarInt(t, raw, "SELECT count(*) FROM issue WHERE note IS NOT NULL"); n != 0 {
+				t.Errorf("%d issues have a non-NULL note, want 0", n)
+			}
+
+			// A few values, not just counts.
+			if got := scalarStr(t, raw, "SELECT from_status_id || '>' || to_status_id FROM status_change WHERE history_id='h2'"); got != "10>11" {
+				t.Errorf("status_change h2 = %q, want 10>11", got)
+			}
+			var vf, vt sql.NullInt64
+			if err := raw.QueryRowContext(ctx, "SELECT valid_from, valid_to FROM standup_issue_span WHERE issue_id=1 AND valid_from=3000").Scan(&vf, &vt); err != nil {
+				t.Fatal(err)
+			}
+			if vf.Int64 != 3000 || vt.Valid {
+				t.Errorf("open span = (%v, %v), want (3000, NULL)", vf, vt)
+			}
+			if got := scalarStr(t, raw, "SELECT key FROM issue WHERE id=2 AND removed_at=4000"); got != "MOB-2" {
+				t.Errorf("removed issue = %q, want MOB-2 with removed_at kept", got)
+			}
+			if got := scalarStr(t, raw, "SELECT fingerprint FROM standup_config_history WHERE valid_to IS NULL"); got != "fp-b" {
+				t.Errorf("current config history = %q, want fp-b", got)
+			}
+
+			// The pre-migration backup holds the same data at the old version.
+			if want := filepath.Join(dir, fmt.Sprintf("cuisle.db.bak-v%d", n)); backup != want {
+				t.Fatalf("backup = %q, want %q", backup, want)
+			}
+			bak := rawDB(t, backup)
+			if got := rowCounts(t, bak); !reflect.DeepEqual(got, before) {
+				t.Errorf("backup row counts differ from the pre-migration DB:\n got %v\nwant %v", got, before)
+			}
+		})
+	}
+}
+
+// ---- LoadMigrations -------------------------------------------------------------------------------------------
+
+func mapFS(files map[string]string) fs.FS {
+	m := fstest.MapFS{}
+	for k, v := range files {
+		m[k] = &fstest.MapFile{Data: []byte(v)}
+	}
+	return m
+}
+
+func TestLoadMigrations_SortsAndParsesVersionNameSQLAndChecksum(t *testing.T) {
+	defer recoverStub(t)
+	files := map[string]string{
+		"0003_add_c.sql": "SELECT 3;\n",
+		"0001_init.sql":  "SELECT 1;\n",
+		"0002_add_b.sql": "SELECT 2;\n",
+		"README.md":      "not a migration",
+		"notes.txt":      "ignored",
+	}
+	got, err := store.LoadMigrations(mapFS(files))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("got %d migrations, want 3 (non-matching files ignored): %+v", len(got), got)
+	}
+	want := []struct {
+		v    int
+		name string
+		sql  string
+	}{{1, "init", "SELECT 1;\n"}, {2, "add_b", "SELECT 2;\n"}, {3, "add_c", "SELECT 3;\n"}}
+	for i, w := range want {
+		m := got[i]
+		if m.Version != w.v || m.Name != w.name || m.SQL != w.sql {
+			t.Errorf("[%d] = {%d %q %q}, want {%d %q %q}", i, m.Version, m.Name, m.SQL, w.v, w.name, w.sql)
+		}
+		if m.Checksum != sha([]byte(w.sql)) {
+			t.Errorf("[%d] checksum = %q, want sha256 hex %q", i, m.Checksum, sha([]byte(w.sql)))
+		}
+		if m.FKOff {
+			t.Errorf("[%d] FKOff = true without the marker", i)
+		}
+	}
+}
+
+func TestLoadMigrations_TenFilesStaySortedNumerically(t *testing.T) {
+	defer recoverStub(t)
+	files := map[string]string{}
+	for i := 1; i <= 10; i++ {
+		files[fmt.Sprintf("%04d_step_%d.sql", i, i)] = fmt.Sprintf("SELECT %d;", i)
+	}
+	got, err := store.LoadMigrations(mapFS(files))
+	if err != nil || len(got) != 10 {
+		t.Fatalf("LoadMigrations = %d items, %v", len(got), err)
+	}
+	for i, m := range got {
+		if m.Version != i+1 {
+			t.Errorf("[%d].Version = %d", i, m.Version)
+		}
+	}
+}
+
+func TestLoadMigrations_FKOffMarkerMustBeTheFirstLine(t *testing.T) {
+	defer recoverStub(t)
+	cases := []struct {
+		name string
+		sql  string
+		want bool
+	}{
+		{"first line", "-- cuisle:fk-off\nCREATE TABLE x(a);\n", true},
+		{"marker only, no newline", "-- cuisle:fk-off", true},
+		{"second line", "-- note\n-- cuisle:fk-off\nSELECT 1;\n", false},
+		{"after a blank line", "\n-- cuisle:fk-off\nSELECT 1;\n", false},
+		{"after SQL", "SELECT 1;\n-- cuisle:fk-off\n", false},
+		{"absent", "SELECT 1;\n", false},
+	}
+	for _, c := range cases {
+		got, err := store.LoadMigrations(mapFS(map[string]string{"0001_x.sql": c.sql}))
+		if err != nil || len(got) != 1 {
+			t.Fatalf("%s: LoadMigrations = %v, %v", c.name, got, err)
+		}
+		if got[0].FKOff != c.want {
+			t.Errorf("%s: FKOff = %v, want %v", c.name, got[0].FKOff, c.want)
+		}
+	}
+}
+
+func TestLoadMigrations_RejectsBadNumbering(t *testing.T) {
+	defer recoverStub(t)
+	cases := []struct {
+		name  string
+		files map[string]string
+	}{
+		{"gap", map[string]string{"0001_a.sql": "x", "0003_c.sql": "x"}},
+		{"gap in the middle of three", map[string]string{"0001_a.sql": "x", "0002_b.sql": "x", "0004_d.sql": "x"}},
+		{"does not start at 1", map[string]string{"0002_b.sql": "x"}},
+		{"duplicate version", map[string]string{"0001_a.sql": "x", "0001_b.sql": "x"}},
+	}
+	for _, c := range cases {
+		if got, err := store.LoadMigrations(mapFS(c.files)); err == nil {
+			t.Errorf("%s: no error, got %+v", c.name, got)
+		}
+	}
+}
+
+func TestLoadMigrations_EmbeddedSet(t *testing.T) {
+	defer recoverStub(t)
+	sub, err := fs.Sub(store.Migrations, "migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := store.LoadMigrations(sub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := embeddedList(t)
+	if len(got) == 0 || !reflect.DeepEqual(got, want) {
+		t.Fatalf("embedded migrations = %+v\nwant %+v", got, want)
+	}
+	if got[0].Version != 1 || got[0].Name != "init" || got[0].FKOff {
+		t.Errorf("first migration = %+v, want version 1, name init, no fk-off", got[0])
+	}
+	if got[0].Checksum != head1(t).Checksum || got[0].SQL != head1(t).SQL {
+		t.Error("0001 checksum/SQL do not match the embedded file bytes")
+	}
+}

@@ -1,0 +1,112 @@
+/* Configure > Export. Section frame lives in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.exp {
+  gap: var(--space-3);
+}
+
+.exp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.exp-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--color-rule-soft);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.exp-top {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.exp-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-kind {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.exp-tag {
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-chip);
+  background: var(--color-tag-bg);
+  color: var(--color-tag-fg);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  letter-spacing: var(--font-tracking-tag);
+  text-transform: uppercase;
+}
+
+.exp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.exp-status {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.exp-alert {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-alert-text);
+}
+
+.exp-empty {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.exp-btn {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.exp-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.exp-alert .exp-btn {
+  min-height: var(--size-control-height);
+  margin-left: var(--space-2);
+}
+
+.exp-primary {
+  background: var(--color-button-bg);
+  color: var(--color-button-fg);
+}
+
+.exp-add {
+  padding-top: var(--space-1);
+}

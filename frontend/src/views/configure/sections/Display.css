@@ -1,0 +1,4 @@
+/* Configure > Display. Section frame and field rows live in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.disp .cfg-field-control {
+  flex-wrap: wrap;
+}

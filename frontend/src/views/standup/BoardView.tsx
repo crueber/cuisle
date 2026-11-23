@@ -1,0 +1,225 @@
+// Whole-board screen body (ux-spec §6). Go computes the data; this file only arranges it (ADR 0008).
+import "../../styles/person.css";
+import "../../styles/board.css";
+import { useEffect, useRef, useState } from "preact/hooks";
+import type { SpeakerView, StandupView, ViewOptions } from "../../api/types";
+import { balanceLanes, boardColumns, boardTitleWidth, doneBacklogLayout, laneRowHeight, type LaneInput } from "../../layout/board";
+import { atEnd as isAtEnd, boardBelow, type BoardSection } from "../../layout/below";
+import { legendMode } from "../../layout/responsive";
+import { textScale } from "../../state/app";
+import { buildBoardLanes, type BoardLane } from "../../state/standup";
+import { BacklogList } from "./BacklogList";
+import { DoneList } from "./DoneList";
+import { Legend } from "./Legend";
+import { MoreBar } from "./MoreBar";
+import { PulseTrack } from "./PulseTrack";
+import { TypeIcon } from "./TicketRow";
+import type { BoardViewProps } from "./props";
+import { TrackBackdrop } from "./TrackBackdrop";
+import { axisMondays, laneTrackWidth, realTrackWidth, ROW_GAP_PX, ROW_ICON_PX } from "./BoardView.geometry";
+import { openIssue } from "./BoardView.rows";
+
+/** Vertical space the lanes must leave free (title row, axis row, paddings), in CSS px. */
+const LANE_CHROME_H = 180;
+/** The more bar sits over the bottom 36px of the visible board (ux-spec §6.4). */
+const MORE_BAR_H = 36;
+/** Rough px width of one mono key character, for the title-width rule. */
+const KEY_CH_PX = 8;
+
+type LaneBox = BoardLane;
+
+const isUnassigned = (s: SpeakerView) => s.unassigned || s.id === "unassigned";
+
+/** Nearest ancestor that scrolls vertically (the standup main area in the app). */
+function scrollerOf(el: HTMLElement): HTMLElement | null {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const overflow = getComputedStyle(p).overflowY;
+    if (overflow === "auto" || overflow === "scroll") return p;
+  }
+  return null;
+}
+
+function subtitleHead(view: StandupView): string {
+  if (view.boardType === "kanban") return "Kanban · continuous flow";
+  if (view.sprint) return `${view.sprint.name} · ${view.sprint.endsLabel}`;
+  return view.boardName;
+}
+
+interface LaneProps {
+  box: LaneBox;
+  k: number; // text scale: inline px are design px times this
+  rowH: number;
+  trackW: number;
+  pulseDays: number;
+  options: ViewOptions;
+  onSelect: (id: string) => void;
+}
+
+function Lane({ box, k, rowH, trackW, pulseDays, options, onSelect }: LaneProps) {
+  const { speaker, tickets } = box;
+  const unassigned = isUnassigned(speaker);
+  return (
+    <section role="group" aria-label={speaker.name} class="board-lane">
+      <button
+        type="button"
+        class={unassigned ? "board-lane-head board-lane-head--unassigned" : "board-lane-head"}
+        data-lane-first={speaker.first}
+        onClick={() => onSelect(speaker.id)}
+      >
+        <span class="board-lane-name">{speaker.name}</span>
+        {unassigned ? (
+          <span class="board-lane-alert" data-alert="true">{`${tickets.length} need an owner`}</span>
+        ) : (
+          <span class="board-lane-meta">{`${tickets.length} active · ${speaker.done} done`}</span>
+        )}
+        <span class={unassigned ? "board-lane-rule board-lane-rule--dashed" : "board-lane-rule"} aria-hidden="true" />
+      </button>
+      {tickets.map((t) => {
+        const days = Math.max(1, t.daysInLane);
+        const alert = t.overLimit || t.blocked;
+        return (
+          <button type="button" class="board-row" key={t.key} style={`height:${rowH * k}px`} onClick={() => openIssue(t.key)}>
+            <TypeIcon type={t.type} />
+            <span class="board-row-key">{t.key}</span>
+            <span class="board-row-title">{t.summary}</span>
+            <PulseTrack pulse={t.pulse} days={pulseDays} width={trackW} rowH={rowH} lane options={options} />
+            <span class="board-days" data-alert={String(alert)}>{`${days}d`}</span>
+          </button>
+        );
+      })}
+    </section>
+  );
+}
+
+export function BoardView(props: BoardViewProps) {
+  const { view, mainW, vh, onSelectPerson } = props;
+  // mainW and vh are design px (window / text scale); k multiplies the inline px back (ux-spec §11).
+  const k = textScale.value;
+  const cols = boardColumns(mainW);
+  const lanes = buildBoardLanes(view);
+  const inputs: LaneInput[] = lanes.map((l) => ({ id: l.speaker.id, rows: l.tickets.length, unassigned: isUnassigned(l.speaker) }));
+  const rowH = laneRowHeight(inputs, cols, vh - LANE_CHROME_H);
+  const balanced = balanceLanes(inputs, cols, rowH);
+  const byId = new Map(lanes.map((l) => [l.speaker.id, l] as const));
+  const columns = balanced.columns.map((col) =>
+    col.flatMap((i) => {
+      const box = byId.get(i.id);
+      return box ? [box] : [];
+    }),
+  );
+
+  const keyCh = (view.tickets ?? []).reduce((m, t) => Math.max(m, t.key.length), 7);
+  const colW = (mainW - 40 * (cols - 1)) / cols;
+  const keyPx = keyCh * KEY_CH_PX;
+  const titleW = boardTitleWidth(mainW, colW, keyPx) * k;
+  // The track takes whatever the row has left; the axis runs over the same span (plus the gap before the chip).
+  const trackW = realTrackWidth(laneTrackWidth(colW, keyPx, titleW / k), k);
+  const mondays = axisMondays(view.axis, (trackW + ROW_GAP_PX) / k);
+  const trackLeft = `calc(${ROW_ICON_PX * k}px + var(--key-w) + var(--title-w) + ${3 * ROW_GAP_PX}px)`;
+  const counts = view.counts;
+  const doneTickets = (view.tickets ?? []).filter((t) => t.lane === "done");
+  const backlog = view.backlog ?? [];
+  const bottom = doneBacklogLayout(mainW);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState({ visible: false, atEnd: false, summary: "" });
+  // Scroll and resize are throttled to one animation frame. The scroll container is the nearest ancestor that scrolls.
+  useEffect(() => {
+    const root = rootRef.current;
+    const scroller = root ? scrollerOf(root) : null;
+    if (!root || !scroller) return;
+    let frame: number | null = null;
+    const measure = () => {
+      const box = scroller.getBoundingClientRect();
+      // Header bottom edge in content px (as belowFold uses row bottoms): a header the bar covers counts as below.
+      const contentBottom = (node: Element) => node.getBoundingClientRect().bottom - box.top + scroller.scrollTop;
+      const sections: BoardSection[] = Array.from(root.querySelectorAll<HTMLElement>(".board-lane-head")).map((h) => ({
+        label: h.dataset.laneFirst ?? "",
+        top: contentBottom(h),
+      }));
+      root.querySelectorAll<HTMLElement>(".board-list-title").forEach((h) => {
+        const title = (h.textContent ?? "").trim();
+        if (title === "Done") sections.push({ label: `Done (${view.counts.done})`, top: contentBottom(h) });
+        if (title === "Backlog") sections.push({ label: `Backlog (${view.counts.backlog})`, top: contentBottom(h) });
+      });
+      const below = boardBelow(sections, scroller.clientHeight - MORE_BAR_H * k, scroller.scrollTop);
+      setMore({
+        visible: scroller.scrollHeight > scroller.clientHeight,
+        atEnd: isAtEnd(scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight),
+        summary: below.summary,
+      });
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        measure();
+      });
+    };
+    measure();
+    scroller.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // The screen sits under display:none while Configure is open (0 px tall); measure again when it comes back.
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    ro?.observe(scroller);
+    return () => {
+      ro?.disconnect();
+      scroller.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, [view, vh, mainW, k]);
+
+  return (
+    <div class="board" ref={rootRef}>
+      <header class="board-head">
+        <div class="board-title-block">
+          <h1 class="board-title">Whole board</h1>
+          <p class="board-sub">
+            {subtitleHead(view)} · {counts.active} active · <span class="board-sub-alert" data-alert="true">{`${counts.unassigned} unassigned`}</span> · {counts.done} done · {view.backlogTotal >= 0 ? view.backlogTotal : counts.backlog} backlog
+          </p>
+        </div>
+        <Legend mode={legendMode(mainW)} options={view.options} lanes={view.lanes ?? []} />
+      </header>
+
+      <div class="board-cols" style={`--cols:${cols};--key-w:${keyCh}ch;--title-w:${titleW}px;--track-left:${trackLeft}`}>
+        {columns.map((col, i) => (
+          <div class="board-col" data-column={String(i + 1)} key={i}>
+            <div class="board-axis">
+              <span class="board-axis-label">{`last ${view.pulseDays} days`}</span>
+              <div class="board-axis-track" style={`--days:${view.axis.length}`}>
+                {mondays.map((m) => (
+                  <span class="board-axis-mon" key={m.x} style={`--x:${m.x}`}>{m.text}</span>
+                ))}
+                <span class="board-axis-today">today</span>
+              </div>
+            </div>
+            <div class="board-col-lanes">
+              <div class="board-backdrop" aria-hidden="true">
+                <TrackBackdrop axis={view.axis} width={trackW} shadeWeekends={view.options.shadeWeekends} todayLine={2} />
+              </div>
+              {col.map((box) => (
+                <Lane
+                  key={box.speaker.id}
+                  box={box}
+                  k={k}
+                  rowH={rowH}
+                  trackW={trackW}
+                  pulseDays={view.pulseDays}
+                  options={view.options}
+                  onSelect={onSelectPerson}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class={bottom.sideBySide ? "board-bottom" : "board-bottom board-bottom--stacked"}>
+        <DoneList tickets={doneTickets} label={view.options.doneLabel} cols={bottom.doneCols} speakers={view.speakers ?? []} />
+        <BacklogList items={backlog} total={view.backlogTotal} rows={backlog.length} cols={bottom.backlogCols} />
+      </div>
+      <MoreBar visible={more.visible} atEnd={more.atEnd} summary={more.summary} />
+    </div>
+  );
+}

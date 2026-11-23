@@ -1,0 +1,433 @@
+{
+  "spaces": [
+    {
+      "id": "10100",
+      "key": "MOB",
+      "name": "Saffron Mobile"
+    },
+    {
+      "id": "10101",
+      "key": "WEB",
+      "name": "Web & Checkout"
+    },
+    {
+      "id": "10102",
+      "key": "DATA",
+      "name": "Recipe Data"
+    },
+    {
+      "id": "10103",
+      "key": "GRO",
+      "name": "Growth"
+    },
+    {
+      "id": "10104",
+      "key": "PLAT",
+      "name": "Platform"
+    }
+  ],
+  "boards": [
+    {
+      "spaceKey": "MOB",
+      "id": "10200",
+      "name": "MOB board",
+      "type": "scrum",
+      "columns": [
+        {
+          "columnName": "To Do",
+          "statusNames": [
+            "To Do"
+          ],
+          "lane": "todo",
+          "auto": true
+        },
+        {
+          "columnName": "In Progress",
+          "statusNames": [
+            "In Progress"
+          ],
+          "lane": "prog",
+          "auto": true
+        },
+        {
+          "columnName": "Review",
+          "statusNames": [
+            "Review"
+          ],
+          "lane": "review",
+          "auto": true
+        },
+        {
+          "columnName": "QA",
+          "statusNames": [
+            "QA"
+          ],
+          "lane": "qa",
+          "auto": true
+        },
+        {
+          "columnName": "Done",
+          "statusNames": [
+            "Done"
+          ],
+          "lane": "done",
+          "auto": true
+        },
+        {
+          "columnName": "Backlog",
+          "statusNames": [
+            "Backlog"
+          ],
+          "lane": "backlog",
+          "auto": true
+        }
+      ]
+    },
+    {
+      "spaceKey": "WEB",
+      "id": "10201",
+      "name": "WEB board",
+      "type": "scrum",
+      "columns": [
+        {
+          "columnName": "To Do",
+          "statusNames": [
+            "To Do"
+          ],
+          "lane": "todo",
+          "auto": true
+        },
+        {
+          "columnName": "In Progress",
+          "statusNames": [
+            "In Progress"
+          ],
+          "lane": "prog",
+          "auto": true
+        },
+        {
+          "columnName": "Review",
+          "statusNames": [
+            "Review"
+          ],
+          "lane": "review",
+          "auto": true
+        },
+        {
+          "columnName": "QA",
+          "statusNames": [
+            "QA"
+          ],
+          "lane": "qa",
+          "auto": true
+        },
+        {
+          "columnName": "Done",
+          "statusNames": [
+            "Done"
+          ],
+          "lane": "done",
+          "auto": true
+        },
+        {
+          "columnName": "Backlog",
+          "statusNames": [
+            "Backlog"
+          ],
+          "lane": "backlog",
+          "auto": true
+        }
+      ]
+    },
+    {
+      "spaceKey": "DATA",
+      "id": "10202",
+      "name": "DATA board",
+      "type": "kanban",
+      "columns": [
+        {
+          "columnName": "To Do",
+          "statusNames": [
+            "To Do"
+          ],
+          "lane": "todo",
+          "auto": true
+        },
+        {
+          "columnName": "In Progress",
+          "statusNames": [
+            "In Progress"
+          ],
+          "lane": "prog",
+          "auto": true
+        },
+        {
+          "columnName": "Review",
+          "statusNames": [
+            "Review"
+          ],
+          "lane": "review",
+          "auto": true
+        },
+        {
+          "columnName": "QA",
+          "statusNames": [
+            "QA"
+          ],
+          "lane": "qa",
+          "auto": true
+        },
+        {
+          "columnName": "Done",
+          "statusNames": [
+            "Done"
+          ],
+          "lane": "done",
+          "auto": true
+        },
+        {
+          "columnName": "Backlog",
+          "statusNames": [
+            "Backlog"
+          ],
+          "lane": "backlog",
+          "auto": true
+        }
+      ]
+    },
+    {
+      "spaceKey": "GRO",
+      "id": "10203",
+      "name": "GRO board",
+      "type": "scrum",
+      "columns": [
+        {
+          "columnName": "To Do",
+          "statusNames": [
+            "To Do"
+          ],
+          "lane": "todo",
+          "auto": true
+        },
+        {
+          "columnName": "In Progress",
+          "statusNames": [
+            "In Progress"
+          ],
+          "lane": "prog",
+          "auto": true
+        },
+        {
+          "columnName": "Review",
+          "statusNames": [
+            "Review"
+          ],
+          "lane": "review",
+          "auto": true
+        },
+        {
+          "columnName": "QA",
+          "statusNames": [
+            "QA"
+          ],
+          "lane": "qa",
+          "auto": true
+        },
+        {
+          "columnName": "Done",
+          "statusNames": [
+            "Done"
+          ],
+          "lane": "done",
+          "auto": true
+        },
+        {
+          "columnName": "Backlog",
+          "statusNames": [
+            "Backlog"
+          ],
+          "lane": "backlog",
+          "auto": true
+        }
+      ]
+    },
+    {
+      "spaceKey": "PLAT",
+      "id": "10204",
+      "name": "PLAT board",
+      "type": "kanban",
+      "columns": [
+        {
+          "columnName": "To Do",
+          "statusNames": [
+            "To Do"
+          ],
+          "lane": "todo",
+          "auto": true
+        },
+        {
+          "columnName": "In Progress",
+          "statusNames": [
+            "In Progress"
+          ],
+          "lane": "prog",
+          "auto": true
+        },
+        {
+          "columnName": "Review",
+          "statusNames": [
+            "Review"
+          ],
+          "lane": "review",
+          "auto": true
+        },
+        {
+          "columnName": "QA",
+          "statusNames": [
+            "QA"
+          ],
+          "lane": "qa",
+          "auto": true
+        },
+        {
+          "columnName": "Done",
+          "statusNames": [
+            "Done"
+          ],
+          "lane": "done",
+          "auto": true
+        },
+        {
+          "columnName": "Backlog",
+          "statusNames": [
+            "Backlog"
+          ],
+          "lane": "backlog",
+          "auto": true
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "accountId": "iris",
+      "displayName": "Iris Calloway",
+      "initials": "IC"
+    },
+    {
+      "accountId": "silas",
+      "displayName": "Silas Marchetti",
+      "initials": "SM"
+    },
+    {
+      "accountId": "noor",
+      "displayName": "Noor Abadi",
+      "initials": "NA"
+    },
+    {
+      "accountId": "otto",
+      "displayName": "Otto Brandt",
+      "initials": "OB"
+    },
+    {
+      "accountId": "amara",
+      "displayName": "Amara Osei",
+      "initials": "AO"
+    },
+    {
+      "accountId": "jonas",
+      "displayName": "Jonas Reyes",
+      "initials": "JR"
+    },
+    {
+      "accountId": "wren",
+      "displayName": "Wren Kowalski",
+      "initials": "WK"
+    },
+    {
+      "accountId": "paloma",
+      "displayName": "Paloma Vidal",
+      "initials": "PV"
+    },
+    {
+      "accountId": "kenji",
+      "displayName": "Kenji Mori",
+      "initials": "KM"
+    },
+    {
+      "accountId": "hugo",
+      "displayName": "Hugo Lambert",
+      "initials": "HL"
+    },
+    {
+      "accountId": "zara",
+      "displayName": "Zara Whitfield",
+      "initials": "ZW"
+    },
+    {
+      "accountId": "idris",
+      "displayName": "Idris Siddiq",
+      "initials": "IS"
+    },
+    {
+      "accountId": "elsa",
+      "displayName": "Elsa Bergman",
+      "initials": "EB"
+    },
+    {
+      "accountId": "arjun",
+      "displayName": "Arjun Bose",
+      "initials": "AB"
+    },
+    {
+      "accountId": "clara",
+      "displayName": "Clara Voss",
+      "initials": "CV"
+    },
+    {
+      "accountId": "mateo",
+      "displayName": "Mateo Ruiz",
+      "initials": "MR"
+    },
+    {
+      "accountId": "bea",
+      "displayName": "Bea Thornton",
+      "initials": "BT"
+    },
+    {
+      "accountId": "luca",
+      "displayName": "Luca Ferri",
+      "initials": "LF"
+    },
+    {
+      "accountId": "yuki",
+      "displayName": "Yuki Tanaka",
+      "initials": "YT"
+    },
+    {
+      "accountId": "diego",
+      "displayName": "Diego Alvarez",
+      "initials": "DA"
+    },
+    {
+      "accountId": "freya",
+      "displayName": "Freya Nilsen",
+      "initials": "FN"
+    },
+    {
+      "accountId": "malik",
+      "displayName": "Malik Hayes",
+      "initials": "MH"
+    },
+    {
+      "accountId": "sofia",
+      "displayName": "Sofia Castell",
+      "initials": "SC"
+    },
+    {
+      "accountId": "ezra",
+      "displayName": "Ezra Holt",
+      "initials": "EH"
+    }
+  ]
+}

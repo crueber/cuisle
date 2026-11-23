@@ -1,0 +1,38 @@
+{
+  "issues": [
+    {
+      "id": "10390",
+      "key": "MOB-1390",
+      "fields": {
+        "summary": "Rework the retry budget",
+        "issuetype": {"id": "10002", "name": "Story", "subtask": false, "hierarchyLevel": 0},
+        "status": {"id": "10002", "name": "Blocked", "statusCategory": {"id": 4, "key": "indeterminate", "name": "In Progress"}},
+        "assignee": {"accountId": "u-iris", "displayName": "Iris Calloway", "emailAddress": "iris.raman@acme.example", "active": true, "accountType": "atlassian"},
+        "created": "2026-11-05T09:15:02.123+0000",
+        "updated": "2026-11-20T10:00:00.000+0000",
+        "resolutiondate": null,
+        "parent": {"id": "10300", "key": "MOB-1300"},
+        "comment": {
+          "total": 2,
+          "maxResults": 2,
+          "startAt": 0,
+          "comments": [
+            {"id": "70001", "created": "2026-11-21T08:00:00.000+0000",
+             "author": {"accountId": "u-silas", "displayName": "Silas Lee", "emailAddress": "silas.lee@acme.example", "accountType": "atlassian"},
+             "body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "SECRET-COMMENT-BODY alpha"}]}]}},
+            {"id": "70002", "created": "2026-11-22T08:00:00.000+0000",
+             "author": {"accountId": "bot-automation", "displayName": "Automation for Jira", "accountType": "app"},
+             "body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "SECRET-COMMENT-BODY beta"}]}]}}
+          ]
+        },
+        "customfield_10020": [
+          {"id": 41, "name": "Sprint 41", "state": "closed", "boardId": 1, "startDate": "2026-10-13T09:00:00.000Z", "endDate": "2026-10-27T17:00:00.000Z", "completeDate": "2026-10-27T16:30:00.000Z"},
+          {"id": 42, "name": "Sprint 42", "state": "active", "boardId": 1, "startDate": "2026-11-10T09:00:00.000Z", "endDate": "2026-11-24T17:00:00.000Z"}
+        ],
+        "customfield_10019": "0|i0001b:",
+        "customfield_10021": [{"self": "https://acme.atlassian.net/rest/api/3/customFieldOption/10019", "value": "Impediment", "id": "10019"}]
+      }
+    }
+  ],
+  "isLast": true
+}

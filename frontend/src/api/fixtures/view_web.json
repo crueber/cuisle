@@ -1,0 +1,2360 @@
+{
+  "standupId": 2,
+  "rev": 3,
+  "generatedAt": 1795424400000,
+  "today": "2026-11-23",
+  "asOf": 1795424400000,
+  "live": true,
+  "name": "Web & Checkout",
+  "spaceKey": "WEB",
+  "boardName": "WEB board",
+  "boardType": "scrum",
+  "scope": "sprint",
+  "sprint": {
+    "id": "s-18",
+    "name": "Sprint 18",
+    "startAt": 1794589200000,
+    "endAt": 1795798800000,
+    "daysLeft": 4,
+    "endsLabel": "ends in 4 days"
+  },
+  "pulseDays": 28,
+  "axis": [
+    {
+      "date": "2026-10-27",
+      "label": "27",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-28",
+      "label": "28",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-29",
+      "label": "29",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-30",
+      "label": "30",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-31",
+      "label": "31",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-01",
+      "label": "1",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-02",
+      "label": "2",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "qa",
+      "label": "QA",
+      "limitDays": 3,
+      "columns": [
+        "QA"
+      ]
+    },
+    {
+      "lane": "review",
+      "label": "In Review",
+      "limitDays": 2,
+      "columns": [
+        "Review"
+      ]
+    },
+    {
+      "lane": "prog",
+      "label": "In Progress",
+      "limitDays": 5,
+      "columns": [
+        "In Progress"
+      ]
+    },
+    {
+      "lane": "todo",
+      "label": "To Do",
+      "limitDays": 10,
+      "columns": [
+        "To Do"
+      ]
+    },
+    {
+      "lane": "done",
+      "label": "Done",
+      "limitDays": 0,
+      "columns": [
+        "Done"
+      ]
+    }
+  ],
+  "speakers": [
+    {
+      "id": "paloma",
+      "name": "Paloma Vidal",
+      "first": "Paloma",
+      "initials": "PV",
+      "unassigned": false,
+      "included": true,
+      "active": 5,
+      "done": 2
+    },
+    {
+      "id": "kenji",
+      "name": "Kenji Mori",
+      "first": "Kenji",
+      "initials": "KM",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 1
+    },
+    {
+      "id": "hugo",
+      "name": "Hugo Lambert",
+      "first": "Hugo",
+      "initials": "HL",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 2
+    },
+    {
+      "id": "zara",
+      "name": "Zara Whitfield",
+      "first": "Zara",
+      "initials": "ZW",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "idris",
+      "name": "Idris Siddiq",
+      "first": "Idris",
+      "initials": "IS",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 1
+    },
+    {
+      "id": "unassigned",
+      "name": "Unassigned",
+      "first": "Unassigned",
+      "initials": "··",
+      "unassigned": true,
+      "included": true,
+      "active": 2,
+      "done": 0
+    }
+  ],
+  "tickets": [
+    {
+      "id": 201,
+      "sourceId": "10200",
+      "key": "WEB-820",
+      "summary": "Speed up checkout",
+      "url": "https://example.atlassian.net/browse/WEB-820",
+      "type": "bug",
+      "assignee": "paloma",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 7,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 14
+          },
+          {
+            "lane": "prog",
+            "from": 14,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 21
+          },
+          {
+            "lane": "qa",
+            "from": 21,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 9,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 7 days, previously In Review 1 day; 14 commits, 2 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 202,
+      "sourceId": "10201",
+      "key": "WEB-823",
+      "summary": "Fix rounding in basket",
+      "url": "https://example.atlassian.net/browse/WEB-823",
+      "type": "story",
+      "assignee": "paloma",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 8,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 11,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 8 days, previously In Progress 4 days; 5 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 203,
+      "sourceId": "10202",
+      "key": "WEB-825",
+      "summary": "Redesign promo codes",
+      "url": "https://example.atlassian.net/browse/WEB-825",
+      "type": "bug",
+      "assignee": "paloma",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 19,
+            "to": 26
+          },
+          {
+            "lane": "prog",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 2 days, previously To Do 7 days; 7 commits, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 204,
+      "sourceId": "10203",
+      "key": "WEB-826",
+      "summary": "Add tests for gift cards",
+      "url": "https://example.atlassian.net/browse/WEB-826",
+      "type": "story",
+      "assignee": "paloma",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 8,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 10,
+            "to": 20
+          },
+          {
+            "lane": "prog",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 8 days, previously To Do 10 days; 5 commits, 1 PR update in 28 days"
+      }
+    },
+    {
+      "id": 205,
+      "sourceId": "10204",
+      "key": "WEB-833",
+      "summary": "Localise order history",
+      "url": "https://example.atlassian.net/browse/WEB-833",
+      "type": "story",
+      "assignee": "paloma",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 6 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 206,
+      "sourceId": "10205",
+      "key": "WEB-839",
+      "summary": "Audit accessibility of address book",
+      "url": "https://example.atlassian.net/browse/WEB-839",
+      "type": "task",
+      "assignee": "paloma",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1794992400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 18
+          },
+          {
+            "lane": "review",
+            "from": 18,
+            "to": 21
+          },
+          {
+            "lane": "qa",
+            "from": 21,
+            "to": 22
+          },
+          {
+            "lane": "done",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 12,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 6 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 207,
+      "sourceId": "10206",
+      "key": "WEB-848",
+      "summary": "Simplify invoices",
+      "url": "https://example.atlassian.net/browse/WEB-848",
+      "type": "bug",
+      "assignee": "paloma",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 25
+          },
+          {
+            "lane": "qa",
+            "from": 25,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 208,
+      "sourceId": "10207",
+      "key": "WEB-856",
+      "summary": "Log errors from payment sheet",
+      "url": "https://example.atlassian.net/browse/WEB-856",
+      "type": "story",
+      "assignee": "kenji",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 17,
+            "to": 21
+          },
+          {
+            "lane": "prog",
+            "from": 21,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 6 days; 10 commits, 2 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 209,
+      "sourceId": "10208",
+      "key": "WEB-860",
+      "summary": "Speed up subscription page",
+      "url": "https://example.atlassian.net/browse/WEB-860",
+      "type": "bug",
+      "assignee": "kenji",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 10,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 18
+          },
+          {
+            "lane": "prog",
+            "from": 18,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 10 days, previously To Do 10 days; 7 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 210,
+      "sourceId": "10209",
+      "key": "WEB-862",
+      "summary": "Fix rounding in receipts",
+      "url": "https://example.atlassian.net/browse/WEB-862",
+      "type": "story",
+      "assignee": "kenji",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 9 days; 3 commits, 3 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 211,
+      "sourceId": "10210",
+      "key": "WEB-866",
+      "summary": "Redesign checkout",
+      "url": "https://example.atlassian.net/browse/WEB-866",
+      "type": "task",
+      "assignee": "kenji",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 7,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 21,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 7 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 212,
+      "sourceId": "10211",
+      "key": "WEB-875",
+      "summary": "Add tests for basket",
+      "url": "https://example.atlassian.net/browse/WEB-875",
+      "type": "story",
+      "assignee": "kenji",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1794992400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 7,
+            "to": 12
+          },
+          {
+            "lane": "prog",
+            "from": 12,
+            "to": 18
+          },
+          {
+            "lane": "review",
+            "from": 18,
+            "to": 19
+          },
+          {
+            "lane": "qa",
+            "from": 19,
+            "to": 22
+          },
+          {
+            "lane": "done",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 6 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 213,
+      "sourceId": "10212",
+      "key": "WEB-881",
+      "summary": "Localise promo codes",
+      "url": "https://example.atlassian.net/browse/WEB-881",
+      "type": "story",
+      "assignee": "hugo",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 2 days, previously In Review 2 days; 5 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 214,
+      "sourceId": "10213",
+      "key": "WEB-885",
+      "summary": "Audit accessibility of gift cards",
+      "url": "https://example.atlassian.net/browse/WEB-885",
+      "type": "task",
+      "assignee": "hugo",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 11,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 11 days, previously To Do 9 days; 7 commits, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 215,
+      "sourceId": "10214",
+      "key": "WEB-894",
+      "summary": "Simplify order history",
+      "url": "https://example.atlassian.net/browse/WEB-894",
+      "type": "story",
+      "assignee": "hugo",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 5 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 216,
+      "sourceId": "10215",
+      "key": "WEB-898",
+      "summary": "Log errors from address book",
+      "url": "https://example.atlassian.net/browse/WEB-898",
+      "type": "story",
+      "assignee": "hugo",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 3 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 217,
+      "sourceId": "10216",
+      "key": "WEB-899",
+      "summary": "Speed up invoices",
+      "url": "https://example.atlassian.net/browse/WEB-899",
+      "type": "spike",
+      "assignee": "hugo",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 7,
+            "to": 13
+          },
+          {
+            "lane": "prog",
+            "from": 13,
+            "to": 18
+          },
+          {
+            "lane": "review",
+            "from": 18,
+            "to": 21
+          },
+          {
+            "lane": "qa",
+            "from": 21,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 11,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 12,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 218,
+      "sourceId": "10217",
+      "key": "WEB-904",
+      "summary": "Fix rounding in payment sheet",
+      "url": "https://example.atlassian.net/browse/WEB-904",
+      "type": "task",
+      "assignee": "hugo",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 13,
+            "to": 18
+          },
+          {
+            "lane": "prog",
+            "from": 18,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 219,
+      "sourceId": "10218",
+      "key": "WEB-907",
+      "summary": "Redesign subscription page",
+      "url": "https://example.atlassian.net/browse/WEB-907",
+      "type": "story",
+      "assignee": "zara",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 5 days; 10 commits, 4 PR updates, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 220,
+      "sourceId": "10219",
+      "key": "WEB-912",
+      "summary": "Add tests for receipts",
+      "url": "https://example.atlassian.net/browse/WEB-912",
+      "type": "story",
+      "assignee": "zara",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 21
+          },
+          {
+            "lane": "prog",
+            "from": 21,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 6 days; 6 commits, 3 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 221,
+      "sourceId": "10220",
+      "key": "WEB-913",
+      "summary": "Localise checkout",
+      "url": "https://example.atlassian.net/browse/WEB-913",
+      "type": "bug",
+      "assignee": "zara",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 10 days; 3 commits, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 222,
+      "sourceId": "10221",
+      "key": "WEB-915",
+      "summary": "Audit accessibility of basket",
+      "url": "https://example.atlassian.net/browse/WEB-915",
+      "type": "bug",
+      "assignee": "zara",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795424400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 27
+          },
+          {
+            "lane": "done",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 1 day ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 223,
+      "sourceId": "10222",
+      "key": "WEB-917",
+      "summary": "Simplify promo codes",
+      "url": "https://example.atlassian.net/browse/WEB-917",
+      "type": "task",
+      "assignee": "idris",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 2 days, previously In Review 2 days; 14 commits, 3 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 224,
+      "sourceId": "10223",
+      "key": "WEB-924",
+      "summary": "Log errors from gift cards",
+      "url": "https://example.atlassian.net/browse/WEB-924",
+      "type": "story",
+      "assignee": "idris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 5 days, previously To Do 7 days; 11 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 225,
+      "sourceId": "10224",
+      "key": "WEB-933",
+      "summary": "Speed up order history",
+      "url": "https://example.atlassian.net/browse/WEB-933",
+      "type": "story",
+      "assignee": "idris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 10 days; 7 commits, 3 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 226,
+      "sourceId": "10225",
+      "key": "WEB-936",
+      "summary": "Fix rounding in address book",
+      "url": "https://example.atlassian.net/browse/WEB-936",
+      "type": "bug",
+      "assignee": "idris",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 4 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 227,
+      "sourceId": "10226",
+      "key": "WEB-943",
+      "summary": "Redesign invoices",
+      "url": "https://example.atlassian.net/browse/WEB-943",
+      "type": "task",
+      "assignee": "idris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 6,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 9,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 228,
+      "sourceId": "10227",
+      "key": "WEB-951",
+      "summary": "Add tests for payment sheet",
+      "url": "https://example.atlassian.net/browse/WEB-951",
+      "type": "story",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 5 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 229,
+      "sourceId": "10228",
+      "key": "WEB-957",
+      "summary": "Localise subscription page",
+      "url": "https://example.atlassian.net/browse/WEB-957",
+      "type": "bug",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 7,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 21,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 7 days; no activity in 28 days"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "key": "WEB-903",
+      "summary": "Audit accessibility of checkout",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-903"
+    },
+    {
+      "key": "WEB-909",
+      "summary": "Simplify basket",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-909"
+    },
+    {
+      "key": "WEB-910",
+      "summary": "Log errors from promo codes",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/WEB-910"
+    },
+    {
+      "key": "WEB-915",
+      "summary": "Speed up gift cards",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-915"
+    },
+    {
+      "key": "WEB-918",
+      "summary": "Fix rounding in order history",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/WEB-918"
+    },
+    {
+      "key": "WEB-923",
+      "summary": "Redesign address book",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-923"
+    },
+    {
+      "key": "WEB-924",
+      "summary": "Add tests for invoices",
+      "type": "spike",
+      "url": "https://example.atlassian.net/browse/WEB-924"
+    },
+    {
+      "key": "WEB-930",
+      "summary": "Localise payment sheet",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-930"
+    },
+    {
+      "key": "WEB-931",
+      "summary": "Audit accessibility of subscription page",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/WEB-931"
+    },
+    {
+      "key": "WEB-934",
+      "summary": "Simplify receipts",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/WEB-934"
+    },
+    {
+      "key": "WEB-935",
+      "summary": "Log errors from checkout",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-935"
+    },
+    {
+      "key": "WEB-937",
+      "summary": "Speed up basket",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/WEB-937"
+    }
+  ],
+  "backlogTotal": 22,
+  "counts": {
+    "active": 22,
+    "unassigned": 2,
+    "done": 7,
+    "backlog": 12
+  },
+  "options": {
+    "rowsMode": "fit",
+    "showCommits": true,
+    "showPRs": true,
+    "showComments": true,
+    "shadeWeekends": true,
+    "doneWindow": "sprint",
+    "doneLabel": "this sprint",
+    "devActivity": "ok"
+  },
+  "sync": {
+    "standupId": 2,
+    "runId": 0,
+    "state": "idle",
+    "mode": "incremental",
+    "phase": "",
+    "done": 0,
+    "total": 0,
+    "lastSuccessAt": 1795424400000,
+    "lastAttemptAt": 1795424400000,
+    "lastStatus": "ok",
+    "warnings": [],
+    "errorCode": "",
+    "errorMessage": "",
+    "needsSync": false
+  },
+  "warnings": [],
+  "previewKey": "WEB-917",
+  "lastSyncedAt": 1795424400000
+}

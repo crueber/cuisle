@@ -1,0 +1,175 @@
+<h1 align="center">CUISLE</h1>
+
+<p align="center"><strong>Run your daily standup from your Jira board: one screen per person, every ticket, and how it moved.</strong></p>
+
+<p align="center">
+  A fast desktop app for macOS, Windows and Linux. Your data stays on your machine.
+</p>
+
+![A person's view in Cuisle: every ticket they own, grouped by lane, each with a 21-day pulse track](docs/screenshots/person.png)
+
+<sub>All screenshots use invented data: a made-up recipe app called "Saffron" and invented people.</sub>
+
+---
+
+## What it is
+
+Most standups are someone sharing a Jira board and scrolling while each person hunts for their tickets. Cuisle
+replaces that with a screen built for the meeting:
+
+- **One person at a time.** When it's Iris's turn, the screen shows *all* of Iris's tickets, grouped in the order you
+  walk the board (QA, then Review, then In Progress, then To Do). Done tickets come last. Press `→` for the next
+  person.
+- **A pulse track on every ticket.** A thin timeline of the last 7–28 days shows which lane the ticket sat in each
+  day, when it was blocked, and when work happened: commits, pull requests and comments. "Stuck for a week" is
+  visible at a glance, without anyone saying it.
+- **Days in lane, flagged when too long.** Every ticket shows how long it's been in its current lane. The counter
+  turns red past the limit you set for that lane.
+- **The whole board on one screen.** A two-column overview of every person's work, with unassigned tickets first,
+  plus what finished this sprint and the top of the backlog.
+- **Several standups, one app.** Each team gets a tab. Press `1`–`9` to switch instantly.
+- **Nothing is hidden to make things fit.** Rows tighten first. If there's still too much, the screen scrolls with
+  a "Scroll for more" bar.
+- **Legible over a screen share.** Big monospaced keys, high contrast, light and dark themes, and a Large (TV) text
+  size for the conference-room screen.
+
+## Screenshots
+
+**The whole board.** Unassigned work first, then everyone in speaking order, then Done and the backlog.
+
+![The whole board view](docs/screenshots/board.png)
+
+**Dark theme.** It follows your system setting, or you can pick light or dark.
+
+![A person's view in the dark theme, with a blocked ticket](docs/screenshots/person-dark.png)
+
+**Configure.** Every setting saves as you change it. There's no Save button.
+
+![The Configure screen](docs/screenshots/configure.png)
+
+## Install
+
+Download the latest build from **[Releases](../../releases)**:
+
+| Platform | File | First launch |
+|---|---|---|
+| macOS (Apple Silicon and Intel) | `.dmg` | The build is self-signed, not notarised. Right-click **Cuisle.app → Open → Open**, or use **System Settings → Privacy & Security → Open Anyway**. |
+| Windows | installer `.exe` | SmartScreen → **More info → Run anyway** (the installer is self-signed). |
+| Linux | `.AppImage` or `.deb` | `chmod +x Cuisle-*.AppImage`. Your API token is stored through the Secret Service, so GNOME Keyring or KWallet must be running. |
+
+Each release includes `SHA256SUMS.txt` so you can verify your download.
+
+## Getting started
+
+1. **Connect to Jira Cloud.** Enter your site (`https://your-team.atlassian.net`), your Atlassian email and an
+   [API token](https://id.atlassian.com/manage-profile/security/api-tokens). The token goes straight into your OS
+   keychain.
+2. **Create a standup.** Pick a space (project) and a board. Cuisle maps the board's columns to lanes automatically.
+   Adjust the mapping in **Status mapping** if your workflow is unusual.
+3. **Sync.** Press **↻** or `R`. The first sync of a board takes a moment. The header shows progress, and later syncs
+   only fetch what changed.
+4. **Run the meeting.** Start on the whole board or the first speaker, and press `→` as each person finishes.
+
+Speakers come from the board: anyone with tickets on it. You can reorder them, shuffle them (optionally every day),
+sort by most active, leave someone out for a day, remove them, or add someone who has no tickets yet.
+
+### Keyboard
+
+| Key | Action |
+|---|---|
+| `←` `→` | Previous / next speaker (the whole board sits after the last speaker) |
+| `B` | Whole board |
+| `1`–`9` | Switch standup |
+| `R` / `Shift+R` | Sync changes / full resync |
+| `/` | Standup switcher |
+| `,` | Configure |
+| `?` | Key and pulse legend |
+| `Esc` | Close a popover, or leave Configure |
+| `Enter` | Open the focused ticket in Jira |
+
+### Reading the pulse track
+
+Each ticket's track covers the last 7, 14, 21 or 28 days (you choose), with today on the right:
+
+- **Coloured bars** show the lane the ticket was in each day: To Do, In Progress, In Review, QA, Done. Weekends are
+  shaded.
+- **Red hatching** marks days it was blocked (a flag, or a status you mark as blocked).
+- **Ticks above the bar** show work. A tall tick is a commit, a ◆ is a pull request event, and a small grey tick is a
+  comment. Commits and PRs come from Jira's development information when your site has it.
+- **The `3d` chip** is days in the current lane. It turns red past that lane's limit.
+
+## Configure
+
+Every control saves as you change it. Text fields save after a short pause. Highlights:
+
+- **Source:** space, board, active sprint or whole board, plus an optional extra JQL filter (for example `labels = standup`).
+- **Speakers:** order, include or exclude, shuffle daily, add or remove people, and where Unassigned goes (first, last or skip).
+- **Person view:** the walk order of lanes, and whether rows tighten to fit or always stay roomy.
+- **Pulse:** days shown, which marks to draw, per-lane day limits, weekend shading, and a live preview.
+- **Whole board:** the Done window (sprint, 14 days or since yesterday) and how many backlog rows to show.
+- **Status mapping:** board columns to lanes. When several columns share a lane, you choose their order.
+- **Export:** send a standup to a folder as JSON (`cuisle.export.v1`) by hand or after every sync. No comment
+  bodies, emails or secrets are ever exported.
+- **Display:** light, dark or system theme. Standard or Large (TV) text. Sync on open (when stale, always or never).
+
+## Privacy and data
+
+- **Local first.** Synced tickets and their history are kept in a SQLite database on your machine, so Cuisle opens
+  instantly, works offline and builds up history over time. History is never pruned.
+  - macOS: `~/Library/Application Support/Cuisle`
+  - Windows: `%LOCALAPPDATA%\Cuisle`
+  - Linux: `~/.local/share/cuisle`
+- **No background traffic.** Cuisle only talks to Jira when you ask it to: Resync, sync on open (if enabled),
+  leaving Configure after changing the source, or searching while you type in a picker. There's no polling and no
+  telemetry.
+- **Secrets stay in the OS keychain.** Your API token is never written to the database, logs or exports.
+- **Comment bodies are never stored.** Cuisle counts comments for the pulse track and keeps nothing else about them.
+
+## Build from source
+
+You'll need:
+- Go 1.27
+- Node 24
+- [Task](https://taskfile.dev)
+- the Wails v3 CLI: `go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0`
+- on Linux, GTK 3 and WebKitGTK 4.1 headers (`libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev`)
+
+```sh
+cd frontend && npm ci && cd ..
+task dev        # the app against a built-in fake Jira, with hot reload; no account needed
+task test       # Go (cgo-free) and frontend unit tests
+task e2e        # Playwright: performance budgets, accessibility (axe, contrast), screenshots
+task package    # a bundle for this OS in bin/
+```
+
+`task dev:mock` runs only the frontend, in a browser, against an in-memory mock.
+
+### How it's built
+
+- **Go + [Wails v3](https://v3.wails.io)** for the app shell.
+- **Preact + Signals** for the UI. The only runtime dependencies are `preact`, `@preact/signals` and
+  `@wailsio/runtime`.
+- **Pure-Go SQLite** for storage, so no cgo is needed for tests.
+- **Go computes, the UI lays out.** View models are built in Go, and the frontend only decides how they fit on screen.
+- **Adapters, not hard-wiring.** Jira is one source adapter behind a small interface, and exports go through sink
+  adapters (a JSON file sink ships today). Adding another tracker or destination doesn't touch the core.
+- **Performance budgets are CI gates:**
+  - cold start under 500 ms;
+  - switching standups or people in under 50 ms;
+  - the JS bundle under 50 KB gzipped.
+
+The design and the reasoning behind it are in [`docs/`](docs):
+- [product spec](docs/product-spec.md)
+- [UX spec](docs/ux-spec.md)
+- [architecture](docs/architecture.md)
+- [data model](docs/data-model.md)
+- [Jira sync](docs/jira-sync.md)
+- [ADRs](docs/adr)
+
+## Name
+
+*Cuisle* (KUSH-leh) is Irish for "pulse". The pulse track is the heart of the app.
+
+## License
+
+[MIT](LICENSE).

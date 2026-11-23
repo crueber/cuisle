@@ -1,0 +1,20 @@
+{
+  "id": 1,
+  "name": "MOB board",
+  "type": "scrum",
+  "self": "https://acme.atlassian.net/rest/agile/1.0/board/1/configuration",
+  "location": {"type": "project", "key": "MOB", "id": "10001", "name": "Saffron Mobile"},
+  "filter": {"id": "9001", "self": "https://acme.atlassian.net/rest/api/3/filter/9001"},
+  "subQuery": {"query": "fixVersion in unreleasedVersions() OR fixVersion is EMPTY"},
+  "columnConfig": {
+    "columns": [
+      {"name": "Backlog", "statuses": []},
+      {"name": "Selected for Development", "statuses": [{"id": "10001", "self": "x"}]},
+      {"name": "In Progress", "statuses": [{"id": "10002", "self": "x"}, {"id": "10003", "self": "x"}]},
+      {"name": "Done", "statuses": [{"id": "10005", "self": "x"}]}
+    ],
+    "constraintType": "none"
+  },
+  "estimation": {"type": "field", "field": {"fieldId": "customfield_10016", "displayName": "Story point estimate"}},
+  "ranking": {"rankCustomFieldId": 10019}
+}

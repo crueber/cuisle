@@ -1,0 +1,168 @@
+name: desktop release
+# Installed into the GitHub mirror (crueber/cuisle) by scripts/publish-to-github.sh, which pushes the version tag
+# AFTER the branch so this workflow fires (see the note at the end of that script).
+#
+# Builds Cuisle for Linux (AppImage + .deb), macOS (universal .dmg) and Windows (NSIS installer), signs with
+# SELF-SIGNED identities (docs/adr/0013-self-signed-builds.md), writes SHA256SUMS.txt, optionally signs it with
+# ed25519 (internal/relsign, a port of Weave's release signing), and attaches everything to the GitHub release.
+#
+# Output names are the ones the Taskfiles produce in bin/ (build/darwin, build/linux, build/windows):
+#   Linux:   bin/cuisle (binary), bin/*.AppImage, bin/*.deb
+#   macOS:   bin/cuisle.app (task darwin:package:universal), then bin/Cuisle-<tag>-macos-universal.dmg
+#   Windows: bin/<product>-amd64-installer.exe (NSIS OutFile), copied to bin/Cuisle-<tag>-windows-amd64-setup.exe
+#
+# Secrets (all optional; when absent the step falls back and the release notes say so):
+#   MACOS_SIGN_P12 / MACOS_SIGN_P12_PASSWORD      base64 .p12 of Chris's stable self-signed "Cuisle Self-Signed" code-signing
+#                                                 cert (absent: ad-hoc signature `codesign --sign -`)
+#   WINDOWS_SIGN_PFX / WINDOWS_SIGN_PFX_PASSWORD  base64 .pfx self-signed Authenticode cert (absent: unsigned)
+#   RELEASE_SIGNING_KEY                           ed25519 private key (base64 seed or PKCS#8 PEM) -> SHA256SUMS.txt.sig
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            name: linux
+          - os: macos-14
+            name: macos
+          - os: windows-latest
+            name: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod, cache: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Linux deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev wget
+      - name: Tools
+        shell: bash
+        run: |
+          WAILS=$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)
+          go install github.com/wailsapp/wails/v3/cmd/wails3@"$WAILS"
+          go install github.com/go-task/task/v3/cmd/task@v3.54.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Linux package (AppImage + deb)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          task package
+          ls -la bin
+
+      - name: macOS universal package
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+          P12: ${{ secrets.MACOS_SIGN_P12 }}
+          P12_PASSWORD: ${{ secrets.MACOS_SIGN_P12_PASSWORD }}
+        run: |
+          task darwin:package:universal   # -> bin/cuisle.app (ad-hoc signed by the Taskfile)
+          APP=bin/cuisle.app
+          if [ -n "$P12" ]; then
+            KC=$RUNNER_TEMP/sign.keychain-db
+            security create-keychain -p tmp "$KC" && security set-keychain-settings "$KC" && security unlock-keychain -p tmp "$KC"
+            printf "%s" "$P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+            security import "$RUNNER_TEMP/cert.p12" -k "$KC" -P "$P12_PASSWORD" -T /usr/bin/codesign
+            security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+            security set-key-partition-list -S apple-tool:,apple: -s -k tmp "$KC" >/dev/null
+            codesign --force --deep --options runtime --timestamp=none --sign "Cuisle Self-Signed" "$APP"
+          else
+            echo "::warning::MACOS_SIGN_P12 not set: ad-hoc signing (keychain prompts will reappear after every update)"
+            codesign --force --deep --sign - "$APP"
+          fi
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          hdiutil create -volname Cuisle -srcfolder "$APP" -ov -format UDZO "bin/Cuisle-${VERSION}-macos-universal.dmg"
+          ls -la bin
+
+      - name: Windows package (NSIS)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ github.ref_name }}
+          PFX: ${{ secrets.WINDOWS_SIGN_PFX }}
+          PFX_PASSWORD: ${{ secrets.WINDOWS_SIGN_PFX_PASSWORD }}
+        run: |
+          $signtool = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+          if ($env:PFX) {
+            [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\cert.pfx", [Convert]::FromBase64String($env:PFX))
+          } else {
+            Write-Host "::warning::WINDOWS_SIGN_PFX not set: installer is unsigned"
+          }
+          # windows:package builds bin/cuisle.exe itself (the NSIS task depends on build), so the exe is not
+          # signed separately: signing it before packaging would be overwritten. The installer is signed, which
+          # is what SmartScreen checks on download.
+          task windows:package             # -> bin/<product>-amd64-installer.exe
+          $inst = Get-ChildItem bin -Filter "*-installer.exe" | Select-Object -First 1
+          if (-not $inst) { throw "no NSIS installer in bin/" }
+          $setup = "bin\Cuisle-$env:VERSION-windows-amd64-setup.exe"
+          Copy-Item $inst.FullName $setup
+          if ($env:PFX) { & $signtool sign /fd SHA256 /f "$env:RUNNER_TEMP\cert.pfx" /p $env:PFX_PASSWORD $setup; if ($LASTEXITCODE -ne 0) { exit 1 } }
+          Get-ChildItem bin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cuisle-${{ matrix.name }}
+          path: |
+            bin/*.AppImage
+            bin/*.deb
+            bin/*.dmg
+            bin/*-setup.exe
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod, cache: true }
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - name: Checksums (+ optional ed25519 signature)
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          cd dist
+          ls -la
+          # every artifact, sorted, by bare name so `sha256sum -c` works from the download folder
+          ls -1 | grep -v -E '^(SHA256SUMS\.txt|.*\.sig)$' | sort | xargs sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cd ..
+          if [ -n "$RELEASE_SIGNING_KEY" ]; then
+            go run ./internal/relsign/cmd/relsign sign -in dist/SHA256SUMS.txt -out dist/SHA256SUMS.txt.sig
+          else
+            echo "::warning::RELEASE_SIGNING_KEY not set: SHA256SUMS.txt is unsigned"
+          fi
+      - name: Reset any previous release for this tag
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh release delete "${{ github.ref_name }}" --repo "${{ github.repository }}" --yes --cleanup-tag=false || true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+          name: Cuisle ${{ github.ref_name }}
+          body: |
+            Desktop builds for macOS (universal .dmg), Windows (installer) and Linux (AppImage, .deb). Verify downloads with `SHA256SUMS.txt` (and `SHA256SUMS.txt.sig` when present).
+
+            **These builds are self-signed, not notarised.** First launch:
+            - **macOS:** right-click Cuisle.app → Open → Open (Gatekeeper warns because the build is not notarised). Or System Settings → Privacy & Security → Open Anyway. Or `xattr -dr com.apple.quarantine /Applications/Cuisle.app`.
+            - **Windows:** SmartScreen → "More info" → "Run anyway" (the installer is self-signed, not from a commercial CA).
+            - **Linux:** `chmod +x Cuisle-*.AppImage`. The API token is kept in a Secret Service keyring, so you need GNOME Keyring or KWallet running.

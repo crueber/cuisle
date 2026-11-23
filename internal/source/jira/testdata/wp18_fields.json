@@ -1,0 +1,14 @@
+[
+  {"id": "summary", "key": "summary", "name": "Summary", "custom": false, "orderable": true, "navigable": true, "searchable": true,
+   "clauseNames": ["summary"], "schema": {"type": "string", "system": "summary"}},
+  {"id": "customfield_10016", "key": "customfield_10016", "name": "Story point estimate", "custom": true,
+   "clauseNames": ["cf[10016]", "Story point estimate", "Story Points"], "schema": {"type": "number", "customId": 10016, "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float"}},
+  {"id": "customfield_10019", "key": "customfield_10019", "name": "Rank", "custom": true,
+   "clauseNames": ["cf[10019]", "Rank"], "schema": {"type": "any", "customId": 10019, "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank"}},
+  {"id": "customfield_10020", "key": "customfield_10020", "name": "Sprint", "custom": true,
+   "clauseNames": ["cf[10020]", "Sprint"], "schema": {"type": "array", "items": "json", "customId": 10020, "custom": "com.pyxis.greenhopper.jira:gh-sprint"}},
+  {"id": "customfield_10021", "key": "customfield_10021", "name": "Flagged", "custom": true,
+   "clauseNames": ["cf[10021]", "Flagged"], "schema": {"type": "array", "items": "option", "customId": 10021, "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes"}},
+  {"id": "customfield_10030", "key": "customfield_10030", "name": "Rank (legacy)", "custom": true,
+   "clauseNames": ["cf[10030]", "Rank (legacy)"], "schema": {"type": "any", "customId": 10030, "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield"}}
+]

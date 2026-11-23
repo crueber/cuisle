@@ -1,0 +1,8 @@
+[
+  {"id": "10001", "name": "To Do", "statusCategory": {"id": 2, "key": "new", "name": "To Do"}},
+  {"id": "10002", "name": "In Progress", "statusCategory": {"id": 4, "key": "indeterminate", "name": "In Progress"}},
+  {"id": "10003", "name": "Blocked", "statusCategory": {"id": 4, "key": "indeterminate", "name": "In Progress"}},
+  {"id": "10004", "name": "Waiting - On Hold", "statusCategory": {"id": 4, "key": "indeterminate", "name": "In Progress"}},
+  {"id": "10005", "name": "Done", "statusCategory": {"id": 3, "key": "done", "name": "Done"}},
+  {"id": "10006", "name": "Legacy", "statusCategory": {"id": 1, "key": "undefined", "name": "No Category"}}
+]

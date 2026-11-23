@@ -1,0 +1,409 @@
+/* Standup screen frame: header, tabs, switcher and speaker rail (ux-spec §2, §4). Tokens only: no raw hex.
+   Sizes scale with --scale (Large/TV text). Layout widths come from the inline style or the rail's mode class. */
+
+.sf-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Header */
+.sf-header {
+  height: calc(var(--scale) * var(--size-header));
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0 var(--space-5) 0 var(--space-6);
+  box-sizing: border-box;
+  background: var(--color-bg);
+  border-bottom: calc(var(--scale) * var(--size-header-rule)) solid var(--color-rule);
+  position: relative;
+}
+
+/* Sync progress: a bar over the header rule while a sync runs (width = phase done/total, sliding when unknown). */
+.sf-header__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--scale) * var(--size-header-rule));
+  height: calc(var(--scale) * var(--size-header-rule));
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sf-header__progress > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--color-focus-ring);
+  transition: width 0.3s ease-out;
+}
+
+.sf-header__progress[data-indeterminate="true"] > span {
+  width: 30%;
+  animation: sf-progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes sf-progress-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-header__progress[data-indeterminate="true"] > span {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+  .sf-header__progress > span { transition: none; }
+}
+
+.sf-header__wordmark {
+  font-size: calc(var(--scale) * 1.25rem);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--font-tracking-wordmark);
+  white-space: nowrap;
+}
+
+.sf-header__rule {
+  width: 2px;
+  height: 24px;
+  background: var(--color-rule-mid);
+}
+
+.sf-header__spacer {
+  flex: 1;
+}
+
+.sf-header__sync {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sf-header__label {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.sf-header__label[data-running="true"] {
+  color: var(--color-fg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sf-header__label[data-alert="true"] {
+  color: var(--color-alert-text);
+}
+
+.sf-header__date {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.sf-icon-btn {
+  width: calc(var(--scale) * 36px);
+  height: calc(var(--scale) * 36px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.sf-header__configure {
+  height: calc(var(--scale) * var(--size-touch-min));
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Tabs */
+.sf-tabs {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 2px;
+  margin-bottom: -3px;
+  min-width: 0;
+}
+
+.sf-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-family-sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sf-tab[aria-pressed="true"] {
+  color: var(--color-fg);
+  border-bottom-color: var(--color-fg);
+}
+
+.sf-tab__num {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-bold);
+  line-height: 16px;
+  padding: 0 5px;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-chip);
+}
+
+.sf-tab__name {
+  font-size: var(--font-size-tab);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sf-tab[aria-pressed="true"] .sf-tab__name {
+  font-weight: var(--font-weight-bold);
+}
+
+.sf-tab__key {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+.sf-tabs[data-mode="key"] .sf-tab__key {
+  font-size: var(--font-size-tab-key);
+  color: inherit;
+}
+
+.sf-tabs__add {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+/* Menu form of the tabs */
+.sf-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sf-switch__name {
+  font-size: var(--font-size-tab);
+  font-weight: var(--font-weight-bold);
+}
+
+.sf-switch__pos {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  color: var(--color-muted);
+}
+
+.sf-switch__hint {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+/* Body: rail and main */
+.sf-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.sf-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Speaker rail */
+.sf-rail {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: var(--color-rail-bg);
+  color: var(--color-fg);
+  border-right: 2px solid var(--color-rail-rule);
+}
+
+.sf-rail--full {
+  width: var(--size-rail-full);
+}
+
+.sf-rail--compact {
+  width: var(--size-rail-compact);
+  padding: 14px 6px;
+}
+
+.sf-rail__item {
+  min-height: calc(var(--scale) * var(--size-touch-min));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-rail-item);
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.sf-rail__item[aria-pressed="true"] {
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+}
+
+.sf-rail__item[aria-pressed="true"] .sf-rail__count {
+  color: inherit;
+}
+
+.sf-rail__item--unassigned {
+  margin-top: var(--space-2);
+  border: 2px dashed var(--color-unassigned-border);
+}
+
+.sf-rail__item--unassigned .sf-rail__first {
+  font-size: 17px;
+  font-weight: var(--font-weight-bold);
+}
+
+.sf-rail__whole {
+  font-size: 17px;
+  font-weight: var(--font-weight-bold);
+}
+
+.sf-rail--compact .sf-rail__whole {
+  justify-content: center;
+  padding: 0;
+}
+
+.sf-rail__initials {
+  width: 26px;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-bold);
+}
+
+.sf-rail__first {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-rail-name);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sf-rail__count {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+.sf-rail__caps {
+  padding: 14px 12px 6px;
+  font-size: var(--font-size-gutter-head);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--font-tracking-caps);
+  color: var(--color-muted);
+}
+
+.sf-rail__hint {
+  margin-top: auto;
+  padding: 8px 12px;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-regular);
+  line-height: 19px;
+  color: var(--color-muted);
+}
+
+.sf-rail__hint span {
+  white-space: nowrap;
+}
+
+.sf-rail--compact .sf-rail__item {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  padding: 4px 0;
+}
+
+.sf-rail--compact .sf-rail__initials {
+  width: auto;
+  font-size: 15px;
+}
+
+.sf-rail--compact .sf-rail__count {
+  font-size: 11px;
+}
+
+.sf-rail--compact .sf-rail__item--unassigned {
+  margin-top: var(--space-2);
+}
+
+.sf-rail--compact .sf-rail__item--unassigned .sf-rail__initials {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-micro);
+}
+
+/* Before a standup's first sync the board is empty: say why, and what is happening. */
+.sf-notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-rule);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+}

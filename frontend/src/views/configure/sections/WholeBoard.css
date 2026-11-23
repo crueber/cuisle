@@ -1,0 +1,6 @@
+/* Configure > Whole board. Section frame and field rows live in styles/configure.css. Tokens only. */
+.wholeboard-hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}

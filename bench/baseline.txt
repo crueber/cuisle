@@ -1,0 +1,54 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/crueber/cuisle/internal/view
+cpu: Apple M4 Max
+BenchmarkStandupView-16    	     864	   1254395 ns/op	 1664968 B/op	   10335 allocs/op
+BenchmarkStandupView-16    	     931	   1263129 ns/op	 1664997 B/op	   10335 allocs/op
+BenchmarkStandupView-16    	     939	   1256579 ns/op	 1665015 B/op	   10335 allocs/op
+BenchmarkStandupView-16    	     939	   1270685 ns/op	 1664999 B/op	   10335 allocs/op
+BenchmarkStandupView-16    	     964	   1271693 ns/op	 1665015 B/op	   10335 allocs/op
+BenchmarkStandupView-16    	     963	   1254185 ns/op	 1665034 B/op	   10336 allocs/op
+PASS
+ok  	github.com/crueber/cuisle/internal/view	8.058s
+goos: darwin
+goarch: arm64
+pkg: github.com/crueber/cuisle/internal/settings
+cpu: Apple M4 Max
+BenchmarkConfigUpdate-16    	   11197	    105708 ns/op	    7980 B/op	     194 allocs/op
+BenchmarkConfigUpdate-16    	   12106	    111126 ns/op	    7990 B/op	     194 allocs/op
+BenchmarkConfigUpdate-16    	    9308	    120844 ns/op	    8005 B/op	     195 allocs/op
+BenchmarkConfigUpdate-16    	   11104	    105800 ns/op	    7977 B/op	     194 allocs/op
+BenchmarkConfigUpdate-16    	   10000	    104998 ns/op	    7976 B/op	     194 allocs/op
+BenchmarkConfigUpdate-16    	   11245	    105549 ns/op	    7976 B/op	     194 allocs/op
+PASS
+ok  	github.com/crueber/cuisle/internal/settings	11.540s
+goos: darwin
+goarch: arm64
+pkg: github.com/crueber/cuisle/internal/app
+cpu: Apple M4 Max
+BenchmarkBootstrap/L-16    	      45	  26722600 ns/op	 5194832 B/op	   83879 allocs/op
+BenchmarkBootstrap/L-16    	      49	  24801009 ns/op	 5194368 B/op	   83874 allocs/op
+BenchmarkBootstrap/L-16    	      48	  25149857 ns/op	 5194607 B/op	   83876 allocs/op
+BenchmarkBootstrap/L-16    	      49	  24920263 ns/op	 5194509 B/op	   83875 allocs/op
+BenchmarkBootstrap/L-16    	      45	  25018932 ns/op	 5194980 B/op	   83876 allocs/op
+BenchmarkBootstrap/L-16    	      48	  24818376 ns/op	 5194417 B/op	   83874 allocs/op
+BenchmarkStandupView/L-16  	     142	   8328440 ns/op	 5021411 B/op	   82579 allocs/op
+BenchmarkStandupView/L-16  	     141	   8458306 ns/op	 5021361 B/op	   82579 allocs/op
+BenchmarkStandupView/L-16  	     142	   8322430 ns/op	 5021511 B/op	   82580 allocs/op
+BenchmarkStandupView/L-16  	     140	   8467290 ns/op	 5021467 B/op	   82579 allocs/op
+BenchmarkStandupView/L-16  	     142	   8230517 ns/op	 5021203 B/op	   82578 allocs/op
+BenchmarkStandupView/L-16  	     142	   8389916 ns/op	 5021455 B/op	   82580 allocs/op
+PASS
+ok  	github.com/crueber/cuisle/internal/app	21.337s
+goos: darwin
+goarch: arm64
+pkg: github.com/crueber/cuisle/internal/store
+cpu: Apple M4 Max
+BenchmarkOpenExisting-16    	     832	   1410888 ns/op	   89072 B/op	     308 allocs/op
+BenchmarkOpenExisting-16    	     810	   1474136 ns/op	   89338 B/op	     308 allocs/op
+BenchmarkOpenExisting-16    	     801	   2449359 ns/op	   89449 B/op	     308 allocs/op
+BenchmarkOpenExisting-16    	     694	   1495284 ns/op	   89229 B/op	     308 allocs/op
+BenchmarkOpenExisting-16    	     802	   1484745 ns/op	   89055 B/op	     308 allocs/op
+BenchmarkOpenExisting-16    	     810	   1502350 ns/op	   89321 B/op	     308 allocs/op
+PASS
+ok  	github.com/crueber/cuisle/internal/store	11.489s

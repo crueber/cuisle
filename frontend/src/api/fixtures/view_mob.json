@@ -1,0 +1,4279 @@
+{
+  "standupId": 1,
+  "rev": 3,
+  "generatedAt": 1795424400000,
+  "today": "2026-11-23",
+  "asOf": 1795424400000,
+  "live": true,
+  "name": "Saffron Mobile",
+  "spaceKey": "MOB",
+  "boardName": "MOB board",
+  "boardType": "scrum",
+  "scope": "sprint",
+  "sprint": {
+    "id": "s-42",
+    "name": "Sprint 42",
+    "startAt": 1794243600000,
+    "endAt": 1795453200000,
+    "daysLeft": 0,
+    "endsLabel": "ends today"
+  },
+  "pulseDays": 28,
+  "axis": [
+    {
+      "date": "2026-10-27",
+      "label": "27",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-28",
+      "label": "28",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-29",
+      "label": "29",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-30",
+      "label": "30",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-31",
+      "label": "31",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-01",
+      "label": "1",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-02",
+      "label": "2",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "qa",
+      "label": "QA",
+      "limitDays": 3,
+      "columns": [
+        "QA"
+      ]
+    },
+    {
+      "lane": "review",
+      "label": "In Review",
+      "limitDays": 2,
+      "columns": [
+        "Review"
+      ]
+    },
+    {
+      "lane": "prog",
+      "label": "In Progress",
+      "limitDays": 5,
+      "columns": [
+        "In Progress"
+      ]
+    },
+    {
+      "lane": "todo",
+      "label": "To Do",
+      "limitDays": 10,
+      "columns": [
+        "To Do"
+      ]
+    },
+    {
+      "lane": "done",
+      "label": "Done",
+      "limitDays": 0,
+      "columns": [
+        "Done"
+      ]
+    }
+  ],
+  "speakers": [
+    {
+      "id": "iris",
+      "name": "Iris Calloway",
+      "first": "Iris",
+      "initials": "IC",
+      "unassigned": false,
+      "included": true,
+      "active": 14,
+      "done": 6
+    },
+    {
+      "id": "silas",
+      "name": "Silas Marchetti",
+      "first": "Silas",
+      "initials": "SM",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 2
+    },
+    {
+      "id": "noor",
+      "name": "Noor Abadi",
+      "first": "Noor",
+      "initials": "NA",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 1
+    },
+    {
+      "id": "otto",
+      "name": "Otto Brandt",
+      "first": "Otto",
+      "initials": "OB",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 2
+    },
+    {
+      "id": "amara",
+      "name": "Amara Osei",
+      "first": "Amara",
+      "initials": "AO",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 1
+    },
+    {
+      "id": "jonas",
+      "name": "Jonas Reyes",
+      "first": "Jonas",
+      "initials": "JR",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "wren",
+      "name": "Wren Kowalski",
+      "first": "Wren",
+      "initials": "WK",
+      "unassigned": false,
+      "included": true,
+      "active": 4,
+      "done": 1
+    },
+    {
+      "id": "unassigned",
+      "name": "Unassigned",
+      "first": "Unassigned",
+      "initials": "··",
+      "unassigned": true,
+      "included": true,
+      "active": 4,
+      "done": 1
+    }
+  ],
+  "tickets": [
+    {
+      "id": 101,
+      "sourceId": "10100",
+      "key": "MOB-1390",
+      "summary": "Swipe to check off items on the shopping list",
+      "url": "https://example.atlassian.net/browse/MOB-1390",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 25
+          },
+          {
+            "lane": "qa",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 11,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 13,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 3 days, previously In Review 3 days; 10 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 102,
+      "sourceId": "10101",
+      "key": "MOB-1399",
+      "summary": "Recipe card crops the hero photo on small phones",
+      "url": "https://example.atlassian.net/browse/MOB-1399",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 26
+          },
+          {
+            "lane": "review",
+            "from": 26,
+            "to": 27
+          },
+          {
+            "lane": "qa",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 1 day, previously In Review 1 day; 13 commits, 2 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 103,
+      "sourceId": "10102",
+      "key": "MOB-1407",
+      "summary": "Offline mode for saved recipes",
+      "url": "https://example.atlassian.net/browse/MOB-1407",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 9,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 6,
+            "to": 14
+          },
+          {
+            "lane": "prog",
+            "from": 14,
+            "to": 16
+          },
+          {
+            "lane": "review",
+            "from": 16,
+            "to": 19
+          },
+          {
+            "lane": "qa",
+            "from": 19,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 6,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "QA 9 days, previously In Review 3 days; 4 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 104,
+      "sourceId": "10103",
+      "key": "MOB-1411",
+      "summary": "Scale ingredient amounts when servings change",
+      "url": "https://example.atlassian.net/browse/MOB-1411",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 4 days; 8 commits, 2 PR updates, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 105,
+      "sourceId": "10104",
+      "key": "MOB-1413",
+      "summary": "Pantry scanner misreads barcodes in low light",
+      "url": "https://example.atlassian.net/browse/MOB-1413",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 20
+          },
+          {
+            "lane": "prog",
+            "from": 20,
+            "to": 26
+          },
+          {
+            "lane": "review",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 2 days, previously In Progress 6 days; 13 commits, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 106,
+      "sourceId": "10105",
+      "key": "MOB-1414",
+      "summary": "Defrost reminder for tomorrow's planned meal",
+      "url": "https://example.atlassian.net/browse/MOB-1414",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 8,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 8 days, previously In Progress 4 days; 5 commits, 1 PR update, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 107,
+      "sourceId": "10106",
+      "key": "MOB-1421",
+      "summary": "Unit toggle between metric and US cups",
+      "url": "https://example.atlassian.net/browse/MOB-1421",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 10 days; 10 commits, 2 PR updates, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 108,
+      "sourceId": "10107",
+      "key": "MOB-1428",
+      "summary": "Cooking mode keeps the screen awake",
+      "url": "https://example.atlassian.net/browse/MOB-1428",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 5 days, previously To Do 3 days; 4 commits in 28 days"
+      }
+    },
+    {
+      "id": 109,
+      "sourceId": "10108",
+      "key": "MOB-1429",
+      "summary": "Share a recipe as a link with a preview image",
+      "url": "https://example.atlassian.net/browse/MOB-1429",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 6,
+      "overLimit": true,
+      "blocked": true,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [
+          {
+            "from": 25,
+            "to": 27
+          }
+        ],
+        "label": "In Progress 6 days, previously To Do 8 days; 9 commits, 1 PR update, 4 comments in 28 days; blocked 3 days"
+      }
+    },
+    {
+      "id": 110,
+      "sourceId": "10109",
+      "key": "MOB-1431",
+      "summary": "Search filters for vegan, gluten-free and halal",
+      "url": "https://example.atlassian.net/browse/MOB-1431",
+      "type": "spike",
+      "assignee": "iris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 5 days, previously To Do 8 days; 10 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 111,
+      "sourceId": "10110",
+      "key": "MOB-1436",
+      "summary": "Timer survives backgrounding on Android",
+      "url": "https://example.atlassian.net/browse/MOB-1436",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 3 days; 3 commits, 2 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 112,
+      "sourceId": "10111",
+      "key": "MOB-1440",
+      "summary": "Drag meals between days in the planner",
+      "url": "https://example.atlassian.net/browse/MOB-1440",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 5 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 113,
+      "sourceId": "10112",
+      "key": "MOB-1448",
+      "summary": "Favourites lose their sort order after sync",
+      "url": "https://example.atlassian.net/browse/MOB-1448",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 2 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 114,
+      "sourceId": "10113",
+      "key": "MOB-1456",
+      "summary": "Onboarding: pick the cuisines you like",
+      "url": "https://example.atlassian.net/browse/MOB-1456",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 8,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 8 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 115,
+      "sourceId": "10114",
+      "key": "MOB-1464",
+      "summary": "Dark mode contrast on ingredient checkboxes",
+      "url": "https://example.atlassian.net/browse/MOB-1464",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795165200000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 6,
+            "to": 14
+          },
+          {
+            "lane": "prog",
+            "from": 14,
+            "to": 19
+          },
+          {
+            "lane": "review",
+            "from": 19,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 24
+          },
+          {
+            "lane": "done",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 7,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 4 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 116,
+      "sourceId": "10115",
+      "key": "MOB-1473",
+      "summary": "Voice \"next step\" command in cooking mode",
+      "url": "https://example.atlassian.net/browse/MOB-1473",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 5,
+            "to": 15
+          },
+          {
+            "lane": "prog",
+            "from": 15,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 117,
+      "sourceId": "10116",
+      "key": "MOB-1481",
+      "summary": "Crash when rotating during video playback",
+      "url": "https://example.atlassian.net/browse/MOB-1481",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795424400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 27
+          },
+          {
+            "lane": "done",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 1 day ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 118,
+      "sourceId": "10117",
+      "key": "MOB-1486",
+      "summary": "Personal notes on a saved recipe",
+      "url": "https://example.atlassian.net/browse/MOB-1486",
+      "type": "story",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 13,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 119,
+      "sourceId": "10118",
+      "key": "MOB-1490",
+      "summary": "Nutrition panel rounds fibre down to zero",
+      "url": "https://example.atlassian.net/browse/MOB-1490",
+      "type": "bug",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 3,
+            "to": 12
+          },
+          {
+            "lane": "prog",
+            "from": 12,
+            "to": 17
+          },
+          {
+            "lane": "review",
+            "from": 17,
+            "to": 20
+          },
+          {
+            "lane": "qa",
+            "from": 20,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 3,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 6,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 120,
+      "sourceId": "10119",
+      "key": "MOB-1497",
+      "summary": "Export the weekly plan to a calendar",
+      "url": "https://example.atlassian.net/browse/MOB-1497",
+      "type": "task",
+      "assignee": "iris",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 18
+          },
+          {
+            "lane": "prog",
+            "from": 18,
+            "to": 21
+          },
+          {
+            "lane": "review",
+            "from": 21,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 121,
+      "sourceId": "10120",
+      "key": "MOB-1501",
+      "summary": "Accessibility labels on the rating stars",
+      "url": "https://example.atlassian.net/browse/MOB-1501",
+      "type": "story",
+      "assignee": "silas",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 21,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 4 days; 8 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 122,
+      "sourceId": "10121",
+      "key": "MOB-1508",
+      "summary": "Image cache grows without a limit",
+      "url": "https://example.atlassian.net/browse/MOB-1508",
+      "type": "task",
+      "assignee": "silas",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 11,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 7,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 11 days, previously To Do 10 days; 9 commits, 1 PR update, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 123,
+      "sourceId": "10122",
+      "key": "MOB-1509",
+      "summary": "Pull to refresh on the home feed",
+      "url": "https://example.atlassian.net/browse/MOB-1509",
+      "type": "bug",
+      "assignee": "silas",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 20
+          },
+          {
+            "lane": "prog",
+            "from": 20,
+            "to": 26
+          },
+          {
+            "lane": "review",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 2 days, previously In Progress 6 days; 8 commits, 2 PR updates, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 124,
+      "sourceId": "10123",
+      "key": "MOB-1515",
+      "summary": "Group the shopping list by supermarket aisle",
+      "url": "https://example.atlassian.net/browse/MOB-1515",
+      "type": "story",
+      "assignee": "silas",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 8,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 8 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 125,
+      "sourceId": "10124",
+      "key": "MOB-1519",
+      "summary": "Substitutions sheet for missing ingredients",
+      "url": "https://example.atlassian.net/browse/MOB-1519",
+      "type": "bug",
+      "assignee": "silas",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 18
+          },
+          {
+            "lane": "prog",
+            "from": 18,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 9,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 13,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 126,
+      "sourceId": "10125",
+      "key": "MOB-1524",
+      "summary": "Two-column recipe layout on tablets",
+      "url": "https://example.atlassian.net/browse/MOB-1524",
+      "type": "task",
+      "assignee": "silas",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 127,
+      "sourceId": "10126",
+      "key": "MOB-1528",
+      "summary": "Deep links open the wrong recipe tab",
+      "url": "https://example.atlassian.net/browse/MOB-1528",
+      "type": "spike",
+      "assignee": "noor",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 26
+          },
+          {
+            "lane": "prog",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 2 days, previously To Do 4 days; 9 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 128,
+      "sourceId": "10127",
+      "key": "MOB-1536",
+      "summary": "Haptic tap when a timer finishes",
+      "url": "https://example.atlassian.net/browse/MOB-1536",
+      "type": "story",
+      "assignee": "noor",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 24
+          },
+          {
+            "lane": "review",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "qa",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 1 day, previously In Review 3 days; 7 commits, 1 PR update, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 129,
+      "sourceId": "10128",
+      "key": "MOB-1539",
+      "summary": "Collections: group recipes into cookbooks",
+      "url": "https://example.atlassian.net/browse/MOB-1539",
+      "type": "bug",
+      "assignee": "noor",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 4,
+      "overLimit": true,
+      "blocked": true,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 11,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [
+          {
+            "from": 25,
+            "to": 27
+          }
+        ],
+        "label": "QA 4 days, previously In Review 1 day; 8 commits, 1 PR update, 2 comments in 28 days; blocked 3 days"
+      }
+    },
+    {
+      "id": 130,
+      "sourceId": "10129",
+      "key": "MOB-1545",
+      "summary": "Sign in with passkeys",
+      "url": "https://example.atlassian.net/browse/MOB-1545",
+      "type": "task",
+      "assignee": "noor",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 8,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 8 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 131,
+      "sourceId": "10130",
+      "key": "MOB-1550",
+      "summary": "Duplicate items after merging two lists",
+      "url": "https://example.atlassian.net/browse/MOB-1550",
+      "type": "story",
+      "assignee": "noor",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 14
+          },
+          {
+            "lane": "prog",
+            "from": 14,
+            "to": 19
+          },
+          {
+            "lane": "review",
+            "from": 19,
+            "to": 21
+          },
+          {
+            "lane": "qa",
+            "from": 21,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 132,
+      "sourceId": "10131",
+      "key": "MOB-1554",
+      "summary": "Show prep time and cook time separately",
+      "url": "https://example.atlassian.net/browse/MOB-1554",
+      "type": "story",
+      "assignee": "otto",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 16,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 8 days; 10 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 133,
+      "sourceId": "10132",
+      "key": "MOB-1559",
+      "summary": "Render fractions (½, ¼) in ingredient lists",
+      "url": "https://example.atlassian.net/browse/MOB-1559",
+      "type": "bug",
+      "assignee": "otto",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 21,
+            "to": 26
+          },
+          {
+            "lane": "prog",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 2 days, previously To Do 5 days; 9 commits, 1 PR update in 28 days"
+      }
+    },
+    {
+      "id": 134,
+      "sourceId": "10133",
+      "key": "MOB-1566",
+      "summary": "Retry failed photo uploads in the background",
+      "url": "https://example.atlassian.net/browse/MOB-1566",
+      "type": "task",
+      "assignee": "otto",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 7,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 9,
+            "to": 15
+          },
+          {
+            "lane": "prog",
+            "from": 15,
+            "to": 21
+          },
+          {
+            "lane": "review",
+            "from": 21,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 9,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 10,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 7 days, previously In Progress 6 days; 3 commits, 2 PR updates, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 135,
+      "sourceId": "10134",
+      "key": "MOB-1569",
+      "summary": "Leftovers planner suggests next-day meals",
+      "url": "https://example.atlassian.net/browse/MOB-1569",
+      "type": "story",
+      "assignee": "otto",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 7,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 10,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 136,
+      "sourceId": "10135",
+      "key": "MOB-1575",
+      "summary": "Allergy warnings on recipe cards",
+      "url": "https://example.atlassian.net/browse/MOB-1575",
+      "type": "bug",
+      "assignee": "otto",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 9,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 137,
+      "sourceId": "10136",
+      "key": "MOB-1578",
+      "summary": "Friendlier empty state for the shopping list",
+      "url": "https://example.atlassian.net/browse/MOB-1578",
+      "type": "story",
+      "assignee": "amara",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "prog",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 2 days, previously To Do 3 days; 2 commits, 1 PR update in 28 days"
+      }
+    },
+    {
+      "id": 138,
+      "sourceId": "10137",
+      "key": "MOB-1585",
+      "summary": "Cut cold start time on older phones",
+      "url": "https://example.atlassian.net/browse/MOB-1585",
+      "type": "bug",
+      "assignee": "amara",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 3 days; 10 commits, 1 PR update, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 139,
+      "sourceId": "10138",
+      "key": "MOB-1592",
+      "summary": "Ask for a rating after cooking mode",
+      "url": "https://example.atlassian.net/browse/MOB-1592",
+      "type": "task",
+      "assignee": "amara",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 26
+          },
+          {
+            "lane": "review",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 2 days, previously In Progress 2 days; 6 commits, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 140,
+      "sourceId": "10139",
+      "key": "MOB-1601",
+      "summary": "Family sharing for meal plans",
+      "url": "https://example.atlassian.net/browse/MOB-1601",
+      "type": "spike",
+      "assignee": "amara",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 6 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 141,
+      "sourceId": "10140",
+      "key": "MOB-1608",
+      "summary": "Seasonal produce badge on recipes",
+      "url": "https://example.atlassian.net/browse/MOB-1608",
+      "type": "task",
+      "assignee": "amara",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 6,
+            "to": 15
+          },
+          {
+            "lane": "prog",
+            "from": 15,
+            "to": 19
+          },
+          {
+            "lane": "review",
+            "from": 19,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 6,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 7,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 142,
+      "sourceId": "10141",
+      "key": "MOB-1613",
+      "summary": "Keyboard covers the notes field",
+      "url": "https://example.atlassian.net/browse/MOB-1613",
+      "type": "story",
+      "assignee": "jonas",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 10,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 18
+          },
+          {
+            "lane": "prog",
+            "from": 18,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 10 days, previously To Do 7 days; 6 commits, 2 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 143,
+      "sourceId": "10142",
+      "key": "MOB-1622",
+      "summary": "Batch-cook mode multiplies the whole plan",
+      "url": "https://example.atlassian.net/browse/MOB-1622",
+      "type": "bug",
+      "assignee": "jonas",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 2 days, previously In Review 3 days; 10 commits in 28 days"
+      }
+    },
+    {
+      "id": 144,
+      "sourceId": "10143",
+      "key": "MOB-1627",
+      "summary": "Home screen widget for tonight's dinner",
+      "url": "https://example.atlassian.net/browse/MOB-1627",
+      "type": "story",
+      "assignee": "jonas",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 3 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 145,
+      "sourceId": "10144",
+      "key": "MOB-1629",
+      "summary": "Crash breadcrumbs for the meal planner",
+      "url": "https://example.atlassian.net/browse/MOB-1629",
+      "type": "bug",
+      "assignee": "jonas",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795251600000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 11,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 20
+          },
+          {
+            "lane": "review",
+            "from": 20,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 25
+          },
+          {
+            "lane": "done",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 3 days ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 146,
+      "sourceId": "10145",
+      "key": "MOB-1633",
+      "summary": "Hand the shopping list to grocery delivery",
+      "url": "https://example.atlassian.net/browse/MOB-1633",
+      "type": "task",
+      "assignee": "wren",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 7 days; 8 commits, 1 PR update, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 147,
+      "sourceId": "10146",
+      "key": "MOB-1636",
+      "summary": "Resume long recipe videos where you left off",
+      "url": "https://example.atlassian.net/browse/MOB-1636",
+      "type": "story",
+      "assignee": "wren",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 3 days; 10 commits, 1 PR update, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 148,
+      "sourceId": "10147",
+      "key": "MOB-1637",
+      "summary": "Wine pairing suggestions panel",
+      "url": "https://example.atlassian.net/browse/MOB-1637",
+      "type": "task",
+      "assignee": "wren",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 21
+          },
+          {
+            "lane": "prog",
+            "from": 21,
+            "to": 26
+          },
+          {
+            "lane": "review",
+            "from": 26,
+            "to": 27
+          },
+          {
+            "lane": "qa",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 1 day, previously In Review 1 day; 6 commits, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 149,
+      "sourceId": "10148",
+      "key": "MOB-1640",
+      "summary": "Remember the last servings used per recipe",
+      "url": "https://example.atlassian.net/browse/MOB-1640",
+      "type": "bug",
+      "assignee": "wren",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 2 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 150,
+      "sourceId": "10149",
+      "key": "MOB-1644",
+      "summary": "Long-press to swap meals between days",
+      "url": "https://example.atlassian.net/browse/MOB-1644",
+      "type": "story",
+      "assignee": "wren",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795424400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 13,
+            "to": 19
+          },
+          {
+            "lane": "prog",
+            "from": 19,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "done",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 1 day ago, previously QA 3 days"
+      }
+    },
+    {
+      "id": 151,
+      "sourceId": "10150",
+      "key": "MOB-1647",
+      "summary": "Colour-blind safe palette for diet tags",
+      "url": "https://example.atlassian.net/browse/MOB-1647",
+      "type": "bug",
+      "assignee": "",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 11,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 11 days, previously To Do 3 days; 4 commits, 1 PR update, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 152,
+      "sourceId": "10151",
+      "key": "MOB-1648",
+      "summary": "Large text mode for the kitchen counter",
+      "url": "https://example.atlassian.net/browse/MOB-1648",
+      "type": "bug",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 1 day; no activity in 28 days"
+      }
+    },
+    {
+      "id": 153,
+      "sourceId": "10152",
+      "key": "MOB-1651",
+      "summary": "Unit tests for the ingredient scaling engine",
+      "url": "https://example.atlassian.net/browse/MOB-1651",
+      "type": "story",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 8,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 25,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 8 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 154,
+      "sourceId": "10153",
+      "key": "MOB-1660",
+      "summary": "Move analytics events to the new schema",
+      "url": "https://example.atlassian.net/browse/MOB-1660",
+      "type": "task",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 3 days; no activity in 28 days"
+      }
+    },
+    {
+      "id": 155,
+      "sourceId": "10154",
+      "key": "MOB-1663",
+      "summary": "Remove deprecated recipe API calls",
+      "url": "https://example.atlassian.net/browse/MOB-1663",
+      "type": "task",
+      "assignee": "",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795338000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 13,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 22
+          },
+          {
+            "lane": "review",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "qa",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "done",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 2 days ago, previously QA 3 days"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "key": "MOB-1525",
+      "summary": "Meal plan templates for busy weeks",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1525"
+    },
+    {
+      "key": "MOB-1527",
+      "summary": "Pantry expiry reminders",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1527"
+    },
+    {
+      "key": "MOB-1533",
+      "summary": "Recipe import from a web page",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/MOB-1533"
+    },
+    {
+      "key": "MOB-1538",
+      "summary": "Shared shopping list with live updates",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/MOB-1538"
+    },
+    {
+      "key": "MOB-1539",
+      "summary": "Price per serving on every recipe",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1539"
+    },
+    {
+      "key": "MOB-1543",
+      "summary": "Kids' portion sizes",
+      "type": "spike",
+      "url": "https://example.atlassian.net/browse/MOB-1543"
+    },
+    {
+      "key": "MOB-1545",
+      "summary": "Cooking classes in the app",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1545"
+    },
+    {
+      "key": "MOB-1548",
+      "summary": "Weekly nutrition summary",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/MOB-1548"
+    },
+    {
+      "key": "MOB-1554",
+      "summary": "Apple Watch timers",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/MOB-1554"
+    },
+    {
+      "key": "MOB-1555",
+      "summary": "Print-friendly recipe view",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1555"
+    },
+    {
+      "key": "MOB-1557",
+      "summary": "Recipe version history",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/MOB-1557"
+    },
+    {
+      "key": "MOB-1560",
+      "summary": "Smart reorder of staple items",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/MOB-1560"
+    }
+  ],
+  "backlogTotal": 40,
+  "counts": {
+    "active": 40,
+    "unassigned": 4,
+    "done": 15,
+    "backlog": 12
+  },
+  "options": {
+    "rowsMode": "fit",
+    "showCommits": true,
+    "showPRs": true,
+    "showComments": true,
+    "shadeWeekends": true,
+    "doneWindow": "sprint",
+    "doneLabel": "this sprint",
+    "devActivity": "ok"
+  },
+  "sync": {
+    "standupId": 1,
+    "runId": 0,
+    "state": "idle",
+    "mode": "incremental",
+    "phase": "",
+    "done": 0,
+    "total": 0,
+    "lastSuccessAt": 1795424400000,
+    "lastAttemptAt": 1795424400000,
+    "lastStatus": "ok",
+    "warnings": [],
+    "errorCode": "",
+    "errorMessage": "",
+    "needsSync": false
+  },
+  "warnings": [],
+  "previewKey": "MOB-1490",
+  "lastSyncedAt": 1795424400000
+}

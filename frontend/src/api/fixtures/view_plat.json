@@ -1,0 +1,1328 @@
+{
+  "standupId": 5,
+  "rev": 3,
+  "generatedAt": 1795424400000,
+  "today": "2026-11-23",
+  "asOf": 1795424400000,
+  "live": true,
+  "name": "Platform",
+  "spaceKey": "PLAT",
+  "boardName": "PLAT board",
+  "boardType": "kanban",
+  "scope": "board",
+  "sprint": null,
+  "pulseDays": 28,
+  "axis": [
+    {
+      "date": "2026-10-27",
+      "label": "27",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-28",
+      "label": "28",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-29",
+      "label": "29",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-30",
+      "label": "30",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-10-31",
+      "label": "31",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-01",
+      "label": "1",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-02",
+      "label": "2",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "qa",
+      "label": "QA",
+      "limitDays": 3,
+      "columns": [
+        "QA"
+      ]
+    },
+    {
+      "lane": "review",
+      "label": "In Review",
+      "limitDays": 2,
+      "columns": [
+        "Review"
+      ]
+    },
+    {
+      "lane": "prog",
+      "label": "In Progress",
+      "limitDays": 5,
+      "columns": [
+        "In Progress"
+      ]
+    },
+    {
+      "lane": "todo",
+      "label": "To Do",
+      "limitDays": 10,
+      "columns": [
+        "To Do"
+      ]
+    },
+    {
+      "lane": "done",
+      "label": "Done",
+      "limitDays": 0,
+      "columns": [
+        "Done"
+      ]
+    }
+  ],
+  "speakers": [
+    {
+      "id": "freya",
+      "name": "Freya Nilsen",
+      "first": "Freya",
+      "initials": "FN",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 1
+    },
+    {
+      "id": "malik",
+      "name": "Malik Hayes",
+      "first": "Malik",
+      "initials": "MH",
+      "unassigned": false,
+      "included": true,
+      "active": 2,
+      "done": 1
+    },
+    {
+      "id": "sofia",
+      "name": "Sofia Castell",
+      "first": "Sofia",
+      "initials": "SC",
+      "unassigned": false,
+      "included": true,
+      "active": 3,
+      "done": 0
+    },
+    {
+      "id": "ezra",
+      "name": "Ezra Holt",
+      "first": "Ezra",
+      "initials": "EH",
+      "unassigned": false,
+      "included": true,
+      "active": 2,
+      "done": 1
+    }
+  ],
+  "tickets": [
+    {
+      "id": 501,
+      "sourceId": "10500",
+      "key": "PLAT-414",
+      "summary": "Upgrade API gateway",
+      "url": "https://example.atlassian.net/browse/PLAT-414",
+      "type": "task",
+      "assignee": "freya",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 22,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 3 days; 5 commits in 28 days"
+      }
+    },
+    {
+      "id": 502,
+      "sourceId": "10501",
+      "key": "PLAT-421",
+      "summary": "Harden build cache",
+      "url": "https://example.atlassian.net/browse/PLAT-421",
+      "type": "bug",
+      "assignee": "freya",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 18,
+            "to": 23
+          },
+          {
+            "lane": "prog",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 18,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 5 days, previously To Do 5 days; 8 commits, 2 PR updates, 4 comments in 28 days"
+      }
+    },
+    {
+      "id": 503,
+      "sourceId": "10502",
+      "key": "PLAT-429",
+      "summary": "Automate staging database",
+      "url": "https://example.atlassian.net/browse/PLAT-429",
+      "type": "task",
+      "assignee": "freya",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 6 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 504,
+      "sourceId": "10503",
+      "key": "PLAT-430",
+      "summary": "Alert on feature flags",
+      "url": "https://example.atlassian.net/browse/PLAT-430",
+      "type": "story",
+      "assignee": "freya",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 6,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1794992400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 5,
+            "to": 14
+          },
+          {
+            "lane": "prog",
+            "from": 14,
+            "to": 18
+          },
+          {
+            "lane": "review",
+            "from": 18,
+            "to": 20
+          },
+          {
+            "lane": "qa",
+            "from": 20,
+            "to": 22
+          },
+          {
+            "lane": "done",
+            "from": 22,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 6,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 8,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 6 days ago, previously QA 2 days"
+      }
+    },
+    {
+      "id": 505,
+      "sourceId": "10504",
+      "key": "PLAT-439",
+      "summary": "Right-size log retention",
+      "url": "https://example.atlassian.net/browse/PLAT-439",
+      "type": "task",
+      "assignee": "malik",
+      "lane": "review",
+      "statusName": "Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 22
+          },
+          {
+            "lane": "prog",
+            "from": 22,
+            "to": 27
+          },
+          {
+            "lane": "review",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 24,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 5 days; 15 commits, 3 PR updates, 6 comments in 28 days"
+      }
+    },
+    {
+      "id": 506,
+      "sourceId": "10505",
+      "key": "PLAT-444",
+      "summary": "Document CDN rules",
+      "url": "https://example.atlassian.net/browse/PLAT-444",
+      "type": "bug",
+      "assignee": "malik",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 3,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 15,
+            "to": 25
+          },
+          {
+            "lane": "prog",
+            "from": 25,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 3 days, previously To Do 10 days; 12 commits, 3 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 507,
+      "sourceId": "10506",
+      "key": "PLAT-449",
+      "summary": "Migrate secrets rotation",
+      "url": "https://example.atlassian.net/browse/PLAT-449",
+      "type": "task",
+      "assignee": "malik",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795078800000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 21
+          },
+          {
+            "lane": "review",
+            "from": 21,
+            "to": 22
+          },
+          {
+            "lane": "qa",
+            "from": 22,
+            "to": 23
+          },
+          {
+            "lane": "done",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 19,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "Done 5 days ago, previously QA 1 day"
+      }
+    },
+    {
+      "id": 508,
+      "sourceId": "10507",
+      "key": "PLAT-455",
+      "summary": "Benchmark queue workers",
+      "url": "https://example.atlassian.net/browse/PLAT-455",
+      "type": "spike",
+      "assignee": "sofia",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 17
+          },
+          {
+            "lane": "prog",
+            "from": 17,
+            "to": 23
+          },
+          {
+            "lane": "review",
+            "from": 23,
+            "to": 26
+          },
+          {
+            "lane": "qa",
+            "from": 26,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 13,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 15,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 18,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "QA 2 days, previously In Review 3 days; 14 commits, 4 PR updates, 3 comments in 28 days"
+      }
+    },
+    {
+      "id": 509,
+      "sourceId": "10508",
+      "key": "PLAT-460",
+      "summary": "Upgrade status page",
+      "url": "https://example.atlassian.net/browse/PLAT-460",
+      "type": "task",
+      "assignee": "sofia",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 14,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 14,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 18,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 19,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 10 days; 12 commits, 1 PR update in 28 days"
+      }
+    },
+    {
+      "id": 510,
+      "sourceId": "10509",
+      "key": "PLAT-463",
+      "summary": "Harden load tests",
+      "url": "https://example.atlassian.net/browse/PLAT-463",
+      "type": "story",
+      "assignee": "sofia",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 23,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 26,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "To Do 5 days; 1 commit, 1 comment in 28 days"
+      }
+    },
+    {
+      "id": 511,
+      "sourceId": "10510",
+      "key": "PLAT-467",
+      "summary": "Automate API gateway",
+      "url": "https://example.atlassian.net/browse/PLAT-467",
+      "type": "bug",
+      "assignee": "ezra",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 4,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 20,
+            "to": 24
+          },
+          {
+            "lane": "prog",
+            "from": 24,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 20,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 22,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 23,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 24,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 26,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 27,
+            "commits": 1,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "In Progress 4 days, previously To Do 4 days; 2 commits, 5 PR updates, 2 comments in 28 days"
+      }
+    },
+    {
+      "id": 512,
+      "sourceId": "10511",
+      "key": "PLAT-474",
+      "summary": "Alert on build cache",
+      "url": "https://example.atlassian.net/browse/PLAT-474",
+      "type": "task",
+      "assignee": "ezra",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 1 day; no activity in 28 days"
+      }
+    },
+    {
+      "id": 513,
+      "sourceId": "10512",
+      "key": "PLAT-478",
+      "summary": "Right-size staging database",
+      "url": "https://example.atlassian.net/browse/PLAT-478",
+      "type": "task",
+      "assignee": "ezra",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795424400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 8,
+            "to": 16
+          },
+          {
+            "lane": "prog",
+            "from": 16,
+            "to": 21
+          },
+          {
+            "lane": "review",
+            "from": 21,
+            "to": 24
+          },
+          {
+            "lane": "qa",
+            "from": 24,
+            "to": 27
+          },
+          {
+            "lane": "done",
+            "from": 27,
+            "to": 28
+          }
+        ],
+        "marks": [
+          {
+            "day": 10,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 11,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 14,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 16,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          },
+          {
+            "day": 17,
+            "commits": 2,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 20,
+            "commits": 1,
+            "prs": 0,
+            "comments": 0
+          },
+          {
+            "day": 21,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          },
+          {
+            "day": 25,
+            "commits": 0,
+            "prs": 1,
+            "comments": 1
+          }
+        ],
+        "blocked": [],
+        "label": "Done 1 day ago, previously QA 3 days"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "key": "PLAT-466",
+      "summary": "Document API gateway",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/PLAT-466"
+    },
+    {
+      "key": "PLAT-470",
+      "summary": "Migrate build cache",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/PLAT-470"
+    },
+    {
+      "key": "PLAT-473",
+      "summary": "Benchmark staging database",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/PLAT-473"
+    },
+    {
+      "key": "PLAT-475",
+      "summary": "Upgrade feature flags",
+      "type": "story",
+      "url": "https://example.atlassian.net/browse/PLAT-475"
+    },
+    {
+      "key": "PLAT-481",
+      "summary": "Harden log retention",
+      "type": "task",
+      "url": "https://example.atlassian.net/browse/PLAT-481"
+    },
+    {
+      "key": "PLAT-484",
+      "summary": "Automate CDN rules",
+      "type": "bug",
+      "url": "https://example.atlassian.net/browse/PLAT-484"
+    }
+  ],
+  "backlogTotal": 6,
+  "counts": {
+    "active": 10,
+    "unassigned": 0,
+    "done": 3,
+    "backlog": 6
+  },
+  "options": {
+    "rowsMode": "fit",
+    "showCommits": true,
+    "showPRs": true,
+    "showComments": true,
+    "shadeWeekends": true,
+    "doneWindow": "14d",
+    "doneLabel": "last 14 days",
+    "devActivity": "ok"
+  },
+  "sync": {
+    "standupId": 5,
+    "runId": 0,
+    "state": "idle",
+    "mode": "incremental",
+    "phase": "",
+    "done": 0,
+    "total": 0,
+    "lastSuccessAt": 1795424400000,
+    "lastAttemptAt": 1795424400000,
+    "lastStatus": "ok",
+    "warnings": [],
+    "errorCode": "",
+    "errorMessage": "",
+    "needsSync": false
+  },
+  "warnings": [],
+  "previewKey": "PLAT-439",
+  "lastSyncedAt": 1795424400000
+}

@@ -1,0 +1,557 @@
+{
+  "standupId": 7,
+  "rev": 3,
+  "generatedAt": 1795629600000,
+  "today": "2026-11-25",
+  "asOf": 1795629600000,
+  "live": true,
+  "name": "MOB standup",
+  "spaceKey": "MOB",
+  "boardName": "MOB board",
+  "boardType": "scrum",
+  "scope": "sprint",
+  "sprint": {
+    "id": "s-42",
+    "name": "Sprint s-42",
+    "startAt": 1795024800000,
+    "endAt": 1795888800000,
+    "daysLeft": 3,
+    "endsLabel": "ends in 3 days"
+  },
+  "pulseDays": 14,
+  "axis": [
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-24",
+      "label": "24",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-25",
+      "label": "25",
+      "weekend": false,
+      "monday": false
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "qa",
+      "label": "QA",
+      "limitDays": 3,
+      "columns": [
+        "Testing"
+      ]
+    },
+    {
+      "lane": "review",
+      "label": "In Review",
+      "limitDays": 2,
+      "columns": [
+        "Review"
+      ]
+    },
+    {
+      "lane": "prog",
+      "label": "In Progress",
+      "limitDays": 5,
+      "columns": [
+        "In Progress",
+        "Blocked"
+      ]
+    },
+    {
+      "lane": "todo",
+      "label": "To Do",
+      "limitDays": 10,
+      "columns": [
+        "To Do"
+      ]
+    },
+    {
+      "lane": "done",
+      "label": "Done",
+      "limitDays": 0,
+      "columns": [
+        "Done"
+      ]
+    }
+  ],
+  "speakers": [
+    {
+      "id": "a1",
+      "name": "Iris Calloway",
+      "first": "Iris",
+      "initials": "IC",
+      "unassigned": false,
+      "included": true,
+      "active": 2,
+      "done": 0
+    },
+    {
+      "id": "a2",
+      "name": "Silas Webb",
+      "first": "Silas",
+      "initials": "SW",
+      "unassigned": false,
+      "included": true,
+      "active": 1,
+      "done": 1
+    },
+    {
+      "id": "a4",
+      "name": "Cher",
+      "first": "Cher",
+      "initials": "C",
+      "unassigned": false,
+      "included": true,
+      "active": 0,
+      "done": 0
+    },
+    {
+      "id": "unassigned",
+      "name": "Unassigned",
+      "first": "Unassigned",
+      "initials": "··",
+      "unassigned": true,
+      "included": true,
+      "active": 2,
+      "done": 0
+    },
+    {
+      "id": "a3",
+      "name": "Amara Osei",
+      "first": "Amara",
+      "initials": "AO",
+      "unassigned": false,
+      "included": false,
+      "active": 1,
+      "done": 1
+    }
+  ],
+  "tickets": [
+    {
+      "id": 2,
+      "sourceId": "102",
+      "key": "MOB-2",
+      "summary": "Summary of MOB-2",
+      "url": "https://acme.atlassian.net/browse/MOB-2",
+      "type": "bug",
+      "assignee": "a2",
+      "lane": "review",
+      "statusName": "In Review",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "prog",
+            "from": 0,
+            "to": 12
+          },
+          {
+            "lane": "review",
+            "from": 12,
+            "to": 14
+          }
+        ],
+        "marks": [
+          {
+            "day": 12,
+            "commits": 2,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 13,
+            "commits": 0,
+            "prs": 1,
+            "comments": 0
+          }
+        ],
+        "blocked": [],
+        "label": "In Review 1 day, previously In Progress 12 days; 2 commits, 1 PR update, 1 comment in 14 days"
+      }
+    },
+    {
+      "id": 5,
+      "sourceId": "105",
+      "key": "MOB-5",
+      "summary": "Summary of MOB-5",
+      "url": "https://acme.atlassian.net/browse/MOB-5",
+      "type": "story",
+      "assignee": "a2",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 2,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795464000000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "prog",
+            "from": 0,
+            "to": 11
+          },
+          {
+            "lane": "done",
+            "from": 11,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "Done 2 days ago, previously In Progress 11 days"
+      }
+    },
+    {
+      "id": 1,
+      "sourceId": "101",
+      "key": "MOB-1",
+      "summary": "Summary of MOB-1",
+      "url": "https://acme.atlassian.net/browse/MOB-1",
+      "type": "story",
+      "assignee": "a1",
+      "lane": "prog",
+      "statusName": "In Progress",
+      "daysInLane": 7,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 0,
+            "to": 6
+          },
+          {
+            "lane": "prog",
+            "from": 6,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "In Progress 7 days, previously To Do 6 days; no activity in 14 days"
+      }
+    },
+    {
+      "id": 10,
+      "sourceId": "1010",
+      "key": "MOB-10",
+      "summary": "Summary of MOB-10",
+      "url": "https://acme.atlassian.net/browse/MOB-10",
+      "type": "subtask",
+      "assignee": "",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 12,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 1 day; no activity in 14 days"
+      }
+    },
+    {
+      "id": 3,
+      "sourceId": "103",
+      "key": "MOB-3",
+      "summary": "Summary of MOB-3",
+      "url": "https://acme.atlassian.net/browse/MOB-3",
+      "type": "task",
+      "assignee": "",
+      "lane": "qa",
+      "statusName": "QA",
+      "daysInLane": 5,
+      "overLimit": true,
+      "blocked": true,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "prog",
+            "from": 0,
+            "to": 2
+          },
+          {
+            "lane": "review",
+            "from": 2,
+            "to": 8
+          },
+          {
+            "lane": "qa",
+            "from": 8,
+            "to": 14
+          }
+        ],
+        "marks": [
+          {
+            "day": 8,
+            "commits": 0,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 9,
+            "commits": 0,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 10,
+            "commits": 0,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 11,
+            "commits": 0,
+            "prs": 0,
+            "comments": 1
+          },
+          {
+            "day": 12,
+            "commits": 0,
+            "prs": 0,
+            "comments": 1
+          }
+        ],
+        "blocked": [
+          {
+            "from": 12,
+            "to": 13
+          }
+        ],
+        "label": "QA 5 days, previously In Review 6 days; 5 comments in 14 days; blocked 2 days"
+      }
+    },
+    {
+      "id": 9,
+      "sourceId": "109",
+      "key": "MOB-9",
+      "summary": "Summary of MOB-9",
+      "url": "https://acme.atlassian.net/browse/MOB-9",
+      "type": "task",
+      "assignee": "a3",
+      "lane": "todo",
+      "statusName": "To Do",
+      "daysInLane": 16,
+      "overLimit": true,
+      "blocked": false,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 0,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "To Do 16 days; no activity in 14 days"
+      }
+    },
+    {
+      "id": 4,
+      "sourceId": "104",
+      "key": "MOB-4",
+      "summary": "Summary of MOB-4",
+      "url": "https://acme.atlassian.net/browse/MOB-4",
+      "type": "spike",
+      "assignee": "a1",
+      "lane": "prog",
+      "statusName": "Blocked",
+      "daysInLane": 1,
+      "overLimit": false,
+      "blocked": true,
+      "doneAt": 0,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "prog",
+            "from": 12,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [
+          {
+            "from": 12,
+            "to": 13
+          }
+        ],
+        "label": "In Progress 1 day; no activity in 14 days; blocked 2 days"
+      }
+    },
+    {
+      "id": 11,
+      "sourceId": "1011",
+      "key": "MOB-11",
+      "summary": "Summary of MOB-11",
+      "url": "https://acme.atlassian.net/browse/MOB-11",
+      "type": "epic",
+      "assignee": "a3",
+      "lane": "done",
+      "statusName": "Done",
+      "daysInLane": 5,
+      "overLimit": false,
+      "blocked": false,
+      "doneAt": 1795190400000,
+      "pulse": {
+        "segs": [
+          {
+            "lane": "todo",
+            "from": 0,
+            "to": 8
+          },
+          {
+            "lane": "done",
+            "from": 8,
+            "to": 14
+          }
+        ],
+        "marks": [],
+        "blocked": [],
+        "label": "Done 5 days ago, previously To Do 8 days"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "key": "MOB-101",
+      "summary": "Summary of MOB-101",
+      "type": "story",
+      "url": "https://acme.atlassian.net/browse/MOB-101"
+    },
+    {
+      "key": "MOB-102",
+      "summary": "Summary of MOB-102",
+      "type": "bug",
+      "url": "https://acme.atlassian.net/browse/MOB-102"
+    }
+  ],
+  "backlogTotal": 28,
+  "counts": {
+    "active": 6,
+    "unassigned": 2,
+    "done": 2,
+    "backlog": 2
+  },
+  "options": {
+    "rowsMode": "roomy",
+    "showCommits": true,
+    "showPRs": false,
+    "showComments": true,
+    "shadeWeekends": true,
+    "doneWindow": "sprint",
+    "doneLabel": "this sprint",
+    "devActivity": "ok"
+  },
+  "sync": {
+    "standupId": 0,
+    "runId": 0,
+    "state": "",
+    "mode": "",
+    "phase": "",
+    "done": 0,
+    "total": 0,
+    "lastSuccessAt": 0,
+    "lastAttemptAt": 0,
+    "lastStatus": "",
+    "warnings": null,
+    "errorCode": "",
+    "errorMessage": "",
+    "needsSync": false
+  },
+  "warnings": [
+    "unmapped_statuses"
+  ],
+  "previewKey": "MOB-3",
+  "lastSyncedAt": 1795627800000
+}

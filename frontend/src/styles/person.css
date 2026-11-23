@@ -1,0 +1,488 @@
+/* WP-24: person view, ticket rows, pulse track, track backdrop, more bar, legend (ux-spec §5, §7, §10). Tokens only. */
+
+/* ── person view frame ── */
+.person-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+}
+.person-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  box-sizing: border-box;
+  height: calc(var(--scale) * 46px);
+}
+.is-tall .person-title {
+  height: calc(var(--scale) * 56px);
+}
+.person-title-text {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.person-name {
+  margin: 0;
+  font-size: calc(var(--scale) * var(--font-size-h1-compact));
+  font-weight: var(--font-weight-bold);
+  line-height: normal;
+  white-space: nowrap;
+}
+.is-tall .person-name {
+  font-size: calc(var(--scale) * var(--font-size-h1));
+}
+.person-counts {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-lane-title));
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+.person-density-tag {
+  border: var(--size-rule-row) solid var(--color-rule-mid);
+  border-radius: var(--radius-rail-item);
+  padding: 0 6px;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+
+/* ── axis row ── */
+.person-axis {
+  display: flex;
+  align-items: flex-end;
+  height: calc(var(--scale) * 30px);
+}
+.person-axis-label {
+  flex: 1;
+  min-width: 0;
+  padding-right: var(--space-3);
+  padding-bottom: 5px;
+  text-align: right;
+  font-size: calc(var(--scale) * var(--font-size-small));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.person-axis-track {
+  position: relative;
+  flex: none;
+  height: calc(var(--scale) * 30px);
+  border-bottom: 2px solid var(--color-rule-mid);
+}
+.person-axis-day {
+  position: absolute;
+  bottom: 5px;
+  left: calc((var(--x) + 0.5) / var(--days) * 100%);
+  transform: translateX(-50%);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-axis));
+  font-weight: var(--font-weight-regular);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+/* ux-spec §3 asks for weekends in --color-rule-mid, but that fails axe color-contrast (ux-spec §10) in both themes on
+   the real payload, so weekends keep the muted colour and the shaded backdrop marks them. Mondays are bold --color-fg
+   (a Monday wins over a weekend flag). To follow §3 literally, set color: var(--color-rule-mid) on the weekend kind. */
+.person-axis-day[data-axis-kind="monday"] {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-fg);
+}
+.person-axis-spacer {
+  flex: none;
+  width: calc(var(--scale) * var(--size-days-chip) + var(--space-3));
+}
+
+/* ── scroll area and body ── */
+.person-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.person-body {
+  position: relative;
+}
+.person-body > .track-backdrop {
+  right: calc(var(--size-days-chip) + var(--space-3));
+}
+.person-empty {
+  margin: 0;
+  padding-top: var(--space-10);
+  font-size: calc(var(--scale) * var(--font-size-row-title-roomy));
+  color: var(--color-muted);
+}
+
+/* ── groups ── */
+.person-group-head h2 {
+  margin: 0;
+  font-size: calc(var(--scale) * var(--font-size-group-head));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+}
+.person-group-head {
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  border-bottom: 3px solid var(--color-rule);
+}
+.person-group-count {
+  margin-left: var(--space-1);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-small));
+  font-weight: var(--font-weight-regular);
+  color: var(--color-muted);
+}
+.person-group.is-done .person-group-head {
+  border-bottom-color: var(--color-rule-mid);
+  color: var(--color-done-fg);
+}
+.person-group.is-side {
+  display: flex;
+  align-items: flex-start;
+  margin-top: var(--space-1);
+  border-top: 3px solid var(--color-rule);
+}
+.person-group.is-side.is-done {
+  border-top-color: var(--color-rule-mid);
+}
+.person-group.is-side .person-group-head {
+  flex: none;
+  align-items: center;
+  width: calc(var(--scale) * var(--size-gutter));
+  padding: 0 var(--space-2) 0 6px;
+  border-bottom: 0;
+  white-space: nowrap;
+}
+.person-group.is-side .person-group-head h2 {
+  font-size: calc(var(--scale) * var(--font-size-gutter-head));
+}
+.person-group.is-side .person-group-count {
+  margin-left: 2px;
+  font-size: calc(var(--scale) * var(--font-size-gutter-head));
+  font-weight: var(--font-weight-semibold);
+}
+.person-group.is-side .person-group-rows {
+  flex: 1;
+  min-width: 0;
+  border-left: 2px solid var(--color-rule-soft);
+}
+
+/* ── ticket row ── */
+.ticket-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid var(--color-rule-soft);
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  text-align: left;
+  cursor: pointer;
+}
+.ticket-row:hover,
+.ticket-row:focus-visible {
+  background: var(--color-rule-soft);
+}
+.ticket-row:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+.ticket-icon {
+  flex: none;
+  width: calc(var(--scale) * 18px);
+  height: calc(var(--scale) * 18px);
+}
+.type-story {
+  color: var(--color-type-story);
+}
+.type-bug {
+  color: var(--color-type-bug);
+}
+.type-task {
+  color: var(--color-type-task);
+}
+.type-spike {
+  color: var(--color-type-spike);
+}
+.type-other {
+  color: var(--color-type-other);
+}
+.ticket-key {
+  flex: none;
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.ticket-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-semibold);
+}
+.ticket-blocked {
+  flex: none;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-chip);
+  background: var(--color-tag-bg);
+  color: var(--color-tag-fg);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-axis-board));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-tag);
+  line-height: 16px;
+}
+.ticket-row > .pulse-track {
+  margin-left: auto;
+  margin-right: var(--space-3);
+}
+.ticket-days {
+  flex: none;
+  width: calc(var(--scale) * var(--size-days-chip));
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-days-chip));
+  font-weight: var(--font-weight-bold);
+  color: var(--color-muted);
+}
+.ticket-days[data-alert="true"] {
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+  border-radius: var(--radius-control);
+}
+
+/* density tiers (row height 46 / 38 / 34) */
+.tier-roomy .ticket-key {
+  font-size: calc(var(--scale) * var(--font-size-row-key-roomy));
+}
+.tier-roomy .ticket-title {
+  font-size: calc(var(--scale) * var(--font-size-row-title-roomy));
+}
+.tier-compact .ticket-key,
+.tier-tight .ticket-key {
+  font-size: calc(var(--scale) * var(--font-size-row-key-compact));
+}
+.tier-compact .ticket-title {
+  font-size: calc(var(--scale) * var(--font-size-row-title-compact));
+}
+.tier-tight .ticket-title {
+  font-size: calc(var(--scale) * var(--font-size-row-title-tight));
+}
+
+/* done rows: muted anatomy */
+.ticket-row.is-done .ticket-key,
+.ticket-row.is-done .ticket-title,
+.ticket-row.is-done .ticket-days {
+  color: var(--color-done-fg);
+}
+.ticket-row.is-done .ticket-icon {
+  color: var(--color-done-icon);
+}
+
+/* ── pulse track ── */
+.pulse-track {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+}
+.pulse-seg {
+  position: absolute;
+  left: calc(var(--x) / var(--days) * 100%);
+  width: calc(var(--w) / var(--days) * 100% - 2px);
+  border-radius: var(--radius-chip);
+}
+.pulse-seg[data-lane="todo"] {
+  background: var(--color-lane-todo);
+}
+.pulse-seg[data-lane="prog"] {
+  background: var(--color-lane-prog);
+}
+.pulse-seg[data-lane="review"] {
+  background: var(--color-lane-review);
+}
+.pulse-seg[data-lane="qa"] {
+  background: var(--color-lane-qa);
+}
+.pulse-seg[data-lane="done"] {
+  background: var(--color-lane-done);
+}
+.pulse-track.is-done .pulse-seg:not([data-lane="done"]) {
+  background: var(--color-lane-done-history);
+}
+.pulse-blocked {
+  position: absolute;
+  left: calc(var(--x) / var(--days) * 100%);
+  width: calc(var(--w) / var(--days) * 100% - 2px);
+  border-radius: var(--radius-chip);
+  background: repeating-linear-gradient(135deg, var(--color-hatch) 0 4px, transparent 4px 8px);
+}
+.pulse-mark {
+  position: absolute;
+  left: calc((var(--x) + 0.5) / var(--days) * 100%);
+  transform: translateX(-50%);
+  width: var(--size-tick-width);
+}
+.pulse-mark[data-mark="commit"] {
+  background: var(--color-tick);
+}
+.pulse-mark[data-mark="pr"] {
+  width: 8px;
+  background: var(--color-tick);
+  transform: translateX(-50%) rotate(45deg);
+}
+.pulse-mark[data-mark="comment"] {
+  background: var(--color-tick-comment);
+}
+
+/* ── track backdrop ── */
+.track-backdrop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.track-weekend {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--x) / var(--days) * 100%);
+  width: calc(100% / var(--days));
+  background: var(--color-weekend);
+}
+.track-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background: var(--color-today);
+}
+
+/* ── more bar ── */
+.more-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3; /* above the rows (z-index 1) and the track backdrop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: calc(var(--scale) * var(--size-more-bar));
+  margin-top: var(--space-2);
+  border-radius: var(--radius-rail-item);
+  background: var(--color-more-bar-bg);
+  color: var(--color-more-bar-fg);
+}
+.more-bar-title {
+  font-size: calc(var(--scale) * var(--font-size-lane-title));
+  font-weight: var(--font-weight-bold);
+}
+.more-bar-summary {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-small));
+  opacity: 0.8;
+}
+
+/* ── legend ── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 13px;
+  font-size: calc(var(--scale) * var(--font-size-meta));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 9px;
+}
+.legend-swatch[data-lane="todo"] {
+  background: var(--color-lane-todo);
+}
+.legend-swatch[data-lane="prog"] {
+  background: var(--color-lane-prog);
+}
+.legend-swatch[data-lane="review"] {
+  background: var(--color-lane-review);
+}
+.legend-swatch[data-lane="qa"] {
+  background: var(--color-lane-qa);
+}
+.legend-blocked {
+  display: inline-block;
+  width: 16px;
+  height: 9px;
+  background: repeating-linear-gradient(135deg, var(--color-hatch) 0 4px, transparent 4px 8px);
+}
+.legend-commit {
+  display: inline-block;
+  width: var(--size-tick-width);
+  height: 14px;
+  background: var(--color-tick);
+}
+.legend-pr {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-tick);
+  transform: rotate(45deg);
+}
+.legend-comment {
+  display: inline-block;
+  width: var(--size-tick-width);
+  height: 7px;
+  background: var(--color-tick-comment);
+}
+.legend-over {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: var(--radius-chip);
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  font-weight: var(--font-weight-bold);
+}
+.legend-key {
+  height: var(--size-control-height);
+  padding: 0 var(--space-3);
+  border: var(--size-rule-row) solid var(--color-rule-mid);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+.legend-key:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}

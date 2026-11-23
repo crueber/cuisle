@@ -1,0 +1,7854 @@
+{
+  "projects": [
+    {
+      "id": "10001",
+      "key": "MOB",
+      "name": "Saffron Mobile"
+    },
+    {
+      "id": "10002",
+      "key": "WEB",
+      "name": "Web \u0026 Checkout"
+    },
+    {
+      "id": "10003",
+      "key": "DATA",
+      "name": "Recipe Data"
+    },
+    {
+      "id": "10004",
+      "key": "GRO",
+      "name": "Growth"
+    },
+    {
+      "id": "10005",
+      "key": "PLAT",
+      "name": "Platform"
+    }
+  ],
+  "boards": [
+    {
+      "id": 1,
+      "name": "MOB board",
+      "type": "scrum",
+      "projectKey": "MOB",
+      "filterId": 9001,
+      "columns": [
+        {
+          "name": "To Do",
+          "statuses": [
+            "To Do"
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            "In Progress"
+          ]
+        },
+        {
+          "name": "Code Review",
+          "statuses": [
+            "Code Review"
+          ]
+        },
+        {
+          "name": "QA",
+          "statuses": [
+            "QA"
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            "Done"
+          ]
+        }
+      ],
+      "sprint": {
+        "id": 42,
+        "name": "Sprint 42",
+        "startDay": -13,
+        "endDay": 0
+      }
+    },
+    {
+      "id": 2,
+      "name": "WEB board",
+      "type": "scrum",
+      "projectKey": "WEB",
+      "filterId": 9002,
+      "columns": [
+        {
+          "name": "To Do",
+          "statuses": [
+            "To Do"
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            "In Progress"
+          ]
+        },
+        {
+          "name": "Code Review",
+          "statuses": [
+            "Code Review"
+          ]
+        },
+        {
+          "name": "QA",
+          "statuses": [
+            "QA"
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            "Done"
+          ]
+        }
+      ],
+      "sprint": {
+        "id": 18,
+        "name": "Sprint 18",
+        "startDay": -5,
+        "endDay": 4
+      }
+    },
+    {
+      "id": 3,
+      "name": "DATA board",
+      "type": "kanban",
+      "projectKey": "DATA",
+      "filterId": 9003,
+      "columns": [
+        {
+          "name": "To Do",
+          "statuses": [
+            "To Do"
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            "In Progress"
+          ]
+        },
+        {
+          "name": "Code Review",
+          "statuses": [
+            "Code Review"
+          ]
+        },
+        {
+          "name": "QA",
+          "statuses": [
+            "QA"
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            "Done"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "GRO board",
+      "type": "scrum",
+      "projectKey": "GRO",
+      "filterId": 9004,
+      "columns": [
+        {
+          "name": "To Do",
+          "statuses": [
+            "To Do"
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            "In Progress"
+          ]
+        },
+        {
+          "name": "Code Review",
+          "statuses": [
+            "Code Review"
+          ]
+        },
+        {
+          "name": "QA",
+          "statuses": [
+            "QA"
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            "Done"
+          ]
+        }
+      ],
+      "sprint": {
+        "id": 9,
+        "name": "Sprint 9",
+        "startDay": -2,
+        "endDay": 7
+      }
+    },
+    {
+      "id": 5,
+      "name": "PLAT board",
+      "type": "kanban",
+      "projectKey": "PLAT",
+      "filterId": 9005,
+      "columns": [
+        {
+          "name": "To Do",
+          "statuses": [
+            "To Do"
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            "In Progress"
+          ]
+        },
+        {
+          "name": "Code Review",
+          "statuses": [
+            "Code Review"
+          ]
+        },
+        {
+          "name": "QA",
+          "statuses": [
+            "QA"
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            "Done"
+          ]
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "accountId": "u-iris",
+      "displayName": "Iris Calloway"
+    },
+    {
+      "accountId": "u-silas",
+      "displayName": "Silas Marchetti"
+    },
+    {
+      "accountId": "u-noor",
+      "displayName": "Noor Abadi"
+    },
+    {
+      "accountId": "u-otto",
+      "displayName": "Otto Brandt"
+    },
+    {
+      "accountId": "u-amara",
+      "displayName": "Amara Osei"
+    },
+    {
+      "accountId": "u-jonas",
+      "displayName": "Jonas Reyes"
+    },
+    {
+      "accountId": "u-wren",
+      "displayName": "Wren Kowalski"
+    },
+    {
+      "accountId": "u-paloma",
+      "displayName": "Paloma Vidal"
+    },
+    {
+      "accountId": "u-kenji",
+      "displayName": "Kenji Mori"
+    },
+    {
+      "accountId": "u-hugo",
+      "displayName": "Hugo Lambert"
+    },
+    {
+      "accountId": "u-zara",
+      "displayName": "Zara Whitfield"
+    },
+    {
+      "accountId": "u-idris",
+      "displayName": "Idris Siddiq"
+    },
+    {
+      "accountId": "u-elsa",
+      "displayName": "Elsa Bergman"
+    },
+    {
+      "accountId": "u-arjun",
+      "displayName": "Arjun Bose"
+    },
+    {
+      "accountId": "u-clara",
+      "displayName": "Clara Voss"
+    },
+    {
+      "accountId": "u-mateo",
+      "displayName": "Mateo Ruiz"
+    },
+    {
+      "accountId": "u-bea",
+      "displayName": "Bea Thornton"
+    },
+    {
+      "accountId": "u-luca",
+      "displayName": "Luca Ferri"
+    },
+    {
+      "accountId": "u-yuki",
+      "displayName": "Yuki Tanaka"
+    },
+    {
+      "accountId": "u-diego",
+      "displayName": "Diego Alvarez"
+    },
+    {
+      "accountId": "u-freya",
+      "displayName": "Freya Nilsen"
+    },
+    {
+      "accountId": "u-malik",
+      "displayName": "Malik Hayes"
+    },
+    {
+      "accountId": "u-sofia",
+      "displayName": "Sofia Castell"
+    },
+    {
+      "accountId": "u-ezra",
+      "displayName": "Ezra Holt"
+    }
+  ],
+  "issues": [
+    {
+      "key": "MOB-1390",
+      "type": "Story",
+      "summary": "Swipe to check off items on the shopping list",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -24,
+        -24,
+        -23,
+        -22,
+        -18,
+        -17,
+        -17,
+        -16,
+        -16,
+        -14,
+        -14,
+        -6,
+        -5,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 1,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -27,
+        -24,
+        -16,
+        -9
+      ]
+    },
+    {
+      "key": "MOB-1399",
+      "type": "Bug",
+      "summary": "Recipe card crops the hero photo on small phones",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -24,
+        -21,
+        -21,
+        -18,
+        -14,
+        -13,
+        -12,
+        -11,
+        -10,
+        -10,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5,
+        -4,
+        -4,
+        -2,
+        -2,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 2,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 3,
+          "day": -3,
+          "status": "MERGED"
+        },
+        {
+          "id": 4,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -24,
+        -1
+      ]
+    },
+    {
+      "key": "MOB-1407",
+      "type": "Task",
+      "summary": "Offline mode for saved recipes",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 9
+        }
+      ],
+      "commits": [
+        -24,
+        -24,
+        -13,
+        -11,
+        -9,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 5,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 6,
+          "day": -21,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -11,
+        -7
+      ]
+    },
+    {
+      "key": "MOB-1411",
+      "type": "Story",
+      "summary": "Scale ingredient amounts when servings change",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -26,
+        -25,
+        -18,
+        -18,
+        -15,
+        -14,
+        -14,
+        -12,
+        -9,
+        -6,
+        -5,
+        -2,
+        -2,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 7,
+          "day": -22,
+          "status": "MERGED"
+        },
+        {
+          "id": 8,
+          "day": -13,
+          "status": "MERGED"
+        },
+        {
+          "id": 9,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 10,
+          "day": -8,
+          "status": "MERGED"
+        },
+        {
+          "id": 11,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -26,
+        -14,
+        -12,
+        -10,
+        -8,
+        -6,
+        0
+      ]
+    },
+    {
+      "key": "MOB-1413",
+      "type": "Bug",
+      "summary": "Pantry scanner misreads barcodes in low light",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -26,
+        -16,
+        -14,
+        -14,
+        -12,
+        -12,
+        -11,
+        -10,
+        -10,
+        -9,
+        -8,
+        -8,
+        -7,
+        -4,
+        -2,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 12,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 13,
+          "day": -19,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -19,
+        -11,
+        -10,
+        -7,
+        -2
+      ]
+    },
+    {
+      "key": "MOB-1414",
+      "type": "Task",
+      "summary": "Defrost reminder for tomorrow's planned meal",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -23,
+        -22,
+        -21,
+        -21,
+        -18,
+        -16,
+        -16,
+        -12,
+        -10,
+        -10,
+        -8,
+        -8
+      ],
+      "prs": [
+        {
+          "id": 14,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -12,
+        -10,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1421",
+      "type": "Story",
+      "summary": "Unit toggle between metric and US cups",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -26,
+        -22,
+        -18,
+        -14,
+        -14,
+        -13,
+        -13,
+        -11,
+        -11,
+        -10,
+        -8,
+        -6,
+        -6,
+        -5,
+        -3,
+        -3,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 15,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 16,
+          "day": -2,
+          "status": "OPEN"
+        },
+        {
+          "id": 17,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -13,
+        -11,
+        -10,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1428",
+      "type": "Story",
+      "summary": "Cooking mode keeps the screen awake",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -22,
+        -20,
+        -20,
+        -19,
+        -19,
+        -17,
+        -14,
+        -14,
+        -13,
+        -10,
+        -10,
+        -9,
+        -9,
+        -5,
+        -5,
+        -4,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 18,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 19,
+          "day": -12,
+          "status": "MERGED"
+        },
+        {
+          "id": 20,
+          "day": -11,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -17,
+        -13,
+        -10
+      ]
+    },
+    {
+      "key": "MOB-1429",
+      "type": "Bug",
+      "summary": "Share a recipe as a link with a preview image",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [
+        [
+          -2,
+          0
+        ]
+      ],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -25,
+        -21,
+        -21,
+        -20,
+        -19,
+        -19,
+        -18,
+        -16,
+        -15,
+        -15,
+        -13,
+        -13,
+        -9,
+        -9,
+        -8,
+        -8,
+        -6,
+        -2,
+        0
+      ],
+      "prs": [
+        {
+          "id": 21,
+          "day": -12,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -27,
+        -21,
+        -19,
+        -9,
+        -6,
+        -2,
+        0
+      ]
+    },
+    {
+      "key": "MOB-1431",
+      "type": "Spike",
+      "summary": "Search filters for vegan, gluten-free and halal",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -23,
+        -16,
+        -11,
+        -11,
+        -10,
+        -9,
+        -9,
+        -7,
+        -6,
+        -5,
+        -3,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 22,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 23,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -16,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1436",
+      "type": "Task",
+      "summary": "Timer survives backgrounding on Android",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -23,
+        -23,
+        -17,
+        -17,
+        -15,
+        -14,
+        -12,
+        -11,
+        -11,
+        -9,
+        -9,
+        -8,
+        -8,
+        -7,
+        -4,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 24,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 25,
+          "day": -3,
+          "status": "MERGED"
+        },
+        {
+          "id": 26,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -27,
+        -23,
+        -17,
+        -16,
+        -9,
+        -8,
+        -7,
+        -4
+      ]
+    },
+    {
+      "key": "MOB-1440",
+      "type": "Story",
+      "summary": "Drag meals between days in the planner",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -18,
+        -14,
+        -2
+      ],
+      "prs": [],
+      "comments": [
+        -18,
+        -14,
+        -2
+      ]
+    },
+    {
+      "key": "MOB-1448",
+      "type": "Bug",
+      "summary": "Favourites lose their sort order after sync",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -20,
+        -8
+      ],
+      "prs": [],
+      "comments": [
+        -20,
+        -8
+      ]
+    },
+    {
+      "key": "MOB-1456",
+      "type": "Task",
+      "summary": "Onboarding: pick the cuisines you like",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "MOB-1464",
+      "type": "Story",
+      "summary": "Dark mode contrast on ingredient checkboxes",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -24,
+        -24,
+        -20,
+        -17,
+        -17,
+        -12,
+        -12,
+        -10,
+        -6,
+        -6,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 27,
+          "day": -27,
+          "status": "MERGED"
+        },
+        {
+          "id": 28,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 29,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 30,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -24,
+        -16,
+        -10
+      ]
+    },
+    {
+      "key": "MOB-1473",
+      "type": "Bug",
+      "summary": "Voice \"next step\" command in cooking mode",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -26,
+        -24,
+        -24,
+        -13,
+        -11,
+        -10,
+        -8,
+        -6,
+        -5,
+        -4,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 31,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 32,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -13,
+        -6,
+        -5,
+        -4,
+        -2
+      ]
+    },
+    {
+      "key": "MOB-1481",
+      "type": "Task",
+      "summary": "Crash when rotating during video playback",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -24,
+        -16,
+        -16,
+        -15,
+        -15,
+        -8,
+        -8,
+        -7,
+        -6,
+        -6,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 33,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 34,
+          "day": -5,
+          "status": "MERGED"
+        },
+        {
+          "id": 35,
+          "day": -4,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -24,
+        -16,
+        -8,
+        -7,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1486",
+      "type": "Story",
+      "summary": "Personal notes on a saved recipe",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -24,
+        -14,
+        -13,
+        -13,
+        -9,
+        -9,
+        -5,
+        -5,
+        -4,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 36,
+          "day": -12,
+          "status": "MERGED"
+        },
+        {
+          "id": 37,
+          "day": -11,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -13,
+        -12,
+        -5
+      ]
+    },
+    {
+      "key": "MOB-1490",
+      "type": "Bug",
+      "summary": "Nutrition panel rounds fibre down to zero",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -26,
+        -24,
+        -21,
+        -17,
+        -17,
+        -13,
+        -13,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 38,
+          "day": -12,
+          "status": "MERGED"
+        },
+        {
+          "id": 39,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 40,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -21,
+        -17,
+        -12,
+        -7,
+        -5,
+        -4
+      ]
+    },
+    {
+      "key": "MOB-1497",
+      "type": "Task",
+      "summary": "Export the weekly plan to a calendar",
+      "assignee": "u-iris",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -24,
+        -22,
+        -21,
+        -21,
+        -16,
+        -16,
+        -14,
+        -11,
+        -11,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 41,
+          "day": -12,
+          "status": "MERGED"
+        },
+        {
+          "id": 42,
+          "day": -10,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -11,
+        -1
+      ]
+    },
+    {
+      "key": "MOB-1501",
+      "type": "Story",
+      "summary": "Accessibility labels on the rating stars",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -26,
+        -24,
+        -22,
+        -19,
+        -19,
+        -17,
+        -14,
+        -12,
+        -11,
+        -10,
+        -9,
+        -8,
+        -5,
+        -4,
+        -2,
+        -2,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 43,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -24,
+        -22,
+        -19,
+        -17,
+        -14,
+        -10,
+        -9,
+        -2,
+        -1
+      ]
+    },
+    {
+      "key": "MOB-1508",
+      "type": "Task",
+      "summary": "Image cache grows without a limit",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 11
+        }
+      ],
+      "commits": [
+        -19,
+        -19,
+        -16,
+        -13,
+        -13,
+        -6,
+        -6,
+        -5,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 44,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 45,
+          "day": -15,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -16,
+        -15,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1509",
+      "type": "Bug",
+      "summary": "Pull to refresh on the home feed",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -22,
+        -18,
+        -13,
+        -13,
+        -10,
+        -10,
+        -9,
+        -9,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 46,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 47,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -18,
+        -10,
+        -9,
+        -2
+      ]
+    },
+    {
+      "key": "MOB-1515",
+      "type": "Story",
+      "summary": "Group the shopping list by supermarket aisle",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -4
+      ],
+      "prs": [],
+      "comments": [
+        -4
+      ]
+    },
+    {
+      "key": "MOB-1519",
+      "type": "Bug",
+      "summary": "Substitutions sheet for missing ingredients",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -18,
+        -18,
+        -16,
+        -15,
+        -15,
+        -14,
+        -14,
+        -12,
+        -10,
+        -10,
+        -5,
+        -5,
+        -4,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 48,
+          "day": -13,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -15,
+        -12,
+        -10
+      ]
+    },
+    {
+      "key": "MOB-1524",
+      "type": "Task",
+      "summary": "Two-column recipe layout on tablets",
+      "assignee": "u-silas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -24,
+        -24,
+        -21,
+        -20,
+        -20,
+        -12,
+        -12,
+        -11,
+        -11,
+        -10,
+        -5,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 49,
+          "day": -23,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -12,
+        -11
+      ]
+    },
+    {
+      "key": "MOB-1528",
+      "type": "Spike",
+      "summary": "Deep links open the wrong recipe tab",
+      "assignee": "u-noor",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -25,
+        -25,
+        -23,
+        -16,
+        -16,
+        -15,
+        -15,
+        -14,
+        -14,
+        -13,
+        -13,
+        -11,
+        -11,
+        -8,
+        -8,
+        -6,
+        -5,
+        -5,
+        -4,
+        -4,
+        -3,
+        -2,
+        -2,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 50,
+          "day": -17,
+          "status": "MERGED"
+        },
+        {
+          "id": 51,
+          "day": -1,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -14,
+        -13,
+        -11,
+        -6,
+        -5,
+        -1
+      ]
+    },
+    {
+      "key": "MOB-1536",
+      "type": "Story",
+      "summary": "Haptic tap when a timer finishes",
+      "assignee": "u-noor",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -21,
+        -18,
+        -18,
+        -15,
+        -15,
+        -9,
+        -8,
+        -8,
+        -4,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 52,
+          "day": -24,
+          "status": "MERGED"
+        },
+        {
+          "id": 53,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -24,
+        -8,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1539",
+      "type": "Bug",
+      "summary": "Collections: group recipes into cookbooks",
+      "assignee": "u-noor",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [
+        [
+          -2,
+          0
+        ]
+      ],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -25,
+        -23,
+        -16,
+        -9,
+        -7,
+        -6,
+        -4,
+        -4,
+        -2,
+        0
+      ],
+      "prs": [
+        {
+          "id": 54,
+          "day": -26,
+          "status": "MERGED"
+        },
+        {
+          "id": 55,
+          "day": -19,
+          "status": "MERGED"
+        },
+        {
+          "id": 56,
+          "day": -14,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -19,
+        -2,
+        0
+      ]
+    },
+    {
+      "key": "MOB-1545",
+      "type": "Task",
+      "summary": "Sign in with passkeys",
+      "assignee": "u-noor",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -23,
+        -3
+      ],
+      "prs": [],
+      "comments": [
+        -23,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1550",
+      "type": "Story",
+      "summary": "Duplicate items after merging two lists",
+      "assignee": "u-noor",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -11,
+        -9,
+        -9,
+        -7,
+        -6,
+        -6,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 57,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 58,
+          "day": -8,
+          "status": "MERGED"
+        },
+        {
+          "id": 59,
+          "day": -5,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -18,
+        -7,
+        -5
+      ]
+    },
+    {
+      "key": "MOB-1554",
+      "type": "Story",
+      "summary": "Show prep time and cook time separately",
+      "assignee": "u-otto",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -21,
+        -14,
+        -11,
+        -11,
+        -9,
+        -9,
+        -8,
+        -7,
+        -7,
+        -4,
+        -4,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 60,
+          "day": -25,
+          "status": "MERGED"
+        },
+        {
+          "id": 61,
+          "day": -22,
+          "status": "MERGED"
+        },
+        {
+          "id": 62,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 63,
+          "day": -10,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -8
+      ]
+    },
+    {
+      "key": "MOB-1559",
+      "type": "Bug",
+      "summary": "Render fractions (½, ¼) in ingredient lists",
+      "assignee": "u-otto",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -22,
+        -19,
+        -17,
+        -14,
+        -14,
+        -13,
+        -13,
+        -12,
+        -11,
+        -10,
+        -9,
+        -9,
+        -8,
+        -8,
+        -5,
+        -5,
+        -4,
+        -4,
+        -2,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 64,
+          "day": -24,
+          "status": "MERGED"
+        },
+        {
+          "id": 65,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 66,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 67,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -24,
+        -20,
+        -17
+      ]
+    },
+    {
+      "key": "MOB-1566",
+      "type": "Task",
+      "summary": "Retry failed photo uploads in the background",
+      "assignee": "u-otto",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 7
+        }
+      ],
+      "commits": [
+        -26,
+        -25,
+        -25,
+        -24,
+        -24,
+        -19,
+        -19,
+        -18,
+        -11,
+        -10
+      ],
+      "prs": [
+        {
+          "id": 68,
+          "day": -17,
+          "status": "MERGED"
+        },
+        {
+          "id": 69,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -26,
+        -24,
+        -11
+      ]
+    },
+    {
+      "key": "MOB-1569",
+      "type": "Story",
+      "summary": "Leftovers planner suggests next-day meals",
+      "assignee": "u-otto",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -25,
+        -21,
+        -19,
+        -19,
+        -17,
+        -17,
+        -14,
+        -14,
+        -12,
+        -11,
+        -11,
+        -6,
+        -6,
+        -4
+      ],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "MOB-1575",
+      "type": "Bug",
+      "summary": "Allergy warnings on recipe cards",
+      "assignee": "u-otto",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -25,
+        -25,
+        -22,
+        -19,
+        -18,
+        -16,
+        -16,
+        -10,
+        -8,
+        -8,
+        -3,
+        -3,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 70,
+          "day": -21,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -16,
+        -8,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1578",
+      "type": "Story",
+      "summary": "Friendlier empty state for the shopping list",
+      "assignee": "u-amara",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -23,
+        -20,
+        -14,
+        -13,
+        -8,
+        -5,
+        -5,
+        -4,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 71,
+          "day": -6,
+          "status": "MERGED"
+        },
+        {
+          "id": 72,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -23,
+        -20,
+        -14
+      ]
+    },
+    {
+      "key": "MOB-1585",
+      "type": "Bug",
+      "summary": "Cut cold start time on older phones",
+      "assignee": "u-amara",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -23,
+        -23,
+        -20,
+        -20,
+        -14,
+        -13,
+        -12,
+        -11,
+        -7,
+        -6,
+        -4,
+        -4,
+        -3,
+        -2,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 73,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 74,
+          "day": -5,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -12,
+        -7,
+        -6,
+        -2,
+        -1
+      ]
+    },
+    {
+      "key": "MOB-1592",
+      "type": "Task",
+      "summary": "Ask for a rating after cooking mode",
+      "assignee": "u-amara",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -23,
+        -23,
+        -16,
+        -14,
+        -14,
+        -13,
+        -11,
+        -5,
+        -3,
+        -3,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 75,
+          "day": -17,
+          "status": "MERGED"
+        },
+        {
+          "id": 76,
+          "day": -15,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -14,
+        -11,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1601",
+      "type": "Spike",
+      "summary": "Family sharing for meal plans",
+      "assignee": "u-amara",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -12,
+        -3
+      ],
+      "prs": [],
+      "comments": [
+        -12,
+        -3
+      ]
+    },
+    {
+      "key": "MOB-1608",
+      "type": "Task",
+      "summary": "Seasonal produce badge on recipes",
+      "assignee": "u-amara",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -23,
+        -23,
+        -22,
+        -22,
+        -21,
+        -21,
+        -20,
+        -14,
+        -11,
+        -11,
+        -8,
+        -8,
+        -6,
+        -4,
+        -4,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 77,
+          "day": -26,
+          "status": "MERGED"
+        },
+        {
+          "id": 78,
+          "day": -13,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -23,
+        -21
+      ]
+    },
+    {
+      "key": "MOB-1613",
+      "type": "Story",
+      "summary": "Keyboard covers the notes field",
+      "assignee": "u-jonas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 10
+        }
+      ],
+      "commits": [
+        -27,
+        -14,
+        -10,
+        -10,
+        -9,
+        -6,
+        -6
+      ],
+      "prs": [
+        {
+          "id": 79,
+          "day": -25,
+          "status": "MERGED"
+        },
+        {
+          "id": 80,
+          "day": -13,
+          "status": "MERGED"
+        },
+        {
+          "id": 81,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -13,
+        -9
+      ]
+    },
+    {
+      "key": "MOB-1622",
+      "type": "Bug",
+      "summary": "Batch-cook mode multiplies the whole plan",
+      "assignee": "u-jonas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -20,
+        -20,
+        -18,
+        -14,
+        -14,
+        -13,
+        -13,
+        -10,
+        -10,
+        -8,
+        -5,
+        -4,
+        -4
+      ],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "MOB-1627",
+      "type": "Story",
+      "summary": "Home screen widget for tonight's dinner",
+      "assignee": "u-jonas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "MOB-1629",
+      "type": "Bug",
+      "summary": "Crash breadcrumbs for the meal planner",
+      "assignee": "u-jonas",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -25,
+        -23,
+        -23,
+        -15,
+        -15,
+        -13,
+        -11,
+        -11,
+        -10,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 82,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 83,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 84,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -13,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1633",
+      "type": "Task",
+      "summary": "Hand the shopping list to grocery delivery",
+      "assignee": "u-wren",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -23,
+        -23,
+        -22,
+        -13,
+        -13,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -4,
+        -4,
+        -3,
+        -2,
+        -2,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 85,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -9,
+        -4,
+        -2,
+        0
+      ]
+    },
+    {
+      "key": "MOB-1636",
+      "type": "Story",
+      "summary": "Resume long recipe videos where you left off",
+      "assignee": "u-wren",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -22,
+        -20,
+        -20,
+        -17,
+        -16,
+        -14,
+        -14,
+        -12,
+        -9,
+        -9,
+        -7,
+        -7,
+        -6,
+        -5,
+        -4,
+        -4,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 86,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -24,
+        -17,
+        -16,
+        -12,
+        -6
+      ]
+    },
+    {
+      "key": "MOB-1637",
+      "type": "Task",
+      "summary": "Wine pairing suggestions panel",
+      "assignee": "u-wren",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -16,
+        -16,
+        -14,
+        -13,
+        -12,
+        -12,
+        -10,
+        -10,
+        -7,
+        -7,
+        -4,
+        -4,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 87,
+          "day": -18,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -14,
+        -10,
+        -7
+      ]
+    },
+    {
+      "key": "MOB-1640",
+      "type": "Bug",
+      "summary": "Remember the last servings used per recipe",
+      "assignee": "u-wren",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -13,
+        -10,
+        -7
+      ],
+      "prs": [],
+      "comments": [
+        -13,
+        -10,
+        -7
+      ]
+    },
+    {
+      "key": "MOB-1644",
+      "type": "Story",
+      "summary": "Long-press to swap meals between days",
+      "assignee": "u-wren",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -26,
+        -23,
+        -16,
+        -15,
+        -11,
+        -11,
+        -9,
+        -8,
+        -5,
+        -5,
+        -4
+      ],
+      "prs": [],
+      "comments": [
+        -26,
+        -15,
+        -8
+      ]
+    },
+    {
+      "key": "MOB-1647",
+      "type": "Bug",
+      "summary": "Colour-blind safe palette for diet tags",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 11
+        }
+      ],
+      "commits": [
+        -26,
+        -21,
+        -17,
+        -16,
+        -16,
+        -13,
+        -13,
+        -12,
+        -10
+      ],
+      "prs": [
+        {
+          "id": 88,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -17,
+        -13,
+        -12,
+        -10
+      ]
+    },
+    {
+      "key": "MOB-1648",
+      "type": "Bug",
+      "summary": "Large text mode for the kitchen counter",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -19,
+        -9
+      ],
+      "prs": [],
+      "comments": [
+        -19,
+        -9
+      ]
+    },
+    {
+      "key": "MOB-1651",
+      "type": "Story",
+      "summary": "Unit tests for the ingredient scaling engine",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -2
+      ],
+      "prs": [],
+      "comments": [
+        -2
+      ]
+    },
+    {
+      "key": "MOB-1660",
+      "type": "Task",
+      "summary": "Move analytics events to the new schema",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -22,
+        -20
+      ],
+      "prs": [],
+      "comments": [
+        -22,
+        -20
+      ]
+    },
+    {
+      "key": "MOB-1663",
+      "type": "Task",
+      "summary": "Remove deprecated recipe API calls",
+      "board": 1,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -24,
+        -21,
+        -21,
+        -20,
+        -19,
+        -14,
+        -12,
+        -10,
+        -7,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 89,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -20,
+        -19,
+        -12,
+        -6
+      ]
+    },
+    {
+      "key": "WEB-820",
+      "type": "Bug",
+      "summary": "Speed up checkout",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 7
+        }
+      ],
+      "commits": [
+        -22,
+        -22,
+        -19,
+        -19,
+        -18,
+        -18,
+        -16,
+        -16,
+        -14,
+        -13,
+        -12,
+        -12,
+        -9,
+        -9,
+        -8,
+        -8,
+        -7,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 90,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 91,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 92,
+          "day": -10,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -19,
+        -16,
+        -14
+      ]
+    },
+    {
+      "key": "WEB-823",
+      "type": "Story",
+      "summary": "Fix rounding in basket",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -23,
+        -22,
+        -14,
+        -8,
+        -8,
+        -5,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 93,
+          "day": -16,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -22,
+        -14
+      ]
+    },
+    {
+      "key": "WEB-825",
+      "type": "Bug",
+      "summary": "Redesign promo codes",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -23,
+        -23,
+        -22,
+        -22,
+        -15,
+        -15,
+        -13,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -8,
+        -7,
+        -7,
+        -4,
+        -3,
+        -2,
+        0
+      ],
+      "prs": [
+        {
+          "id": 94,
+          "day": -14,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -12,
+        -8,
+        -7,
+        -3
+      ]
+    },
+    {
+      "key": "WEB-826",
+      "type": "Story",
+      "summary": "Add tests for gift cards",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -26,
+        -25,
+        -25,
+        -17,
+        -17,
+        -9,
+        -8,
+        -8
+      ],
+      "prs": [
+        {
+          "id": 95,
+          "day": -14,
+          "status": "MERGED"
+        }
+      ],
+      "comments": []
+    },
+    {
+      "key": "WEB-833",
+      "type": "Story",
+      "summary": "Localise order history",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -26
+      ],
+      "prs": [],
+      "comments": [
+        -26
+      ]
+    },
+    {
+      "key": "WEB-839",
+      "type": "Task",
+      "summary": "Audit accessibility of address book",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -23,
+        -20,
+        -19,
+        -15,
+        -14,
+        -13,
+        -13,
+        -11,
+        -8,
+        -8,
+        -7,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 96,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -13
+      ]
+    },
+    {
+      "key": "WEB-848",
+      "type": "Bug",
+      "summary": "Simplify invoices",
+      "assignee": "u-paloma",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -21,
+        -21,
+        -20,
+        -16,
+        -16,
+        -13,
+        -12,
+        -9,
+        -5,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 97,
+          "day": -19,
+          "status": "MERGED"
+        },
+        {
+          "id": 98,
+          "day": -11,
+          "status": "MERGED"
+        },
+        {
+          "id": 99,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -21,
+        -20,
+        -19,
+        -11
+      ]
+    },
+    {
+      "key": "WEB-856",
+      "type": "Story",
+      "summary": "Log errors from payment sheet",
+      "assignee": "u-kenji",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -22,
+        -21,
+        -20,
+        -20,
+        -19,
+        -18,
+        -15,
+        -14,
+        -12,
+        -12,
+        -11,
+        -11,
+        -9,
+        -6,
+        -6,
+        -5,
+        -5,
+        -3,
+        -2,
+        -2,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 100,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 101,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -22,
+        -19,
+        -6,
+        -1
+      ]
+    },
+    {
+      "key": "WEB-860",
+      "type": "Bug",
+      "summary": "Speed up subscription page",
+      "assignee": "u-kenji",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 10
+        }
+      ],
+      "commits": [
+        -22,
+        -19,
+        -19,
+        -14,
+        -11,
+        -9,
+        -9,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 102,
+          "day": -24,
+          "status": "MERGED"
+        },
+        {
+          "id": 103,
+          "day": -13,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -14
+      ]
+    },
+    {
+      "key": "WEB-862",
+      "type": "Story",
+      "summary": "Fix rounding in receipts",
+      "assignee": "u-kenji",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -21,
+        -17,
+        -14,
+        -13,
+        -13,
+        -10,
+        -10,
+        -6
+      ],
+      "prs": [
+        {
+          "id": 104,
+          "day": -5,
+          "status": "MERGED"
+        },
+        {
+          "id": 105,
+          "day": -2,
+          "status": "OPEN"
+        },
+        {
+          "id": 106,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -27,
+        -17,
+        -13,
+        -2
+      ]
+    },
+    {
+      "key": "WEB-866",
+      "type": "Task",
+      "summary": "Redesign checkout",
+      "assignee": "u-kenji",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        }
+      ],
+      "commits": [],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "WEB-875",
+      "type": "Story",
+      "summary": "Add tests for basket",
+      "assignee": "u-kenji",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -24,
+        -24,
+        -23,
+        -23,
+        -22,
+        -16,
+        -16,
+        -15,
+        -15,
+        -10,
+        -10
+      ],
+      "prs": [
+        {
+          "id": 107,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 108,
+          "day": -19,
+          "status": "MERGED"
+        },
+        {
+          "id": 109,
+          "day": -12,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -21,
+        -12
+      ]
+    },
+    {
+      "key": "WEB-881",
+      "type": "Story",
+      "summary": "Localise promo codes",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -18,
+        -18,
+        -13,
+        -11,
+        -11,
+        -5,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 110,
+          "day": -14,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -11
+      ]
+    },
+    {
+      "key": "WEB-885",
+      "type": "Task",
+      "summary": "Audit accessibility of gift cards",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 11
+        }
+      ],
+      "commits": [
+        -26,
+        -23,
+        -21,
+        -21,
+        -20,
+        -20,
+        -17,
+        -17,
+        -16,
+        -12,
+        -12,
+        -10,
+        -10
+      ],
+      "prs": [],
+      "comments": [
+        -26,
+        -23,
+        -16,
+        -10
+      ]
+    },
+    {
+      "key": "WEB-894",
+      "type": "Story",
+      "summary": "Simplify order history",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -15,
+        -12
+      ],
+      "prs": [],
+      "comments": [
+        -15,
+        -12
+      ]
+    },
+    {
+      "key": "WEB-898",
+      "type": "Story",
+      "summary": "Log errors from address book",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -24,
+        -19,
+        -9
+      ],
+      "prs": [],
+      "comments": [
+        -24,
+        -19,
+        -9
+      ]
+    },
+    {
+      "key": "WEB-899",
+      "type": "Spike",
+      "summary": "Speed up invoices",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -23,
+        -23,
+        -15,
+        -14,
+        -7,
+        -4,
+        -2,
+        -2,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 111,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 112,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -23,
+        -16
+      ]
+    },
+    {
+      "key": "WEB-904",
+      "type": "Task",
+      "summary": "Fix rounding in payment sheet",
+      "assignee": "u-hugo",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -26,
+        -21,
+        -21,
+        -18,
+        -18,
+        -12,
+        -12,
+        -9,
+        -9,
+        -6,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 113,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -21,
+        -8,
+        -6,
+        -4
+      ]
+    },
+    {
+      "key": "WEB-907",
+      "type": "Story",
+      "summary": "Redesign subscription page",
+      "assignee": "u-zara",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -25,
+        -17,
+        -17,
+        -13,
+        -13,
+        -12,
+        -11,
+        -8,
+        -7,
+        -6,
+        -4,
+        -4,
+        -3,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 114,
+          "day": -26,
+          "status": "MERGED"
+        },
+        {
+          "id": 115,
+          "day": -24,
+          "status": "MERGED"
+        },
+        {
+          "id": 116,
+          "day": -19,
+          "status": "MERGED"
+        },
+        {
+          "id": 117,
+          "day": -14,
+          "status": "MERGED"
+        },
+        {
+          "id": 118,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 119,
+          "day": -5,
+          "status": "MERGED"
+        },
+        {
+          "id": 120,
+          "day": -1,
+          "status": "OPEN"
+        },
+        {
+          "id": 121,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -26,
+        -14,
+        -12,
+        -11,
+        -6,
+        0
+      ]
+    },
+    {
+      "key": "WEB-912",
+      "type": "Story",
+      "summary": "Add tests for receipts",
+      "assignee": "u-zara",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -25,
+        -25,
+        -24,
+        -24,
+        -22,
+        -22,
+        -21,
+        -14,
+        -13,
+        -12,
+        -11,
+        -11,
+        -10,
+        -8,
+        -6,
+        -5,
+        -5,
+        -2,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 122,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 123,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 124,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 125,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 126,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -12,
+        -10,
+        -4,
+        0
+      ]
+    },
+    {
+      "key": "WEB-913",
+      "type": "Bug",
+      "summary": "Localise checkout",
+      "assignee": "u-zara",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -20,
+        -14,
+        -13,
+        -12,
+        -10
+      ],
+      "prs": [],
+      "comments": [
+        -13
+      ]
+    },
+    {
+      "key": "WEB-915",
+      "type": "Bug",
+      "summary": "Audit accessibility of basket",
+      "assignee": "u-zara",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -24,
+        -20,
+        -20,
+        -17,
+        -14,
+        -13,
+        -12,
+        -10,
+        -9,
+        -9,
+        -6,
+        -6
+      ],
+      "prs": [
+        {
+          "id": 127,
+          "day": -5,
+          "status": "MERGED"
+        },
+        {
+          "id": 128,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 129,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -10,
+        -4,
+        -3
+      ]
+    },
+    {
+      "key": "WEB-917",
+      "type": "Task",
+      "summary": "Simplify promo codes",
+      "assignee": "u-idris",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -23,
+        -23,
+        -22,
+        -22,
+        -21,
+        -21,
+        -14,
+        -13,
+        -13,
+        -10,
+        -10,
+        -8,
+        -7,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5,
+        -3,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 130,
+          "day": -27,
+          "status": "MERGED"
+        },
+        {
+          "id": 131,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 132,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 133,
+          "day": -2,
+          "status": "OPEN"
+        },
+        {
+          "id": 134,
+          "day": -1,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -26,
+        -21,
+        -2,
+        -1
+      ]
+    },
+    {
+      "key": "WEB-924",
+      "type": "Story",
+      "summary": "Log errors from gift cards",
+      "assignee": "u-idris",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -26,
+        -14,
+        -13,
+        -13,
+        -11,
+        -10,
+        -10,
+        -9,
+        -9,
+        -4,
+        -3,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 135,
+          "day": -7,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -14,
+        -7,
+        -3
+      ]
+    },
+    {
+      "key": "WEB-933",
+      "type": "Story",
+      "summary": "Speed up order history",
+      "assignee": "u-idris",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -19,
+        -17,
+        -17,
+        -14,
+        -14,
+        -13,
+        -13,
+        -12,
+        -6,
+        -6,
+        -5,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 136,
+          "day": -27,
+          "status": "MERGED"
+        },
+        {
+          "id": 137,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 138,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 139,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -17,
+        -1
+      ]
+    },
+    {
+      "key": "WEB-936",
+      "type": "Bug",
+      "summary": "Fix rounding in address book",
+      "assignee": "u-idris",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -27,
+        -8,
+        -6
+      ],
+      "prs": [],
+      "comments": [
+        -27,
+        -8,
+        -6
+      ]
+    },
+    {
+      "key": "WEB-943",
+      "type": "Task",
+      "summary": "Redesign invoices",
+      "assignee": "u-idris",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -24,
+        -24,
+        -23,
+        -17,
+        -17,
+        -14,
+        -13,
+        -12,
+        -11,
+        -8,
+        -4,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 140,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 141,
+          "day": -7,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -17,
+        -14,
+        -13,
+        -8
+      ]
+    },
+    {
+      "key": "WEB-951",
+      "type": "Story",
+      "summary": "Add tests for payment sheet",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -19,
+        -14,
+        -10
+      ],
+      "prs": [],
+      "comments": [
+        -19,
+        -14,
+        -10
+      ]
+    },
+    {
+      "key": "WEB-957",
+      "type": "Bug",
+      "summary": "Localise subscription page",
+      "board": 2,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        }
+      ],
+      "commits": [
+        -23,
+        -20,
+        -17,
+        -11,
+        -8
+      ],
+      "prs": [],
+      "comments": [
+        -23,
+        -20,
+        -17,
+        -11,
+        -8
+      ]
+    },
+    {
+      "key": "DATA-234",
+      "type": "Task",
+      "summary": "Backfill ingredient taxonomy",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -18,
+        -17,
+        -17,
+        -14,
+        -14,
+        -13,
+        -13,
+        -12,
+        -12,
+        -11,
+        -9,
+        -9,
+        -8,
+        -5,
+        -4,
+        -4,
+        -2,
+        -1,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 142,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 143,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 144,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -18,
+        -7,
+        -5,
+        0
+      ]
+    },
+    {
+      "key": "DATA-242",
+      "type": "Story",
+      "summary": "Validate nutrition import",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -24,
+        -23,
+        -23,
+        -14,
+        -14,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -9,
+        -9,
+        -8,
+        -8,
+        -7,
+        -6,
+        -6,
+        -4,
+        -3,
+        -3,
+        -2,
+        -1,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 145,
+          "day": -27,
+          "status": "MERGED"
+        },
+        {
+          "id": 146,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 147,
+          "day": -17,
+          "status": "MERGED"
+        },
+        {
+          "id": 148,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 149,
+          "day": -5,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -26,
+        -17,
+        -12,
+        -11,
+        -9,
+        -4,
+        -1
+      ]
+    },
+    {
+      "key": "DATA-245",
+      "type": "Task",
+      "summary": "Speed up recipe tagging",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -23,
+        -21,
+        -21,
+        -19,
+        -19,
+        -15,
+        -15,
+        -10,
+        -10,
+        -8,
+        -8,
+        -7,
+        -7,
+        -4,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 150,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 151,
+          "day": -11,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -23,
+        -21,
+        -11,
+        -10,
+        -4
+      ]
+    },
+    {
+      "key": "DATA-248",
+      "type": "Story",
+      "summary": "Document allergen rules",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        }
+      ],
+      "commits": [
+        -23,
+        -18,
+        -11
+      ],
+      "prs": [],
+      "comments": [
+        -23,
+        -18,
+        -11
+      ]
+    },
+    {
+      "key": "DATA-252",
+      "type": "Task",
+      "summary": "Monitor search index",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -21,
+        -19,
+        -16,
+        -14,
+        -12,
+        -12,
+        -11,
+        -9,
+        -9,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 152,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -4
+      ]
+    },
+    {
+      "key": "DATA-256",
+      "type": "Bug",
+      "summary": "Clean up image pipeline",
+      "assignee": "u-elsa",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -26,
+        -25,
+        -24,
+        -24,
+        -20,
+        -20,
+        -10,
+        -8,
+        -7,
+        -4,
+        -4
+      ],
+      "prs": [],
+      "comments": []
+    },
+    {
+      "key": "DATA-264",
+      "type": "Story",
+      "summary": "Version duplicate detection",
+      "assignee": "u-arjun",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -25,
+        -21,
+        -18,
+        -18,
+        -10,
+        -8,
+        -8,
+        -6,
+        -5,
+        -3,
+        -3,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 153,
+          "day": -15,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -21,
+        -10,
+        -6,
+        -5,
+        -1
+      ]
+    },
+    {
+      "key": "DATA-265",
+      "type": "Story",
+      "summary": "Rebuild unit conversions",
+      "assignee": "u-arjun",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 9
+        }
+      ],
+      "commits": [
+        -26,
+        -22,
+        -22,
+        -21,
+        -21,
+        -17,
+        -17,
+        -15,
+        -15,
+        -10,
+        -10,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 154,
+          "day": -8,
+          "status": "MERGED"
+        },
+        {
+          "id": 155,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -10
+      ]
+    },
+    {
+      "key": "DATA-273",
+      "type": "Bug",
+      "summary": "Backfill seasonality table",
+      "assignee": "u-arjun",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -22,
+        -21,
+        -11,
+        -4
+      ],
+      "prs": [],
+      "comments": [
+        -22,
+        -21,
+        -11,
+        -4
+      ]
+    },
+    {
+      "key": "DATA-276",
+      "type": "Task",
+      "summary": "Validate ratings model",
+      "assignee": "u-arjun",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -15,
+        -15,
+        -11,
+        -10,
+        -10,
+        -5,
+        -5,
+        -4,
+        -3,
+        -3
+      ],
+      "prs": [
+        {
+          "id": 156,
+          "day": -14,
+          "status": "MERGED"
+        },
+        {
+          "id": 157,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 158,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -11,
+        -7
+      ]
+    },
+    {
+      "key": "DATA-285",
+      "type": "Story",
+      "summary": "Speed up ingredient taxonomy",
+      "assignee": "u-clara",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -26,
+        -23,
+        -21,
+        -21,
+        -20,
+        -20,
+        -17,
+        -16,
+        -16,
+        -14,
+        -11,
+        -8,
+        -8,
+        -7,
+        -7,
+        -6,
+        -5,
+        -5,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 159,
+          "day": -13,
+          "status": "MERGED"
+        },
+        {
+          "id": 160,
+          "day": -12,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -17,
+        -14,
+        -7,
+        -6
+      ]
+    },
+    {
+      "key": "DATA-290",
+      "type": "Task",
+      "summary": "Document nutrition import",
+      "assignee": "u-clara",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -24,
+        -22,
+        -22,
+        -16,
+        -16,
+        -13,
+        -13,
+        -12,
+        -11,
+        -10,
+        -10,
+        -9,
+        -9,
+        -8,
+        -7,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5,
+        -4,
+        -3,
+        -3,
+        -2,
+        -2,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 161,
+          "day": 0,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -24,
+        -16,
+        -9,
+        -7,
+        -3,
+        0
+      ]
+    },
+    {
+      "key": "DATA-291",
+      "type": "Spike",
+      "summary": "Monitor recipe tagging",
+      "assignee": "u-clara",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -27,
+        -24,
+        -21,
+        -21,
+        -12,
+        -9,
+        -9,
+        -7,
+        -7,
+        -6,
+        -5,
+        -3,
+        -3,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 162,
+          "day": -22,
+          "status": "MERGED"
+        },
+        {
+          "id": 163,
+          "day": -13,
+          "status": "MERGED"
+        },
+        {
+          "id": 164,
+          "day": -11,
+          "status": "MERGED"
+        },
+        {
+          "id": 165,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 166,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -21,
+        -3,
+        -1
+      ]
+    },
+    {
+      "key": "DATA-298",
+      "type": "Story",
+      "summary": "Clean up allergen rules",
+      "assignee": "u-clara",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -18,
+        -18,
+        -12,
+        -10,
+        -10,
+        -6,
+        -4
+      ],
+      "prs": [
+        {
+          "id": 167,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 168,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -15
+      ]
+    },
+    {
+      "key": "DATA-303",
+      "type": "Story",
+      "summary": "Version search index",
+      "assignee": "u-mateo",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -20,
+        -19,
+        -18,
+        -18,
+        -17,
+        -14,
+        -11,
+        -6,
+        -6,
+        -5,
+        -3,
+        -3,
+        -2,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 169,
+          "day": -22,
+          "status": "MERGED"
+        },
+        {
+          "id": 170,
+          "day": -12,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -18,
+        -14,
+        -6,
+        -5
+      ]
+    },
+    {
+      "key": "DATA-310",
+      "type": "Bug",
+      "summary": "Rebuild image pipeline",
+      "assignee": "u-mateo",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -24,
+        -18
+      ],
+      "prs": [],
+      "comments": [
+        -24,
+        -18
+      ]
+    },
+    {
+      "key": "DATA-316",
+      "type": "Task",
+      "summary": "Backfill duplicate detection",
+      "assignee": "u-mateo",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -24,
+        -17
+      ],
+      "prs": [],
+      "comments": [
+        -24,
+        -17
+      ]
+    },
+    {
+      "key": "DATA-318",
+      "type": "Story",
+      "summary": "Validate unit conversions",
+      "assignee": "u-mateo",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -22,
+        -21,
+        -21,
+        -20,
+        -20,
+        -19,
+        -18,
+        -18,
+        -14,
+        -14,
+        -13,
+        -10,
+        -10,
+        -6,
+        -6,
+        -2,
+        -2
+      ],
+      "prs": [],
+      "comments": [
+        -22,
+        -20,
+        -18,
+        -13,
+        -10
+      ]
+    },
+    {
+      "key": "DATA-320",
+      "type": "Story",
+      "summary": "Speed up seasonality table",
+      "board": 3,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -9,
+        -8
+      ],
+      "prs": [],
+      "comments": [
+        -9,
+        -8
+      ]
+    },
+    {
+      "key": "GRO-148",
+      "type": "Story",
+      "summary": "Launch referral flow",
+      "assignee": "u-bea",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -25,
+        -22,
+        -15,
+        -13,
+        -11,
+        -11,
+        -8,
+        -8,
+        -7,
+        -5,
+        -5,
+        -4,
+        -4,
+        -3,
+        -2,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 171,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 172,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -13,
+        -10,
+        -8
+      ]
+    },
+    {
+      "key": "GRO-157",
+      "type": "Bug",
+      "summary": "Test welcome emails",
+      "assignee": "u-bea",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -26,
+        -23,
+        -21,
+        -21,
+        -18,
+        -17,
+        -16,
+        -14,
+        -12,
+        -11,
+        -11,
+        -10,
+        -8,
+        -8,
+        -6,
+        -6,
+        -5,
+        -3,
+        -1,
+        0
+      ],
+      "prs": [],
+      "comments": [
+        -27,
+        -23,
+        -10,
+        -8,
+        -3
+      ]
+    },
+    {
+      "key": "GRO-160",
+      "type": "Story",
+      "summary": "Refresh trial banner",
+      "assignee": "u-bea",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -25,
+        -25,
+        -20,
+        -20,
+        -19,
+        -19,
+        -15,
+        -13,
+        -13,
+        -12,
+        -10,
+        -10,
+        -9,
+        -9,
+        -7,
+        -7,
+        -5,
+        -5,
+        -4,
+        -4,
+        -3,
+        -3,
+        -2,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 173,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 174,
+          "day": -14,
+          "status": "MERGED"
+        },
+        {
+          "id": 175,
+          "day": -11,
+          "status": "MERGED"
+        },
+        {
+          "id": 176,
+          "day": -6,
+          "status": "MERGED"
+        },
+        {
+          "id": 177,
+          "day": -1,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -15,
+        -14,
+        -9,
+        -7,
+        -4,
+        -1
+      ]
+    },
+    {
+      "key": "GRO-161",
+      "type": "Task",
+      "summary": "Measure pricing page",
+      "assignee": "u-bea",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -24,
+        -21,
+        -1
+      ],
+      "prs": [],
+      "comments": [
+        -24,
+        -21,
+        -1
+      ]
+    },
+    {
+      "key": "GRO-169",
+      "type": "Story",
+      "summary": "Personalise win-back offer",
+      "assignee": "u-bea",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -15,
+        -15,
+        -14,
+        -12,
+        -12,
+        -11,
+        -7,
+        -7,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 178,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -15,
+        -14,
+        -12,
+        -5
+      ]
+    },
+    {
+      "key": "GRO-170",
+      "type": "Bug",
+      "summary": "Tidy up app store listing",
+      "assignee": "u-luca",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -26,
+        -25,
+        -22,
+        -19,
+        -19,
+        -17,
+        -17,
+        -16,
+        -16,
+        -15,
+        -15,
+        -14,
+        -14,
+        -10,
+        -10,
+        -7,
+        -7,
+        -6,
+        -6,
+        -3,
+        -2,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      "prs": [
+        {
+          "id": 179,
+          "day": -11,
+          "status": "MERGED"
+        },
+        {
+          "id": 180,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 181,
+          "day": -5,
+          "status": "MERGED"
+        },
+        {
+          "id": 182,
+          "day": -4,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -22,
+        -19,
+        -15,
+        -5,
+        -1
+      ]
+    },
+    {
+      "key": "GRO-171",
+      "type": "Story",
+      "summary": "Translate newsletter signup",
+      "assignee": "u-luca",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -24,
+        -24,
+        -21,
+        -21,
+        -17,
+        -17,
+        -13,
+        -13,
+        -12,
+        -9,
+        -8,
+        -8,
+        -4,
+        -3,
+        -3,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 183,
+          "day": -14,
+          "status": "MERGED"
+        },
+        {
+          "id": 184,
+          "day": -5,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -8,
+        -4,
+        -3
+      ]
+    },
+    {
+      "key": "GRO-173",
+      "type": "Spike",
+      "summary": "Track share cards",
+      "assignee": "u-luca",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -17,
+        -10,
+        -6,
+        -3
+      ],
+      "prs": [],
+      "comments": [
+        -17,
+        -10,
+        -6,
+        -3
+      ]
+    },
+    {
+      "key": "GRO-182",
+      "type": "Task",
+      "summary": "Launch landing pages",
+      "assignee": "u-luca",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 2
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -23,
+        -23,
+        -16,
+        -15,
+        -7,
+        -6,
+        -5,
+        -5,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 185,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 186,
+          "day": -4,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -23,
+        -20,
+        -16,
+        -7,
+        -5,
+        -2
+      ]
+    },
+    {
+      "key": "GRO-183",
+      "type": "Story",
+      "summary": "Test A/B framework",
+      "assignee": "u-yuki",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 8
+        }
+      ],
+      "commits": [
+        -25,
+        -24,
+        -24,
+        -20,
+        -18,
+        -18
+      ],
+      "prs": [
+        {
+          "id": 187,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 188,
+          "day": -13,
+          "status": "MERGED"
+        },
+        {
+          "id": 189,
+          "day": -9,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -20,
+        -9
+      ]
+    },
+    {
+      "key": "GRO-192",
+      "type": "Bug",
+      "summary": "Refresh referral flow",
+      "assignee": "u-yuki",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -25,
+        -24,
+        -24,
+        -23,
+        -23,
+        -22,
+        -22,
+        -21,
+        -21,
+        -20,
+        -18,
+        -18,
+        -16,
+        -16,
+        -14,
+        -11,
+        -10,
+        -10,
+        -8,
+        -8,
+        -7,
+        -7,
+        -6,
+        -5,
+        -5,
+        -4,
+        -3,
+        -2,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 190,
+          "day": -12,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -23,
+        -22,
+        -14,
+        -4
+      ]
+    },
+    {
+      "key": "GRO-200",
+      "type": "Story",
+      "summary": "Measure welcome emails",
+      "assignee": "u-yuki",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -21,
+        -14
+      ],
+      "prs": [],
+      "comments": [
+        -21,
+        -14
+      ]
+    },
+    {
+      "key": "GRO-209",
+      "type": "Task",
+      "summary": "Personalise trial banner",
+      "assignee": "u-yuki",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 7
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -21,
+        -14,
+        -14,
+        -13,
+        -9,
+        -9,
+        -7,
+        -7,
+        -5,
+        -5,
+        -3,
+        -3,
+        -2,
+        -2
+      ],
+      "prs": [
+        {
+          "id": 191,
+          "day": -8,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -21,
+        -13,
+        -9,
+        -2
+      ]
+    },
+    {
+      "key": "GRO-216",
+      "type": "Story",
+      "summary": "Tidy up pricing page",
+      "assignee": "u-diego",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -16,
+        -16,
+        -13,
+        -13,
+        -9,
+        -7,
+        -7
+      ],
+      "prs": [],
+      "comments": [
+        -7
+      ]
+    },
+    {
+      "key": "GRO-221",
+      "type": "Bug",
+      "summary": "Translate win-back offer",
+      "assignee": "u-diego",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -26,
+        -24,
+        -24,
+        -22,
+        -21,
+        -21,
+        -19,
+        -18,
+        -15,
+        -14,
+        -12,
+        -12,
+        -10,
+        -10,
+        -8,
+        -4,
+        -3,
+        -3,
+        -2,
+        -2,
+        -1,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 192,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 193,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 194,
+          "day": -6,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -23,
+        -22,
+        -19,
+        -18,
+        -14,
+        -8,
+        -4,
+        -1
+      ]
+    },
+    {
+      "key": "GRO-229",
+      "type": "Story",
+      "summary": "Track app store listing",
+      "assignee": "u-diego",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -14,
+        -13,
+        -13,
+        -10,
+        -10,
+        -8,
+        -8,
+        -5,
+        0
+      ],
+      "prs": [
+        {
+          "id": 195,
+          "day": -25,
+          "status": "MERGED"
+        },
+        {
+          "id": 196,
+          "day": -17,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -17,
+        -14
+      ]
+    },
+    {
+      "key": "GRO-235",
+      "type": "Bug",
+      "summary": "Launch newsletter signup",
+      "board": 4,
+      "inSprint": true,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -26,
+        -25
+      ],
+      "prs": [],
+      "comments": [
+        -26,
+        -25
+      ]
+    },
+    {
+      "key": "PLAT-414",
+      "type": "Task",
+      "summary": "Upgrade API gateway",
+      "assignee": "u-freya",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 3
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -25,
+        -22,
+        -22,
+        -16,
+        -13,
+        -13,
+        -12,
+        -10,
+        -9,
+        -7,
+        -7,
+        -6,
+        -6,
+        -5,
+        -5,
+        -4,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 197,
+          "day": -20,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -22,
+        -16,
+        -9,
+        -6
+      ]
+    },
+    {
+      "key": "PLAT-421",
+      "type": "Bug",
+      "summary": "Harden build cache",
+      "assignee": "u-freya",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -17,
+        -17,
+        -16,
+        -16,
+        -14,
+        -14,
+        -12,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -9,
+        -8,
+        -7,
+        -7,
+        -5,
+        -4,
+        -4,
+        0
+      ],
+      "prs": [
+        {
+          "id": 198,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 199,
+          "day": -18,
+          "status": "MERGED"
+        },
+        {
+          "id": 200,
+          "day": -6,
+          "status": "MERGED"
+        },
+        {
+          "id": 201,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -17,
+        -10,
+        -9,
+        -7,
+        -5,
+        -4
+      ]
+    },
+    {
+      "key": "PLAT-429",
+      "type": "Task",
+      "summary": "Automate staging database",
+      "assignee": "u-freya",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -25,
+        -11,
+        -1
+      ],
+      "prs": [],
+      "comments": [
+        -25,
+        -11,
+        -1
+      ]
+    },
+    {
+      "key": "PLAT-430",
+      "type": "Story",
+      "summary": "Alert on feature flags",
+      "assignee": "u-freya",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 9
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        },
+        {
+          "status": "Code Review",
+          "days": 2
+        },
+        {
+          "status": "QA",
+          "days": 2
+        },
+        {
+          "status": "Done",
+          "days": 6
+        }
+      ],
+      "commits": [
+        -24,
+        -24,
+        -21,
+        -19,
+        -13,
+        -11,
+        -11,
+        -9,
+        -9,
+        -7,
+        -7
+      ],
+      "prs": [],
+      "comments": [
+        -24,
+        -21,
+        -19,
+        -7
+      ]
+    },
+    {
+      "key": "PLAT-439",
+      "type": "Task",
+      "summary": "Right-size log retention",
+      "assignee": "u-malik",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -27,
+        -25,
+        -25,
+        -23,
+        -23,
+        -21,
+        -21,
+        -20,
+        -20,
+        -19,
+        -19,
+        -16,
+        -16,
+        -13,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -7,
+        -7,
+        -6,
+        -5,
+        -4,
+        -3,
+        -1,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 202,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 203,
+          "day": -8,
+          "status": "MERGED"
+        },
+        {
+          "id": 204,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -21,
+        -20,
+        -11,
+        -6,
+        -4,
+        -2,
+        -1,
+        0
+      ]
+    },
+    {
+      "key": "PLAT-444",
+      "type": "Bug",
+      "summary": "Document CDN rules",
+      "assignee": "u-malik",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 3
+        }
+      ],
+      "commits": [
+        -25,
+        -17,
+        -17,
+        -12,
+        -11,
+        -11,
+        -10,
+        -10,
+        -8,
+        -8,
+        -7,
+        -2,
+        -2,
+        -1,
+        -1
+      ],
+      "prs": [
+        {
+          "id": 205,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 206,
+          "day": -6,
+          "status": "MERGED"
+        },
+        {
+          "id": 207,
+          "day": -4,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -8,
+        -6
+      ]
+    },
+    {
+      "key": "PLAT-449",
+      "type": "Task",
+      "summary": "Migrate secrets rotation",
+      "assignee": "u-malik",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 1
+        },
+        {
+          "status": "QA",
+          "days": 1
+        },
+        {
+          "status": "Done",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -26,
+        -26,
+        -20,
+        -20,
+        -18,
+        -18,
+        -16,
+        -16,
+        -8,
+        -7,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 208,
+          "day": -25,
+          "status": "MERGED"
+        },
+        {
+          "id": 209,
+          "day": -21,
+          "status": "MERGED"
+        },
+        {
+          "id": 210,
+          "day": -19,
+          "status": "MERGED"
+        },
+        {
+          "id": 211,
+          "day": -17,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -26,
+        -21,
+        -19,
+        -18,
+        -17
+      ]
+    },
+    {
+      "key": "PLAT-455",
+      "type": "Spike",
+      "summary": "Benchmark queue workers",
+      "assignee": "u-sofia",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        },
+        {
+          "status": "In Progress",
+          "days": 6
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 2
+        }
+      ],
+      "commits": [
+        -26,
+        -25,
+        -22,
+        -22,
+        -19,
+        -19,
+        -18,
+        -18,
+        -14,
+        -13,
+        -12,
+        -11,
+        -7,
+        -7,
+        -6,
+        -6,
+        -5,
+        -4,
+        -2,
+        -2,
+        -1,
+        0
+      ],
+      "prs": [
+        {
+          "id": 212,
+          "day": -23,
+          "status": "MERGED"
+        },
+        {
+          "id": 213,
+          "day": -20,
+          "status": "MERGED"
+        },
+        {
+          "id": 214,
+          "day": -10,
+          "status": "MERGED"
+        },
+        {
+          "id": 215,
+          "day": -9,
+          "status": "MERGED"
+        },
+        {
+          "id": 216,
+          "day": -8,
+          "status": "MERGED"
+        },
+        {
+          "id": 217,
+          "day": -3,
+          "status": "MERGED"
+        }
+      ],
+      "comments": [
+        -25,
+        -23,
+        -13,
+        -10,
+        -1
+      ]
+    },
+    {
+      "key": "PLAT-460",
+      "type": "Task",
+      "summary": "Upgrade status page",
+      "assignee": "u-sofia",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 10
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -23,
+        -21,
+        -21,
+        -13,
+        -13,
+        -10,
+        -10,
+        -9,
+        -9,
+        -8,
+        -8,
+        -7,
+        -7,
+        -6,
+        -5
+      ],
+      "prs": [
+        {
+          "id": 218,
+          "day": -24,
+          "status": "MERGED"
+        },
+        {
+          "id": 219,
+          "day": -4,
+          "status": "MERGED"
+        }
+      ],
+      "comments": []
+    },
+    {
+      "key": "PLAT-463",
+      "type": "Story",
+      "summary": "Harden load tests",
+      "assignee": "u-sofia",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 5
+        }
+      ],
+      "commits": [
+        -10,
+        -1
+      ],
+      "prs": [],
+      "comments": [
+        -10,
+        -1
+      ]
+    },
+    {
+      "key": "PLAT-467",
+      "type": "Bug",
+      "summary": "Automate API gateway",
+      "assignee": "u-ezra",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 4
+        },
+        {
+          "status": "In Progress",
+          "days": 4
+        }
+      ],
+      "commits": [
+        -27,
+        -27,
+        -25,
+        -14,
+        -14,
+        -13,
+        -12,
+        -12,
+        -10,
+        -8,
+        -5,
+        0
+      ],
+      "prs": [
+        {
+          "id": 220,
+          "day": -7,
+          "status": "MERGED"
+        },
+        {
+          "id": 221,
+          "day": -4,
+          "status": "MERGED"
+        },
+        {
+          "id": 222,
+          "day": -3,
+          "status": "MERGED"
+        },
+        {
+          "id": 223,
+          "day": -2,
+          "status": "OPEN"
+        },
+        {
+          "id": 224,
+          "day": -1,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -27,
+        -14,
+        -1,
+        0
+      ]
+    },
+    {
+      "key": "PLAT-474",
+      "type": "Task",
+      "summary": "Alert on build cache",
+      "assignee": "u-ezra",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -22,
+        -10
+      ],
+      "prs": [],
+      "comments": [
+        -22,
+        -10
+      ]
+    },
+    {
+      "key": "PLAT-478",
+      "type": "Task",
+      "summary": "Right-size staging database",
+      "assignee": "u-ezra",
+      "board": 5,
+      "inSprint": false,
+      "flaggedDays": [],
+      "history": [
+        {
+          "status": "To Do",
+          "days": 8
+        },
+        {
+          "status": "In Progress",
+          "days": 5
+        },
+        {
+          "status": "Code Review",
+          "days": 3
+        },
+        {
+          "status": "QA",
+          "days": 3
+        },
+        {
+          "status": "Done",
+          "days": 1
+        }
+      ],
+      "commits": [
+        -23,
+        -21,
+        -20,
+        -13,
+        -10,
+        -10,
+        -7
+      ],
+      "prs": [
+        {
+          "id": 225,
+          "day": -27,
+          "status": "MERGED"
+        },
+        {
+          "id": 226,
+          "day": -17,
+          "status": "MERGED"
+        },
+        {
+          "id": 227,
+          "day": -16,
+          "status": "MERGED"
+        },
+        {
+          "id": 228,
+          "day": -15,
+          "status": "MERGED"
+        },
+        {
+          "id": 229,
+          "day": -11,
+          "status": "MERGED"
+        },
+        {
+          "id": 230,
+          "day": -6,
+          "status": "MERGED"
+        },
+        {
+          "id": 231,
+          "day": -2,
+          "status": "OPEN"
+        }
+      ],
+      "comments": [
+        -20,
+        -15,
+        -6,
+        -2
+      ]
+    }
+  ],
+  "backlog": [
+    {
+      "key": "MOB-1525",
+      "type": "Story",
+      "summary": "Meal plan templates for busy weeks",
+      "board": 1
+    },
+    {
+      "key": "MOB-1527",
+      "type": "Story",
+      "summary": "Pantry expiry reminders",
+      "board": 1
+    },
+    {
+      "key": "MOB-1533",
+      "type": "Bug",
+      "summary": "Recipe import from a web page",
+      "board": 1
+    },
+    {
+      "key": "MOB-1538",
+      "type": "Task",
+      "summary": "Shared shopping list with live updates",
+      "board": 1
+    },
+    {
+      "key": "MOB-1539",
+      "type": "Story",
+      "summary": "Price per serving on every recipe",
+      "board": 1
+    },
+    {
+      "key": "MOB-1543",
+      "type": "Spike",
+      "summary": "Kids' portion sizes",
+      "board": 1
+    },
+    {
+      "key": "MOB-1545",
+      "type": "Story",
+      "summary": "Cooking classes in the app",
+      "board": 1
+    },
+    {
+      "key": "MOB-1548",
+      "type": "Bug",
+      "summary": "Weekly nutrition summary",
+      "board": 1
+    },
+    {
+      "key": "MOB-1554",
+      "type": "Task",
+      "summary": "Apple Watch timers",
+      "board": 1
+    },
+    {
+      "key": "MOB-1555",
+      "type": "Story",
+      "summary": "Print-friendly recipe view",
+      "board": 1
+    },
+    {
+      "key": "MOB-1557",
+      "type": "Story",
+      "summary": "Recipe version history",
+      "board": 1
+    },
+    {
+      "key": "MOB-1560",
+      "type": "Bug",
+      "summary": "Smart reorder of staple items",
+      "board": 1
+    },
+    {
+      "key": "MOB-1563",
+      "type": "Task",
+      "summary": "Add tests for checkout (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1565",
+      "type": "Story",
+      "summary": "Localise basket (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1571",
+      "type": "Spike",
+      "summary": "Audit accessibility of promo codes (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1572",
+      "type": "Story",
+      "summary": "Simplify gift cards (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1578",
+      "type": "Bug",
+      "summary": "Log errors from order history (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1584",
+      "type": "Task",
+      "summary": "Speed up address book (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1590",
+      "type": "Story",
+      "summary": "Fix rounding in invoices (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1596",
+      "type": "Story",
+      "summary": "Redesign payment sheet (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1599",
+      "type": "Bug",
+      "summary": "Add tests for subscription page (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1603",
+      "type": "Task",
+      "summary": "Localise receipts (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1604",
+      "type": "Story",
+      "summary": "Audit accessibility of checkout (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1607",
+      "type": "Story",
+      "summary": "Simplify basket (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1609",
+      "type": "Bug",
+      "summary": "Log errors from promo codes (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1611",
+      "type": "Task",
+      "summary": "Speed up gift cards (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1617",
+      "type": "Story",
+      "summary": "Fix rounding in order history (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1618",
+      "type": "Spike",
+      "summary": "Redesign address book (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1621",
+      "type": "Story",
+      "summary": "Add tests for invoices (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1624",
+      "type": "Bug",
+      "summary": "Localise payment sheet (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1625",
+      "type": "Task",
+      "summary": "Audit accessibility of subscription page (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1631",
+      "type": "Story",
+      "summary": "Simplify receipts (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1632",
+      "type": "Story",
+      "summary": "Log errors from checkout (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1633",
+      "type": "Bug",
+      "summary": "Speed up basket (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1637",
+      "type": "Task",
+      "summary": "Fix rounding in promo codes (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1641",
+      "type": "Story",
+      "summary": "Redesign gift cards (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1647",
+      "type": "Story",
+      "summary": "Add tests for order history (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1651",
+      "type": "Bug",
+      "summary": "Localise address book (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1653",
+      "type": "Task",
+      "summary": "Audit accessibility of invoices (later)",
+      "board": 1
+    },
+    {
+      "key": "MOB-1657",
+      "type": "Story",
+      "summary": "Simplify payment sheet (later)",
+      "board": 1
+    },
+    {
+      "key": "WEB-903",
+      "type": "Story",
+      "summary": "Audit accessibility of checkout",
+      "board": 2
+    },
+    {
+      "key": "WEB-909",
+      "type": "Story",
+      "summary": "Simplify basket",
+      "board": 2
+    },
+    {
+      "key": "WEB-910",
+      "type": "Bug",
+      "summary": "Log errors from promo codes",
+      "board": 2
+    },
+    {
+      "key": "WEB-915",
+      "type": "Story",
+      "summary": "Speed up gift cards",
+      "board": 2
+    },
+    {
+      "key": "WEB-918",
+      "type": "Task",
+      "summary": "Fix rounding in order history",
+      "board": 2
+    },
+    {
+      "key": "WEB-923",
+      "type": "Story",
+      "summary": "Redesign address book",
+      "board": 2
+    },
+    {
+      "key": "WEB-924",
+      "type": "Spike",
+      "summary": "Add tests for invoices",
+      "board": 2
+    },
+    {
+      "key": "WEB-930",
+      "type": "Story",
+      "summary": "Localise payment sheet",
+      "board": 2
+    },
+    {
+      "key": "WEB-931",
+      "type": "Bug",
+      "summary": "Audit accessibility of subscription page",
+      "board": 2
+    },
+    {
+      "key": "WEB-934",
+      "type": "Task",
+      "summary": "Simplify receipts",
+      "board": 2
+    },
+    {
+      "key": "WEB-935",
+      "type": "Story",
+      "summary": "Log errors from checkout",
+      "board": 2
+    },
+    {
+      "key": "WEB-937",
+      "type": "Story",
+      "summary": "Speed up basket",
+      "board": 2
+    },
+    {
+      "key": "WEB-942",
+      "type": "Story",
+      "summary": "Fix rounding in promo codes",
+      "board": 2
+    },
+    {
+      "key": "WEB-943",
+      "type": "Task",
+      "summary": "Redesign gift cards",
+      "board": 2
+    },
+    {
+      "key": "WEB-944",
+      "type": "Bug",
+      "summary": "Add tests for order history",
+      "board": 2
+    },
+    {
+      "key": "WEB-950",
+      "type": "Story",
+      "summary": "Localise address book",
+      "board": 2
+    },
+    {
+      "key": "WEB-952",
+      "type": "Story",
+      "summary": "Audit accessibility of invoices",
+      "board": 2
+    },
+    {
+      "key": "WEB-957",
+      "type": "Task",
+      "summary": "Simplify payment sheet",
+      "board": 2
+    },
+    {
+      "key": "WEB-961",
+      "type": "Story",
+      "summary": "Log errors from subscription page",
+      "board": 2
+    },
+    {
+      "key": "WEB-963",
+      "type": "Story",
+      "summary": "Speed up receipts",
+      "board": 2
+    },
+    {
+      "key": "WEB-965",
+      "type": "Bug",
+      "summary": "Fix rounding in checkout",
+      "board": 2
+    },
+    {
+      "key": "WEB-970",
+      "type": "Story",
+      "summary": "Redesign basket",
+      "board": 2
+    },
+    {
+      "key": "DATA-301",
+      "type": "Story",
+      "summary": "Clean up ingredient taxonomy",
+      "board": 3
+    },
+    {
+      "key": "DATA-304",
+      "type": "Task",
+      "summary": "Version nutrition import",
+      "board": 3
+    },
+    {
+      "key": "DATA-305",
+      "type": "Spike",
+      "summary": "Rebuild recipe tagging",
+      "board": 3
+    },
+    {
+      "key": "DATA-308",
+      "type": "Story",
+      "summary": "Backfill allergen rules",
+      "board": 3
+    },
+    {
+      "key": "DATA-314",
+      "type": "Bug",
+      "summary": "Validate search index",
+      "board": 3
+    },
+    {
+      "key": "DATA-315",
+      "type": "Story",
+      "summary": "Speed up image pipeline",
+      "board": 3
+    },
+    {
+      "key": "DATA-319",
+      "type": "Task",
+      "summary": "Document duplicate detection",
+      "board": 3
+    },
+    {
+      "key": "DATA-320",
+      "type": "Story",
+      "summary": "Monitor unit conversions",
+      "board": 3
+    },
+    {
+      "key": "DATA-322",
+      "type": "Story",
+      "summary": "Clean up seasonality table",
+      "board": 3
+    },
+    {
+      "key": "DATA-328",
+      "type": "Task",
+      "summary": "Version ratings model",
+      "board": 3
+    },
+    {
+      "key": "DATA-334",
+      "type": "Story",
+      "summary": "Rebuild ingredient taxonomy",
+      "board": 3
+    },
+    {
+      "key": "DATA-339",
+      "type": "Bug",
+      "summary": "Backfill nutrition import",
+      "board": 3
+    },
+    {
+      "key": "DATA-343",
+      "type": "Story",
+      "summary": "Validate recipe tagging",
+      "board": 3
+    },
+    {
+      "key": "DATA-349",
+      "type": "Task",
+      "summary": "Speed up allergen rules",
+      "board": 3
+    },
+    {
+      "key": "GRO-204",
+      "type": "Story",
+      "summary": "Tidy up referral flow",
+      "board": 4
+    },
+    {
+      "key": "GRO-208",
+      "type": "Bug",
+      "summary": "Translate welcome emails",
+      "board": 4
+    },
+    {
+      "key": "GRO-213",
+      "type": "Story",
+      "summary": "Track trial banner",
+      "board": 4
+    },
+    {
+      "key": "GRO-215",
+      "type": "Task",
+      "summary": "Launch pricing page",
+      "board": 4
+    },
+    {
+      "key": "GRO-216",
+      "type": "Story",
+      "summary": "Test win-back offer",
+      "board": 4
+    },
+    {
+      "key": "GRO-217",
+      "type": "Bug",
+      "summary": "Refresh app store listing",
+      "board": 4
+    },
+    {
+      "key": "GRO-222",
+      "type": "Story",
+      "summary": "Measure newsletter signup",
+      "board": 4
+    },
+    {
+      "key": "GRO-228",
+      "type": "Spike",
+      "summary": "Personalise share cards",
+      "board": 4
+    },
+    {
+      "key": "PLAT-466",
+      "type": "Task",
+      "summary": "Document API gateway",
+      "board": 5
+    },
+    {
+      "key": "PLAT-470",
+      "type": "Bug",
+      "summary": "Migrate build cache",
+      "board": 5
+    },
+    {
+      "key": "PLAT-473",
+      "type": "Task",
+      "summary": "Benchmark staging database",
+      "board": 5
+    },
+    {
+      "key": "PLAT-475",
+      "type": "Story",
+      "summary": "Upgrade feature flags",
+      "board": 5
+    },
+    {
+      "key": "PLAT-481",
+      "type": "Task",
+      "summary": "Harden log retention",
+      "board": 5
+    },
+    {
+      "key": "PLAT-484",
+      "type": "Bug",
+      "summary": "Automate CDN rules",
+      "board": 5
+    }
+  ]
+}

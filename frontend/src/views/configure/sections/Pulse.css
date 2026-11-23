@@ -1,0 +1,46 @@
+/* Configure > Pulse. Section frame and field rows live in styles/configure.css. Tokens only (AGENTS.md invariant 11). */
+.pulse-warning {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+  font-size: var(--font-size-small);
+}
+
+.pulse-preview-track {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pulse-marks {
+  gap: var(--space-2) var(--space-4);
+}
+
+/* Four limits in walk order: swatch + name above a stepper. They wrap by whole cells, never mid-control. */
+.pulse-limits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--scale) * 6.25rem), 1fr));
+  gap: var(--space-2) var(--space-3);
+}
+
+.pulse-limit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.pulse-limit-head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pulse-limit-name {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+}

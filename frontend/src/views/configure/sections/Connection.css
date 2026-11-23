@@ -1,0 +1,80 @@
+/* Configure > Connection. Section frame lives in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.conn {
+  gap: var(--space-3);
+}
+
+.conn-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3);
+  border: 2px solid var(--color-rule-soft);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.conn-site {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+}
+
+.conn-account {
+  margin: 0;
+  font-size: var(--font-size-meta);
+  color: var(--color-muted);
+}
+
+.conn-tag {
+  margin-left: auto;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-chip);
+  background: var(--color-tag-bg);
+  color: var(--color-tag-fg);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  letter-spacing: var(--font-tracking-tag);
+  text-transform: uppercase;
+}
+
+.conn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.conn-btn {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.conn-btn:hover {
+  background: var(--color-rule-soft);
+}
+
+.conn-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.conn-danger,
+.conn-danger:hover {
+  border-color: var(--color-alert-bg);
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+}
+
+.conn-alert {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-alert-text);
+}

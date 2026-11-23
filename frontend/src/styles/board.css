@@ -1,0 +1,394 @@
+/* Whole-board screen (ux-spec §6). Tokens only; lane colours come from data-lane on the track, not here. */
+
+.board {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Title row (ux-spec §3: 48px, or 40px when vh < 800): h1 and the one-line summary share a baseline. */
+.board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  box-sizing: border-box;
+  height: calc(var(--scale) * 48px);
+  min-width: 0;
+}
+
+.board-title-block {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.board-title {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: calc(var(--scale) * var(--font-size-h1-board));
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  color: var(--color-fg);
+}
+
+.board-sub {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+@media (max-height: 799px) {
+  .board-head {
+    height: calc(var(--scale) * 40px);
+  }
+  .board-title {
+    font-size: calc(var(--scale) * var(--font-size-h1-board-compact));
+  }
+}
+
+.board-sub-alert,
+[data-alert="true"] {
+  color: var(--color-alert-text);
+}
+
+/* Columns */
+
+.board-cols {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--space-column-gap);
+  min-width: 0;
+}
+
+.board-col {
+  min-width: 0;
+}
+
+.board-col-lanes {
+  position: relative;
+}
+
+.board-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* The backdrop sits exactly over the lane tracks: from the track's left edge, same width (inline). */
+.board-backdrop > .track-backdrop {
+  left: var(--track-left);
+  right: auto;
+  max-width: calc(100% - var(--track-left));
+}
+
+/* Axis row (30px) */
+
+.board-axis {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  height: calc(var(--scale) * var(--size-lane-head));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+/* The label block spans icon + key + title and its gaps, so the axis track starts where the lane tracks do. */
+.board-axis-label {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: calc(var(--scale) * 14px + var(--key-w) + var(--title-w) + var(--space-2) * 3);
+  padding-bottom: 6px;
+  font-size: calc(var(--scale) * var(--font-size-small));
+}
+
+.board-axis-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 100%;
+  min-width: 0;
+  margin-right: calc(var(--scale) * var(--size-days-chip-lane) + var(--space-2));
+  border-bottom: var(--size-rule-row) solid var(--color-rule-mid);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-axis-board));
+}
+
+.board-axis-mon {
+  position: absolute;
+  bottom: 5px;
+  left: calc(var(--x) / var(--days) * 100%);
+  padding-left: var(--space-1);
+  border-left: var(--size-rule-row) solid var(--color-rule-mid);
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.board-axis-today {
+  position: absolute;
+  bottom: 5px;
+  right: var(--space-1);
+  line-height: 14px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-fg);
+}
+
+/* Lane header (30px) */
+
+.board-lane {
+  position: relative;
+  z-index: 1;
+}
+
+/* The 8px gap under a lane and the lane header mask the weekend shading, which only sits behind the rows. */
+.board-lane::after {
+  content: "";
+  display: block;
+  height: var(--space-2);
+  background: var(--color-bg);
+}
+
+.board-lane-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: calc(var(--scale) * var(--size-lane-head));
+  padding: 0;
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-lane-name {
+  flex: 0 0 auto;
+  font-size: calc(var(--scale) * var(--font-size-row-title-tight));
+  font-weight: var(--font-weight-bold);
+}
+
+.board-lane-head--unassigned {
+  color: var(--color-alert-text);
+}
+
+.board-lane-meta,
+.board-lane-alert {
+  flex: 0 0 auto;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+.board-lane-alert {
+  color: var(--color-alert-text);
+}
+
+.board-lane-rule {
+  flex: 1 1 auto;
+  height: var(--size-rule-row);
+  background: var(--color-rule-soft);
+}
+
+.board-lane-rule--dashed {
+  height: 0;
+  background: none;
+  border-top: var(--size-rule-row) dashed var(--color-unassigned-border);
+}
+
+/* Lane rows */
+
+.board-row {
+  display: grid;
+  grid-template-columns: calc(var(--scale) * 14px) var(--key-w) var(--title-w) minmax(0, 1fr) calc(var(--scale) * var(--size-days-chip-lane));
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The track is a flexible grid cell's width at most: it can shrink, never push the chip off the column. */
+.board-row > .pulse-track {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.board-row:focus-visible,
+.board-list-row:focus-visible,
+.board-lane-head:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.board-row-key {
+  overflow: hidden;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-lane-key));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.board-row-title {
+  overflow: hidden;
+  font-size: calc(var(--scale) * var(--font-size-lane-title));
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.board-days {
+  padding: 2px 0;
+  border-radius: var(--radius-chip);
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-days-chip-lane));
+  font-weight: var(--font-weight-bold);
+  color: var(--color-muted);
+}
+
+.board-days[data-alert="true"] {
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+}
+
+/* Icons: the shared issue-type icon (TicketRow), 14px here; done rows use the done colour. */
+
+.board-row .ticket-icon,
+.board-list-row .ticket-icon {
+  width: calc(var(--scale) * 14px);
+  height: calc(var(--scale) * 14px);
+}
+
+.ticket-icon.is-done-icon {
+  color: var(--color-done-icon);
+}
+
+/* Done and Backlog */
+
+.board-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  column-gap: var(--space-column-gap);
+  align-items: start;
+  margin-top: var(--space-1);
+}
+
+.board-bottom--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--space-section-gap);
+}
+
+.board-list--done {
+  color: var(--color-done-fg);
+}
+
+/* Heading row: 36px, the 3px rule runs under the whole section width. */
+.board-list-head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  height: calc(var(--scale) * 36px);
+  padding-bottom: 5px;
+  border-bottom: var(--size-rule-heavy) solid var(--color-rule);
+}
+
+.board-list--done .board-list-head {
+  border-bottom-color: var(--color-rule-mid);
+}
+
+.board-list-title {
+  margin: 0;
+  font-size: calc(var(--scale) * var(--font-size-group-head));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+}
+
+.board-list--backlog .board-list-title {
+  color: var(--color-fg);
+}
+
+.board-list-count {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-small));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+.board-list-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), calc(var(--scale) * 26px));
+  grid-auto-flow: column;
+  column-gap: var(--space-6);
+  padding-top: 6px;
+}
+
+.board-list-row {
+  display: grid;
+  grid-template-columns: calc(var(--scale) * 14px) calc(var(--scale) * 70px) minmax(0, 1fr) calc(var(--scale) * 22px);
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-list-row--backlog {
+  grid-template-columns: calc(var(--scale) * 14px) calc(var(--scale) * 70px) minmax(0, 1fr);
+  color: var(--color-fg);
+}
+
+.board-list-key {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-small));
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.board-list-key--muted {
+  color: var(--color-muted);
+}
+
+.board-list-text {
+  overflow: hidden;
+  font-size: calc(var(--scale) * var(--font-size-lane-title));
+  font-weight: var(--font-weight-regular);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.board-initials {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+}
+
+.board-footnote {
+  margin: var(--space-1) 0 0;
+  font-size: calc(var(--scale) * var(--font-size-small));
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}

@@ -1,0 +1,117 @@
+version: '3'
+
+# Shared steps for local work and every CI workflow (architecture §6.5, R18). Frontend tools are called through
+# ./node_modules/.bin directly (no npm run / npx) so the same commands work in sandboxes that block npm script spawning.
+
+vars:
+  APP_NAME: "cuisle"
+  BIN_DIR: "bin"
+  PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  GOOS: '{{.GOOS | default OS}}'
+  FE: ./node_modules/.bin
+  VERSION: '{{.VERSION | default "dev"}}'
+  LDFLAGS: '-X github.com/crueber/cuisle/internal/buildinfo.Version={{.VERSION}}'
+
+includes:
+  common: ./build/Taskfile.yml
+  windows: ./build/windows/Taskfile.yml
+  darwin: ./build/darwin/Taskfile.yml
+  linux: ./build/linux/Taskfile.yml
+
+tasks:
+  dev:
+    summary: App against the fake Jira (cuisle --fake-jira), hot reload
+    env:
+      CUISLE_FAKE_JIRA: default
+      CUISLE_DATA_DIR: '{{.ROOT_DIR}}/.dev-data'
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+
+  dev:real:
+    summary: App against your Jira site (token from the keychain)
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+
+  dev:mock:
+    summary: Frontend only, in a browser, against src/api/mock.ts
+    dir: frontend
+    cmds:
+      - '{{.FE}}/vite --mode mock'
+
+  bindings:
+    summary: Regenerate TS bindings from Go services (never hand-edit frontend/src/bindings)
+    cmds:
+      - wails3 generate bindings -f '-tags gtk3' -clean=true -ts -i -d frontend/src/bindings ./cmd/cuisle
+
+  bindings:check:
+    summary: Fail when committed bindings differ from the Go services
+    cmds:
+      - task: bindings
+      - git diff --exit-code -- frontend/src/bindings
+
+  tokens:
+    summary: design/tokens.json → frontend/src/styles/tokens.css + tokens.ts
+    dir: frontend
+    cmds:
+      - node scripts/tokens.mjs
+
+  test:
+    summary: Go tests (cgo-free) + Vitest
+    cmds:
+      - task: test:go
+      - task: test:fe
+
+  test:go:
+    env:
+      CGO_ENABLED: "0"
+    cmds:
+      - go test -tags purego -count=1 ./...
+
+  test:fe:
+    dir: frontend
+    cmds:
+      - '{{.FE}}/vitest run'
+
+  lint:
+    summary: go vet, layercheck, staticcheck (if installed), tsc, eslint
+    cmds:
+      - CGO_ENABLED=0 go vet -tags purego ./...
+      - go run ./scripts/layercheck
+      - 'if staticcheck -version >/dev/null 2>&1; then CGO_ENABLED=0 staticcheck -tags purego ./...; else echo "staticcheck not installed: skipped"; fi'
+      - cd frontend && {{.FE}}/tsc --noEmit
+      - cd frontend && {{.FE}}/eslint src scripts tests
+      - cmp internal/app/testdata/bootstrap_mob.golden.json frontend/tests/fixtures/bootstrap_mob.json  # Playwright fixture = Go golden
+
+  bench:
+    summary: Go benchmarks (compare with benchstat against bench/baseline.txt)
+    cmds:
+      - CGO_ENABLED=0 go test -tags purego -run '^$' -bench . -benchmem -count 6 ./internal/view ./internal/settings ./internal/store ./internal/app | tee bench/latest.txt
+
+  size:
+    summary: vite build + size-limit budgets
+    dir: frontend
+    cmds:
+      - '{{.FE}}/vite build'
+      - '{{.FE}}/size-limit'
+
+  e2e:
+    summary: Playwright perf, a11y and screenshots against vite preview --mode mock
+    dir: frontend
+    cmds:
+      - '{{.FE}}/playwright test'
+
+  build:
+    summary: Production build for this OS
+    cmds:
+      - task: "{{.GOOS}}:build"
+
+  package:
+    summary: Bundle/installer for this OS (macOS local builds are ad-hoc signed)
+    cmds:
+      - task: "{{.GOOS}}:package"
+
+  run:
+    summary: Runs the application
+    cmds:
+      - task: "{{.GOOS}}:run"

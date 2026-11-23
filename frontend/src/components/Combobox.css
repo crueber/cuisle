@@ -1,0 +1,170 @@
+/* Shared Combobox (architecture §4.6, ux-spec §9.3). Tokens only (AGENTS invariant 11). */
+.cbx {
+  position: relative;
+  min-width: 0;
+  font-family: var(--font-family-sans);
+  color: var(--color-fg);
+}
+
+.cbx-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cbx-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.cbx-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.cbx-field::after {
+  content: "";
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  width: var(--space-2);
+  height: var(--space-2);
+  border: solid var(--color-fg);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-75%) rotate(45deg);
+  pointer-events: none;
+}
+.cbx-field:has(.cbx-input:disabled)::after {
+  opacity: 0.4;
+}
+
+.cbx-input,
+.cbx-menu-btn {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--size-field-height);
+  padding: 0 var(--space-8) 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-field-bg);
+  color: var(--color-fg);
+  font-family: inherit;
+  font-size: var(--font-size-label);
+  text-align: left;
+}
+
+.cbx-input[aria-invalid="true"] {
+  border-color: var(--color-alert-text);
+}
+
+.cbx-input::placeholder {
+  color: var(--color-muted);
+}
+
+.cbx-input:focus-visible,
+.cbx-menu-btn:focus-visible,
+.cbx-retry:focus-visible,
+.cbx-option:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.cbx-input:disabled,
+.cbx-menu-btn:disabled {
+  opacity: 0.4;
+}
+
+.cbx-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.cbx-menu-btn[aria-expanded="true"] {
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+}
+
+.cbx-popup {
+  position: fixed;
+  z-index: 50;
+  box-sizing: border-box;
+  min-width: 160px;
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  overflow: hidden;
+}
+
+.cbx-popup:empty {
+  display: none;
+}
+
+.cbx-popup .cbx-input {
+  border-width: 0;
+  border-bottom: 2px solid var(--color-rule-soft);
+  border-radius: 0;
+}
+
+.cbx-list {
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.cbx-option {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-control-height);
+  padding: 0 var(--space-3);
+  cursor: pointer;
+  font-size: var(--font-size-label);
+}
+
+.cbx-option[data-active="true"] {
+  background: var(--color-rule-soft);
+}
+
+.cbx-option[aria-selected="true"] {
+  font-weight: var(--font-weight-bold);
+}
+
+.cbx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--size-control-height);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-small);
+}
+
+.cbx-muted {
+  color: var(--color-muted);
+}
+
+.cbx-error {
+  color: var(--color-alert-text);
+}
+
+.cbx-retry {
+  height: var(--size-control-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-field-bg);
+  color: var(--color-fg);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
