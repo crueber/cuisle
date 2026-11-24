@@ -23,7 +23,7 @@ telemetry, and nothing installed that wasn't verified.
   no updater at all.
 
 Forgejo gets releases from the same publish: after the GitHub push, `publish-github.yml` creates the same `vX.Y.Z`
-tag on Forgejo at the published source commit through the Forgejo API (a personal token, `FORGEJO_TAG_TOKEN`, else
+tag on Forgejo at the published source commit through the Forgejo API (a personal token, `CUISLE_TAG_TOKEN`, else
 `REGISTRY_TOKEN`: events made with the job's automatic token start no workflows). That tag runs `ci.yml`'s release
 job, which attaches the AppImage, the .deb and `SHA256SUMS.txt`.
 
@@ -104,7 +104,7 @@ day timer's `onRoll` hook, a separate download client without an overall timeout
   with the stable "Cuisle Self-Signed" certificate; Windows shows a UAC prompt for the machine-wide installer.
 - The update check is a small, visible network request; the README and the project page say so, and the setting
   turns it off.
-- A Forgejo publish needs the secret `FORGEJO_TAG_TOKEN` (a Forgejo access token with `write:repository`; or a
+- A Forgejo publish needs the secret `CUISLE_TAG_TOKEN` (a Forgejo access token with `write:repository`; or a
   `REGISTRY_TOKEN` with that scope); without it the
   GitHub publish succeeds and the Forgejo tag step fails loudly.
 - The install paths that touch the system (hdiutil/ditto, NSIS, AppImage rename) are unit-tested with fakes and temp

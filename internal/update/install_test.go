@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -268,7 +269,8 @@ func TestSystemAppImage_ReplacesInPlaceAndRelaunches(t *testing.T) {
 	}
 	b, _ := os.ReadFile(appImage)
 	fi, _ := os.Stat(appImage)
-	if string(b) != "new" || fi.Mode().Perm()&0o111 == 0 {
+	// Windows file systems have no execute bit; the AppImage path only runs on Linux anyway.
+	if string(b) != "new" || (runtime.GOOS != "windows" && fi.Mode().Perm()&0o111 == 0) {
 		t.Fatalf("content %q mode %v", b, fi.Mode())
 	}
 	if _, err := os.Stat(newFile); !os.IsNotExist(err) {

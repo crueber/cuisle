@@ -11,6 +11,9 @@ vars:
   GOOS: '{{.GOOS | default OS}}'
   FE: ./node_modules/.bin
   VERSION: '{{.VERSION | default "dev"}}'
+  # VERSION without the leading v or any -suffix, for bundle/exe/package metadata (Info.plist, info.json, NSIS, nfpm);
+  # 0.0.0 for dev builds.
+  NUMERIC_VERSION: '{{$v := .VERSION | trimPrefix "v" | splitList "-" | first}}{{if regexMatch "^[0-9]+[.][0-9]+[.][0-9]+$" $v}}{{$v}}{{else}}0.0.0{{end}}'
   LDFLAGS: '-X github.com/crueber/cuisle/internal/buildinfo.Version={{.VERSION}}'
   # Auto-update channel (ADR 0016). Only the release workflows set these (environment); local `task build` and
   # `task package` leave them empty, so those builds never check for updates.

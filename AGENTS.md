@@ -206,8 +206,8 @@ go test ./internal/view -update               # regenerate the golden StandupVie
   - **Forgejo release from the same publish:** after the GitHub push, `publish-github.yml` creates the same `vX.Y.Z`
     tag on Forgejo at the published source commit (Forgejo API). That tag runs `ci.yml`'s release job: Linux
     AppImage, .deb and `SHA256SUMS.txt` on a Forgejo release.
-  - **Secret it needs (not set yet):** `FORGEJO_TAG_TOKEN`, a Forgejo access token with the `write:repository` scope,
-    added under the repository's Settings → Actions → Secrets. The job's automatic token can't be used (its events
+  - **Secret it uses:** `CUISLE_TAG_TOKEN` (set 2026-11-24 at the account level), a Forgejo access token with the
+    `write:repository` scope, under Settings → Actions → Secrets. The job's automatic token can't be used (its events
     start no workflows); `REGISTRY_TOKEN` is the fallback if it ever exists with that scope. Without either, the
     GitHub publish still succeeds and the tag step fails with exactly this instruction.
 - **Update channels (ADR 0016):** builds get `CUISLE_CHANNEL`/`CUISLE_RELEASE_API` (and `CUISLE_RELEASE_PUBKEY`) from the

@@ -6,7 +6,7 @@
 name: "cuisle"
 arch: ${GOARCH}
 platform: "linux"
-version: "0.0.1"
+version: "${CUISLE_PKG_VERSION}" # set by build/linux/Taskfile.yml from the release version
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
