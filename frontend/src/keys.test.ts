@@ -1,8 +1,8 @@
 // WP-15 tests: global keyboard (keys.ts; ux-spec §8, testing §4 "Global keys are ignored while focus is in inputs or
 // comboboxes").
 //
-// SPEC-NOTE: key mapping asserted (event.key based, route = standup unless stated): ArrowLeft/ArrowRight =>
-//   prevSpeaker/nextSpeaker; "b" or "B" => whole board; "1".."9" => switchByNumber(n); "r" => startSync(current,
+// SPEC-NOTE: key mapping asserted (event.key based, route = standup unless stated): ArrowUp/ArrowDown =>
+//   prevSpeaker/nextSpeaker; ArrowLeft/ArrowRight => previous/next standup tab (wraps); "b" or "B" => toggle whole board / back; "1".."9" => switchByNumber(n); "r" => startSync(current,
 //   "incremental"); "R" with shiftKey => startSync(current, "full"); "," => open Configure on the current standup;
 //   "?" => keyLegendOpen = true (a second press is not asserted); "/" => switcherOpen = true;
 //   Escape => closes keyLegendOpen / switcherOpen (handled, true); with nothing open on the standup route it is NOT
@@ -159,20 +159,48 @@ describe("isEditableTarget", () => {
 });
 
 describe("handleGlobalKey: speakers and board", () => {
-  it("ArrowRight_selects_the_next_speaker", () => {
-    expect(press("ArrowRight")).toBe(true);
+  it("ArrowDown_selects_the_next_speaker", () => {
+    expect(press("ArrowDown")).toBe(true);
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "a" });
-    expect(press("ArrowRight")).toBe(true);
+    expect(press("ArrowDown")).toBe(true);
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "b" });
-    press("ArrowRight");
+    press("ArrowDown");
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null }); // whole board after the last
   });
 
-  it("ArrowLeft_selects_the_previous_speaker_and_wraps_through_the_whole_board", () => {
-    expect(press("ArrowLeft")).toBe(true);
+  it("ArrowUp_selects_the_previous_speaker_and_wraps_through_the_whole_board", () => {
+    expect(press("ArrowUp")).toBe(true);
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "b" });
-    press("ArrowLeft");
-    press("ArrowLeft");
+    press("ArrowUp");
+    press("ArrowUp");
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
+  });
+
+  it("ArrowRight_and_ArrowLeft_cycle_the_standup_tabs_and_wrap", async () => {
+    expect(press("ArrowRight")).toBe(true);
+    await settle();
+    expect(routeNow()).toEqual({ view: "standup", standupId: 2, person: null });
+    press("ArrowRight");
+    press("ArrowRight");
+    await settle();
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null }); // wrapped past the last
+    expect(press("ArrowLeft")).toBe(true);
+    await settle();
+    expect(routeNow()).toEqual({ view: "standup", standupId: 3, person: null }); // wrapped before the first
+  });
+
+  it("ArrowRight_keeps_the_person_when_they_speak_in_the_next_standup", async () => {
+    T.R.route.value = { view: "standup", standupId: 1, person: "a" };
+    press("ArrowRight");
+    await settle();
+    expect(routeNow()).toEqual({ view: "standup", standupId: 2, person: "a" });
+  });
+
+  it("left_and_right_are_not_handled_with_a_single_standup", async () => {
+    T.A.standups.value = [tab(1)];
+    expect(press("ArrowRight")).toBe(false);
+    expect(press("ArrowLeft")).toBe(false);
+    await settle();
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
   });
 
@@ -182,9 +210,24 @@ describe("handleGlobalKey: speakers and board", () => {
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
   });
 
+  it("b_a_second_time_returns_to_the_person_and_a_third_time_goes_back_to_the_board", () => {
+    T.R.route.value = { view: "standup", standupId: 1, person: "b" };
+    press("b");
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
+    expect(press("b")).toBe(true);
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "b" });
+    press("b");
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
+  });
+
+  it("b_on_a_board_reached_another_way_stays_on_the_board_but_is_handled", () => {
+    expect(press("b")).toBe(true);
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
+  });
+
   it("speaker_keys_make_no_facade_call_before_the_500ms_persistence_debounce", async () => {
-    press("ArrowRight");
-    press("ArrowRight");
+    press("ArrowDown");
+    press("ArrowUp");
     press("b");
     await vi.advanceTimersByTimeAsync(499);
     expect(callsOtherThan(T.fake)).toEqual([]);
@@ -295,6 +338,8 @@ describe("handleGlobalKey: ignored cases", () => {
   const KEYS: [string, boolean][] = [
     ["ArrowRight", false],
     ["ArrowLeft", false],
+    ["ArrowUp", false],
+    ["ArrowDown", false],
     ["b", false],
     ["B", true],
     ["1", false],
@@ -344,7 +389,7 @@ describe("handleGlobalKey: ignored cases", () => {
     ["meta", { meta: true }],
     ["alt", { alt: true }],
   ])("does_not_handle_keys_combined_with_%s", async (_n, mod) => {
-    for (const key of ["r", ",", "1", "b", "ArrowRight", "/"]) expect(press(key, mod), key).toBe(false);
+    for (const key of ["r", ",", "1", "b", "ArrowRight", "ArrowDown", "/"]) expect(press(key, mod), key).toBe(false);
     await settle();
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });
     expect(callsOtherThan(T.fake)).toEqual([]);
@@ -360,9 +405,7 @@ describe("handleGlobalKey: ignored cases", () => {
     ["connect", { view: "connect" } as const],
   ])("does_not_move_speakers_or_the_board_on_the_%s_route", (_n, route) => {
     T.R.route.value = route;
-    expect(press("ArrowRight")).toBe(false);
-    expect(press("ArrowLeft")).toBe(false);
-    expect(press("b")).toBe(false);
+    for (const k of ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "b"]) expect(press(k), k).toBe(false);
     expect(T.R.route.value).toEqual(route);
   });
 });
@@ -396,18 +439,18 @@ describe("installGlobalKeys", () => {
 
   it("defaults_to_window_so_a_keydown_anywhere_in_the_document_is_handled_until_uninstalled", () => {
     uninstall = T.K.installGlobalKeys();
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "a" });
     uninstall();
     uninstall = undefined;
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "a" });
   });
 
   it("does_not_handle_keys_typed_into_an_input_when_installed_on_window", () => {
     uninstall = T.K.installGlobalKeys();
     const input = el(`<input type="text">`);
-    const ev = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true });
+    const ev = new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true });
     input.dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(false);
     expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: null });

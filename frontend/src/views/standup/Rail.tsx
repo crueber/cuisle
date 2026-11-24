@@ -61,7 +61,7 @@ export function Rail(props: RailProps) {
       })}
       {full ? (
         <div class="sf-rail__hint">
-          <span>← → next speaker</span> · <span>B whole board</span> · <span>{`1–${standupCount} switch standup`}</span>
+          <span>↑ ↓ speaker</span> <span>← → standup</span> <span>B board ⇄ person</span> <span>{`1–${standupCount} jump`}</span>
         </div>
       ) : null}
     </nav>

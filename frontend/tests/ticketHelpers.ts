@@ -41,7 +41,7 @@ export async function openApp(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
   // The whole board, then the first speaker: Iris (the rail may be icon-only at narrow widths, so no clicking by name).
   await page.keyboard.press("b");
-  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
   await expect(page.locator(".person-name")).toHaveText(/Iris/);
 }
 

@@ -4,7 +4,7 @@ import { api } from "../api/index";
 import type { LaneInfo, SpeakerView, StandupView, TicketView } from "../api/types";
 import { on } from "../api/events";
 import { refreshStandups, standups, tabStandups } from "./app";
-import { navigate, route } from "./route";
+import { navigate, route, type Route } from "./route";
 import { showBanner } from "./ui";
 import { toAppError } from "../api/errors";
 
@@ -123,12 +123,37 @@ function step(delta: 1 | -1): void {
   navigate({ view: "standup", standupId: r.standupId, person: next });
 }
 
-/** → : next included speaker; after the last → whole board; from whole board → first speaker. */
+/** ↓ : next included speaker; after the last → whole board; from whole board → first speaker. */
 export function nextSpeaker(): void {
   step(1);
 }
 export function prevSpeaker(): void {
   step(-1);
+}
+
+/** What B remembers: the person it left, and the exact route object it produced (identity = "nothing navigated since"). */
+let boardReturn: { standupId: number; person: string; route: Route } | null = null;
+
+/**
+ * B: on a person, remember them and show the whole board; on the whole board reached by that same B press (and not
+ * navigated away from since, which would have replaced the route object), go back to that person if they still speak.
+ * Otherwise on the board it is a no-op.
+ */
+export function toggleBoard(): void {
+  const r = route.value;
+  if (r.view !== "standup") return;
+  if (r.person !== null) {
+    const to: Route = { view: "standup", standupId: r.standupId, person: null };
+    boardReturn = { standupId: r.standupId, person: r.person, route: to };
+    navigate(to);
+    return;
+  }
+  const back = boardReturn;
+  boardReturn = null;
+  if (!back || back.route !== r) return;
+  const view = views.value.get(r.standupId);
+  if (!view || !(view.speakers ?? []).some((s) => s.id === back.person && s.included)) return;
+  navigate({ view: "standup", standupId: r.standupId, person: back.person });
 }
 
 /** The person to keep when switching to `view`: only when they speak there (included). */
@@ -184,6 +209,20 @@ export async function switchStandup(standupId: number): Promise<void> {
   } finally {
     loadingView.value = false;
   }
+}
+
+/** ← / → : the previous / next standup tab, wrapping. Returns false (nothing to do) with fewer than two standups. */
+export function cycleStandup(delta: 1 | -1): boolean {
+  const r = route.value;
+  if (r.view !== "standup") return false;
+  const tabs = tabStandups();
+  if (tabs.length < 2) return false;
+  const at = tabs.findIndex((t) => t.id === r.standupId);
+  const from = at === -1 ? 0 : at;
+  const next = tabs[(((from + delta) % tabs.length) + tabs.length) % tabs.length];
+  if (!next) return false;
+  void switchStandup(next.id);
+  return true;
 }
 
 /** 1-based position among tab standups (keys 1–9). */

@@ -108,27 +108,16 @@ a:focus-visible {
   color: var(--color-alert-text);
 }
 
+/* The date stands alone in the free space between the tabs and the right cluster (spacers either side). */
 .sf-header__date {
+  flex: none;
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-label);
-  font-weight: var(--font-weight-semibold);
+  font-size: calc(var(--scale) * 1.125rem);
+  font-weight: var(--font-weight-bold);
   white-space: nowrap;
 }
 
-.sf-icon-btn {
-  width: calc(var(--scale) * 36px);
-  height: calc(var(--scale) * 36px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--color-fg);
-  cursor: pointer;
-}
-
+/* Configure, Resync and Cancel share one bordered-button look; icon-only when the label collapses. */
 .sf-header__configure {
   height: calc(var(--scale) * var(--size-touch-min));
   display: flex;
@@ -371,6 +360,7 @@ a:focus-visible {
 }
 
 .sf-rail__hint span {
+  display: block;
   white-space: nowrap;
 }
 

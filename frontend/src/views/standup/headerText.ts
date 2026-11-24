@@ -2,16 +2,16 @@
 import type { SyncStatus } from "../../api/types";
 import type { HeaderCollapse } from "../../layout/responsive";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAYS = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MS_PER_MIN = 60_000;
 
-/** "2 min", "3 h", "2 days" for an age in milliseconds (timestamps are unix ms). */
+/** "2 min", "3h", "2 days" for an age in milliseconds (timestamps are unix ms). */
 export function ageText(now: number, since: number): string {
   const mins = Math.max(0, Math.floor((now - since) / MS_PER_MIN));
   if (mins < 60) return `${Math.max(1, mins)} min`;
   const hours = Math.floor(mins / 60);
-  if (hours < 48) return `${hours} h`;
+  if (hours < 48) return `${hours}h`;
   return `${Math.floor(hours / 24)} days`;
 }
 
@@ -30,7 +30,23 @@ export function syncLabel(status: SyncStatus | undefined, lastSyncedAt: number, 
   return { text: `synced ${ageText(now, lastSyncedAt)} ago${partial}`, alert: false };
 }
 
-/** "Mon 23 Nov" from a local-date string "2026-11-23" (StandupView.today). Empty when malformed. */
+/** 1 → "1st", 2 → "2nd", 3 → "3rd", 11–13 → "11th"…"13th", 21 → "21st", 24 → "24th". */
+export function ordinal(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
+/** "Mon, 23rd of Nov" from a local-date string "2026-11-23" (StandupView.today). Empty when malformed. */
 export function dayLabel(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return "";
@@ -38,15 +54,19 @@ export function dayLabel(iso: string): string {
   const month = Number(m[2]);
   const day = Number(m[3]);
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()] ?? "";
-  return `${weekday} ${day} ${MONTHS[month - 1] ?? ""}`;
+  return `${weekday}, ${ordinal(day)} of ${MONTHS[month - 1] ?? ""}`;
 }
 
-/** Approximate width of the right cluster (sync, date, Configure) for the tabs' available width. */
+/** Approximate width of the right cluster (sync status, Resync, Configure) for the tabs' available width. */
 export function rightClusterWidth(c: HeaderCollapse): number {
-  const sync = 36 + (c.syncLabel ? 200 : 0);
-  const date = c.date ? 120 : 0;
+  const sync = (c.configureLabel ? 112 : 44) + (c.syncLabel ? 200 : 0);
   const configure = c.configureLabel ? 150 : 44;
-  return sync + date + configure + 48;
+  return sync + configure + 48;
+}
+
+/** Approximate width of the standalone centred date ("Wednesday"-length worst case: "Thurs, 23rd of Nov"). */
+export function dateWidth(c: HeaderCollapse): number {
+  return c.date ? 190 : 0;
 }
 
 /** Approximate width of the CUISLE wordmark block, including its rule. */

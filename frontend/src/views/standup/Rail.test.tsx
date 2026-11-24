@@ -16,7 +16,7 @@
 //   rail renders included speakers in array order and never renders an included=false speaker (ux-spec: "rail shows
 //   Included only"; an excluded speaker with tickets still appears on the whole board, not in the rail).
 // SPEC-NOTE: the rail never hides people; with 30 speakers all 30 buttons exist in the DOM (it scrolls vertically).
-// SPEC-NOTE: the footer hint ("← → next speaker", "B whole board", "1–N switch standup") exists in the full rail only.
+// SPEC-NOTE: the footer hint ("↑ ↓ speaker", "← → standup", "B board ⇄ person", "1–N jump") exists in the full rail only.
 import { fireEvent, render, screen, within } from "@testing-library/preact";
 import axe from "axe-core";
 import { describe, expect, it, vi } from "vitest";
@@ -106,8 +106,8 @@ describe("Rail (full)", () => {
   it("labels the list SPEAKING ORDER and shows the keyboard hint", () => {
     renderRail();
     expect(screen.getByText(/speaking order/i)).toBeTruthy();
-    expect(screen.getByText(/next speaker/)).toBeTruthy();
-    expect(screen.getByText(/switch standup/)).toBeTruthy();
+    expect(screen.getByText(/↑ ↓ speaker/)).toBeTruthy();
+    expect(screen.getByText(/← → standup/)).toBeTruthy();
   });
 
   it("marks Whole board pressed when nothing is selected", () => {
@@ -183,8 +183,8 @@ describe("Rail (compact)", () => {
   it("omits the keyboard hint and the SPEAKING ORDER label", () => {
     renderRail({ mode: "compact" });
     expect(railButtons().length).toBeGreaterThan(1); // anchor
-    expect(screen.queryByText(/next speaker/)).toBeNull();
-    expect(screen.queryByText(/switch standup/)).toBeNull();
+    expect(screen.queryByText(/↑ ↓ speaker/)).toBeNull();
+    expect(screen.queryByText(/← → standup/)).toBeNull();
     expect(screen.queryByText(/speaking order/i)).toBeNull();
   });
 

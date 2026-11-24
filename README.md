@@ -6,6 +6,15 @@
   A fast desktop app for macOS, Windows and Linux. Your data stays on your machine.
 </p>
 
+<p align="center">
+  <em>Cuisle</em> is Irish for "pulse", pronounced <strong>KISH-luh</strong> (/ˈkɪʃlʲə/).
+</p>
+
+<p align="center">
+  <a href="https://crueber.github.io/cuisle/"><strong>Website</strong></a> ·
+  <a href="https://github.com/crueber/cuisle/releases/latest"><strong>Download</strong></a>
+</p>
+
 ![A person's view in Cuisle: every ticket they own, grouped by lane, each with a 21-day pulse track](docs/screenshots/person.png)
 
 <sub>All screenshots use invented data: a made-up recipe app called "Saffron" and invented people.</sub>
@@ -18,7 +27,7 @@ Most standups are someone sharing a Jira board and scrolling while each person h
 replaces that with a screen built for the meeting:
 
 - **One person at a time.** When it's Iris's turn, the screen shows *all* of Iris's tickets, grouped in the order you
-  walk the board (QA, then Review, then In Progress, then To Do). Done tickets come last. Press `→` for the next
+  walk the board (QA, then Review, then In Progress, then To Do). Done tickets come last. Press `↓` for the next
   person.
 - **A pulse track on every ticket.** A thin timeline of the last 7–28 days shows which lane the ticket sat in each
   day, when it was blocked, and when work happened: commits, pull requests and comments. "Stuck for a week" is
@@ -40,6 +49,11 @@ replaces that with a screen built for the meeting:
 **The whole board.** Unassigned work first, then everyone in speaking order, then Done and the backlog.
 
 ![The whole board view](docs/screenshots/board.png)
+
+**Any ticket, in place.** The description with images, every comment, all fields and the development activity. Change
+the status, assignee or flag, or comment, without leaving standup.
+
+![The ticket panel: description, comments, fields and development activity](docs/screenshots/ticket.png)
 
 **Dark theme.** It follows your system setting, or you can pick light or dark.
 
@@ -68,9 +82,9 @@ Each release includes `SHA256SUMS.txt` so you can verify your download.
    keychain.
 2. **Create a standup.** Pick a space (project) and a board. Cuisle maps the board's columns to lanes automatically.
    Adjust the mapping in **Status mapping** if your workflow is unusual.
-3. **Sync.** Press **↻** or `R`. The first sync of a board takes a moment. The header shows progress, and later syncs
+3. **Sync.** Press **Resync** or `R`. The first sync of a board takes a moment. The header shows progress, and later syncs
    only fetch what changed.
-4. **Run the meeting.** Start on the whole board or the first speaker, and press `→` as each person finishes.
+4. **Run the meeting.** Start on the whole board or the first speaker, and press `↓` as each person finishes.
 
 Speakers come from the board: anyone with tickets on it. You can reorder them, shuffle them (optionally every day),
 sort by most active, leave someone out for a day, remove them, or add someone who has no tickets yet.
@@ -79,8 +93,9 @@ sort by most active, leave someone out for a day, remove them, or add someone wh
 
 | Key | Action |
 |---|---|
-| `←` `→` | Previous / next speaker (the whole board sits after the last speaker) |
-| `B` | Whole board |
+| `↑` `↓` | Previous / next speaker (the whole board sits after the last speaker) |
+| `←` `→` | Previous / next standup |
+| `B` | Whole board; press again right away to return to the person you left |
 | `1`–`9` | Switch standup |
 | `R` / `Shift+R` | Sync changes / full resync |
 | `/` | Standup switcher |
@@ -122,10 +137,12 @@ Every control saves as you change it. Text fields save after a short pause. High
   - Windows: `%LOCALAPPDATA%\Cuisle`
   - Linux: `~/.local/share/cuisle`
 - **No background traffic.** Cuisle only talks to Jira when you ask it to: Resync, sync on open (if enabled),
-  leaving Configure after changing the source, or searching while you type in a picker. There's no polling and no
-  telemetry.
+  leaving Configure after changing the source, searching while you type in a picker, or acting on a ticket you
+  opened (refresh, change status, reassign, flag, comment). There's no polling and no telemetry. Unchanged tickets
+  cost nothing to re-check: a sync with no changes is a handful of requests, whatever the board size.
 - **Secrets stay in the OS keychain.** Your API token is never written to the database, logs or exports.
-- **Comment bodies are never stored.** Cuisle counts comments for the pulse track and keeps nothing else about them.
+- **Ticket content stays on your machine.** Descriptions, comments and images are stored locally so the ticket
+  panel opens instantly and offline. They never appear in logs, exports or crash output.
 
 ## Build from source
 
@@ -170,7 +187,8 @@ The design and the reasoning behind it are in [`docs/`](docs):
 
 ## Name
 
-*Cuisle* (KUSH-leh) is Irish for "pulse". The pulse track is the heart of the app.
+*Cuisle* (KISH-luh, /ˈkɪʃlʲə/; closer to KUSH-luh in southern Irish) is Irish for "pulse". The pulse track is the
+heart of the app.
 
 ## License
 

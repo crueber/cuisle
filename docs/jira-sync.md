@@ -543,8 +543,8 @@ with last-writer-wins on identical source data.
 
 | Situation | Behaviour |
 |---|---|
-| Offline at launch | Cached view shown as always. Sync-on-open attempt fails `offline`: **no banner** — the header sync status reads "offline · data from 3 h ago" (alert text) until the next successful sync. No modal, no retry loop. |
-| Offline on manual Resync | Dismissible banner "Offline — showing data from 3 h ago", plus the same header state. |
+| Offline at launch | Cached view shown as always. Sync-on-open attempt fails `offline`: **no banner** — the header sync status reads "offline · data from 3h ago" (alert text) until the next successful sync. No modal, no retry loop. |
+| Offline on manual Resync | Dismissible banner "Offline — showing data from 3h ago", plus the same header state. |
 | Token missing (`auth_missing`) | Banner "Connect to Jira to sync" → Connect screen. Cached standups remain usable. |
 | Token rejected (`auth_invalid`) | Banner "Jira rejected the token — Reconnect"; all sync triggers are suppressed until `Connect` succeeds; Configure comboboxes fall back to cached options and show "Offline — showing cached". |
 | Board/filter forbidden or gone | Run fails; tab shows a warning dot; Configure › Source shows the message on the Board field. |

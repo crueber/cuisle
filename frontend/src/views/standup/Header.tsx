@@ -1,4 +1,5 @@
-// Standup header (ux-spec §2.1): wordmark, standup tabs, then the right cluster (sync status, date, Configure).
+// Standup header (ux-spec §2.1): wordmark, standup tabs, the date standing alone in the middle, then the right cluster
+// (sync status, Resync, Configure).
 // What collapses with width comes from layout/responsive headerCollapse. Sync age uses Date.now() at render only.
 import { Icon } from "../../components/Icon";
 import { tabsAvailableWidth } from "../../layout/tabs";
@@ -9,7 +10,7 @@ import { goConfigure, route } from "../../state/route";
 import { currentView, switchStandup } from "../../state/standup";
 import { cancelSync, startSync, syncStatus } from "../../state/sync";
 import { Tabs } from "./Tabs";
-import { WORDMARK_WIDTH, dayLabel, rightClusterWidth, syncLabel } from "./headerText";
+import { WORDMARK_WIDTH, dateWidth, dayLabel, rightClusterWidth, syncLabel } from "./headerText";
 import type { HeaderProps } from "./props";
 
 export function Header(props: HeaderProps) {
@@ -22,7 +23,7 @@ export function Header(props: HeaderProps) {
   // A running sync always shows its progress text, however narrow the window (otherwise only ↻ → × would change).
   const base = headerCollapse(vw);
   const collapse = running ? { ...base, syncLabel: true } : base;
-  const availW = tabsAvailableWidth(vw, WORDMARK_WIDTH, rightClusterWidth(collapse));
+  const availW = tabsAvailableWidth(vw, WORDMARK_WIDTH, rightClusterWidth(collapse) + dateWidth(collapse));
   const label = syncLabel(status, view?.lastSyncedAt ?? 0, Date.now());
   const pct = running && status.total > 0 ? Math.min(100, Math.round((status.done / status.total) * 100)) : null;
 
@@ -42,6 +43,8 @@ export function Header(props: HeaderProps) {
         }}
       />
       <span class="sf-header__spacer" />
+      {collapse.date && view ? <span class="sf-header__date">{dayLabel(view.today)}</span> : null}
+      <span class="sf-header__spacer" />
       {standupId === null ? null : (
         <div class="sf-header__sync">
           {collapse.syncLabel ? (
@@ -57,31 +60,32 @@ export function Header(props: HeaderProps) {
           {running ? (
             <button
               type="button"
-              class="sf-icon-btn"
+              class="sf-header__configure"
               aria-label="Cancel sync"
               title={label.text}
               onClick={() => {
                 void cancelSync(standupId);
               }}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} strokeWidth={2.2} />
+              {collapse.configureLabel ? <span>Cancel</span> : null}
             </button>
           ) : (
             <button
               type="button"
-              class="sf-icon-btn"
+              class="sf-header__configure"
               aria-label="Resync (R)"
               title={label.text}
               onClick={() => {
                 void startSync(standupId, "incremental");
               }}
             >
-              <Icon name="resync" size={18} />
+              <Icon name="resync" size={20} strokeWidth={2.2} />
+              {collapse.configureLabel ? <span>Resync</span> : null}
             </button>
           )}
         </div>
       )}
-      {collapse.date && view ? <span class="sf-header__date">{dayLabel(view.today)}</span> : null}
       <button type="button" class="sf-header__configure" aria-label="Configure" onClick={() => goConfigure(null)}>
         <Icon name="sliders" size={20} strokeWidth={2.2} />
         {collapse.configureLabel ? <span>Configure</span> : null}

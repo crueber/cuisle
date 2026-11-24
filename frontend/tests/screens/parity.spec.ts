@@ -52,7 +52,7 @@ for (const { w, h } of SIZES) {
 
     test("person view (first speaker)", async ({ page }) => {
       await open(page, boot);
-      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowDown");
       await expect(page.locator(".person-view .ticket-key").first()).toBeVisible();
       await expect(page).toHaveScreenshot(`person-${w}x${h}.png`, SHOT);
     });
@@ -80,7 +80,7 @@ test.describe("dark theme at 1920x1080", () => {
 
   test("person view (dark)", async ({ page }) => {
     await open(page, dark);
-    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowDown");
     await expect(page.locator(".person-view .ticket-key").first()).toBeVisible();
     await expect(page).toHaveScreenshot("person-dark-1920x1080.png", SHOT);
   });

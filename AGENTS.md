@@ -140,6 +140,8 @@ task package          # bundle/installer for this OS into bin/ (macOS: local, ad
 go run ./scripts/layercheck                   # architecture §2 dependency table
 git diff --name-only main...wp/NN | scripts/agent/check-ownership WP-NN   # WP allowlist gate
 go run ./cmd/fixturegen                       # regenerate the fake-Jira fixture
+node scripts/readme/shoot.mjs                 # README/site screenshots from the real app + fake Jira (see the script header)
+scripts/site/build.sh                         # the GitHub Pages project page (site/) into bin/site for a local preview
 go test ./internal/view -update               # regenerate the golden StandupView (review the diff!)
 ./scripts/publish-to-github.sh --repo crueber/cuisle --version vX.Y.Z   # PLAN ONLY; never --apply from an agent
 ```
@@ -189,7 +191,8 @@ go test ./internal/view -update               # regenerate the golden StandupVie
     removes `.forgejo/` and installs `.github/workflows/` from `scripts/publish/*.yml`. It pushes one squash commit, then
     the tag separately.
   - **GitHub workflows:** `ci.yml` runs Linux, macOS and Windows. `release.yml` builds, self-signs and publishes the
-    GitHub Release.
+    GitHub Release. `pages.yml` deploys the project page (`site/`, built by `scripts/site/build.sh`) to
+    https://crueber.github.io/cuisle/ on every publish; the page uses invented data only.
   - **Agents never run `--apply` or push to GitHub.**
 - **macOS day-to-day builds are local** (`task package`, ad-hoc signed).
 - **Signing is self-signed** (ADR 0013).

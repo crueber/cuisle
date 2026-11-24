@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuisle — run your standup from your Jira board</title>
+<meta name="description" content="Cuisle is a fast desktop app for running daily standups from Jira Cloud: one screen per person, every ticket, and a pulse track that shows how each one moved. macOS, Windows and Linux. Local-first and free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crueber.github.io/cuisle/">
+<meta property="og:title" content="Cuisle — run your standup from your Jira board">
+<meta property="og:description" content="One screen per person, every ticket, and how it moved. A fast, local-first desktop app for macOS, Windows and Linux.">
+<meta property="og:image" content="https://crueber.github.io/cuisle/img/person.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top__row">
+    <a class="wordmark" href="#top" aria-label="Cuisle, back to top">CUISLE</a>
+    <nav class="top__nav" aria-label="Sections">
+      <a href="#pulse">The pulse</a>
+      <a href="#features">Features</a>
+      <a href="#keys">Keyboard</a>
+      <a href="#privacy">Privacy</a>
+      <a class="btn btn--small" href="https://github.com/crueber/cuisle/releases/latest">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ── hero ─────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero__glow" aria-hidden="true"></div>
+    <div class="wrap hero__copy">
+      <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Free &middot; open source &middot; macOS, Windows, Linux</p>
+      <h1>Standups that <span class="hl">move</span>.</h1>
+      <p class="lede">Cuisle turns your Jira board into a screen built for the meeting: one person at a time, every
+        ticket they own, and a <strong>pulse track</strong> that shows how each one moved. No more scrolling a shared
+        board while someone hunts for their work.</p>
+      <div class="cta">
+        <a class="btn btn--big" href="https://github.com/crueber/cuisle/releases/latest">Download Cuisle</a>
+        <a class="btn btn--big btn--ghost" href="https://github.com/crueber/cuisle">View on GitHub</a>
+      </div>
+      <p class="say"><em>Cuisle</em> is Irish for &ldquo;pulse&rdquo;. Say it <strong>KISH-luh</strong>
+        <span class="ipa">/ˈkɪʃlʲə/</span>.</p>
+    </div>
+    <div class="wrap wrap--wide">
+      <figure class="window reveal">
+        <div class="window__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img src="img/person.png" width="1600" height="1000" alt="Cuisle's person view: every ticket Iris owns, grouped by lane, each with a 21-day pulse track and a days-in-lane counter">
+      </figure>
+      <p class="fine">Screenshots use invented data: a made-up recipe app called &ldquo;Saffron&rdquo; and invented people.</p>
+    </div>
+  </section>
+
+  <!-- ── numbers ──────────────────────────────────────────────────────────── -->
+  <section class="stats" aria-label="By the numbers">
+    <div class="wrap stats__row">
+      <div class="stat"><b>&lt;0.4&nbsp;s</b><span>cold start with five standups</span></div>
+      <div class="stat"><b>0</b><span>background polling, tracking or telemetry</span></div>
+      <div class="stat"><b>~7</b><span>requests for a sync where nothing changed</span></div>
+      <div class="stat"><b>65&nbsp;KB</b><span>of JavaScript, all of it local</span></div>
+    </div>
+  </section>
+
+  <!-- ── problem ──────────────────────────────────────────────────────────── -->
+  <section class="problem">
+    <div class="wrap narrow">
+      <h2 class="big">Your board is built for planning.<br><span class="muted">Your standup isn&rsquo;t.</span></h2>
+      <p class="section-lede">A sprint board shows columns. A standup is about people: what each of them is carrying,
+        what&rsquo;s stuck, and what quietly hasn&rsquo;t moved in a week. Cuisle reshapes the same Jira data around
+        the speaker, and shows the last few weeks of every ticket at a glance.</p>
+    </div>
+  </section>
+
+  <!-- ── the pulse (signature) ────────────────────────────────────────────── -->
+  <section id="pulse" class="band pulse-sec">
+    <div class="wrap">
+      <p class="kicker">The pulse track</p>
+      <h2 class="section-title">Every ticket&rsquo;s last three weeks, in one line.</h2>
+      <p class="section-lede">&ldquo;Stuck for a week&rdquo; becomes visible without anyone having to say it.</p>
+
+      <div class="anatomy reveal" role="img" aria-label="Anatomy of a pulse track: lanes over time, a blocked stretch, commit ticks, pull request diamonds, a today line and the days-in-lane chip">
+        <div class="anatomy__row">
+          <span class="anatomy__key">MOB-1429</span>
+          <span class="anatomy__title">Share a recipe as a link with a preview image</span>
+        </div>
+        <div class="track">
+          <div class="track__marks">
+            <i class="tick" style="--x:6%"></i><i class="pr" style="--x:12%"></i><i class="tick" style="--x:30%"></i>
+            <i class="tick" style="--x:36%"></i><i class="tick" style="--x:52%"></i><i class="pr" style="--x:61%"></i>
+            <i class="tick" style="--x:70%"></i><i class="cm" style="--x:78%"></i><i class="tick" style="--x:88%"></i>
+            <i class="cm" style="--x:93%"></i>
+          </div>
+          <div class="track__bars">
+            <span data-lane="todo" style="--w:38"></span>
+            <span data-lane="prog" style="--w:30"></span>
+            <span data-lane="prog" class="blocked" style="--w:20"></span>
+          </div>
+          <span class="track__now"></span>
+          <span class="chip chip--alert">5d</span>
+        </div>
+        <ol class="callouts">
+          <li><b>Lanes over time.</b> To Do, In Progress, In Review, QA and Done, one colour each, day by day.</li>
+          <li><b>Blocked days.</b> Red hatching for a flag, or a status you mark as blocked.</li>
+          <li><b>Work happening.</b> Tall ticks are commits, &#9670; is a pull request, small ticks are comments.</li>
+          <li><b>Days in lane.</b> The chip turns red past the limit you set for that lane.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── feature stories ──────────────────────────────────────────────────── -->
+  <section id="features" class="stories">
+    <div class="wrap">
+      <p class="kicker">Built for the fifteen minutes you spend together</p>
+      <h2 class="section-title">Everything on one screen. Nothing hidden to make it fit.</h2>
+    </div>
+
+    <article class="story wrap reveal">
+      <div class="story__text">
+        <h3>One person at a time</h3>
+        <p>When it&rsquo;s Iris&rsquo;s turn, the screen shows <em>all</em> of Iris&rsquo;s tickets, grouped in the order
+          you walk the board: QA first, then review, in progress and to do. Done comes last. Press <kbd>↓</kbd> and
+          it&rsquo;s the next person.</p>
+        <ul class="ticks">
+          <li>Speaking order you control: shuffle daily, sort by most active, or set it yourself</li>
+          <li>Rows tighten before anything scrolls; tickets never collapse into counts</li>
+        </ul>
+      </div>
+      <figure class="crop crop--person"><img src="img/person.png" width="1600" height="1000" loading="lazy" alt="Close-up of a person's tickets grouped into QA, In Review and In Progress"></figure>
+    </article>
+
+    <article class="story story--flip wrap reveal">
+      <div class="story__text">
+        <h3>The whole board, at a glance</h3>
+        <p>Everyone&rsquo;s work side by side, unassigned tickets first so nothing falls through the cracks, then what
+          finished this sprint and the top of the backlog. <kbd>B</kbd> flips between the board and the person you
+          were on.</p>
+        <ul class="ticks">
+          <li>Unassigned work called out in red, every time</li>
+          <li>Days-in-lane counters flag what&rsquo;s been sitting too long</li>
+        </ul>
+      </div>
+      <figure class="crop crop--board"><img src="img/board.png" width="1600" height="1000" loading="lazy" alt="Close-up of the whole board: unassigned tickets first, then each person's work"></figure>
+    </article>
+
+    <article class="story wrap reveal">
+      <div class="story__text">
+        <h3>Open any ticket, right there</h3>
+        <p>The description with its images, every comment, all the fields including custom ones, and the development
+          activity. Move it, reassign it, flag it or comment, without leaving standup or opening a browser.</p>
+        <ul class="ticks">
+          <li>Opens instantly and offline: content is synced up front</li>
+          <li>Changes go to Jira only when you make them, once, and roll back if Jira says no</li>
+        </ul>
+      </div>
+      <figure class="crop crop--ticket"><img src="img/ticket.png" width="1600" height="1000" loading="lazy" alt="The ticket panel with description, comments, fields and development activity"></figure>
+    </article>
+
+    <article class="story story--flip wrap reveal">
+      <div class="story__text">
+        <h3>Legible over a screen share</h3>
+        <p>Big monospaced keys, high contrast, light and dark themes, and a Large (TV) text size for the conference
+          room screen. Several teams? Each standup gets a tab, and switching is instant because the data is already
+          on your machine.</p>
+        <ul class="ticks">
+          <li>Follows your system theme, or pick one</li>
+          <li><kbd>1</kbd>&ndash;<kbd>9</kbd> or <kbd>←</kbd> <kbd>→</kbd> to switch standups</li>
+        </ul>
+      </div>
+      <figure class="crop crop--dark"><img src="img/person-dark.png" width="1600" height="1000" loading="lazy" alt="A person's view in the dark theme, with a blocked ticket"></figure>
+    </article>
+
+    <article class="story wrap reveal">
+      <div class="story__text">
+        <h3>Set it up once. It saves as you go.</h3>
+        <p>Pick a space and a board and Cuisle maps the columns to lanes for you. Every setting saves the moment you
+          change it; there&rsquo;s no Save button. Per-lane limits, walk order, pulse length, speakers and exports are
+          all one screen away.</p>
+        <ul class="ticks">
+          <li>Status mapping with per-lane ordering</li>
+          <li>Export a standup as JSON to a folder, by hand or after every sync</li>
+        </ul>
+      </div>
+      <figure class="crop crop--configure"><img src="img/configure.png" width="1600" height="1000" loading="lazy" alt="The Configure screen with source, speakers, person view and pulse settings"></figure>
+    </article>
+  </section>
+
+  <!-- ── keyboard ─────────────────────────────────────────────────────────── -->
+  <section id="keys" class="band">
+    <div class="wrap split">
+      <div>
+        <p class="kicker">Keyboard first</p>
+        <h2 class="section-title">Drive the whole meeting without touching the mouse.</h2>
+        <p class="section-lede">Whoever is sharing runs standup from the keyboard. Press <kbd>?</kbd> in the app for the
+          full legend.</p>
+      </div>
+      <dl class="keys">
+        <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Previous / next speaker</dd></div>
+        <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Previous / next standup</dd></div>
+        <div><dt><kbd>B</kbd></dt><dd>Whole board, and back to the person you left</dd></div>
+        <div><dt><kbd>1</kbd><kbd>9</kbd></dt><dd>Jump straight to a standup</dd></div>
+        <div><dt><kbd>R</kbd></dt><dd>Sync what changed</dd></div>
+        <div><dt><kbd>J</kbd><kbd>K</kbd></dt><dd>Step through tickets in the ticket panel</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── privacy ──────────────────────────────────────────────────────────── -->
+  <section id="privacy">
+    <div class="wrap">
+      <p class="kicker">Local first</p>
+      <h2 class="section-title">Your data stays on your machine.</h2>
+      <div class="grid grid--3">
+        <article class="card reveal">
+          <span class="card__icon" aria-hidden="true">⌂</span>
+          <h3>Synced once, kept locally</h3>
+          <p>Tickets and their history live in a database on your computer. Cuisle opens instantly, works offline and
+            builds up history over time. History is never pruned.</p>
+        </article>
+        <article class="card reveal">
+          <span class="card__icon" aria-hidden="true">⇅</span>
+          <h3>Good to Jira&rsquo;s API</h3>
+          <p>Cuisle talks to Jira only when you ask. No polling, no telemetry. It fetches only what changed, so a sync
+            with nothing new is a handful of requests whatever the board size.</p>
+        </article>
+        <article class="card reveal">
+          <span class="card__icon" aria-hidden="true">⚿</span>
+          <h3>Secrets in the keychain</h3>
+          <p>Your API token goes straight into the OS keychain. It never touches the database, logs, exports or crash
+            output.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── install ──────────────────────────────────────────────────────────── -->
+  <section id="install" class="band">
+    <div class="wrap">
+      <p class="kicker">Get started in two minutes</p>
+      <h2 class="section-title">Install, connect, run standup.</h2>
+      <ol class="steps">
+        <li><b>Download</b> the build for your system from
+          <a href="https://github.com/crueber/cuisle/releases/latest">GitHub Releases</a>.</li>
+        <li><b>Connect</b> with your Jira Cloud site, email and an
+          <a href="https://id.atlassian.com/manage-profile/security/api-tokens">API token</a>.</li>
+        <li><b>Pick a board</b>, press <kbd>R</kbd> to sync, and you&rsquo;re ready for tomorrow&rsquo;s standup.</li>
+      </ol>
+      <div class="grid grid--3">
+        <article class="card">
+          <h3>macOS</h3>
+          <p>Universal <span class="mono">.dmg</span> for Apple Silicon and Intel. It&rsquo;s self-signed, so the first
+            time, right-click <strong>Cuisle.app &rarr; Open</strong>.</p>
+        </article>
+        <article class="card">
+          <h3>Windows</h3>
+          <p>Installer <span class="mono">.exe</span>. If SmartScreen appears, choose <strong>More info &rarr; Run
+            anyway</strong>.</p>
+        </article>
+        <article class="card">
+          <h3>Linux</h3>
+          <p><span class="mono">.AppImage</span> or <span class="mono">.deb</span>. Needs a Secret Service keyring such as
+            GNOME Keyring or KWallet.</p>
+        </article>
+      </div>
+      <p class="fine">Every release ships <span class="mono">SHA256SUMS.txt</span> so you can verify your download.</p>
+    </div>
+  </section>
+
+  <!-- ── closing CTA ──────────────────────────────────────────────────────── -->
+  <section class="final">
+    <div class="wrap final__inner">
+      <div class="final__pulse" aria-hidden="true">
+        <span data-lane="todo"></span><span data-lane="prog"></span><span data-lane="review"></span><span data-lane="qa"></span><span data-lane="done"></span>
+      </div>
+      <h2>Give tomorrow&rsquo;s standup a pulse.</h2>
+      <p>Free and open source under the MIT license.</p>
+      <div class="cta cta--center">
+        <a class="btn btn--big btn--invert" href="https://github.com/crueber/cuisle/releases/latest">Download Cuisle</a>
+        <a class="btn btn--big btn--ghost-invert" href="https://github.com/crueber/cuisle">Star it on GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__row">
+    <span class="wordmark wordmark--small">CUISLE</span>
+    <span>MIT licensed &middot; <a href="https://github.com/crueber/cuisle">GitHub</a> &middot;
+      <a href="https://github.com/crueber/cuisle/releases">Releases</a> &middot;
+      <a href="https://github.com/crueber/cuisle/issues">Issues</a></span>
+  </div>
+  <div class="wrap"><p class="fine">Jira and Atlassian are trademarks of Atlassian. Cuisle is an independent project and
+    isn&rsquo;t affiliated with or endorsed by Atlassian.</p></div>
+</footer>
+
+</body>
+</html>

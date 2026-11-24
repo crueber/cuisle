@@ -4,8 +4,9 @@ import { useEffect } from "preact/hooks";
 import type { KeyLegendProps } from "./props";
 
 const KEYS: [string[], string][] = [
-  [["←", "→"], "Previous / next speaker (whole board after the last)"],
-  [["B"], "Whole board"],
+  [["↑", "↓"], "Previous / next speaker (whole board after the last)"],
+  [["←", "→"], "Previous / next standup"],
+  [["B"], "Whole board; press again to return to the person"],
   [["1–9"], "Switch standup by position"],
   [["R"], "Resync incremental, from Jira"],
   [["Shift+R"], "Resync full, from Jira"],

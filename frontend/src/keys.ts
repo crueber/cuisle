@@ -1,6 +1,6 @@
 // FROZEN SIGNATURES (ux-spec §8). Implementation: WP-15.
 import { goConfigure, route } from "./state/route";
-import { nextSpeaker, prevSpeaker, selectPerson, switchByNumber } from "./state/standup";
+import { cycleStandup, nextSpeaker, prevSpeaker, switchByNumber, toggleBoard } from "./state/standup";
 import { startSync } from "./state/sync";
 import { leaveConfigure } from "./state/config";
 import { keyLegendOpen, switcherOpen, undoLatestToast } from "./state/ui";
@@ -51,15 +51,19 @@ export function handleGlobalKey(e: KeyboardEvent): boolean {
   const current = r.standupId;
 
   switch (e.key) {
-    case "ArrowLeft":
+    case "ArrowUp":
       prevSpeaker();
       return true;
-    case "ArrowRight":
+    case "ArrowDown":
       nextSpeaker();
       return true;
+    case "ArrowLeft":
+      return cycleStandup(-1);
+    case "ArrowRight":
+      return cycleStandup(1);
     case "b":
     case "B":
-      selectPerson(null);
+      toggleBoard();
       return true;
     case "r":
     case "R":

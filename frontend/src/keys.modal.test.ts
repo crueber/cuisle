@@ -28,7 +28,7 @@ describe("global keys with the ticket modal open", () => {
     expect(start).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["r", "R", "ArrowLeft", "ArrowRight", "b", "1", ",", "/", "?", "Escape"])("%s is not handled while the modal is open", (k) => {
+  it.each(["r", "R", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "b", "1", ",", "/", "?", "Escape"])("%s is not handled while the modal is open", (k) => {
     openTicket(1, 4, [2, 4, 8]);
     expect(handleGlobalKey(key(k))).toBe(false);
     expect(start).not.toHaveBeenCalled();

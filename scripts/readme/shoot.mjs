@@ -55,18 +55,28 @@ await light.keyboard.press("b");
 await light.waitForTimeout(600);
 await light.screenshot({ path: join(out, "board.png") });
 
-await light.keyboard.press("ArrowRight");
+// ↓ steps to the first speaker (↑ ↓ speakers, ← → standups).
+await light.keyboard.press("ArrowDown");
 await light.waitForTimeout(600);
 await light.screenshot({ path: join(out, "person.png") });
 
+// The ticket modal: MOB-1429 (blocked; hand-written description and comments in the fake Jira's content overlay).
+await light.locator(".person-view button", { hasText: "MOB-1429" }).first().click();
+await light.waitForSelector('[role="dialog"] .anchor');
+await light.waitForTimeout(800);
+await light.screenshot({ path: join(out, "ticket.png") });
+await light.keyboard.press("Escape");
+await light.waitForTimeout(400);
+
 await light.keyboard.press(",");
-await light.waitForTimeout(1000);
+await light.waitForSelector('.cfg-grid[data-balanced="true"]');
+await light.waitForTimeout(800);
 await light.screenshot({ path: join(out, "configure.png") });
 await light.keyboard.press("Escape");
 
 const dark = await page("dark");
-await dark.keyboard.press("ArrowRight");
-await dark.keyboard.press("ArrowRight");
+await dark.keyboard.press("ArrowDown");
+await dark.keyboard.press("ArrowDown");
 await dark.waitForTimeout(600);
 await dark.screenshot({ path: join(out, "person-dark.png") });
 
@@ -75,4 +85,4 @@ if (errors.length) {
   console.error("page errors:", errors);
   process.exit(1);
 }
-console.log("wrote", ["board", "person", "configure", "person-dark"].map((n) => `docs/screenshots/${n}.png`).join(", "));
+console.log("wrote", ["board", "person", "ticket", "configure", "person-dark"].map((n) => `docs/screenshots/${n}.png`).join(", "));

@@ -8,10 +8,10 @@
 //   - Resync:      a <button> named exactly "Resync (R)". Its `title` contains the sync label text ("synced 2 min ago", ...)
 //                  so the label is still reachable when `vw < 1700` hides it.
 //   - Sync label:  an element whose own text is the status string. data-alert="true" for the offline string, "false" for
-//                  the others. Strings (exact): "synced 2 min ago", "synced 2 min ago · partial", "offline · data from 3 h ago",
-//                  "Syncing · issues 120/300". Relative ages: "N min ago" (< 1 h) and "N h ago" (>= 1 h).
+//                  the others. Strings (exact): "synced 2 min ago", "synced 2 min ago · partial", "offline · data from 3h ago",
+//                  "Syncing · issues 120/300". Relative ages: "N min ago" (< 1 h) and "Nh ago" (>= 1 h).
 //   - Cancel:      while a sync is running, a <button> whose name matches /cancel/i replaces the Resync button's job.
-//   - Date:        an element with the text "Mon 23 Nov", taken from StandupView.today (a local-date string), not from the
+//   - Date:        an element with the text "Mon, 23rd of Nov", taken from StandupView.today (a local-date string), not from the
 //                  clock. Hidden when `vw < 1360`.
 //   - Configure:   a <button> whose name matches /Configure/. Its visible text "Configure" shows when `vw >= 1280`; below
 //                  that it is an icon button (the name still matches via aria-label).
@@ -178,10 +178,10 @@ describe("Header sync status", () => {
     expect(resyncBtn()).toBeTruthy();
   });
 
-  it("counts hours once an hour has passed: 'synced 3 h ago'", () => {
+  it("counts hours once an hour has passed: 'synced 3h ago'", () => {
     setup({ sync: status({ lastSuccessAt: NOW - 3 * HOUR }) });
     render(<Header vw={1920} />);
-    expect(screen.getByText("synced 3 h ago")).toBeTruthy();
+    expect(screen.getByText("synced 3h ago")).toBeTruthy();
   });
 
   it("starts an incremental sync of the current standup when Resync is pressed", async () => {
@@ -228,10 +228,10 @@ describe("Header sync status", () => {
     expect(screen.getByText("synced 2 min ago · partial")).toBeTruthy();
   });
 
-  it("reads 'offline · data from 3 h ago' in alert text, with no banner, after an offline sync failure", () => {
+  it("reads 'offline · data from 3h ago' in alert text, with no banner, after an offline sync failure", () => {
     setup({ sync: status({ state: "failed", lastStatus: "failed", errorCode: "offline", errorMessage: "offline", lastSuccessAt: NOW - 3 * HOUR, lastAttemptAt: NOW }) });
     render(<Header vw={1920} />);
-    expect(screen.getByText("offline · data from 3 h ago").getAttribute("data-alert")).toBe("true");
+    expect(screen.getByText("offline · data from 3h ago").getAttribute("data-alert")).toBe("true");
     expect(banners.value).toHaveLength(0);
   });
 
@@ -247,14 +247,14 @@ describe("Header sync status", () => {
 });
 
 describe("Header right cluster collapses with width", () => {
-  it("shows the date 'Mon 23 Nov' from the view at vw >= 1360 and hides it below", () => {
+  it("shows the date 'Mon, 23rd of Nov' from the view at vw >= 1360 and hides it below", () => {
     setup();
     const wide = render(<Header vw={1360} />);
-    expect(screen.getByText("Mon 23 Nov")).toBeTruthy();
+    expect(screen.getByText("Mon, 23rd of Nov")).toBeTruthy();
     wide.unmount();
     render(<Header vw={1359} />);
     expect(screen.getByRole("button", { name: /Configure/ })).toBeTruthy(); // anchor
-    expect(screen.queryByText("Mon 23 Nov")).toBeNull();
+    expect(screen.queryByText("Mon, 23rd of Nov")).toBeNull();
   });
 
   it("shows the Configure label at vw >= 1280 and an icon-only button below", () => {

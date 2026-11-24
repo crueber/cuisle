@@ -24,7 +24,7 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 
 ```
 ┌ header 64px (3px bottom rule) ─────────────────────────────────────────────────────────────────┐
-│ CUISLE │ [1 Saffron Mobile MOB] [2 Web & Checkout WEB] … [+]      synced 2m ↻   Mon 23 Nov  [Configure] │
+│ CUISLE │ [1 Saffron Mobile MOB] [2 Web & Checkout WEB] … [+]           Mon, 23rd of Nov     synced 2 min ago [↻ Resync] [Configure] │
 ├ rail ─┬ main (scrolls) ───────────────────────────────────────────────────────────────────────────┤
 │ Whole │ title row (pinned)                                                                        │
 │ board │ axis row (pinned)                                                                          │
@@ -35,14 +35,15 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 
 ### 2.1 Header
 - **Wordmark:** "CUISLE", 20px bold caps, tracking `--font-tracking-wordmark`. Then a 2×24 rule, then the tabs (§4).
-- **Right cluster, in order:** the sync status, then the date, then Configure.
-- **Sync status:** "synced 2 min ago", mono 14px muted, followed by the **Resync** icon button (↻, 36px, aria-label
-  "Resync (R)").
-  - While syncing it changes to "Syncing · issues 120/300" with an × (cancel).
+- **Date:** stands alone, centred in the free space between the tabs and the right cluster (flexible spacers on both sides).
+- **Right cluster, in order:** the sync status, then Resync, then Configure.
+- **Sync status:** "synced 2 min ago", mono 14px muted, followed by the **Resync** button (↻ and "Resync", the
+  same bordered 44px button as Configure; icon-only below 1280; aria-label "Resync (R)"). Ages read "2 min", "3h", "2 days".
+  - While syncing it changes to "Syncing · issues 120/300" with a Cancel button (× and "Cancel", same style).
   - After a partial run it shows ⚠ "synced 2 min ago · partial", and clicking opens the warnings.
-  - When an automatic sync-on-open fails offline, it reads "offline · data from 3 h ago" in `--color-alert-text`, with
+  - When an automatic sync-on-open fails offline, it reads "offline · data from 3h ago" in `--color-alert-text`, with
     no banner. Banners are only for failures of a sync the user started (and for auth failures, which block every sync).
-- **Date:** "Mon 23 Nov", mono 16px semibold.
+- **Date:** "Mon, 23rd of Nov" (Sun, Mon, Tues, Wed, Thurs, Fri, Sat; ordinal day; short month), mono 18px bold, hidden below 1360.
 - **Configure:** an outlined 44px button with a sliders icon and "Configure". `,` also opens it.
 - **What collapses as the window narrows:**
 
@@ -60,7 +61,7 @@ content column (window minus rail minus horizontal padding). Tokens are named as
     name), active count (mono 14, right). No initials here (maintainer, 2026-11-23); the compact rail keeps them.
   - 8px gap, then **Unassigned** with a 2px dashed `--color-unassigned-border` and its count. It's hidden when
     `unassigned_position = skip`, and sits first in the list when `first`.
-  - Footer hint (mono 12 muted): "← → next speaker · B whole board · 1–N switch standup".
+  - Footer hint (mono 12 muted): "↑ ↓ speaker · ← → standup · B board ⇄ person · 1–N jump".
 - **Compact rail (`vw < 1360`), 76px:** a whole-board icon button, then per speaker the initials (mono 15 bold) with the
   count beneath (mono 11). The full name goes in `title` and `aria-label`. Unassigned shows as "Unas." + count, dashed.
 - The rail scrolls vertically if it overflows. It never hides people.
@@ -259,8 +260,9 @@ if those sections start below the fold.
 
 | Key | Action | Notes |
 |---|---|---|
-| `←` / `→` | Previous / next speaker (whole board after the last, first speaker after the whole board) | |
-| `B` | Whole board | |
+| `↑` / `↓` | Previous / next speaker (whole board after the last, first speaker after the whole board) | The arrows no longer scroll lists; use the wheel, trackpad or Page Up/Down |
+| `←` / `→` | Previous / next standup tab (wraps; keeps the person if they speak there; no-op with one standup) | |
+| `B` | Toggle: on a person → the whole board; on the board reached by that `B` (no navigation since) → back to that person | On a board reached any other way it stays on the board |
 | `1`–`9` | Switch standup by position | |
 | `R` / `Shift+R` | Resync incremental / full | |
 | `/` | Focus the standup switcher (opens the menu in menu mode, else the first tab) | |

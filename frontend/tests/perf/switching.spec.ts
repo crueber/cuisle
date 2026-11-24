@@ -36,7 +36,7 @@ test.describe("switching budgets (mock, 4x CPU)", () => {
     );
   });
 
-  test("person switch by ArrowRight p95 <= 32 ms, no network", async ({ page, context }) => {
+  test("person switch by ArrowDown p95 <= 32 ms, no network", async ({ page, context }) => {
     await throttleCpu(context, page);
     await waitForStandupScreen(page);
     // Let boot-time requests (module chunks, first view) finish before counting.
@@ -49,10 +49,10 @@ test.describe("switching budgets (mock, 4x CPU)", () => {
     });
 
     // Untimed warm-up press, then RUNS measured presses. Each press moves to the next speaker or the whole board.
-    await timeKey(page, "ArrowRight", PERSON_WATCH);
+    await timeKey(page, "ArrowDown", PERSON_WATCH);
     const samples: number[] = [];
     for (let i = 0; i < RUNS; i++) {
-      samples.push(await timeKey(page, "ArrowRight", PERSON_WATCH));
+      samples.push(await timeKey(page, "ArrowDown", PERSON_WATCH));
     }
     const p = p95(samples);
     test.info().annotations.push({ type: "p95 ms", description: p.toFixed(1) });

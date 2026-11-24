@@ -1795,6 +1795,273 @@
     "MOB-1440",
     "MOB-1456"
    ]
+  },
+  "MOB-1429": {
+   "fields": {
+    "description": {
+     "type": "doc",
+     "version": 1,
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "When someone shares a recipe, the link should unfurl with the hero photo, title and cook time in Messages, WhatsApp and Slack. Today it shows a bare URL, or the app icon at best."
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 3
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "What good looks like"
+        }
+       ]
+      },
+      {
+       "type": "bulletList",
+       "content": [
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "The preview shows the recipe photo, title and total time."
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Opening the link goes straight to the recipe in the app, or to the web page when the app isn't installed."
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Private recipes never unfurl: the link says “Shared recipe” and nothing else."
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 3
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Notes"
+        }
+       ]
+      },
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "The preview image is rendered server-side at "
+        },
+        {
+         "type": "text",
+         "text": "1200×630",
+         "marks": [
+          {
+           "type": "code"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": " and cached per recipe version. Blocked on the CDN signing change, since signed URLs expire before most chat apps fetch them."
+        }
+       ]
+      },
+      {
+       "type": "codeBlock",
+       "attrs": {
+        "language": "http"
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "GET /r/7f3k2/preview.jpg\nCache-Control: public, max-age=604800"
+        }
+       ]
+      }
+     ]
+    },
+    "priority": {
+     "self": "x",
+     "id": "2",
+     "name": "High"
+    },
+    "reporter": {
+     "accountId": "u-silas",
+     "displayName": "Silas Marchetti",
+     "active": true,
+     "accountType": "atlassian"
+    },
+    "labels": [
+     "sharing",
+     "growth"
+    ],
+    "components": [
+     {
+      "id": "10303",
+      "name": "Sharing"
+     }
+    ],
+    "customfield_10016": 3
+   },
+   "comments": [
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Scoping note: Messages and WhatsApp first, Slack after. They all read Open Graph tags, so it's one change on the web side."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "First pass of the preview renderer is up. Long titles wrap to two lines and then truncate in the image only; the page keeps the full title."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tested on iOS 18 and Android 15. The photo is cropped badly for portrait images, so it now centres on the dish instead of the top edge."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Flagging this as blocked: chat apps fetch the image a few minutes after the link is sent, and our signed URLs expire after 60 seconds."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Talked to Platform. A longer-lived signature for preview images only is fine; they'll pick it up this sprint."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Private recipes are covered: no image, no title, just “Shared recipe”. Added a test for it."
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Still waiting on the CDN change. Everything else is ready for review once it lands."
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
   }
  }
 }

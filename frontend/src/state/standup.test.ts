@@ -358,6 +358,89 @@ describe("nextSpeaker and prevSpeaker", () => {
   });
 });
 
+describe("toggleBoard (B)", () => {
+  const speakers = [sp("a"), sp("b"), sp("x", { included: false })];
+  const start = (p: string | null) => seed({ views: [mkView(1, speakers, []), mkView(2, speakers, [])], route: { view: "standup", standupId: 1, person: p } });
+
+  it("person_then_b_shows_the_board_and_b_again_returns_to_the_person", () => {
+    start("b");
+    T.S.toggleBoard();
+    expect(person()).toBeNull();
+    T.S.toggleBoard();
+    expect(person()).toBe("b");
+  });
+
+  it("on_a_board_not_reached_by_b_it_stays_on_the_board", () => {
+    start(null);
+    T.S.toggleBoard();
+    expect(person()).toBeNull();
+  });
+
+  it("any_navigation_after_b_clears_the_memory", () => {
+    start("a");
+    T.S.toggleBoard();
+    T.S.nextSpeaker(); // board -> a
+    T.S.prevSpeaker(); // a -> board
+    expect(person()).toBeNull();
+    T.S.toggleBoard();
+    expect(person()).toBeNull(); // stays on the board: it was not reached by B
+  });
+
+  it("clicking_the_board_in_the_rail_again_clears_the_memory", () => {
+    start("a");
+    T.S.toggleBoard();
+    T.S.selectPerson(null);
+    T.S.toggleBoard();
+    expect(person()).toBeNull();
+  });
+
+  it("switching_standup_clears_the_memory", async () => {
+    start("a");
+    T.S.toggleBoard();
+    await T.S.switchStandup(2);
+    await T.S.switchStandup(1);
+    expect(person()).toBeNull();
+    T.S.toggleBoard();
+    expect(person()).toBeNull();
+  });
+
+  it("does_not_restore_a_speaker_who_is_no_longer_included", () => {
+    start("a");
+    T.S.toggleBoard();
+    T.S.views.value = new Map([[1, mkView(1, [sp("a", { included: false }), sp("b")], [])]]);
+    T.S.toggleBoard();
+    expect(person()).toBeNull();
+  });
+
+  it("is_a_no_op_outside_the_standup_route", () => {
+    seed({ views: [mkView(1, speakers, [])], route: { view: "configure", standupId: 1 } });
+    T.S.toggleBoard();
+    expect(T.R.route.value).toEqual({ view: "configure", standupId: 1 });
+  });
+});
+
+describe("cycleStandup", () => {
+  const three = () => seed({ views: [1, 2, 3].map((id) => mkView(id, [sp("a")], [])), route: { view: "standup", standupId: 1, person: "a" } });
+
+  it("steps_through_tabs_in_order_and_wraps_both_ways_keeping_the_person", async () => {
+    three();
+    expect(T.S.cycleStandup(1)).toBe(true);
+    expect(T.R.route.value).toEqual({ view: "standup", standupId: 2, person: "a" });
+    T.S.cycleStandup(1);
+    T.S.cycleStandup(1);
+    expect(T.R.route.value).toMatchObject({ standupId: 1 });
+    T.S.cycleStandup(-1);
+    expect(T.R.route.value).toMatchObject({ standupId: 3 });
+  });
+
+  it("returns_false_and_does_nothing_with_one_standup", () => {
+    seed({ views: [mkView(1, [sp("a")], [])], route: { view: "standup", standupId: 1, person: null } });
+    expect(T.S.cycleStandup(1)).toBe(false);
+    expect(T.S.cycleStandup(-1)).toBe(false);
+    expect(T.R.route.value).toEqual({ view: "standup", standupId: 1, person: null });
+  });
+});
+
 // ── standup switching ───────────────────────────────────────────────────────────────────────────
 describe("switchStandup", () => {
   const iris1 = () => mkView(1, [sp("iris"), sp("amara")], []);
