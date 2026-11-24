@@ -1,3 +1,5 @@
+<p align="center"><img src="design/icon/png/cuisle-128.png" width="128" height="128" alt="The Cuisle app icon"></p>
+
 <h1 align="center">CUISLE</h1>
 
 <p align="center"><strong>Run your daily standup from your Jira board: one screen per person, every ticket, and how it moved.</strong></p>
