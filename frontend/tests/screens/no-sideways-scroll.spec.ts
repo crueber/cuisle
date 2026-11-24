@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { NOW_1421, TIMEZONE, openApp, openTicket, seed, stubMedia } from "../ticketHelpers";
+import { NOW_1421, TIMEZONE, UPDATE_AVAILABLE, openApp, openTicket, seed, stubMedia } from "../ticketHelpers";
 
 // App rule (AGENTS invariant 16): nothing in Cuisle scrolls sideways — not the window, not a screen, not a panel, not a
 // box inside the ticket modal. Every element that could scroll horizontally must have no horizontal overflow.
@@ -72,6 +72,33 @@ for (const [w, h] of SIZES) {
 
     test("ticket modal (code block, table, long text) never scrolls sideways", async ({ page }) => {
       await openTicket(page, "MOB-1421");
+      expect(await sidewaysScrollers(page)).toEqual([]);
+    });
+  });
+}
+
+// The same rule with the header's Update button showing (ADR 0016): it takes room from the tabs, never from the page.
+for (const [w, h] of SIZES) {
+  test.describe(`${w}x${h} with an update available`, () => {
+    test.use({ viewport: { width: w, height: h } });
+
+    test.beforeEach(async ({ page }) => {
+      await seed(page, NOW_1421, UPDATE_AVAILABLE);
+      await stubMedia(page);
+      await openApp(page);
+      await page.getByRole("button", { name: "Update to v1.3.0" }).waitFor();
+    });
+
+    test("person view never scrolls sideways", async ({ page }) => {
+      expect(await sidewaysScrollers(page)).toEqual([]);
+      // the header's right cluster stays inside the window
+      const right = await page.locator("header.sf-header button.sf-header__configure").last().evaluate((el) => el.getBoundingClientRect().right);
+      expect(right).toBeLessThanOrEqual(w);
+    });
+
+    test("whole board never scrolls sideways", async ({ page }) => {
+      await page.keyboard.press("b");
+      await page.locator(".board-row-key").first().waitFor();
       expect(await sidewaysScrollers(page)).toEqual([]);
     });
   });

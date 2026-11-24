@@ -11,6 +11,18 @@ var (
 	Date    = ""
 )
 
+// Update channel (ADR 0016), set by -ldflags -X in the release workflows only. Local and dev builds leave Channel
+// empty and never check for updates.
+//
+//	Channel       "github" or "forgejo": where this copy was built and published
+//	ReleaseAPI    the channel's releases-list endpoint (…/repos/<owner>/<repo>/releases)
+//	ReleasePubKey base64 ed25519 public key (internal/relsign); when set, a release's SHA256SUMS.txt.sig is required
+var (
+	Channel       = ""
+	ReleaseAPI    = ""
+	ReleasePubKey = ""
+)
+
 type Info struct {
 	Version   string `json:"version"`
 	Commit    string `json:"commit"`

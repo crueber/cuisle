@@ -15,6 +15,7 @@ export interface EventMap {
   "ticket:write_failed": T.TicketWriteFailed;
   "media:ready": T.MediaReady;
   "sync:throttled": T.SyncThrottled;
+  "update:status": T.UpdateStatus;
 }
 export type EventName = keyof EventMap;
 

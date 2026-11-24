@@ -16,6 +16,7 @@ import (
 	"github.com/crueber/cuisle/internal/source"
 	"github.com/crueber/cuisle/internal/store"
 	syncpkg "github.com/crueber/cuisle/internal/sync"
+	"github.com/crueber/cuisle/internal/update"
 )
 
 // Deps are the shared dependencies of every service, built by cmd/cuisle.
@@ -37,6 +38,7 @@ type Deps struct {
 	Now        func() time.Time
 	Media      media.Cache             // attachment cache (ADR 0015); nil = no media cache (originals never stored)
 	OpenFile   func(path string) error // opens a file with the OS default app (OpenAttachment); nil = unsupported
+	Updater    *update.Updater         // auto-update (ADR 0016); nil = this build never checks
 
 	// Ticket modal state (WP-T9): per-issue write locks, the Refresh cooldown, the last network verdict and the
 	// background work (thumbnails after a Refresh) that Services.Shutdown waits for.
@@ -59,6 +61,7 @@ type Services struct {
 	Sink       *SinkService
 	History    *HistoryService
 	Ticket     *TicketService
+	Update     *UpdateService
 }
 
 // NewServices constructs all services over d.
@@ -66,6 +69,6 @@ func NewServices(d *Deps) *Services {
 	return &Services{
 		App: &AppService{d: d}, Standup: &StandupService{d: d}, Config: &ConfigService{d: d},
 		Connection: &ConnectionService{d: d}, Sync: &SyncService{d: d}, Sink: &SinkService{d: d},
-		History: &HistoryService{d: d}, Ticket: &TicketService{d: d},
+		History: &HistoryService{d: d}, Ticket: &TicketService{d: d}, Update: &UpdateService{d: d},
 	}
 }

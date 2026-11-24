@@ -130,6 +130,11 @@ Every control saves as you change it. Text fields save after a short pause. High
 - **Export:** send a standup to a folder as JSON (`cuisle.export.v1`) by hand or after every sync. No comment
   bodies, emails or secrets are ever exported.
 - **Display:** light, dark or system theme. Standard or Large (TV) text. Sync on open (when stale, always or never).
+  Check for updates daily (on by default) and Check now.
+- **Updates:** when a newer release is out, an **Update** button appears in the header next to Resync. It shows what's
+  new, then downloads the release for your system, checks it against the release's `SHA256SUMS.txt` (and its signature
+  when there is one) and restarts into the new version. Copies from GitHub update from GitHub releases, copies from
+  Forgejo from Forgejo releases. A `.deb` install opens the release page instead.
 
 ## Privacy and data
 
@@ -142,6 +147,8 @@ Every control saves as you change it. Text fields save after a short pause. High
   leaving Configure after changing the source, searching while you type in a picker, or acting on a ticket you
   opened (refresh, change status, reassign, flag, comment). There's no polling and no telemetry. Unchanged tickets
   cost nothing to re-check: a sync with no changes is a handful of requests, whatever the board size.
+- **No telemetry.** Once a day Cuisle asks GitHub or Forgejo, wherever you downloaded it, whether there's a newer
+  release; nothing about you or your Jira data is sent. Turn it off in Configure → Display.
 - **Secrets stay in the OS keychain.** Your API token is never written to the database, logs or exports.
 - **Ticket content stays on your machine.** Descriptions, comments and images are stored locally so the ticket
   panel opens instantly and offline. They never appear in logs, exports or crash output.

@@ -34,6 +34,7 @@ import (
 	"github.com/crueber/cuisle/internal/source/jira/jiratest"
 	"github.com/crueber/cuisle/internal/store"
 	syncpkg "github.com/crueber/cuisle/internal/sync"
+	"github.com/crueber/cuisle/internal/update"
 )
 
 // syncOnOpenDelay is how long after the window's runtime is ready the sync-on-open policy runs (architecture 5.1).
@@ -132,6 +133,11 @@ func run() int {
 	})
 	deps.Sinks = sink.NewDispatcher(db, kr, app.NewSinkBuild(deps), sink.DispatcherOptions{
 		Logger: logger, Now: time.Now, Notify: app.SinkNotifier(emitter),
+	})
+	deps.Updater = newUpdater(buildUpdaterConfig(fake, probe != nil, p.Data), deps.Settings, emitter, logger, func() {
+		if wapp != nil {
+			wapp.Quit()
+		}
 	})
 	app.RegisterEvents()
 	svcs := app.NewServices(deps)
@@ -258,6 +264,9 @@ func run() int {
 					logger.Warn("sync on open", "err", err)
 				}
 			})
+			// the daily update check on start (ADR 0016), on its own so a long sync-on-open doesn't delay it; it
+			// sends only when the last check is a day old
+			go svcs.CheckForUpdates(appCtx, update.TriggerStart)
 		})
 	})
 	if probe != nil {
@@ -269,7 +278,7 @@ func run() int {
 			os.Exit(code)
 		}()
 	} else {
-		dayRoll = startDayTimer(clock, emitter)
+		dayRoll = startDayTimer(clock, emitter, func() { svcs.CheckForUpdates(appCtx, update.TriggerDayRolled) })
 	}
 
 	err = wapp.Run()

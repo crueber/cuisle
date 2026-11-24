@@ -36,7 +36,8 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 ### 2.1 Header
 - **Wordmark:** "CUISLE", 20px bold caps, tracking `--font-tracking-wordmark`. Then a 2×24 rule, then the tabs (§4).
 - **Date:** stands alone, centred in the free space between the tabs and the right cluster (flexible spacers on both sides).
-- **Right cluster, in order:** the sync status, then Resync, then Configure.
+- **Right cluster, in order:** the sync status, then Resync, then **Update** (only when a newer release is available),
+  then Configure.
 - **Sync status:** "synced 2 min ago", mono 14px muted, followed by the **Resync** button (↻ and "Resync", the
   same bordered 44px button as Configure; icon-only below 1280; aria-label "Resync (R)"). Ages read "2 min", "3h", "2 days".
   - While syncing it changes to "Syncing · issues 120/300" with a Cancel button (× and "Cancel", same style).
@@ -44,6 +45,23 @@ content column (window minus rail minus horizontal padding). Tokens are named as
   - When an automatic sync-on-open fails offline, it reads "offline · data from 3h ago" in `--color-alert-text`, with
     no banner. Banners are only for failures of a sync the user started (and for auth failures, which block every sync).
 - **Date:** "Mon, 23rd of Nov" (Sun, Mon, Tues, Wed, Thurs, Fri, Sat; ordinal day; short month), mono 18px bold, hidden below 1360.
+- **Update** (ADR 0016): shown only in a build with an update channel (GitHub or Forgejo releases) when a newer
+  release is known; never in local/dev builds. The same outlined 44px button as Resync and Configure
+  (`.sf-header__configure`), with a download icon and "Update"; icon-only below 1280. aria-label "Update to vX.Y.Z",
+  tooltip "Cuisle vX.Y.Z is available". It takes its width from the tabs (`rightClusterWidth(collapse, true)` adds
+  124px, 44 icon-only, plus a 16px gap), never from the page: nothing scrolls sideways. Clicking it opens a small
+  dialog on the ticket modal's scrim (click outside or Esc closes it, except while installing):
+  - title "Update Cuisle", then "v1.2.0 → v1.3.0" (mono), a **What's new** link (the release page in the browser),
+    then **Not now** and **Install and restart** (primary).
+  - While installing: "Downloading… 42%" with a thin bar, then "Verifying the download…", "Installing…",
+    "Restarting…". Buttons are disabled.
+  - Failures in `--color-alert-text`: "Couldn't download the update. Check your connection and try again.",
+    "Couldn't verify the download, so nothing was installed.", "Couldn't install the update. Cuisle is unchanged."
+    The buttons become **Close** and **Try again** (user-initiated; nothing retries by itself). If the new version is in
+    place but the automatic restart failed: "Cuisle vX.Y.Z is installed. Quit and open Cuisle again to finish." with
+    **Close** only.
+  - When this copy can't replace itself (a .deb install, a read-only or translocated macOS app), the dialog says so and
+    the primary button is **Open the release page**.
 - **Configure:** an outlined 44px button with a sliders icon and "Configure". `,` also opens it.
 - **What collapses as the window narrows:**
 
@@ -323,7 +341,7 @@ Status mapping · Export · Display · Connection) sits under the title. Section
 | **Speakers** | Toolbar: Shuffle, A–Z, Most active, then the *Reshuffle daily* switch. An ordered list with include checkboxes (excluded rows muted, number "—") and a **Remove** button on every row (Undo toast). A removed person is not re-added by sync; adding them again restores them. Choosing a different board starts a fresh list from the next sync. Then *Unassigned as a speaker* (First / Last / Skip) in a dashed box. Then "Add someone from this space…" (Combobox, async `SearchUsers`, clears on select). Footnote: "Listed: anyone with tickets on this board in the last 30 days." After a sort action, a transient note on the right ("Shuffled just now"). New standup: an empty state until a board is chosen. |
 | **Pulse** | Days shown (Segmented 7 / 14 / 21 / 28). A live **preview track** of a sample ticket from this board (axis + track, updates instantly). Marks: Commits / PRs / Comments switches. Status limits: 4 steppers in walk order with swatches, 0–99 (0 = none). Weekends: Shade / Plain. If dev-status is unavailable, a one-line warning: "Commit and PR marks unavailable — Jira's development info isn't reachable for this site." |
 | **Whole board** | Done window: Sprint / 14 days / Since yesterday (Sprint is disabled on Kanban). Backlog rows: Stepper 0–50, with the hint "top of the ranked backlog · 0 turns it off". |
-| **Display** *(app-wide)* | Theme: Light / Dark / System. Text size: Standard / Large (TV). Sync on open: When stale / Always / Never, plus "Stale after" Stepper in hours (1–48, default 6), shown only when *When stale* is selected. |
+| **Display** *(app-wide)* | Theme: Light / Dark / System. Text size: Standard / Large (TV). Sync on open: When stale / Always / Never, plus "Stale after" Stepper in hours (1–48, default 6), shown only when *When stale* is selected. **Updates** (only in builds with an update channel, ADR 0016): the *Check for updates daily* Switch (default on; description "Once a day Cuisle asks GitHub/Forgejo whether there's a newer release. Nothing about you or your Jira data is sent."), then "Cuisle v1.2.0 · last checked 3h ago" (or "not checked yet") with a **Check now** button ("Checking…" while it runs), then one result line: "You're up to date.", "Cuisle v1.3.0 is available: use Update in the standup header.", or the failure in alert text. |
 | **Export** *(per standup)* | One row per destination scoped to this standup or to all standups: name, kind ("File (JSON)"), destination detail (folder path, mono 13, middle-ellipsis), *Send on* Segmented (Manual / After each sync), **Send now**, and a status line ("Delivered 2 min ago · cuisle-MOB-2026-11-23.json", or "Failed · Retry" in alert text). **+ Add destination** opens a Combobox of sink kinds (v1: File (JSON)), then the kind's fields, rendered from its `ConfigSchema` (folder uses the OS folder picker). Everything autosaves. Delete uses Undo. |
 | **Connection** *(app-wide)* | Site, account email, "Connected" tag, **Reconnect** (opens the Connect form inline) and **Disconnect** (confirm; offers to delete synced content only past the storage cap, §14.11). |
 

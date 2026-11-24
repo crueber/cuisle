@@ -72,6 +72,20 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # Auto-update channel (ADR 0016): copies built here check THIS repository's GitHub releases. With a signing key
+      # its public half is compiled in, and the updater then requires SHA256SUMS.txt.sig (the release job signs).
+      - name: Update channel
+        shell: bash
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          echo "CUISLE_CHANNEL=github" >> "$GITHUB_ENV"
+          echo "CUISLE_RELEASE_API=https://api.github.com/repos/${{ github.repository }}/releases" >> "$GITHUB_ENV"
+          if [ -n "$RELEASE_SIGNING_KEY" ]; then
+            PUB=$(go run ./internal/relsign/cmd/relsign pubkey)
+            echo "CUISLE_RELEASE_PUBKEY=$PUB" >> "$GITHUB_ENV"
+          fi
+
       - name: Linux package (AppImage + deb)
         if: runner.os == 'Linux'
         shell: bash

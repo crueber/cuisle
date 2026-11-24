@@ -1,0 +1,131 @@
+/* Update confirm dialog (ux-spec §2.1 Update). The ticket modal's frame: --color-scrim mask, --color-bg panel with a
+   1px --color-rule-mid border, radius 4, no shadow. Tokens only (AGENTS invariant 11); sizes scale with --scale. */
+.ud-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--color-scrim);
+}
+
+.ud {
+  width: calc(var(--scale) * 440px);
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--color-rule-mid);
+  border-radius: var(--radius-control);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  font-size: calc(var(--scale) * var(--font-size-label));
+}
+
+.ud:focus {
+  outline: none;
+}
+
+.ud-title {
+  margin: 0;
+  font-size: calc(var(--scale) * var(--font-size-tab));
+  font-weight: var(--font-weight-bold);
+}
+
+.ud-versions {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ud-version--new {
+  font-weight: var(--font-weight-bold);
+}
+
+.ud-arrow {
+  color: var(--color-muted);
+}
+
+.ud-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-link);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ud-note {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+}
+
+.ud-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+}
+
+.ud-bar {
+  height: 4px;
+  background: var(--color-rule-soft);
+  border-radius: var(--radius-chip);
+  overflow: hidden;
+}
+
+.ud-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-fg);
+}
+
+.ud-error {
+  margin: 0;
+  color: var(--color-alert-text);
+  font-weight: var(--font-weight-semibold);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+}
+
+.ud-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ud-btn {
+  height: calc(var(--scale) * var(--size-touch-min));
+  padding: 0 var(--space-4);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  font-size: calc(var(--scale) * var(--font-size-label));
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ud-btn--primary {
+  background: var(--color-button-bg);
+  color: var(--color-button-fg);
+}
+
+.ud-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

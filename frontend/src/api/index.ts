@@ -8,6 +8,7 @@ import * as SyncSvc from "../bindings/github.com/crueber/cuisle/internal/app/syn
 import * as SinkSvc from "../bindings/github.com/crueber/cuisle/internal/app/sinkservice";
 import * as HistorySvc from "../bindings/github.com/crueber/cuisle/internal/app/historyservice";
 import * as TicketSvc from "../bindings/github.com/crueber/cuisle/internal/app/ticketservice";
+import * as UpdateSvc from "../bindings/github.com/crueber/cuisle/internal/app/updateservice";
 import { wrap } from "./errors";
 import type * as T from "./types";
 
@@ -104,6 +105,13 @@ export interface Api {
     range(standupId: number): Promise<T.HistoryRange>;
     viewAsOf(standupId: number, date: string): Promise<T.StandupView>;
   };
+  /** Auto-update (ADR 0016). `status` is local; `checkNow` sends one releases-list request; `install` downloads,
+   *  verifies and installs, then the app restarts (progress arrives as update:status). */
+  update: {
+    status(): Promise<T.UpdateStatus>;
+    checkNow(): Promise<T.UpdateStatus>;
+    install(): Promise<void>;
+  };
 }
 
 // Go never sends nil lists (architecture §3.2); `arr` only guards the generated `T[] | null` types.
@@ -195,6 +203,11 @@ export const wailsApi: Api = {
   history: {
     range: (id) => as(HistorySvc.Range(id)),
     viewAsOf: (id, d) => as(HistorySvc.ViewAsOf(id, d)),
+  },
+  update: {
+    status: () => as(UpdateSvc.Status()),
+    checkNow: () => as(UpdateSvc.CheckNow()),
+    install: () => wrap(UpdateSvc.Install()),
   },
 };
 

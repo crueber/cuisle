@@ -9,6 +9,7 @@ import * as SinkService from "./sinkservice.js";
 import * as StandupService from "./standupservice.js";
 import * as SyncService from "./syncservice.js";
 import * as TicketService from "./ticketservice.js";
+import * as UpdateService from "./updateservice.js";
 export {
     AppService,
     ConfigService,
@@ -17,7 +18,8 @@ export {
     SinkService,
     StandupService,
     SyncService,
-    TicketService
+    TicketService,
+    UpdateService
 };
 
 export type {

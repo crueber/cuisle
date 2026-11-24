@@ -42,6 +42,8 @@ func TestRun_SignVerifyRoundTrip(t *testing.T) {
 		{"verify good signature", []string{"verify", "-pub", pubPath, "-in", sums, "-sig", sigPath}, exitOK},
 		{"sign with unset env", []string{"sign", "-key-env", "TEST_RELSIGN_UNSET", "-in", sums, "-out", sigPath}, exitFail},
 		{"sign without -out", []string{"sign", "-in", sums}, exitUsage},
+		{"pubkey with env key", []string{"pubkey", "-key-env", "TEST_RELSIGN_KEY"}, exitOK},
+		{"pubkey with unset env", []string{"pubkey", "-key-env", "TEST_RELSIGN_UNSET"}, exitFail},
 		{"unknown command", []string{"frobnicate"}, exitUsage},
 		{"no arguments", nil, exitUsage},
 	}

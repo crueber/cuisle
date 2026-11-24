@@ -124,6 +124,39 @@ Write these as table tests over hand-written changelogs. **Don't use the fixture
 - Comments: an edited comment updates `body_adf` and `updated_at`; a comment missing from a complete fetch gets
   `deleted_at` and disappears from the modal but its pulse mark stays; restricted visibility is carried to the view.
 
+### Auto-update (ADR 0016, `internal/update`, `internal/app`, `cmd/cuisle`)
+- **Release JSON:** httptest servers with GitHub and Forgejo shapes; the request carries only `User-Agent:
+  Cuisle/<version>` (no cookies, no Authorization, no other identifying header); non-200 and non-JSON fail.
+- **Which release:** newest stable `vX.Y.Z` newer than the running version; drafts, pre-releases and non-version tags
+  are ignored; equal or older offers nothing; a newest release still missing this platform's asset or
+  `SHA256SUMS.txt` falls back to the next complete one.
+- **Asset table per GOOS/GOARCH** with the names the workflows produce (universal dmg, windows amd64/arm64 setup,
+  x86_64/aarch64 AppImage, bare AppImage = amd64, .deb → release page, never a `.sig`).
+- **Verify:** good checksum installs; bad checksum, unlisted asset, a key with an unsigned release, and a wrong
+  signature all fail with `errorCode=verify`, never call the installer and leave no temp files; no key + a signature
+  still installs on SHA-256; plain-http download URLs are refused.
+- **Daily gate (fake clock, counting fake client):** first start checks; start under 24 h does not; start at 24 h does;
+  rollover on the day of a check does not; the next local day's rollover does once; setting off → none; Check now
+  always; a failed attempt counts for the day; no channel / `dev` / `0.0.0-<sha>` builds never request and refuse
+  Install; state survives a restart (`update.json`). In `internal/app`: `UpdateService` with no updater makes no
+  request; with one, the setting gates scheduled checks and `update:status` is emitted. In `cmd/cuisle`: no updater
+  for no channel, `--fake-jira`, `--bench-startup`, unknown channel or no URL.
+- **Installers (fakes, temp dirs):** dmg swap replaces the bundle, detaches (also after a failure), leaves nothing next
+  to the app and relaunches with `open -n` after the PID exits; a copy failure leaves the old app; non-bundles and
+  translocated apps are refused; the swap rolls back when the new app can't move in; AppImage rename in place (+x,
+  same folder only) and relaunch; the NSIS PowerShell waits for the PID, runs `/S` elevated, relaunches, quotes paths.
+  A failed detach is not an install failure (detach runs before the swap); a relaunch failure after the swap or
+  rename is `ErrInstalledNoRelaunch` → `errorCode=restart`, no quit, never "unchanged". `Status` calls the installer's
+  Check once per kind (cached), not on every progress event.
+- **Hardening:** an https→http redirect is refused and an https→other-https-host redirect works (TLS test servers),
+  the chain is capped at 5, an http releases URL is refused; a body longer than the asset's size fails; stored URLs
+  off the channel's host are looked up again (and never installed); `hostAllowed` table (github.com,
+  `*.githubusercontent.com`, look-alike hosts, other ports); a dmg/installer named for another version is not offered;
+  conflicting duplicate lines in `SHA256SUMS.txt` fail; the NSIS script re-checks the hash with `Get-FileHash` between
+  the wait and the elevated run, quotes `’` (`C:\Users\O’Brien`), uses the absolute PowerShell; a failed restore keeps
+  `previous.app` and names it; a symlinked `$APPIMAGE` resolves; the download client has the redirect policy, no
+  compression, no jar and no overall timeout; the dialog traps Tab.
+
 ### Security
 - **Content never leaks:** after a full fixture sync and a session that opens tickets and performs each write, the log
   files contain none of the fixture's description/comment/draft/field-value marker strings (each fixture body embeds a
@@ -213,6 +246,12 @@ Also cover:
 - **Ticket budgets** (architecture §6.1): modal open ≤ 100 ms p95 with zero facade network calls, step ≤ 50 ms,
   optimistic write feedback ≤ 32 ms; if the ticket UI is code-split, its chunk is prefetched before the measurement.
 
+- **Update button (ADR 0016):** `tests/screens/update.spec.ts` — the button sits between Resync and Configure with the
+  version tooltip (screenshots `header-update-{1920x1080,1280x720,1024x640}`), the dialog (`update-dialog-1920x1080`),
+  the Display row (`display-updates-1920x1080`), and no button in the default (no channel) mock build.
+  `no-sideways-scroll.spec.ts` repeats the person and board checks at every size with the button showing (Chromium and
+  `--browser=webkit`).
+
 ## 6. Manual test script (each milestone / release, each OS)
 1. Fresh install, then Connect to a real site with a classic API token. Check the keychain prompt and that the token is
    absent from the DB.
@@ -226,6 +265,12 @@ Also cover:
 7. Switch the theme between light, dark and system, and toggle the OS theme while the app is running.
 8. Go offline and Resync: you get a banner, cached data stays, and nothing crashes. Revoke the token, Resync, then
    reconnect.
+9. **Auto-update (ADR 0016), on each OS from a real release build of the previous version:** the Update button appears
+   (or Check now finds it), What's new opens the release page, Install and restart downloads, verifies and relaunches
+   into the new version with data and keychain access intact. macOS: from /Applications, and once from Downloads
+   (translocated: release page offered). Windows: the UAC prompt, the silent install, the relaunch. Linux: the AppImage
+   is replaced in place and restarts; a .deb install offers the release page. Turn the daily check off and confirm no
+   request at the next start (OS network monitor).
 
 ### Ticket refresh and throttling (ADR 0015, jira-sync §3.1)
 - **Refresh:**

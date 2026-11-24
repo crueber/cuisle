@@ -250,6 +250,6 @@ Backend and UI. M8 (release) is independent. Design hand-off: `docs/features/tic
 - Speaker timer
 - Working-days option
 - OAuth 2.0 (3LO)
-- Auto-update
+- ~~Auto-update~~ (done 2026-11-24, ADR 0016)
 - Drag-and-drop reordering
 - Multiple connections

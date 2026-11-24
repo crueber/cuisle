@@ -6,6 +6,7 @@ import { leaveConfigure } from "./state/config";
 import { keyLegendOpen, switcherOpen, undoLatestToast } from "./state/ui";
 import { tabStandups } from "./state/app";
 import { ticketSession } from "./state/ticket";
+import { updateDialogOpen } from "./state/update";
 
 const EDITABLE = 'input, textarea, select, [role="combobox"]';
 
@@ -21,6 +22,8 @@ export function isEditableTarget(t: EventTarget | null): boolean {
 export function handleGlobalKey(e: KeyboardEvent): boolean {
   // The ticket modal has its own key map (ux-spec §14.10); nothing here (R, J/K, arrows, digits, Undo) acts behind it.
   if (ticketSession.value !== null) return false;
+  // Nor behind the Update dialog: it closes itself on Escape.
+  if (updateDialogOpen.value) return false;
   // Ctrl/Cmd+Z runs a visible Undo toast; inside inputs the native text undo wins.
   if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "z") {
     return !isEditableTarget(e.target) && undoLatestToast();

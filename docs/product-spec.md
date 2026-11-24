@@ -227,7 +227,7 @@ IDs are referenced from the roadmap and tests.
 - Direct forge integrations (Forgejo/GitHub). Code activity comes only via Jira's dev panel.
 - The History view UI, range exports, and sinks other than File (JSON). The schema, interfaces and outbox are in v1;
   the adapters and UI come later.
-- Auto-update, telemetry, crash upload.
+- Telemetry and crash upload. (Auto-update was added 2026-11-24, ADR 0016: a daily check of the download channel, no telemetry.)
 - Timers or "time per speaker" (a candidate for v1.x).
 
 ## 6. Product decisions (defaults chosen; revisit after first use)

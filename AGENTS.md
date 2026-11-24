@@ -23,6 +23,9 @@ explicitly and kept locally, so it opens instantly and builds up history. The co
 - **No horizontal scrolling, anywhere in the app** (invariant 16). Wrap, tighten or stack instead.
 - **Sync is explicit.** Resync button/`R`, an optional sync-on-open when stale, and leaving Configure after source
   changes. **No background polling, ever.**
+- **Updates come from where you downloaded Cuisle, at most once per local calendar day, with no telemetry** (ADR 0016). A GitHub
+  build checks GitHub releases, a Forgejo build checks Forgejo releases, local/dev builds never check. Installs are
+  verified (SHA256SUMS.txt, plus the ed25519 signature when the build carries the key) before anything runs.
 - **Autosave everything.** No Save buttons. **Every dropdown is an autocomplete** (the shared `Combobox`).
 - **Keep synced data.** History is never pruned (a history view comes later). Deleting a standup archives it.
 - **Adapters, not hard-wiring.** Sync depends on `source.Source`; exports go through `sink.Sink`. Jira is one adapter.
@@ -50,6 +53,7 @@ internal/settings      app + standup config                                  int
 internal/sync          orchestrator over source.Source                       internal/pulse        pure pulse math (asOf)
 internal/view          StandupView/Config/Bootstrap from a BoardSnapshot     internal/app          Wails services (thin)
 internal/paths internal/logx internal/buildinfo internal/relsign (M8, port of Weave's release signing)
+internal/update        auto-update (ADR 0016): GitHub/Forgejo releases, semver, asset table, verify, daily gate, installers
 frontend/              Preact app: src/{api,state,layout,views,components,styles}, scripts/tokens.mjs, tests/
 design/                mockups/*.png (approved), reference/ (DOM snapshots, prototype-logic.js, sample-data.json), tokens.json
 docs/                  product-spec, ux-spec, architecture, data-model, jira-sync, roadmap, testing, agent-plan, adr/, wp-notes/
@@ -71,7 +75,7 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
 | Milestones and DoD | `docs/roadmap.md` |
 | What must be tested, golden cases | `docs/testing.md` |
 | How to split the work across agents | `docs/agent-plan.md` |
-| Decisions already made | `docs/adr/0001…0015` |
+| Decisions already made | `docs/adr/0001…0016` |
 
 ## 3. Invariants (tests and reviewers enforce these)
 
@@ -82,6 +86,11 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
    - Explicit sink sends or after-sync sends.
    - In the ticket modal: opening the Status combobox (transitions), the four writes, **Refresh this ticket**, and
      opening an attachment or a full image not yet cached. Opening the modal itself is offline. A test asserts this with the fake Jira request log. No tickers, no polling, no retry timers.
+   - The daily update check (ADR 0016), at most one releases-list request per local calendar day (a 23:59 start
+     check and the 00:00 rollover check are both allowed): app start when the last check is
+     at least 24 h old, and the existing `day:rolled` local-midnight event when no check ran that day. Plus
+     **Check now** and **Install and restart**. Builds without a channel, the fake Jira and `--bench-startup` never
+     check (no updater is built); tests inject a fake releases client.
 3. **Autosave.** Every Configure control persists on change (text 400ms debounce). There's no Save button; **Done**
    returns.
 4. **Every dropdown is the shared `Combobox`.** No native `<select>`.
@@ -194,6 +203,18 @@ go test ./internal/view -update               # regenerate the golden StandupVie
     GitHub Release. `pages.yml` deploys the project page (`site/`, built by `scripts/site/build.sh`) to
     https://crueber.github.io/cuisle/ on every publish; the page uses invented data only.
   - **Agents never run `--apply` or push to GitHub.**
+  - **Forgejo release from the same publish:** after the GitHub push, `publish-github.yml` creates the same `vX.Y.Z`
+    tag on Forgejo at the published source commit (Forgejo API). That tag runs `ci.yml`'s release job: Linux
+    AppImage, .deb and `SHA256SUMS.txt` on a Forgejo release.
+  - **Secret it needs (not set yet):** `FORGEJO_TAG_TOKEN`, a Forgejo access token with the `write:repository` scope,
+    added under the repository's Settings → Actions → Secrets. The job's automatic token can't be used (its events
+    start no workflows); `REGISTRY_TOKEN` is the fallback if it ever exists with that scope. Without either, the
+    GitHub publish still succeeds and the tag step fails with exactly this instruction.
+- **Update channels (ADR 0016):** builds get `CUISLE_CHANNEL`/`CUISLE_RELEASE_API` (and `CUISLE_RELEASE_PUBKEY`) from the
+  environment, which the Taskfiles turn into `-X buildinfo.Channel/ReleaseAPI/ReleasePubKey`. `release.yml` sets
+  `github`; Forgejo `ci.yml` sets `forgejo` and the Forgejo releases URL on tags (written only in `.forgejo/`, which is
+  never published).
+  Local `task build`/`task package` set nothing, so they never check.
 - **macOS day-to-day builds are local** (`task package`, ad-hoc signed).
 - **Signing is self-signed** (ADR 0013).
   - macOS: Chris's stable "Cuisle Self-Signed" cert (`MACOS_SIGN_P12` / `_PASSWORD`), or ad-hoc as a fallback.
@@ -218,7 +239,12 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
   the bindings flags.
 - **Dev-status is an internal Jira API** (R2): degrade gracefully and warn.
 - **Post-v1:** History view UI, more sinks (webhook, CSV/Markdown, Linear, GitHub Projects, Asana, Notion, Azure
-  Boards), more sources, archive/restore UI, speaker timer, working-days option, OAuth, auto-update.
+  Boards), more sources, archive/restore UI, speaker timer, working-days option, OAuth.
+- **Decided 2026-11-24:** auto-update (ADR 0016). The channel is where the copy was built (GitHub or Forgejo
+  releases), checked at most once per local calendar day (start if ≥ 24 h, day rollover) with a "Check for updates daily" setting
+  (default on) and Check now in Configure → Display. The Update button sits between Resync and Configure. Installs are
+  verified against `SHA256SUMS.txt` (+ ed25519 when the key is compiled in) and replace the app in place per OS
+  (.dmg swap, silent NSIS, AppImage rename; .deb opens the release page). No telemetry.
 - **Decided 2026-11-23 (later):** ticket modal (F12) with full content synced up front and light writes (ADR 0015);
   layout A "Docket" (ux-spec §14).
 - **Decided 2026-11-23:**

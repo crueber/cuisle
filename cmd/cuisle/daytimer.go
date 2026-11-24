@@ -9,18 +9,20 @@ import (
 )
 
 // dayTimer is the one timer the app is allowed (architecture.md section 3.3): a single time.AfterFunc to the next
-// local midnight that emits day:rolled and re-arms itself. It never starts network work; the UI just re-requests
-// the current view.
+// local midnight that emits day:rolled and re-arms itself. It never starts sync work; the UI just re-requests the
+// current view. onRoll (may be nil) runs after each roll: the daily update check hangs off it (ADR 0016), gated
+// inside the updater so it sends at most one request a day.
 type dayTimer struct {
 	mu      sync.Mutex
 	clock   syncpkg.Clock
 	emitter syncpkg.Emitter
 	timer   *time.Timer
 	stopped bool
+	onRoll  func()
 }
 
-func startDayTimer(clock syncpkg.Clock, emitter syncpkg.Emitter) *dayTimer {
-	d := &dayTimer{clock: clock, emitter: emitter}
+func startDayTimer(clock syncpkg.Clock, emitter syncpkg.Emitter, onRoll func()) *dayTimer {
+	d := &dayTimer{clock: clock, emitter: emitter, onRoll: onRoll}
 	d.mu.Lock()
 	d.arm()
 	d.mu.Unlock()
@@ -47,6 +49,9 @@ func (d *dayTimer) fire() {
 	}
 	today := d.clock.Now().In(d.clock.Location()).Format("2006-01-02")
 	d.emitter.Emit(app.EvDayRolled, app.DayRolled{Today: today})
+	if d.onRoll != nil {
+		go d.onRoll()
+	}
 	d.arm()
 }
 

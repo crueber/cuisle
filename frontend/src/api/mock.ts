@@ -20,6 +20,10 @@ export interface MockOptions {
   holdMs?: Record<string, number>;
   /** Serve the hand-built mockup MOB-1421 instead of the Go golden (the T7 component tests assert its content). */
   handBuiltTickets?: boolean;
+  /** Auto-update state (ADR 0016). The default is a build with no channel: no Update button, no checks. */
+  update?: Partial<T.UpdateStatus>;
+  /** How update.install ends: "ok" (default: restarting), or a failure code shown in the dialog. */
+  updateInstall?: "ok" | "verify" | "download";
 }
 
 export interface MockApi extends Api {
@@ -143,6 +147,16 @@ export function createMockApi(given?: MockOptions): MockApi {
       .filter((r) => !PINNED_FIELDS.includes(r.fieldId))
       .map((r) => ({ fieldId: r.fieldId, name: r.label, kind: r.kind, custom: true }))
       .sort((a, b) => a.name.localeCompare(b.name)),
+  };
+  // ── auto-update (ADR 0016) ──
+  let update: T.UpdateStatus = {
+    channel: "", currentVersion: "v1.2.0", enabled: true, lastCheckedAt: 0, lastError: "", available: null,
+    phase: "idle", progress: 0, error: "", errorCode: "", ...(opts?.update ?? {}),
+  };
+  const updateNow = (): T.UpdateStatus => ({ ...update, enabled: settings["update.check_daily"] !== "off" });
+  const setUpdate = (p: Partial<T.UpdateStatus>): void => {
+    update = { ...update, ...p };
+    bus.emit("update:status", clone(updateNow()));
   };
   /** Synced issues the fixtures reference without a board row (parents, inline cards), as minimal rows. */
   const refRows = new Map<number, T.TicketView>();
@@ -995,6 +1009,36 @@ export function createMockApi(given?: MockOptions): MockApi {
       // v1 placeholder: bound and registered, but not implemented until the history milestone (architecture §3.2).
       range: (standupId) => run<T.HistoryRange>("history.range", [standupId], notYet),
       viewAsOf: (standupId, date) => run<T.StandupView>("history.viewAsOf", [standupId, date], notYet),
+    },
+    update: {
+      status: () => run<T.UpdateStatus>("update.status", [], updateNow),
+      checkNow: () =>
+        run<T.UpdateStatus>("update.checkNow", [], () => {
+          if (update.channel !== "") setUpdate({ lastCheckedAt: Date.now(), lastError: "" });
+          return updateNow();
+        }),
+      install: () =>
+        run<void>("update.install", [], () => {
+          if (update.channel === "") throw new AppError("unsupported", "This copy of Cuisle doesn't update itself.");
+          if (!update.available) throw notFound("Newer version");
+          setUpdate({ phase: "downloading", progress: 0, error: "", errorCode: "" });
+          setUpdate({ progress: 45 });
+          setUpdate({ progress: 100 });
+          const end = opts?.updateInstall ?? "ok";
+          if (end === "download") {
+            const message = "Couldn't download the update. Check your connection and try again.";
+            setUpdate({ phase: "failed", progress: 0, error: message, errorCode: "download" });
+            throw new AppError("offline", message);
+          }
+          setUpdate({ phase: "verifying" });
+          if (end === "verify") {
+            const message = "Couldn't verify the download, so nothing was installed.";
+            setUpdate({ phase: "failed", progress: 0, error: message, errorCode: "verify" });
+            throw new AppError("internal", message);
+          }
+          setUpdate({ phase: "installing" });
+          setUpdate({ phase: "restarting" });
+        }),
     },
   };
 

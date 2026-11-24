@@ -18,6 +18,7 @@ const SHAPES: Record<IconName, readonly string[]> = {
   "chevron-up": ["M6 15l6-6 6 6"],
   external: ["M14 4h6v6", "M20 4l-9 9", "M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"], // box with an arrow out
   board: ["M3 3h7v7H3z", "M14 3h7v7h-7z", "M3 14h7v7H3z", "M14 14h7v7h-7z"],
+  download: ["M12 4v11", "M7 10l5 5 5-5", "M5 20h14"], // arrow into a tray (the Update button)
 };
 
 export function Icon(props: IconProps) {

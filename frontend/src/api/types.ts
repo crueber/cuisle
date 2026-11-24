@@ -9,6 +9,7 @@ import type * as St from "../bindings/github.com/crueber/cuisle/internal/setting
 import type * as So from "../bindings/github.com/crueber/cuisle/internal/source/models";
 import type * as B from "../bindings/github.com/crueber/cuisle/internal/buildinfo/models";
 import type * as Adf from "../bindings/github.com/crueber/cuisle/internal/adf/models";
+import type * as U from "../bindings/github.com/crueber/cuisle/internal/update/models";
 
 type IsMap<T> = T extends readonly unknown[] ? false : T extends object ? (string extends keyof T ? true : `${number}` extends keyof T ? true : false) : false;
 type FixField<F> = [Exclude<F, null | undefined>] extends [readonly (infer U)[]]
@@ -115,6 +116,16 @@ export type TicketUpdated = Fix<S.TicketUpdated>;
 export type TicketWriteFailed = Fix<A.TicketWriteFailed>;
 export type MediaReady = Fix<S.MediaReady>;
 export type SyncThrottled = Fix<S.SyncThrottled>;
+
+// ── auto-update (ADR 0016): UpdateService.Status and the update:status event ──
+export type UpdatePhase = "idle" | "checking" | "downloading" | "verifying" | "installing" | "restarting" | "failed";
+export type UpdateErrorCode = "" | "download" | "verify" | "install" | "unsupported" | "restart";
+export type UpdateAvailable = Fix<U.Available>;
+export type UpdateStatus = Omit<Fix<U.Status>, "phase" | "errorCode" | "available"> & {
+  phase: UpdatePhase;
+  errorCode: UpdateErrorCode;
+  available: UpdateAvailable | null;
+};
 
 // ── string unions used across the UI ──
 export type Lane = "todo" | "prog" | "review" | "qa" | "done";

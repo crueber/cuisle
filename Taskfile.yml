@@ -12,6 +12,12 @@ vars:
   FE: ./node_modules/.bin
   VERSION: '{{.VERSION | default "dev"}}'
   LDFLAGS: '-X github.com/crueber/cuisle/internal/buildinfo.Version={{.VERSION}}'
+  # Auto-update channel (ADR 0016). Only the release workflows set these (environment); local `task build` and
+  # `task package` leave them empty, so those builds never check for updates.
+  CUISLE_CHANNEL: '{{.CUISLE_CHANNEL | default ""}}'
+  CUISLE_RELEASE_API: '{{.CUISLE_RELEASE_API | default ""}}'
+  CUISLE_RELEASE_PUBKEY: '{{.CUISLE_RELEASE_PUBKEY | default ""}}'
+  UPDATE_LDFLAGS: '{{if and .CUISLE_CHANNEL .CUISLE_RELEASE_API}} -X github.com/crueber/cuisle/internal/buildinfo.Channel={{.CUISLE_CHANNEL}} -X github.com/crueber/cuisle/internal/buildinfo.ReleaseAPI={{.CUISLE_RELEASE_API}}{{if .CUISLE_RELEASE_PUBKEY}} -X github.com/crueber/cuisle/internal/buildinfo.ReleasePubKey={{.CUISLE_RELEASE_PUBKEY}}{{end}}{{end}}'
 
 includes:
   common: ./build/Taskfile.yml

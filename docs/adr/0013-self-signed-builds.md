@@ -25,5 +25,5 @@ repository's origin is a self-hosted Forgejo (`github.com`) with Linux runners o
 - macOS keychain items are bound to the signing identity: with the stable cert the access prompt appears once; with
   ad-hoc signatures, or if the cert is lost/rotated, it reappears after each update. Chris keeps the `.p12` safe.
 - Windows SmartScreen warns on every new version ("More info → Run anyway").
-- No auto-update (it would need trusted signatures anyway). Integrity for downloaders rests on HTTPS + `SHA256SUMS`.
+- Auto-update arrived later (ADR 0016): it verifies `SHA256SUMS.txt` (and its ed25519 signature when the build carries the key) before installing. Manual downloads still rest on HTTPS + `SHA256SUMS`.
 - Moving to Developer ID + notarisation / a commercial cert later changes only the release workflow and this ADR.

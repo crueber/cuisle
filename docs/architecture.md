@@ -12,7 +12,7 @@ Conventions used below: lane ids are `backlog | todo | prog | review | qa | done
 │                                                                                                  │
 │  ┌─────────── internal/app (Wails v3 services = the only API the UI sees) ────────────────────┐  │
 │  │ AppService  StandupService  ConfigService  ConnectionService  SyncService                  │  │
-│  │ TicketService  SinkService  HistoryService (placeholder, no v1 UI)                         │  │
+│  │ TicketService  SinkService  HistoryService (placeholder, no v1 UI)  UpdateService           │  │
 │  └────┬────────────┬──────────────┬───────────────┬───────────────┬──────────────┬────────────┘  │
 │       ▼            ▼              ▼               ▼               ▼              ▼               │
 │   settings       view ◄── pulse   history       sync ──────► source.Source     sink.Sink        │
@@ -91,7 +91,9 @@ cuisle/
 │   ├── export/            cuisle.export.v1 document: build from StandupView(s), JSON encoding (CSV/Markdown renderers later)
 │   ├── sink/              outbound adapter contract: Sink interface, registry, outbox dispatcher
 │   │   └── file/          reference sink (v1): writes the export JSON to a file
-│   └── buildinfo/         version, commit, date (ldflags)
+│   ├── update/            auto-update (ADR 0016): GitHub/Forgejo releases, semver, asset table, SHA256SUMS/ed25519 verify,
+│   │                      daily gate, update.json state, per-OS installers behind Installer/Runner
+│   └── buildinfo/         version, commit, date, update Channel/ReleaseAPI/ReleasePubKey (ldflags)
 ├── frontend/              see §4
 ├── build/                 Wails v3 build assets (Taskfiles, icons, Info.plist, NSIS, nfpm, AppImage)
 ├── design/                mockups, reference, tokens.json (source of CSS tokens)
@@ -118,6 +120,7 @@ Dependency rule (enforced with a `depguard`/`go list` check in CI):
 | `view` | `model`, `cache`, `settings`, `pulse`, `adf` (takes snapshots; does not import `history`) |
 | `export` | `view`, `model` |
 | `sink`, `sink/*` | `export`, `model`, `secrets`, `store` (outbox), `apperr` |
+| `update` | `relsign`, `apperr` (never a source or the store: settings and state come in through options) |
 | `app` | everything above except concrete adapters |
 | `cmd/cuisle` | everything; the only place `source/jira` and `sink/file` are imported and registered |
 
@@ -511,7 +514,19 @@ func (s *SinkService) Retry(ctx context.Context, outboxID int64) error
 // ── HistoryService (PLACEHOLDER: registered and bound, no v1 UI; returns `not_implemented` until the history milestone) ──
 func (s *HistoryService) Range(ctx context.Context, standupID int64) (HistoryRange, error)            // {From, To "YYYY-MM-DD"} from standup_sync_state.history_from
 func (s *HistoryService) ViewAsOf(ctx context.Context, standupID int64, date string) (StandupView, error) // = view.Build(history.LoadAsOf(id, endOfLocalDay(date)), same)
+
+// ── UpdateService (ADR 0016). Deps.Updater is nil in builds without a channel, under --fake-jira and --bench-startup:
+//    Status then reports channel "" and Install returns `unsupported`. ──
+func (s *UpdateService) Status(ctx context.Context) (update.Status, error)   // local only, never a request
+func (s *UpdateService) CheckNow(ctx context.Context) (update.Status, error) // one releases-list request; `offline` on failure
+func (s *UpdateService) Install(ctx context.Context) error                   // download → verify → install → quit; progress via update:status
 ```
+
+`update.Status` is `{channel, currentVersion, enabled, lastCheckedAt, lastError, available: {version, pageUrl,
+publishedAt, canInstall} | null, phase, progress, error, errorCode}`; `phase` ∈
+`idle|checking|downloading|verifying|installing|restarting|failed`, `errorCode` ∈ `download|verify|install|unsupported`.
+Scheduled checks are not bound: `cmd/cuisle` calls `Services.CheckForUpdates(ctx, update.TriggerStart)` after the
+sync-on-open timer and `TriggerDayRolled` from the day timer's hook; the Updater's gate decides whether to send.
 
 ```go
 type SinkKind    struct { Kind, DisplayName string; Capabilities sink.Capabilities; Schema []sink.Field }
@@ -692,7 +707,8 @@ Emitted through the Wails event bus; JS subscribes via `Events.On(name, cb)` in 
 | `media:ready` | `{attachmentId, issueId, cached}` | an image landed in the cache after the record apply (lazy media phase, or `EnsureMedia`) |
 | `sink:delivered` | `{outboxId, sinkId, standupId, kind, ref}` | a delivery succeeded |
 | `sink:failed` | `{outboxId, sinkId, standupId, kind, errorCode, errorMessage, attempts, willRetry}` (`willRetry` = will be retried on the next explicit trigger) | a delivery job gave up for now |
-| `day:rolled` | `{today}` | local midnight (single timer); UI re-requests the current view |
+| `day:rolled` | `{today}` | local midnight (single timer); UI re-requests the current view (and the update gate may run its daily check, ADR 0016) |
+| `update:status` | `update.Status` (see §3.2 UpdateService) | a check starts or ends, and each install phase or download-percent change |
 
 JS → Go uses bound methods only (no custom JS-emitted events).
 
@@ -1128,6 +1144,7 @@ Startup and interaction marks are also logged at `debug` in normal builds so reg
 | Windows | `%LOCALAPPDATA%\Cuisle\` | `%LOCALAPPDATA%\Cuisle\logs\` |
 | Linux | `${XDG_DATA_HOME:-~/.local/share}/cuisle/` | `${XDG_STATE_HOME:-~/.local/state}/cuisle/` |
 
+Update state: `<data dir>/update.json` (last check time and error, newest suitable release; ADR 0016).
 Media cache: `<data dir>/media/` (inside the data dir so one folder holds everything; safe to delete — images re-download on demand).
 `CUISLE_DATA_DIR` overrides both (used by tests, bench and `--fake-jira`). DB file: `cuisle.db`.
 Keychain: service `crueber.cuisle`; accounts `<source>:<host>:<account>` for a connection (e.g.
@@ -1147,6 +1164,7 @@ instructions; the only bypass is `CUISLE_JIRA_TOKEN` (process env, never persist
 | `media.cache_max_mb` | integer 64–1048576 (cap for full-size images; thumbnails are not counted) | `1024` |
 | `storage.cleanup_offer_mb` | integer 1024–65536 (Disconnect offers to delete synced content only above this, ux-spec §14.11) | `2048` |
 | `jira.max_rps` | hidden; integer 1–20 (the limiter's sustained rate, jira-sync §3.1) | `8` |
+| `update.check_daily` | `on` \| `off` ("Check for updates daily", ADR 0016; Check now works either way) | `on` |
 | `history_retention_days` | reserved; `0` = keep forever (only behaviour in v1, no UI) | `0` |
 
 Sync-on-open policy: `always` → sync every configured standup at launch; `stale` → sync a standup when
@@ -1155,7 +1173,10 @@ Sync-on-open policy: `always` → sync every configured standup at launch; `stal
 ### 6.5 Packaging, signing, CI
 
 - Build system: Wails v3 Taskfiles (`wails3 task build`, `wails3 task package`); frontend built by Vite and embedded
-  with `//go:embed all:frontend/dist`. Version via `-ldflags -X MODULE/internal/buildinfo.Version=…`.
+  with `//go:embed all:frontend/dist`. Version via `-ldflags -X MODULE/internal/buildinfo.Version=…`. The update channel
+  (ADR 0016) via `buildinfo.Channel`, `ReleaseAPI` and `ReleasePubKey`, which the Taskfiles add from the environment
+  (`CUISLE_CHANNEL`, `CUISLE_RELEASE_API`, `CUISLE_RELEASE_PUBKEY`): `release.yml` sets `github` (+ the public key of
+  `RELEASE_SIGNING_KEY`, `relsign pubkey`), Forgejo `ci.yml` sets `forgejo` on tags; local builds set nothing.
 - **cgo**: Wails needs cgo on macOS (Cocoa/WKWebView) and Linux (GTK/WebKitGTK); Windows builds are `CGO_ENABLED=0`.
   Therefore each OS is built on its own native runner — no cross-compilation. The pure-Go SQLite driver keeps the
   Windows build toolchain-free. `go test ./internal/...` runs with `CGO_ENABLED=0 -tags purego` everywhere: Wails
@@ -1213,7 +1234,9 @@ Sync-on-open policy: `always` → sync every configured standup at launch; `stal
   - **macOS day-to-day builds are local** (`task package`, ad-hoc signed).
   - **Agents never publish:** an agent session's job ends at the Forgejo push. Running `publish-to-github.sh --apply` or
     pushing to GitHub is Chris's call (AGENTS.md §8).
-- No auto-updater in milestone 1 (see risks).
+- Auto-update (ADR 0016): GitHub builds update from GitHub releases, Forgejo builds from Forgejo releases (the
+  publish workflow tags Forgejo at the published commit, which runs the Forgejo Linux release). At most one check per local calendar
+  day, verified installs, no telemetry.
 
 ## 7. Risks & open questions
 
@@ -1234,7 +1257,7 @@ Sync-on-open policy: `always` → sync every configured standup at launch; `stal
 | R13 | **Multiple active sprints** on one board. | Ambiguous header | All active sprints are included in scope; header names the one ending first. |
 | R14 | **Kanban sub-filter / kanban backlog** variants across classic and team-managed boards. | Wrong Done/backlog membership | Board config `subQuery` is ANDed when present; backlog = statuses in columns mapped to lane `backlog`. Needs testing on a real team-managed board. |
 | R15 | **Sample fixture vs. real changelog semantics** (fixture has whole-day history). | Edge cases (multiple transitions/day, reopen) untested by fixture | Table-driven `pulse` tests with hand-written changelogs cover these; see `jira-sync.md` §5. |
-| R16 | **No auto-update / no telemetry** in M1. | Manual upgrades | Revisit after M1; data dir and schema are forward-migratable. |
+| R16 | ~~No auto-update~~ Auto-update added (ADR 0016); still **no telemetry**. | The install paths (dmg swap, silent NSIS + UAC, AppImage rename) are unit-tested with fakes only | Manual check per OS on a real machine before each release that changes them; a failed install leaves the old app in place. |
 | R17 | ~~Bundle id / module path / wordmark placeholders~~ **Resolved:** module `github.com/crueber/cuisle`, bundle id `crueber.cuisle`, wordmark "CUISLE". | — | — |
 | R18 | ~~CI hosting~~ **Resolved:** Forgejo origin runs Linux CI and Linux releases; GitHub (published mirror via `publish-to-github.sh`, Weave model) runs the 3-OS CI and the desktop release (§6.5). | Two workflow sets to keep in step | Shared steps live in `Taskfile.yml` targets so every workflow stays thin; the GitHub workflows are templates in `scripts/publish/`. |
 | R19 | **History fidelity.** Membership and config are historised per sync run, so an "as of" board is only as fine-grained as the user's sync habit, starts at the standup's first sync, and shows current summary/type/rank. Dev events exist only from when they were first observed. | Future historical view has gaps on days without a sync | Accepted; documented in `data-model.md` §2.6. The header of a historical view must state "as of last sync before <date>". No backfill attempt in v1. |

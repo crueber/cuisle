@@ -7,6 +7,7 @@ import type { Bootstrap } from "./api/types";
 import { initFromBoot } from "./state/app";
 import { installStandupEvents } from "./state/standup";
 import { installSyncEvents } from "./state/sync";
+import { installUpdateEvents, loadUpdateStatus } from "./state/update";
 import { installGlobalKeys } from "./keys";
 import { flush } from "./state/save";
 import { App } from "./App";
@@ -25,6 +26,8 @@ async function start() {
   initFromBoot(boot);
   installStandupEvents();
   installSyncEvents();
+  installUpdateEvents();
+  void loadUpdateStatus(); // local only; Go runs the daily check itself (ADR 0016)
   installGlobalKeys();
   window.addEventListener("pagehide", () => void flush());
   window.addEventListener("error", (e) => void api().app.logClientError(String(e.message), String(e.error?.stack ?? "")).catch(() => {}));

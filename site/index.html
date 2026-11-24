@@ -64,9 +64,9 @@
   <section class="stats" aria-label="By the numbers">
     <div class="wrap stats__row">
       <div class="stat"><b>&lt;0.4&nbsp;s</b><span>cold start with five standups</span></div>
-      <div class="stat"><b>0</b><span>background polling, tracking or telemetry</span></div>
+      <div class="stat"><b>0</b><span>polling, tracking or telemetry (just one optional update check a day)</span></div>
       <div class="stat"><b>~7</b><span>requests for a sync where nothing changed</span></div>
-      <div class="stat"><b>65&nbsp;KB</b><span>of JavaScript, all of it local</span></div>
+      <div class="stat"><b>67&nbsp;KB</b><span>of JavaScript, all of it local</span></div>
     </div>
   </section>
 
@@ -239,6 +239,9 @@
             output.</p>
         </article>
       </div>
+      <p class="fine">No telemetry. Once a day Cuisle asks GitHub or Forgejo, wherever you downloaded it, whether
+        there&rsquo;s a newer release; nothing about you or your Jira data is sent. Turn it off in
+        <strong>Configure &rarr; Display</strong>.</p>
     </div>
   </section>
 
@@ -271,7 +274,9 @@
             GNOME Keyring or KWallet.</p>
         </article>
       </div>
-      <p class="fine">Every release ships <span class="mono">SHA256SUMS.txt</span> so you can verify your download.</p>
+      <p class="fine">Every release ships <span class="mono">SHA256SUMS.txt</span> so you can verify your download. After
+        that, Cuisle updates itself: an <strong>Update</strong> button appears when a new release is out, and the
+        download is checked against <span class="mono">SHA256SUMS.txt</span> before it&rsquo;s installed.</p>
     </div>
   </section>
 

@@ -1,5 +1,5 @@
 // Standup header (ux-spec §2.1): wordmark, standup tabs, the date standing alone in the middle, then the right cluster
-// (sync status, Resync, Configure).
+// (sync status, Resync, Update when a newer release is available (ADR 0016), Configure).
 // What collapses with width comes from layout/responsive headerCollapse. Sync age uses Date.now() at render only.
 import { Icon } from "../../components/Icon";
 import { tabsAvailableWidth } from "../../layout/tabs";
@@ -9,7 +9,9 @@ import { tabStandups } from "../../state/app";
 import { goConfigure, route } from "../../state/route";
 import { currentView, switchStandup } from "../../state/standup";
 import { cancelSync, startSync, syncStatus } from "../../state/sync";
+import { updateAvailable, updateDialogOpen, updateStatus } from "../../state/update";
 import { Tabs } from "./Tabs";
+import { UpdateDialog } from "./UpdateDialog";
 import { WORDMARK_WIDTH, dateWidth, dayLabel, rightClusterWidth, syncLabel } from "./headerText";
 import type { HeaderProps } from "./props";
 
@@ -23,7 +25,9 @@ export function Header(props: HeaderProps) {
   // A running sync always shows its progress text, however narrow the window (otherwise only ↻ → × would change).
   const base = headerCollapse(vw);
   const collapse = running ? { ...base, syncLabel: true } : base;
-  const availW = tabsAvailableWidth(vw, WORDMARK_WIDTH, rightClusterWidth(collapse) + dateWidth(collapse));
+  const update = updateStatus.value;
+  const hasUpdate = updateAvailable(update);
+  const availW = tabsAvailableWidth(vw, WORDMARK_WIDTH, rightClusterWidth(collapse, hasUpdate) + dateWidth(collapse));
   const label = syncLabel(status, view?.lastSyncedAt ?? 0, Date.now());
   const pct = running && status.total > 0 ? Math.min(100, Math.round((status.done / status.total) * 100)) : null;
 
@@ -86,6 +90,20 @@ export function Header(props: HeaderProps) {
           )}
         </div>
       )}
+      {hasUpdate && update.available ? (
+        <button
+          type="button"
+          class="sf-header__configure sf-header__update"
+          aria-label={`Update to ${update.available.version}`}
+          title={`Cuisle ${update.available.version} is available`}
+          onClick={() => {
+            updateDialogOpen.value = true;
+          }}
+        >
+          <Icon name="download" size={20} strokeWidth={2.2} />
+          {collapse.configureLabel ? <span>Update</span> : null}
+        </button>
+      ) : null}
       <button type="button" class="sf-header__configure" aria-label="Configure" onClick={() => goConfigure(null)}>
         <Icon name="sliders" size={20} strokeWidth={2.2} />
         {collapse.configureLabel ? <span>Configure</span> : null}
@@ -103,6 +121,7 @@ export function Header(props: HeaderProps) {
           <span style={pct === null ? undefined : `width:${pct}%`} />
         </div>
       ) : null}
+      {hasUpdate && updateDialogOpen.value ? <UpdateDialog /> : null}
     </header>
   );
 }

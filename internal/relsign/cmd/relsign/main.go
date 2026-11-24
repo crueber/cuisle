@@ -2,12 +2,14 @@
 //
 //	relsign sign   [-key-env RELEASE_SIGNING_KEY] -in SHA256SUMS.txt -out SHA256SUMS.txt.sig
 //	relsign verify -pub release.pub              -in SHA256SUMS.txt -sig SHA256SUMS.txt.sig
+//	relsign pubkey [-key-env RELEASE_SIGNING_KEY]   (base64 public key, for buildinfo.ReleasePubKey)
 //
 // The private key is read from an environment variable, never from argv. The signature file holds the
 // base64 of the raw signature with a trailing newline. Exit codes: 0 ok, 1 failure, 2 usage.
 package main
 
 import (
+	"crypto/ed25519"
 	"encoding/base64"
 	"errors"
 	"flag"
@@ -38,6 +40,8 @@ func run(args []string, stdout, stderr *os.File) int {
 		return sign(args[1:], stdout, stderr)
 	case "verify":
 		return verify(args[1:], stdout, stderr)
+	case "pubkey":
+		return pubkey(args[1:], stdout, stderr)
 	case "-h", "--help", "help":
 		usage(stdout)
 		return exitOK
@@ -52,6 +56,30 @@ func usage(w *os.File) {
 	fmt.Fprintln(w, "usage:")
 	fmt.Fprintln(w, "  relsign sign   [-key-env NAME] -in FILE -out FILE.sig   (default key env: RELEASE_SIGNING_KEY)")
 	fmt.Fprintln(w, "  relsign verify -pub FILE       -in FILE -sig FILE.sig")
+	fmt.Fprintln(w, "  relsign pubkey [-key-env NAME]   (prints the base64 public key; compiled into builds for the updater)")
+}
+
+// pubkey prints the base64 ed25519 public key of the private key in the environment. The release workflow passes
+// it to the build (buildinfo.ReleasePubKey) so the updater can check SHA256SUMS.txt.sig (ADR 0016).
+func pubkey(args []string, stdout, stderr *os.File) int {
+	fs := flag.NewFlagSet("pubkey", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	keyEnv := fs.String("key-env", "RELEASE_SIGNING_KEY", "environment variable holding the private key")
+	if err := fs.Parse(args); err != nil {
+		return exitUsage
+	}
+	keyText := os.Getenv(*keyEnv)
+	if strings.TrimSpace(keyText) == "" {
+		fmt.Fprintf(stderr, "relsign pubkey: environment variable %s is empty\n", *keyEnv)
+		return exitFail
+	}
+	priv, err := relsign.ParsePrivateKey(keyText)
+	if err != nil {
+		fmt.Fprintf(stderr, "relsign pubkey: %v\n", err)
+		return exitFail
+	}
+	fmt.Fprintln(stdout, base64.StdEncoding.EncodeToString(priv.Public().(ed25519.PublicKey)))
+	return exitOK
 }
 
 func sign(args []string, stdout, stderr *os.File) int {

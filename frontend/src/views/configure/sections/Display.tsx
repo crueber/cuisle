@@ -1,9 +1,13 @@
 // Configure > Display section (app-wide; ux-spec §9.4 Display, §13; architecture §6.4 app_setting keys).
-// Every control saves at once through state/app.setAppSetting (string values). Makes no network calls.
+// Every control saves at once through state/app.setAppSetting (string values). The only network call is the explicit
+// Check now button (ADR 0016); the Updates row shows the version and the last check from state/update.
 import type { Theme, TextSize } from "../../../api/types";
 import { Segmented } from "../../../components/Segmented";
 import { Stepper } from "../../../components/Stepper";
+import { Switch } from "../../../components/Switch";
 import { setAppSetting, settings } from "../../../state/app";
+import { checkError, checkNow, checkingNow, updateStatus } from "../../../state/update";
+import { ageText } from "../../standup/headerText";
 import type { AppSectionProps } from "../props";
 import "./Display.css";
 
@@ -30,6 +34,61 @@ function staleHours(raw: string | undefined): number {
   const n = Number.parseInt(raw ?? "", 10);
   if (Number.isNaN(n)) return DEFAULT_STALE_HOURS;
   return Math.min(48, Math.max(1, n));
+}
+
+/** "last checked 3h ago" / "not checked yet" for the Updates row (now from Date.now() at render). */
+export function lastCheckedText(lastCheckedAt: number, now: number): string {
+  return lastCheckedAt > 0 ? `last checked ${ageText(now, lastCheckedAt)} ago` : "not checked yet";
+}
+
+function UpdatesField() {
+  const u = updateStatus.value;
+  const version = u.currentVersion || "dev";
+  const daily = settings.value["update.check_daily"] !== "off";
+  const busy = checkingNow.value;
+  if (u.channel === "") return null; // local and dev builds never check (ADR 0016): no Updates row at all
+  const failure = checkError.value || u.lastError;
+  const result = failure
+    ? failure
+    : u.available
+      ? `Cuisle ${u.available.version} is available: use Update in the standup header.`
+      : u.lastCheckedAt > 0
+        ? "You're up to date."
+        : "";
+  return (
+    <div class="cfg-field">
+      <span class="cfg-field-label">Updates</span>
+      <div class="cfg-field-control disp-updates">
+        <Switch
+          id="disp-update-daily"
+          label="Check for updates daily"
+          description={`Once a day Cuisle asks ${u.channel === "github" ? "GitHub" : "Forgejo"} whether there's a newer release. Nothing about you or your Jira data is sent.`}
+          checked={daily}
+          onChange={(on) => setAppSetting("update.check_daily", on ? "on" : "off")}
+        />
+        <div class="disp-update-row">
+          <span class="disp-update-line">
+            Cuisle {version} · {lastCheckedText(u.lastCheckedAt, Date.now())}
+          </span>
+          <button
+            type="button"
+            class="disp-btn"
+            disabled={busy}
+            onClick={() => {
+              void checkNow();
+            }}
+          >
+            {busy ? "Checking…" : "Check now"}
+          </button>
+        </div>
+        {result ? (
+          <p class="disp-update-result" data-alert={failure ? "true" : "false"} role="status">
+            {result}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function DisplaySection(props: AppSectionProps) {
@@ -91,6 +150,8 @@ export function DisplaySection(props: AppSectionProps) {
           ) : null}
         </div>
       </div>
+
+      <UpdatesField />
     </section>
   );
 }

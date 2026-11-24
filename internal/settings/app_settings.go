@@ -43,7 +43,18 @@ const (
 	KeyMediaCacheMB          = "media.cache_max_mb"
 	KeyStorageCleanupOfferMB = "storage.cleanup_offer_mb"
 	KeyJiraMaxRPS            = "jira.max_rps"
+	// KeyUpdateCheckDaily is "Check for updates daily" (ADR 0016): "on" (the reader's default) or "off".
+	KeyUpdateCheckDaily = "update.check_daily"
 )
+
+// UpdateCheckDaily reads KeyUpdateCheckDaily: on unless it is stored as "off".
+func (s *Store) UpdateCheckDaily(ctx context.Context) bool {
+	all, err := s.AppSettings(ctx)
+	if err != nil {
+		return true
+	}
+	return all[KeyUpdateCheckDaily] != "off"
+}
 
 // validAppSetting checks one key/value pair. Field is the key for a bad value, and "key" for an unknown key.
 func validAppSetting(key, value string) error {
@@ -71,6 +82,8 @@ func validAppSetting(key, value string) error {
 	case KeyJiraMaxRPS: // hidden: the sustained request rate cap (jira-sync §3.1)
 		n, err := strconv.Atoi(value)
 		ok = err == nil && strconv.Itoa(n) == value && n >= 1 && n <= 20
+	case KeyUpdateCheckDaily:
+		ok = value == "on" || value == "off"
 	default:
 		return apperr.Validationf("key", "Unknown setting %q.", key)
 	}

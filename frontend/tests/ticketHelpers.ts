@@ -21,7 +21,18 @@ export const TIMEZONE = "America/Chicago";
 export interface MockHooks {
   failures?: Record<string, { code: string; message?: string; times?: number }>;
   holdMs?: Record<string, number>;
+  /** Auto-update state (ADR 0016); the default mock build has no channel and shows no Update button. */
+  update?: Record<string, unknown>;
+  updateInstall?: "ok" | "verify" | "download";
 }
+
+/** A channel build with a newer release (the Update button shows). */
+export const UPDATE_AVAILABLE: MockHooks = {
+  update: {
+    channel: "github", currentVersion: "v1.2.0", lastCheckedAt: 0,
+    available: { version: "v1.3.0", pageUrl: "https://github.com/crueber/cuisle/releases/tag/v1.3.0", publishedAt: 0, canInstall: true },
+  },
+};
 
 /** Pins Date.now and (optionally) the mock facade's options before the app starts. */
 export async function seed(page: Page, now: number, options?: MockHooks): Promise<void> {

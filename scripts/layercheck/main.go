@@ -42,6 +42,7 @@ var allowed = map[string][]string{
 	"internal/sink":                 {"internal/export", "internal/model", "internal/secrets", "internal/store", "internal/apperr"},
 	"internal/sink/file":            {"internal/sink", "internal/export", "internal/model", "internal/apperr"},
 	"internal/relsign":              {},
+	"internal/update":               {"internal/relsign", "internal/apperr"}, // auto-update (ADR 0016)
 	"internal/relsign/cmd/relsign":  {"internal/relsign"},
 }
 

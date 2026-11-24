@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	syncpkg "github.com/crueber/cuisle/internal/sync"
+	"github.com/crueber/cuisle/internal/update"
 )
 
 // RegisterEvents declares the typed events for the binding generator and runtime (call once, before application.New).
@@ -23,6 +24,7 @@ func RegisterEvents() {
 	application.RegisterEvent[TicketWriteFailed](EvTicketWriteFailed)
 	application.RegisterEvent[syncpkg.MediaReady](syncpkg.EvMediaReady)
 	application.RegisterEvent[syncpkg.SyncThrottled](syncpkg.EvSyncThrottled)
+	application.RegisterEvent[update.Status](EvUpdateStatus)
 }
 
 // BootMiddleware serves GET /boot.js as `window.__CUISLE_BOOT__ = <Bootstrap JSON>;` (architecture.md §5.1): the
@@ -73,6 +75,6 @@ func (s *Services) Bound() []application.Service {
 	return []application.Service{
 		application.NewService(s.App), application.NewService(s.Standup), application.NewService(s.Config),
 		application.NewService(s.Connection), application.NewService(s.Sync), application.NewService(s.Ticket),
-		application.NewService(s.Sink), application.NewService(s.History),
+		application.NewService(s.Sink), application.NewService(s.History), application.NewService(s.Update),
 	}
 }

@@ -68,3 +68,8 @@ export const TicketUpdated = "ticket:updated";
  */
 export const TicketWriteFailed = "ticket:write_failed";
 
+/**
+ * Name of the custom event "update:status".
+ */
+export const UpdateStatus = "update:status";
+

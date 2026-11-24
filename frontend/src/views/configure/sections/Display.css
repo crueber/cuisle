@@ -2,3 +2,52 @@
 .disp .cfg-field-control {
   flex-wrap: wrap;
 }
+
+/* Updates (ADR 0016): the daily-check switch, then "Cuisle vX · last checked …" with Check now. */
+.disp .disp-updates {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.disp-update-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.disp-update-line,
+.disp-update-result {
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-meta);
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.disp-update-result[data-alert="true"] {
+  color: var(--color-alert-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.disp-btn {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.disp-btn:hover {
+  background: var(--color-rule-soft);
+}
+
+.disp-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

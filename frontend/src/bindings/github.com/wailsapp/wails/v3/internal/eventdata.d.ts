@@ -11,6 +11,9 @@ import type * as app$0 from "../../../../crueber/cuisle/internal/app/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import type * as sync$0 from "../../../../crueber/cuisle/internal/sync/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import type * as update$0 from "../../../../crueber/cuisle/internal/update/models.js";
 
 declare module "@wailsio/runtime" {
     namespace Events {
@@ -27,6 +30,7 @@ declare module "@wailsio/runtime" {
             "sync:throttled": sync$0.SyncThrottled;
             "ticket:updated": sync$0.TicketUpdated;
             "ticket:write_failed": app$0.TicketWriteFailed;
+            "update:status": update$0.Status;
         }
     }
 }
