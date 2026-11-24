@@ -78,4 +78,10 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           task package
-          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a ./bin/cuisle --bench-startup --fake-jira; fi
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            # WebKitGTK's web process sandbox (bubblewrap) needs unprivileged user namespaces, which the runner's
+            # AppArmor policy blocks: the window never appeared (no first-view, no asset requests). Forgejo's job runs
+            # as root in a container and is unaffected.
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+            xvfb-run -a ./bin/cuisle --bench-startup --fake-jira
+          fi
