@@ -70,7 +70,7 @@ for (const theme of THEMES) {
     test("configure, all sections expanded", async ({ page }) => {
       await waitForStandupScreen(page);
       await page.keyboard.press(",");
-      // Every section is wrapped in .cfg-anchor (ConfigureScreen ORDER: 9 sections). All must be mounted.
+      // Every section is wrapped in .cfg-anchor (ConfigureScreen ORDER: 11 sections). All must be mounted.
       const anchors = page.locator(".cfg-anchor");
       await expect(anchors.first()).toBeVisible();
       await page.evaluate(() => {
@@ -79,7 +79,7 @@ for (const theme of THEMES) {
         });
       });
       const count = await anchors.count();
-      expect(count, "all nine configure sections are mounted").toBe(9);
+      expect(count, "all eleven configure sections are mounted").toBe(11);
       for (let i = 0; i < count; i++) {
         await anchors.nth(i).scrollIntoViewIfNeeded();
       }

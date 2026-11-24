@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/crueber/cuisle/internal/apperr"
+	"github.com/crueber/cuisle/internal/source"
+	"github.com/crueber/cuisle/internal/source/jira/limiter"
 )
 
 const maxResponseBytes = 16 << 20
@@ -53,9 +55,13 @@ func NewClient(baseURL, account, token string, opts ClientOptions) *Client {
 	if c.pol == nil {
 		c.pol = DefaultPolicy()
 	}
+	if c.pol == nil { // SetDefaultPolicy's restore can leave nil behind when the default was never created (contract.go)
+		c.pol = fallbackPolicy()
+	}
 	if c.now == nil {
 		c.now = time.Now
 	}
+	c.limit(account)
 	return c
 }
 
@@ -116,12 +122,17 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, payl
 	if len(q) > 0 {
 		target += "?" + q.Encode()
 	}
+	write := limiter.IsWrite(ctx) // ADR 0015: a write is attempted once and never retried
 	var retries429, retries5xx int
 	for {
 		sent := c.now()
 		status, hdr, data, err := c.attempt(ctx, method, path, target, body)
 		if err != nil {
-			if ctx.Err() != nil || unreachable(err) || errors.Is(err, errResponseTooLarge) || retries5xx >= c.pol.opts.MaxRetries5xx {
+			var ge *limiter.GateError
+			if errors.As(err, &ge) { // the limiter refused a write while the 429 gate is closed: nothing was sent
+				return &HTTPError{Status: http.StatusTooManyRequests, Method: method, Path: path, RetryAfter: ge.RetryIn}
+			}
+			if write || ctx.Err() != nil || unreachable(err) || errors.Is(err, errResponseTooLarge) || retries5xx >= c.pol.opts.MaxRetries5xx {
 				return err
 			}
 			retries5xx++
@@ -142,12 +153,23 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, payl
 		he := newHTTPError(method, path, status, hdr, data, c.now())
 		switch {
 		case status == http.StatusTooManyRequests:
+			// The limiter (Transport → Observe) has already halved the connection's rate; the gate is ours to close
+			// (ManualGate) once the budgets below say this Retry-After is honoured. The retry then waits in Acquire.
+			now := c.now()
+			// ra comes from the same clock (c.now) as he.RetryAfter; the gate end is an absolute time on the limiter's real
+			// clock, so only the duration crosses over.
+			ra := limiter.RetryAfter(hdr, now)
+			if write {
+				// A write is never retried, but the next request of the connection still has to wait this 429 out.
+				if ra <= c.pol.opts.MaxGate {
+					c.Limiter().CloseGate(time.Now().Add(c.pol.wait429(ra)))
+				}
+				return he
+			}
 			if retries429 >= c.pol.opts.Max429Retries {
 				return he
 			}
 			retries429++
-			now := c.now()
-			ra := RetryAfter(hdr.Get("Retry-After"), hdr.Get("X-RateLimit-Reset"), now)
 			if ra > c.pol.opts.MaxGate {
 				return he // one Retry-After beyond the whole budget: give up without closing the gate
 			}
@@ -155,9 +177,9 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, payl
 			if !c.reserveGate(sent, now, wait) {
 				return he
 			}
-			c.pol.closeGate(now.Add(wait))
+			c.Limiter().CloseGate(time.Now().Add(wait))
 		case retryable5xx(status):
-			if retries5xx >= c.pol.opts.MaxRetries5xx {
+			if write || retries5xx >= c.pol.opts.MaxRetries5xx {
 				return he
 			}
 			retries5xx++
@@ -174,17 +196,15 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, payl
 	}
 }
 
-// attempt sends one HTTP request under one policy slot and returns the status, headers and body.
+// attempt sends one HTTP request and returns the status, headers and body. The limiter (jira-sync §3.1) and the policy
+// slot are taken by the transport NewClient installed (see limit), so this path cannot reach the network without them.
 func (c *Client) attempt(ctx context.Context, method, path, target string, body []byte) (int, http.Header, []byte, error) {
-	release, err := c.pol.Acquire(ctx)
-	if err != nil {
-		return 0, nil, nil, err
-	}
-	defer release()
-
 	var rdr io.Reader
 	if body != nil {
 		rdr = bytes.NewReader(body)
+	}
+	if source.IsInteractive(ctx) { // the core's neutral marker (source.WithInteractive) → the limiter's interactive lane
+		ctx = WithInteractive(ctx)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, target, rdr)
 	if err != nil {
@@ -196,10 +216,6 @@ func (c *Client) attempt(ctx context.Context, method, path, target string, body 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-
-	c.mu.Lock()
-	c.reqs++
-	c.mu.Unlock()
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -286,8 +302,8 @@ func newHTTPError(method, path string, status int, hdr http.Header, body []byte,
 			}
 		}
 	}
-	if ra, rs := hdr.Get("Retry-After"), hdr.Get("X-RateLimit-Reset"); ra != "" || rs != "" {
-		he.RetryAfter = RetryAfter(ra, rs, now)
+	if hdr.Get("Retry-After") != "" || hdr.Get("X-RateLimit-Reset") != "" || hdr.Get("RateLimit") != "" {
+		he.RetryAfter = limiter.RetryAfter(hdr, now)
 	}
 	return he
 }

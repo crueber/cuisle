@@ -1,0 +1,19 @@
+{
+  "c": [
+    {
+      "t": "media",
+      "a": {
+        "attachmentId": "201",
+        "name": "unit-toggle-v3.png",
+        "mime": "image/png",
+        "bytes": 182540,
+        "width": 1200,
+        "height": 720,
+        "layout": "center",
+        "caption": "Unit toggle, v3",
+        "cached": "full",
+        "block": true
+      }
+    }
+  ]
+}

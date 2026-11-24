@@ -1,0 +1,23 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "see "
+        },
+        {
+          "t": "text",
+          "x": "the docs",
+          "m": [
+            {
+              "t": "link",
+              "v": "https://docs.example.com/a?b=1#c"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 diff --git a/docs/testing.md b/docs/testing.md
-index d09f7b9..b43e260 100644
+index d09f7b9..58fec0b 100644
 --- a/docs/testing.md
 +++ b/docs/testing.md
 @@ -72,7 +72,62 @@ Write these as table tests over hand-written changelogs. **Don't use the fixture
@@ -118,3 +118,29 @@ index d09f7b9..b43e260 100644
  
  ## 6. Manual test script (each milestone / release, each OS)
  1. Fresh install, then Connect to a real site with a classic API token. Check the keychain prompt and that the token is
+@@ -138,3 +223,25 @@ Also cover:
+ 7. Switch the theme between light, dark and system, and toggle the OS theme while the app is running.
+ 8. Go offline and Resync: you get a banner, cached data stays, and nothing crashes. Revoke the token, Resync, then
+    reconnect.
++
++### Ticket refresh and throttling (ADR 0015, jira-sync §3.1)
++- **Refresh:**
++  - Refresh issues requests only for that issue (jiratest request log).
++  - It historises a status change made "in Jira" between syncs.
++  - It updates the row behind the modal and the other standups containing the issue.
++  - A second Refresh within 10 s returns `cooldown` with zero requests.
++  - Offline leaves the stored content untouched.
++- **Limiter rate and priority:**
++  - Under a 200-request synthetic sync, observed throughput never exceeds `max_rps` + burst (fake clock).
++  - An interactive request queued behind 100 sync requests is sent within one token interval.
++  - Media never starts while sync requests are waiting.
++- **Limiter signals:**
++  - `X-RateLimit-NearLimit: true` halves the rate, and it recovers +1/30 s.
++  - The structured `RateLimit` header with `r/q < 0.2` does the same.
++- **Limiter on 429:**
++  - A 429 with `Retry-After: 3` pauses all lanes for ≥ 3 s, and the sync request is retried.
++  - A write that gets 429 is **not** retried and surfaces `rate_limited{retryInMs}`.
++- **Bypass check:** no code path reaches `http.Client` without the limiter (a test wraps the transport and fails on
++  any unlimited request).
++- **Request budgets:** a full fixture sync uses ≤ 150 requests and an incremental sync with 3 changes ≤ 25 (jiratest
++  request log). This is a CI gate.

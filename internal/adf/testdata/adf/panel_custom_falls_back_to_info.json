@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "panel",
+      "attrs": {
+        "panelType": "custom",
+        "panelColor": "#ff00ff"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "custom"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

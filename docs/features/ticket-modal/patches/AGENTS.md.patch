@@ -1,5 +1,5 @@
 diff --git a/AGENTS.md b/AGENTS.md
-index 3b4cd4a..1de8115 100644
+index 3b4cd4a..75e64d3 100644
 --- a/AGENTS.md
 +++ b/AGENTS.md
 @@ -70,14 +70,17 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
@@ -19,12 +19,12 @@ index 3b4cd4a..1de8115 100644
 +   - Resync, the sync-on-open policy, and leaving Configure after source changes.
 +   - Jira-backed combobox typing, board pick and filter validation, and Connect.
 +   - Explicit sink sends or after-sync sends.
-+   - In the ticket modal: opening the Status combobox (transitions), the four writes, and opening an attachment or a
-+     full image not yet cached. Opening the modal itself is offline. A test asserts this with the fake Jira request log. No tickers, no polling, no retry timers.
++   - In the ticket modal: opening the Status combobox (transitions), the four writes, **Refresh this ticket**, and
++     opening an attachment or a full image not yet cached. Opening the modal itself is offline. A test asserts this with the fake Jira request log. No tickers, no polling, no retry timers.
  3. **Autosave.** Every Configure control persists on change (text 400ms debounce). There's no Save button; **Done**
     returns.
  4. **Every dropdown is the shared `Combobox`.** No native `<select>`.
-@@ -98,7 +101,13 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
+@@ -98,7 +101,16 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
  10. **Frontend runtime deps are fixed** (`preact`, `@preact/signals`, `@wailsio/runtime`). Adding one needs an ADR and
      the 45 KB gz JS budget.
  11. **Tokens only.** No raw hex in components. Lane colours via `data-lane`. Sizes scale with `--scale` (Large/TV).
@@ -36,10 +36,13 @@ index 3b4cd4a..1de8115 100644
 +    re-fetches the one issue through the normal apply (history recorded).
 +14. **Cuisle renders Jira rich text itself.** Go normalises ADF (`internal/adf`); Preact renders typed nodes. Never
 +    `innerHTML` and never `renderedFields` HTML.
++15. **Every Jira request goes through the connection's limiter** (jira-sync §3.1): token bucket, header-adaptive, a
++    global pause on 429, and interactive requests ahead of bulk. Never call the HTTP client around it, and never add
++    retry loops outside it.
  
  ## 4. Everyday commands
  
-@@ -142,7 +151,11 @@ go test ./internal/view -update               # regenerate the golden StandupVie
+@@ -142,7 +154,11 @@ go test ./internal/view -update               # regenerate the golden StandupVie
  ## 7. Security checklist for any change
  - **Secrets:** tokens and sink secrets never leave the keychain. No secret in logs (redaction test), DB bytes (scan test),
    exports, crash output or the frontend.
@@ -52,7 +55,7 @@ index 3b4cd4a..1de8115 100644
  - **The webview:** it loads only embedded assets. No remote scripts or fonts, and no `eval`.
  - **File sink:** writes only into the user-chosen folder (clean the path, no traversal), atomically.
  - **Error output:** user-facing messages carry no tokens and no raw HTTP bodies; raw detail goes to the log at `debug`.
-@@ -188,6 +201,12 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
+@@ -188,6 +204,12 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
  - **Dev-status is an internal Jira API** (R2): degrade gracefully and warn.
  - **Post-v1:** History view UI, more sinks (webhook, CSV/Markdown, Linear, GitHub Projects, Asana, Notion, Azure
    Boards), more sources, archive/restore UI, speaker timer, working-days option, OAuth, auto-update.

@@ -29,6 +29,13 @@
       "hasDevActivity": true,
       "hasExtraFilter": true,
       "hasAssigneeHistory": true,
+      "content": true,
+      "writes": {
+        "transition": true,
+        "assign": true,
+        "flag": false,
+        "comment": true
+      },
       "filterLanguage": "JQL",
       "authFields": [
         "baseUrl",
@@ -4161,72 +4168,84 @@
     ],
     "backlog": [
       {
+        "issueId": 56,
         "key": "MOB-1525",
         "summary": "Meal plan templates for busy weeks",
         "type": "story",
         "url": "https://fake-jira.test/browse/MOB-1525"
       },
       {
+        "issueId": 57,
         "key": "MOB-1527",
         "summary": "Pantry expiry reminders",
         "type": "story",
         "url": "https://fake-jira.test/browse/MOB-1527"
       },
       {
+        "issueId": 58,
         "key": "MOB-1533",
         "summary": "Recipe import from a web page",
         "type": "bug",
         "url": "https://fake-jira.test/browse/MOB-1533"
       },
       {
+        "issueId": 59,
         "key": "MOB-1538",
         "summary": "Shared shopping list with live updates",
         "type": "task",
         "url": "https://fake-jira.test/browse/MOB-1538"
       },
       {
+        "issueId": 60,
         "key": "MOB-1543",
         "summary": "Kids' portion sizes",
         "type": "spike",
         "url": "https://fake-jira.test/browse/MOB-1543"
       },
       {
+        "issueId": 61,
         "key": "MOB-1548",
         "summary": "Weekly nutrition summary",
         "type": "bug",
         "url": "https://fake-jira.test/browse/MOB-1548"
       },
       {
+        "issueId": 62,
         "key": "MOB-1555",
         "summary": "Print-friendly recipe view",
         "type": "story",
         "url": "https://fake-jira.test/browse/MOB-1555"
       },
       {
+        "issueId": 63,
         "key": "MOB-1557",
         "summary": "Recipe version history",
         "type": "story",
         "url": "https://fake-jira.test/browse/MOB-1557"
       },
       {
+        "issueId": 64,
         "key": "MOB-1560",
         "summary": "Smart reorder of staple items",
         "type": "bug",
         "url": "https://fake-jira.test/browse/MOB-1560"
       },
       {
+        "issueId": 65,
         "key": "MOB-1563",
         "summary": "Add tests for checkout (later)",
         "type": "task",
         "url": "https://fake-jira.test/browse/MOB-1563"
       },
       {
+        "issueId": 66,
         "key": "MOB-1565",
         "summary": "Localise basket (later)",
         "type": "story",
         "url": "https://fake-jira.test/browse/MOB-1565"
       },
       {
+        "issueId": 67,
         "key": "MOB-1571",
         "summary": "Audit accessibility of promo codes (later)",
         "type": "spike",

@@ -1451,48 +1451,56 @@
   ],
   "backlog": [
     {
+      "issueId": 40001,
       "key": "GRO-204",
       "summary": "Tidy up referral flow",
       "type": "story",
       "url": "https://example.atlassian.net/browse/GRO-204"
     },
     {
+      "issueId": 40002,
       "key": "GRO-208",
       "summary": "Translate welcome emails",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/GRO-208"
     },
     {
+      "issueId": 40003,
       "key": "GRO-213",
       "summary": "Track trial banner",
       "type": "story",
       "url": "https://example.atlassian.net/browse/GRO-213"
     },
     {
+      "issueId": 40004,
       "key": "GRO-215",
       "summary": "Launch pricing page",
       "type": "task",
       "url": "https://example.atlassian.net/browse/GRO-215"
     },
     {
+      "issueId": 40005,
       "key": "GRO-216",
       "summary": "Test win-back offer",
       "type": "story",
       "url": "https://example.atlassian.net/browse/GRO-216"
     },
     {
+      "issueId": 40006,
       "key": "GRO-217",
       "summary": "Refresh app store listing",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/GRO-217"
     },
     {
+      "issueId": 40007,
       "key": "GRO-222",
       "summary": "Measure newsletter signup",
       "type": "story",
       "url": "https://example.atlassian.net/browse/GRO-222"
     },
     {
+      "issueId": 40008,
       "key": "GRO-228",
       "summary": "Personalise share cards",
       "type": "spike",

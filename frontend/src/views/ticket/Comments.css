@@ -1,0 +1,147 @@
+/* Ticket comments (ux-spec §14.5). Scales with --scale. Section head classes live in TicketContent.css. Tokens only. */
+.cm {
+  gap: var(--space-3);
+}
+
+.cm-order {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cm-list {
+  display: grid;
+}
+
+.cm-item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 2px solid var(--color-rule-soft);
+}
+
+.cm-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.cm-initials {
+  display: inline-grid;
+  place-items: center;
+  min-width: calc(var(--scale) * 2.125rem);
+  height: calc(var(--scale) * 2.125rem);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-rail-bg);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  font-weight: var(--font-weight-bold);
+}
+
+.cm-name {
+  font-size: calc(var(--scale) * 1rem);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cm-when {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.8125rem);
+  color: var(--color-muted);
+}
+
+.cm-edited {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.cm-vis {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1.5px solid var(--color-alert-bg);
+  border-radius: var(--radius-chip);
+  color: var(--color-alert-text);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.6875rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-tag);
+  text-transform: uppercase;
+}
+
+.cm-item[data-self="true"] .cm-initials {
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+}
+
+.cm-pending[data-state="failed"] {
+  border-left: 3px dashed var(--color-alert-bg);
+  padding-left: var(--space-3);
+}
+
+.cm-pending[data-state="sending"] {
+  opacity: 0.6;
+}
+
+.cm-sending {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.8125rem);
+  color: var(--color-muted);
+}
+
+.cm-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: calc(var(--scale) * 0.9375rem);
+}
+
+.cm-failed {
+  margin: 0;
+  font-size: calc(var(--scale) * 0.9375rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-alert-text);
+}
+
+.cm-kept {
+  margin: 0;
+  font-size: calc(var(--scale) * 0.8125rem);
+  color: var(--color-muted);
+}
+
+.cm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cm-btn {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.cm-btn:hover {
+  background: var(--color-rule-soft);
+}
+
+.cm-marker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 2px solid var(--color-fg);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+}

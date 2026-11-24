@@ -1,13 +1,15 @@
 package jira
 
 // WP-19 tests for hydrate.go (Hydrate): issue batches, field mapping to model.IssueDetail, changelog bulkfetch with
-// its fallbacks, comment top-ups, comment-body hygiene, people, progress and output order (jira-sync.md §2.8–§2.10,
+// its fallbacks, complete comment fetches (F12), comment/email hygiene, people, progress and output order (jira-sync.md §2.8–§2.10,
 // §4.3; architecture.md R6). Harness and conventions: see scan_test.go.
 //
-// SPEC-NOTE: Hydrate sends POST /rest/api/3/search/jql with `jql` = `id in (<ids>)` (ids are digits; the separator is
-// free), `maxResults` 100 and `fields` = exactly {summary, issuetype, status, assignee, created, updated,
-// resolutiondate, parent, comment, customfield_10020, customfield_10019, customfield_10021} (order free; the three
-// custom ids come from Meta). A batch is ≤ 100 ids; if a response carries nextPageToken it is followed.
+// SPEC-NOTE (F12, was: explicit field list, batches of 100): Hydrate sends POST /rest/api/3/search/jql with `jql` =
+// `id in (<ids>)` (ids are digits; the separator is free), `maxResults` 50 and `fields` = exactly
+// ["*all", "-comment", "-worklog"] in that order (jira-sync §2.8, ADR 0015: every field comes with the page; the sprint,
+// rank and flagged ids are therefore NOT listed any more). A batch is ≤ 50 ids; if a response carries nextPageToken it
+// is followed. Besides the search the adapter reads GET /rest/api/3/field once (registry, see hydrate_content_test.go)
+// and, per issue, the comment endpoint; the old "Hydrate must not call /rest/api/3/field" rule of scan_test.go is gone.
 // SPEC-NOTE: Output order follows the input ids; issues the server does not return are simply absent. The test server
 // answers every batch in REVERSED order to prove this. At most 4 requests are in flight at once (policy semaphore).
 // SPEC-NOTE: Mapping: Issue{SourceID=id, Key, Summary, TypeID, StatusID, AssigneeID ("" when null), Flagged (flagged
@@ -26,23 +28,29 @@ package jira
 // filtered client-side); if that fails too -> per issue GET /rest/api/3/issue/{id}/changelog?maxResults=100 with startAt
 // paging (response {"startAt","maxResults","total","isLast","values":[{id,created,items}]}; continue while the page
 // is not the last: startAt = items read so far).
-// SPEC-NOTE: Progress phases: "issues" (total = number of ids), "changelog" (total = number of hydrated issues), and
-// "comments" (total = number of issues that need a top-up; reported only when > 0). Per phase `total` is constant,
+// SPEC-NOTE (F12): Progress phases: "issues" (total = number of ids), "changelog" (total = number of hydrated issues),
+// "comments" (F12: total = number of hydrated issues, because every issue gets a complete comment fetch; it was "only
+// the issues that need a top-up, reported only when > 0") and optionally "content". Per phase `total` is constant,
 // `done` is non-decreasing in call order, ≤ total, and the last call reaches done == total. Units are issues.
-// SPEC-NOTE: Comments: embedded comments are Comment{ID, At (created), AuthorID (author.accountId)}; CommentTotal =
-// comment.total. A top-up GET /rest/api/3/issue/{id}/comment?orderBy=-created&maxResults=100&startAt=n happens only
-// when comment.total > len(embedded) AND the oldest embedded comment is NOT older than 35 days (tests use 34 d and
-// 36 d). It stops at the first page whose oldest comment is older than 35 d (or when total is exhausted). Top-up
-// results are merged into Comments de-duplicated by id. No bodies are retained: the decoded struct, printed with %+v,
-// never contains the body text or e-mail addresses.
+// SPEC-NOTE (F12, was: embedded comments + 35-day top-up): comment bodies ARE stored now (ADR 0015); they stay out of
+// logs and exports (AGENTS invariant 12), and author e-mail addresses are never retained. The search excludes `comment`
+// and a `comment` key in a hit is ignored. For every hydrated issue the adapter pages GET
+// /rest/api/3/issue/{id}/comment?orderBy=created&maxResults=100&startAt=n until the list is complete; the full contract
+// (bodies, visibility, edited, short pages, empty page) is in hydrate_content_test.go.
 // SPEC-NOTE: Issue types seen while hydrating are returned by a later Reference() call (types map).
 
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -173,7 +181,7 @@ func wp19BulkRoute(t *testing.T, hist func(id string) []wp19Hist) wp19Route {
 func wp19DefaultGen(id string) map[string]any { return wp19IssueJSON(id, wp19Iss{}) }
 
 func wp19HydrateServer(t *testing.T) *wp19Srv {
-	return newWP19Server(t, map[string]wp19Route{
+	return newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql":          wp19SearchRoute(t, wp19DefaultGen, 0),
 		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, wp19DefaultHist),
 	})
@@ -222,11 +230,124 @@ func wp19Day(offsetDays float64) time.Time {
 	return wp19Now.Add(-time.Duration(offsetDays * float64(24*time.Hour)))
 }
 
+// ── F12 harness ──────────────────────────────────────────────────────────────
+//
+// SPEC-NOTE (F12 harness): scan_test.go's wp19 server routes by exact path, but Hydrate now makes one comment request
+// per issue and one /field request. newF12Server is the same recording server with two additions: the route keys
+// "GET /rest/api/3/issue/{id}/comment" and "GET /rest/api/3/issue/{id}" match any id (the handler reads the id from
+// wp19Req.Path), and these defaults are added unless the test supplies its own: GET /rest/api/3/field answers
+// testdata/wp18_fields.json (sprint, rank, flagged and a few more) and every comment request answers an empty list.
+// Unrouted requests still fail the test, so "no extra calls" stays pinned.
+
+var f12IssuePathRe = regexp.MustCompile(`^/rest/api/3/issue/([^/]+)(/comment)?$`)
+
+func f12Lookup(routes map[string]wp19Route, method, path string) (wp19Route, bool) {
+	if r, ok := routes[method+" "+path]; ok {
+		return r, true
+	}
+	if method == "GET" {
+		if m := f12IssuePathRe.FindStringSubmatch(path); m != nil {
+			key := "GET /rest/api/3/issue/{id}"
+			if m[2] == "/comment" {
+				key += "/comment"
+			}
+			r, ok := routes[key]
+			return r, ok
+		}
+	}
+	return nil, false
+}
+
+func f12IssueIDOf(path string) string {
+	if m := f12IssuePathRe.FindStringSubmatch(path); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+func newF12Server(t *testing.T, routes map[string]wp19Route) *wp19Srv {
+	t.Helper()
+	all := map[string]wp19Route{}
+	for k, v := range routes {
+		all[k] = v
+	}
+	if _, ok := all["GET /rest/api/3/field"]; !ok {
+		all["GET /rest/api/3/field"] = wp19Ok(wp19Testdata(t, "wp18_fields.json"))
+	}
+	if _, ok := all["GET /rest/api/3/issue/{id}/comment"]; !ok {
+		all["GET /rest/api/3/issue/{id}/comment"] = wp19Ok(`{"startAt":0,"maxResults":100,"total":0,"comments":[]}`)
+	}
+	s := &wp19Srv{routes: all}
+	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := atomic.AddInt32(&s.inflight, 1)
+		defer atomic.AddInt32(&s.inflight, -1)
+		for {
+			m := atomic.LoadInt32(&s.maxInfl)
+			if n <= m || atomic.CompareAndSwapInt32(&s.maxInfl, m, n) {
+				break
+			}
+		}
+		b, _ := io.ReadAll(r.Body)
+		req := wp19Req{Method: r.Method, Path: r.URL.Path, Query: r.URL.Query(), Body: string(b)}
+		s.mu.Lock()
+		s.reqs = append(s.reqs, req)
+		s.mu.Unlock()
+		route, ok := f12Lookup(all, r.Method, r.URL.Path)
+		if !ok {
+			t.Errorf("unexpected request %s %s?%s", r.Method, r.URL.Path, r.URL.RawQuery)
+			http.Error(w, `{"errorMessages":["no route"]}`, http.StatusNotFound)
+			return
+		}
+		resp := route(req)
+		ct := "application/json"
+		if resp.NonJSON {
+			ct = "text/html"
+		}
+		w.Header().Set("Content-Type", ct)
+		st := resp.Status
+		if st == 0 {
+			st = 200
+		}
+		w.WriteHeader(st)
+		_, _ = io.WriteString(w, resp.Body)
+	}))
+	t.Cleanup(s.Server.Close)
+	return s
+}
+
+// comments returns the requests to GET /rest/api/3/issue/<id>/comment.
+func (s *wp19Srv) comments(id string) []wp19Req {
+	return s.to("GET", "/rest/api/3/issue/"+id+"/comment")
+}
+
+// f12CommentRoute serves comments (ascending by created, as orderBy=created asks) honouring startAt and maxResults;
+// pageCap > 0 caps a page below maxResults (a server that returns short pages). Bodies are ADF paragraphs carrying
+// wp19Sentinel; every comment has `updated` == `created`.
+func f12CommentRoute(t *testing.T, all []wp19Cmt, pageCap int) wp19Route {
+	return func(r wp19Req) wp19Resp {
+		start, _ := strconv.Atoi(r.Query.Get("startAt"))
+		limit, _ := strconv.Atoi(r.Query.Get("maxResults"))
+		if limit <= 0 {
+			limit = 50
+		}
+		if pageCap > 0 && limit > pageCap {
+			limit = pageCap
+		}
+		start = min(start, len(all))
+		end := min(start+limit, len(all))
+		page := []any{}
+		for _, c := range all[start:end] {
+			page = append(page, wp19CmtJSON(c))
+		}
+		return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": start, "maxResults": limit, "total": len(all), "comments": page})}
+	}
+}
+
 // ── batching, order, concurrency ─────────────────────────────────────────────
 
 func TestHydrate_EmptyInputMakesNoRequests(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{})
+	srv := newF12Server(t, map[string]wp19Route{})
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
 	got, err := a.Hydrate(context.Background(), nil, nil)
 	if err != nil || len(got) != 0 {
@@ -237,7 +358,8 @@ func TestHydrate_EmptyInputMakesNoRequests(t *testing.T) {
 	}
 }
 
-func TestHydrate_BatchesIssueSearchesBy100AndKeepsInputOrder(t *testing.T) {
+// F12: batches are 50 ids / maxResults 50 (jira-sync §2.8), was 100.
+func TestHydrate_BatchesIssueSearchesBy50AndKeepsInputOrder(t *testing.T) {
 	defer wp19Guard(t)
 	srv := wp19HydrateServer(t)
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -258,8 +380,8 @@ func TestHydrate_BatchesIssueSearchesBy100AndKeepsInputOrder(t *testing.T) {
 		}
 	}
 	searches := srv.to("POST", "/rest/api/3/search/jql")
-	if len(searches) != 3 {
-		t.Fatalf("search POSTs = %d, want 3 (100+100+50)", len(searches))
+	if len(searches) != 5 { // F12
+		t.Fatalf("search POSTs = %d, want 5 (5×50)", len(searches))
 	}
 	var sizes []int
 	var union []string
@@ -272,13 +394,13 @@ func TestHydrate_BatchesIssueSearchesBy100AndKeepsInputOrder(t *testing.T) {
 		batch := wp19IDsFromJQL(t, jql)
 		sizes = append(sizes, len(batch))
 		union = append(union, batch...)
-		if body["maxResults"] != float64(100) {
-			t.Errorf("maxResults = %v, want 100", body["maxResults"])
+		if body["maxResults"] != float64(50) { // F12
+			t.Errorf("maxResults = %v, want 50", body["maxResults"])
 		}
 	}
 	sort.Ints(sizes)
-	if fmt.Sprint(sizes) != "[50 100 100]" {
-		t.Errorf("batch sizes = %v, want [50 100 100]", sizes)
+	if fmt.Sprint(sizes) != "[50 50 50 50 50]" { // F12
+		t.Errorf("batch sizes = %v, want [50 50 50 50 50]", sizes)
 	}
 	if !wp19SameSet(union, ids) {
 		t.Errorf("the batches do not cover exactly the input ids")
@@ -295,7 +417,8 @@ func TestHydrate_BatchesIssueSearchesBy100AndKeepsInputOrder(t *testing.T) {
 	}
 }
 
-func TestHydrate_RequestsExactlyTheDocumentedFields(t *testing.T) {
+// F12: the hydrate projection is everything except comments and worklog (jira-sync §2.8); comments come from §2.10.
+func TestHydrate_RequestsEverythingExceptCommentsAndWorklog(t *testing.T) {
 	defer wp19Guard(t)
 	srv := wp19HydrateServer(t)
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -303,14 +426,14 @@ func TestHydrate_RequestsExactlyTheDocumentedFields(t *testing.T) {
 		t.Fatalf("Hydrate: %v", err)
 	}
 	body := srv.to("POST", "/rest/api/3/search/jql")[0].json(t)
-	want := []string{"summary", "issuetype", "status", "assignee", "created", "updated", "resolutiondate", "parent", "comment",
-		"customfield_10020", "customfield_10019", "customfield_10021"}
-	if got := wp19StrSlice(body["fields"]); !wp19SameSet(got, want) {
-		t.Errorf("fields = %v, want %v", got, want)
+	want := []string{"*all", "-comment", "-worklog"} // F12
+	if got := wp19StrSlice(body["fields"]); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("fields = %v, want exactly %v in that order", got, want)
 	}
 }
 
-func TestHydrate_ChangelogBatchesBy500AndSearchBatchesBy100(t *testing.T) {
+// F12: search batches of 50.
+func TestHydrate_ChangelogBatchesBy500AndSearchBatchesBy50(t *testing.T) {
 	defer wp19Guard(t)
 	srv := wp19HydrateServer(t)
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -322,8 +445,8 @@ func TestHydrate_ChangelogBatchesBy500AndSearchBatchesBy100(t *testing.T) {
 	if len(got) != 501 {
 		t.Fatalf("details = %d, want 501", len(got))
 	}
-	if n := len(srv.to("POST", "/rest/api/3/search/jql")); n != 6 {
-		t.Errorf("search POSTs = %d, want 6 (5×100 + 1)", n)
+	if n := len(srv.to("POST", "/rest/api/3/search/jql")); n != 11 { // F12
+		t.Errorf("search POSTs = %d, want 11 (10×50 + 1)", n)
 	}
 	bulks := srv.to("POST", "/rest/api/3/changelog/bulkfetch")
 	if len(bulks) != 2 {
@@ -347,8 +470,8 @@ func TestHydrate_ChangelogBatchesBy500AndSearchBatchesBy100(t *testing.T) {
 
 func TestHydrate_FollowsNextPageTokenOfAnIssueSearch(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{
-		"POST /rest/api/3/search/jql":          wp19SearchRoute(t, wp19DefaultGen, 60), // 100 ids -> 60 + 40
+	srv := newF12Server(t, map[string]wp19Route{
+		"POST /rest/api/3/search/jql":          wp19SearchRoute(t, wp19DefaultGen, 30), // F12: 100 ids -> 2 batches of 50, each 30 + 20
 		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, wp19DefaultHist),
 	})
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -366,8 +489,8 @@ func TestHydrate_FollowsNextPageTokenOfAnIssueSearch(t *testing.T) {
 		}
 	}
 	searches := srv.to("POST", "/rest/api/3/search/jql")
-	if len(searches) != 2 {
-		t.Fatalf("search POSTs = %d, want 2", len(searches))
+	if len(searches) != 4 { // F12
+		t.Fatalf("search POSTs = %d, want 4 (2 batches × 2 pages)", len(searches))
 	}
 	var tokens []string
 	for _, r := range searches {
@@ -375,14 +498,14 @@ func TestHydrate_FollowsNextPageTokenOfAnIssueSearch(t *testing.T) {
 		tokens = append(tokens, tok)
 	}
 	sort.Strings(tokens)
-	if tokens[0] != "" || tokens[1] != "off-60" {
-		t.Errorf("tokens = %q, want one first page and one with off-60", tokens)
+	if strings.Join(tokens, "|") != "||off-30|off-30" { // F12: two first pages, two follow-ups
+		t.Errorf("tokens = %q, want two first pages and two with off-30", tokens)
 	}
 }
 
 func TestHydrate_SearchUnauthorizedIsAuthInvalid(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{
+	srv := newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql": wp19Fail(401, `{}`),
 	})
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -393,8 +516,17 @@ func TestHydrate_SearchUnauthorizedIsAuthInvalid(t *testing.T) {
 // ── field mapping (golden: testdata/wp19_issue_full.json) ────────────────────
 
 func wp19FullServer(t *testing.T, hist []wp19Hist) *wp19Srv {
-	return newWP19Server(t, map[string]wp19Route{
+	return newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql": wp19Ok(wp19Testdata(t, "wp19_issue_full.json")),
+		// F12: comments come from the comment endpoint (the golden's embedded `comment` key must be ignored)
+		"GET /rest/api/3/issue/{id}/comment": f12RawCommentRoute(t, []map[string]any{
+			{"id": "70001", "created": "2026-11-21T08:00:00.000+0000", "updated": "2026-11-21T08:00:00.000+0000",
+				"author": map[string]any{"accountId": "u-silas", "displayName": "Silas Lee", "emailAddress": "silas.lee@acme.example", "accountType": "atlassian"},
+				"body":   f12Doc("alpha")},
+			{"id": "70002", "created": "2026-11-22T08:00:00.000+0000", "updated": "2026-11-22T08:00:00.000+0000",
+				"author": map[string]any{"accountId": "bot-automation", "displayName": "Automation for Jira", "accountType": "app"},
+				"body":   f12Doc("beta")},
+		}, 0),
 		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, func(id string) []wp19Hist {
 			if id == "10390" {
 				return hist
@@ -486,9 +618,9 @@ func TestHydrate_MapsIssueFieldsFromARealisticResponse(t *testing.T) {
 		t.Errorf("Sprints[1] = %+v", s42)
 	}
 
-	// embedded comments are complete (total 2 == len), so no top-up request
-	if n := len(srv.to("GET", "/rest/api/3/issue/10390/comment")); n != 0 {
-		t.Errorf("comment top-up requests = %d, want 0", n)
+	// F12: the complete comment list is always fetched from the comment endpoint (one page here)
+	if n := len(srv.to("GET", "/rest/api/3/issue/10390/comment")); n != 1 {
+		t.Errorf("comment requests = %d, want 1", n)
 	}
 	if d.CommentTotal != 2 || len(d.Comments) != 2 {
 		t.Fatalf("CommentTotal/Comments = %d/%+v", d.CommentTotal, d.Comments)
@@ -556,31 +688,27 @@ func TestHydrate_MapsIssueFieldsFromARealisticResponse(t *testing.T) {
 	}
 }
 
-func TestHydrate_NeverRetainsCommentBodiesOrEmailAddresses(t *testing.T) {
+// F12: comment bodies are now stored locally (AGENTS invariant 12 keeps them out of logs and exports); e-mail
+// addresses of authors are still never retained. The "bodies are kept" half is asserted in hydrate_content_test.go.
+func TestHydrate_NeverRetainsEmailAddresses(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{
-		"POST /rest/api/3/search/jql": wp19SearchRoute(t, func(id string) map[string]any {
-			return wp19IssueJSON(id, wp19Iss{Total: 3, Embedded: []wp19Cmt{{ID: "c1", At: wp19Day(2), Author: "u-silas"}}})
-		}, 0),
+	srv := newF12Server(t, map[string]wp19Route{
+		"POST /rest/api/3/search/jql":          wp19SearchRoute(t, wp19DefaultGen, 0),
 		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, wp19DefaultHist),
-		"GET /rest/api/3/issue/10001/comment": func(wp19Req) wp19Resp {
-			return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 0, "maxResults": 100, "total": 3, "comments": []any{
-				wp19CmtJSON(wp19Cmt{ID: "c3", At: wp19Day(1), Author: "u-iris"}),
-				wp19CmtJSON(wp19Cmt{ID: "c2", At: wp19Day(1.5), Author: "u-silas"}),
-				wp19CmtJSON(wp19Cmt{ID: "c1", At: wp19Day(2), Author: "u-silas"}),
-			}})}
-		},
+		"GET /rest/api/3/issue/{id}/comment": f12CommentRoute(t, []wp19Cmt{
+			{ID: "c1", At: wp19Day(2), Author: "u-silas"}, {ID: "c2", At: wp19Day(1), Author: "u-iris"},
+		}, 0),
 	})
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
 	got, err := a.Hydrate(context.Background(), []string{"10001"}, nil)
 	if err != nil {
 		t.Fatalf("Hydrate: %v", err)
 	}
-	if n := len(srv.to("GET", "/rest/api/3/issue/10001/comment")); n != 1 {
-		t.Fatalf("top-up requests = %d, want 1 (the sentinel must be present in the top-up response too)", n)
+	if len(got) != 1 || len(got[0].Comments) != 2 || len(got[0].People) < 2 {
+		t.Fatalf("precondition: want 2 comments and the people seen, got %+v", got)
 	}
 	dump := fmt.Sprintf("%+v", got)
-	for _, secret := range []string{wp19Sentinel, "@acme.example", "emailAddress"} {
+	for _, secret := range []string{"@acme.example", "emailAddress"} {
 		if strings.Contains(dump, secret) {
 			t.Errorf("decoded details contain %q:\n%s", secret, dump)
 		}
@@ -589,7 +717,7 @@ func TestHydrate_NeverRetainsCommentBodiesOrEmailAddresses(t *testing.T) {
 
 func TestHydrate_UnassignedIssueWithNoOptionalFields(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{
+	srv := newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql": wp19Ok(`{"isLast":true,"issues":[{"id":"10500","key":"MOB-500","fields":{
 			"summary":"Subtask of nothing","issuetype":{"id":"10005","name":"Sub-task","subtask":true,"hierarchyLevel":-1},
 			"status":{"id":"10007","name":"Done","statusCategory":{"id":3,"key":"done"}},
@@ -634,7 +762,7 @@ func TestHydrate_UnassignedIssueWithNoOptionalFields(t *testing.T) {
 
 func TestHydrate_RecordsIssueTypesForALaterReference(t *testing.T) {
 	defer wp19Guard(t)
-	srv := newWP19Server(t, map[string]wp19Route{
+	srv := newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql": wp19SearchRoute(t, func(id string) map[string]any {
 			if id == "10002" {
 				return wp19IssueJSON(id, wp19Iss{TypeID: "10004", TypeName: "Bug"})
@@ -693,7 +821,7 @@ func TestHydrate_ChangelogRequestShape(t *testing.T) {
 func TestHydrate_ChangelogFollowsNextPageTokenAndMergesPerIssue(t *testing.T) {
 	defer wp19Guard(t)
 	ms := func(tm time.Time) any { return tm.UnixMilli() }
-	srv := newWP19Server(t, map[string]wp19Route{
+	srv := newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql": wp19SearchRoute(t, wp19DefaultGen, 0),
 		"POST /rest/api/3/changelog/bulkfetch": func(r wp19Req) wp19Resp {
 			switch tok, _ := r.json(t)["nextPageToken"].(string); tok {
@@ -748,7 +876,7 @@ func TestHydrate_ChangelogRetriesWithoutFieldIdsOnRejection(t *testing.T) {
 	for _, status := range []int{400, 404} {
 		t.Run(fmt.Sprint(status), func(t *testing.T) {
 			defer wp19Guard(t)
-			srv := newWP19Server(t, map[string]wp19Route{
+			srv := newF12Server(t, map[string]wp19Route{
 				"POST /rest/api/3/search/jql": wp19SearchRoute(t, wp19DefaultGen, 0),
 				"POST /rest/api/3/changelog/bulkfetch": func(r wp19Req) wp19Resp {
 					if _, has := r.json(t)["fieldIds"]; has {
@@ -803,7 +931,7 @@ func TestHydrate_ChangelogFallsBackToPerIssuePagedEndpoint(t *testing.T) {
 	page := func(startAt, total int, last bool, hs []wp19Hist) wp19Resp {
 		return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": startAt, "maxResults": 100, "total": total, "isLast": last, "values": wp19Histories(hs)})}
 	}
-	srv := newWP19Server(t, map[string]wp19Route{
+	srv := newF12Server(t, map[string]wp19Route{
 		"POST /rest/api/3/search/jql":          wp19SearchRoute(t, wp19DefaultGen, 0),
 		"POST /rest/api/3/changelog/bulkfetch": wp19Fail(400, `{"errorMessages":["not supported"]}`),
 		"GET /rest/api/3/issue/10001/changelog": func(r wp19Req) wp19Resp {
@@ -853,174 +981,15 @@ func TestHydrate_ChangelogFallsBackToPerIssuePagedEndpoint(t *testing.T) {
 }
 
 // ── comments ─────────────────────────────────────────────────────────────────
-
-func wp19CommentServer(t *testing.T, emb []wp19Cmt, total int, topup wp19Route) *wp19Srv {
-	return newWP19Server(t, map[string]wp19Route{
-		"POST /rest/api/3/search/jql": wp19SearchRoute(t, func(id string) map[string]any {
-			return wp19IssueJSON(id, wp19Iss{Total: total, Embedded: emb})
-		}, 0),
-		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, func(string) []wp19Hist { return nil }),
-		"GET /rest/api/3/issue/10001/comment":  topup,
-	})
-}
-
-func TestHydrate_CommentTopUp_FetchesNewestFirstAndMergesWithoutDuplicates(t *testing.T) {
-	defer wp19Guard(t)
-	srv := wp19CommentServer(t, []wp19Cmt{{ID: "c1", At: wp19Day(2), Author: "u-silas"}}, 3,
-		func(wp19Req) wp19Resp {
-			return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 0, "maxResults": 100, "total": 3, "comments": []any{
-				wp19CmtJSON(wp19Cmt{ID: "c3", At: wp19Day(1), Author: "u-iris"}),
-				wp19CmtJSON(wp19Cmt{ID: "c2", At: wp19Day(1.5), Author: "u-silas"}),
-				wp19CmtJSON(wp19Cmt{ID: "c1", At: wp19Day(2), Author: "u-silas"}),
-			}})}
-		})
-	a := newWP19Adapter(t, srv.URL, wp19Meta())
-	got, err := a.Hydrate(context.Background(), []string{"10001"}, nil)
-	if err != nil {
-		t.Fatalf("Hydrate: %v", err)
-	}
-	reqs := srv.to("GET", "/rest/api/3/issue/10001/comment")
-	if len(reqs) != 1 {
-		t.Fatalf("top-up requests = %d, want 1", len(reqs))
-	}
-	for k, want := range map[string]string{"orderBy": "-created", "maxResults": "100", "startAt": "0"} {
-		if got := reqs[0].Query.Get(k); got != want {
-			t.Errorf("top-up query %s = %q, want %q (all: %v)", k, got, want, reqs[0].Query)
-		}
-	}
-	d := got[0]
-	if d.CommentTotal != 3 {
-		t.Errorf("CommentTotal = %d, want 3", d.CommentTotal)
-	}
-	ids := map[string]string{}
-	for _, c := range d.Comments {
-		if _, dup := ids[c.ID]; dup {
-			t.Errorf("comment %s listed twice: %+v", c.ID, d.Comments)
-		}
-		ids[c.ID] = c.AuthorID
-	}
-	if len(ids) != 3 || ids["c1"] != "u-silas" || ids["c2"] != "u-silas" || ids["c3"] != "u-iris" {
-		t.Errorf("Comments = %+v, want c1,c2,c3 with their authors", d.Comments)
-	}
-}
-
-func TestHydrate_CommentTopUp_OnlyWhenTotalExceedsEmbeddedAndOldestEmbeddedIsWithin35Days(t *testing.T) {
-	defer wp19Guard(t)
-	tests := []struct {
-		name         string
-		embedded     []wp19Cmt
-		total        int
-		wantRequests int
-	}{
-		{"oldest embedded 34 days old: top up", []wp19Cmt{{ID: "c1", At: wp19Day(34), Author: "u-silas"}, {ID: "c2", At: wp19Day(3), Author: "u-silas"}}, 5, 1},
-		{"oldest embedded 36 days old: already past the horizon", []wp19Cmt{{ID: "c1", At: wp19Day(36), Author: "u-silas"}, {ID: "c2", At: wp19Day(3), Author: "u-silas"}}, 5, 0},
-		{"total equals embedded count", []wp19Cmt{{ID: "c1", At: wp19Day(2), Author: "u-silas"}, {ID: "c2", At: wp19Day(1), Author: "u-silas"}}, 2, 0},
-		{"no comments at all", nil, 0, 0},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			defer wp19Guard(t)
-			srv := wp19CommentServer(t, tc.embedded, tc.total, func(wp19Req) wp19Resp {
-				return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 0, "maxResults": 100, "total": tc.total, "comments": []any{}})}
-			})
-			a := newWP19Adapter(t, srv.URL, wp19Meta())
-			got, err := a.Hydrate(context.Background(), []string{"10001"}, nil)
-			if err != nil {
-				t.Fatalf("Hydrate: %v", err)
-			}
-			if n := len(srv.to("GET", "/rest/api/3/issue/10001/comment")); n != tc.wantRequests {
-				t.Errorf("top-up requests = %d, want %d", n, tc.wantRequests)
-			}
-			if got[0].CommentTotal != tc.total {
-				t.Errorf("CommentTotal = %d, want %d", got[0].CommentTotal, tc.total)
-			}
-		})
-	}
-}
-
-func TestHydrate_CommentTopUp_PagesUntilAPageReachesPast35Days(t *testing.T) {
-	defer wp19Guard(t)
-	mk := func(prefix string, n int, base float64, last time.Time) []any {
-		out := make([]any, 0, n)
-		for i := 0; i < n; i++ {
-			at := wp19Now.Add(-time.Duration(base*24*float64(time.Hour)) - time.Duration(i)*time.Minute)
-			if i == n-1 && !last.IsZero() {
-				at = last
-			}
-			out = append(out, wp19CmtJSON(wp19Cmt{ID: fmt.Sprintf("%s-%03d", prefix, i), At: at, Author: "u-silas"}))
-		}
-		return out
-	}
-	srv := wp19CommentServer(t, []wp19Cmt{{ID: "c-emb", At: wp19Day(3), Author: "u-iris"}}, 250,
-		func(r wp19Req) wp19Resp {
-			switch r.Query.Get("startAt") {
-			case "0":
-				return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 0, "maxResults": 100, "total": 250, "comments": mk("pa", 100, 1, time.Time{})})}
-			case "100":
-				return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 100, "maxResults": 100, "total": 250, "comments": mk("pb", 100, 2, wp19Day(36))})}
-			}
-			t.Errorf("unexpected comment page: %v", r.Query)
-			return wp19Resp{Body: `{"comments":[]}`}
-		})
-	a := newWP19Adapter(t, srv.URL, wp19Meta())
-	got, err := a.Hydrate(context.Background(), []string{"10001"}, nil)
-	if err != nil {
-		t.Fatalf("Hydrate: %v", err)
-	}
-	reqs := srv.to("GET", "/rest/api/3/issue/10001/comment")
-	if len(reqs) != 2 {
-		t.Fatalf("comment requests = %d, want 2 (the second page's oldest is 36 d old: stop)", len(reqs))
-	}
-	if reqs[0].Query.Get("startAt") != "0" || reqs[1].Query.Get("startAt") != "100" {
-		t.Errorf("startAt sequence = %q, %q, want 0 then 100", reqs[0].Query.Get("startAt"), reqs[1].Query.Get("startAt"))
-	}
-	have := map[string]bool{}
-	for _, c := range got[0].Comments {
-		have[c.ID] = true
-	}
-	for i := 0; i < 100; i++ {
-		if !have[fmt.Sprintf("pa-%03d", i)] {
-			t.Fatalf("comment pa-%03d missing", i)
-		}
-	}
-	for i := 0; i < 99; i++ {
-		if !have[fmt.Sprintf("pb-%03d", i)] {
-			t.Fatalf("comment pb-%03d missing", i)
-		}
-	}
-	if !have["c-emb"] {
-		t.Error("embedded comment c-emb was dropped")
-	}
-	if got[0].CommentTotal != 250 {
-		t.Errorf("CommentTotal = %d, want 250", got[0].CommentTotal)
-	}
-}
+// F12: the three top-up tests (embedded comments + 35-day horizon) are gone: comments are fetched completely for every
+// hydrated issue (see hydrate_content_test.go: paging, bodies, visibility, edited).
 
 // ── progress ─────────────────────────────────────────────────────────────────
 
+// F12: every hydrated issue gets its complete comment list, so the comments phase total is the number of issues.
 func TestHydrate_ReportsProgressPerPhaseMonotonically(t *testing.T) {
 	defer wp19Guard(t)
-	needTopUp := map[string]bool{"20007": true, "20123": true}
-	topup := func(id string) wp19Route {
-		return func(wp19Req) wp19Resp {
-			return wp19Resp{Body: wp19JSON(t, map[string]any{"startAt": 0, "maxResults": 100, "total": 3, "comments": []any{
-				wp19CmtJSON(wp19Cmt{ID: "t3-" + id, At: wp19Day(1), Author: "u-iris"}),
-				wp19CmtJSON(wp19Cmt{ID: "t2-" + id, At: wp19Day(2), Author: "u-iris"}),
-				wp19CmtJSON(wp19Cmt{ID: "t1-" + id, At: wp19Day(3), Author: "u-iris"}),
-			}})}
-		}
-	}
-	srv := newWP19Server(t, map[string]wp19Route{
-		"POST /rest/api/3/search/jql": wp19SearchRoute(t, func(id string) map[string]any {
-			if needTopUp[id] {
-				return wp19IssueJSON(id, wp19Iss{Total: 3, Embedded: []wp19Cmt{{ID: "e-" + id, At: wp19Day(3), Author: "u-iris"}}})
-			}
-			return wp19IssueJSON(id, wp19Iss{})
-		}, 0),
-		"POST /rest/api/3/changelog/bulkfetch": wp19BulkRoute(t, wp19DefaultHist),
-		"GET /rest/api/3/issue/20007/comment":  topup("20007"),
-		"GET /rest/api/3/issue/20123/comment":  topup("20123"),
-	})
+	srv := wp19HydrateServer(t)
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
 	ids := wp19IDs(20000, 250)
 	var prog wp19Progress
@@ -1033,12 +1002,14 @@ func TestHydrate_ReportsProgressPerPhaseMonotonically(t *testing.T) {
 	}
 	prog.mu.Lock()
 	for _, c := range prog.calls {
-		if c.Phase != source.PhaseIssues && c.Phase != source.PhaseChangelog && c.Phase != source.PhaseComments {
-			t.Errorf("unexpected phase %q (Hydrate reports issues, changelog, comments only)", c.Phase)
+		switch c.Phase {
+		case source.PhaseIssues, source.PhaseChangelog, source.PhaseComments, source.PhaseContent:
+		default:
+			t.Errorf("unexpected phase %q (Hydrate reports issues, changelog, comments and content only)", c.Phase)
 		}
 	}
 	prog.mu.Unlock()
-	for phase, wantTotal := range map[string]int{source.PhaseIssues: 250, source.PhaseChangelog: 250, source.PhaseComments: 2} {
+	for phase, wantTotal := range map[string]int{source.PhaseIssues: 250, source.PhaseChangelog: 250, source.PhaseComments: 250} { // F12
 		calls := prog.phase(phase)
 		if len(calls) == 0 {
 			t.Errorf("no progress reported for phase %q", phase)
@@ -1050,7 +1021,7 @@ func TestHydrate_ReportsProgressPerPhaseMonotonically(t *testing.T) {
 				t.Errorf("phase %s call %d: total = %d, want %d", phase, i, c.Total, wantTotal)
 			}
 			if c.Done < prev || c.Done > c.Total {
-				t.Errorf("phase %s call %d: done = %d after %d (total %d): must be monotonic and ≤ total", phase, i, c.Done, prev, c.Total)
+				t.Errorf("phase %s call %d: done = %d after %d (total %d): must be monotonic and <= total", phase, i, c.Done, prev, c.Total)
 			}
 			prev = c.Done
 		}
@@ -1060,7 +1031,8 @@ func TestHydrate_ReportsProgressPerPhaseMonotonically(t *testing.T) {
 	}
 }
 
-func TestHydrate_NilProgressIsAllowedAndNoCommentsPhaseWithoutTopUps(t *testing.T) {
+// F12: was "...NoCommentsPhaseWithoutTopUps": the comments phase is now always reported (total = issues).
+func TestHydrate_NilProgressIsAllowedAndCommentsPhaseCoversEveryIssue(t *testing.T) {
 	defer wp19Guard(t)
 	srv := wp19HydrateServer(t)
 	a := newWP19Adapter(t, srv.URL, wp19Meta())
@@ -1068,8 +1040,9 @@ func TestHydrate_NilProgressIsAllowedAndNoCommentsPhaseWithoutTopUps(t *testing.
 	if _, err := a.Hydrate(context.Background(), []string{"10001", "10002"}, prog.fn()); err != nil {
 		t.Fatalf("Hydrate: %v", err)
 	}
-	if c := prog.phase(source.PhaseComments); len(c) != 0 {
-		t.Errorf("comments phase reported without any top-up: %+v", c)
+	c := prog.phase(source.PhaseComments)
+	if len(c) == 0 || c[len(c)-1].Total != 2 || c[len(c)-1].Done != 2 {
+		t.Errorf("comments phase = %+v, want a final 2/2", c)
 	}
 	srv2 := wp19HydrateServer(t)
 	a2 := newWP19Adapter(t, srv2.URL, wp19Meta())

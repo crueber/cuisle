@@ -25,7 +25,7 @@
 // SPEC-NOTE: a group with no tickets is not rendered even if the caller passes one ("only lanes that have tickets").
 // SPEC-NOTE: lane labels pass through untouched: the fixture uses the mockup's "In Review" / "In Progress" / "To Do"
 //   (bindings comments say "Review"/"In progress"/"To do"); the golden summary "2 To Do · 6 Done below" uses "To Do".
-// SPEC-NOTE: PersonView opens issues itself through the api facade (api().app.openIssue(key)); it has no onOpen prop.
+// SPEC-NOTE: PersonView opens issues itself through the api facade (openTicketFromRow(key) (the ticket modal opens; WP-T9)); it has no onOpen prop.
 // SPEC-NOTE: keyCh passed to every row is the longest key in the WHOLE view (view.tickets), not just this person's.
 import { act, fireEvent, render, screen, within } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
@@ -168,10 +168,13 @@ function props(over: Partial<PersonViewProps> = {}): PersonViewProps {
 }
 
 // ───────────────────────── harness ─────────────────────────
+const rowOpen = vi.hoisted(() => ({ fn: (_key: string): unknown => undefined }));
+vi.mock("../../state/ticketSteps", () => ({ openTicketFromRow: (key: string) => rowOpen.fn(key) }));
 let openIssue: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   openIssue = vi.fn(async () => {});
+  rowOpen.fn = openIssue as unknown as (key: string) => unknown; // rows open the ticket modal (WP-T9); the opener is replaced by this spy
   setApi({ app: { openIssue } } as unknown as Api);
 });
 afterEach(() => {

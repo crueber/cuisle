@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "emoji",
+          "attrs": {
+            "shortName": ":cupcake:",
+            "id": "1f9c1",
+            "text": "🧁"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "emoji",
+          "attrs": {
+            "shortName": ":partyparrot:",
+            "id": "partyparrot",
+            "text": ":partyparrot:"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "emoji",
+          "attrs": {
+            "shortName": ":wave:"
+          }
+        }
+      ]
+    }
+  ]
+}

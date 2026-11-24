@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "ok",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "#00875a"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "named",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "red"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "css",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "red;background:url(x)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "short",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "#fff"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

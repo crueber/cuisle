@@ -1,0 +1,43 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "cc "
+        },
+        {
+          "t": "mention",
+          "a": {
+            "accountId": "silas",
+            "label": "Silas Marchetti"
+          }
+        },
+        {
+          "t": "text",
+          "x": ", "
+        },
+        {
+          "t": "mention",
+          "a": {
+            "accountId": "me",
+            "label": "Dev User",
+            "self": true
+          }
+        },
+        {
+          "t": "text",
+          "x": ", "
+        },
+        {
+          "t": "mention",
+          "a": {
+            "accountId": "ghost",
+            "label": "Gone Person"
+          }
+        }
+      ]
+    }
+  ]
+}

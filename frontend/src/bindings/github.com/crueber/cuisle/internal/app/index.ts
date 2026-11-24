@@ -8,6 +8,7 @@ import * as HistoryService from "./historyservice.js";
 import * as SinkService from "./sinkservice.js";
 import * as StandupService from "./standupservice.js";
 import * as SyncService from "./syncservice.js";
+import * as TicketService from "./ticketservice.js";
 export {
     AppService,
     ConfigService,
@@ -15,7 +16,8 @@ export {
     HistoryService,
     SinkService,
     StandupService,
-    SyncService
+    SyncService,
+    TicketService
 };
 
 export type {
@@ -26,6 +28,7 @@ export type {
     DayRolled,
     Diagnostics,
     HistoryRange,
+    MediaCacheInfo,
     OutboxItem,
     RunInfo,
     SaveAck,
@@ -36,6 +39,7 @@ export type {
     SinkInput,
     SinkKind,
     StandupPatch,
+    TicketWriteFailed,
     UIState,
     UIStatePatch,
     UserOption

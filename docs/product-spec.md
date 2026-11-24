@@ -87,7 +87,7 @@ IDs are referenced from the roadmap and tests.
   then "End of list".
 - **AC:** with 20 tickets (14 active + 6 done) at 1920×1080, everything is visible without scrolling, at 38px rows with
   side headings (layout as `design/mockups/person-1920x1080.png`). At 1024×640 nothing is omitted; the more bar names what's below.
-- Clicking a ticket opens it in the browser (`OpenIssue`).
+- Clicking a ticket opens the ticket modal (F12). Open in Jira (`OpenIssue`) is in the modal and on `O`.
 
 ### F4. Whole board
 - Shown when no speaker is selected (rail "Whole board", `B`).
@@ -175,6 +175,41 @@ IDs are referenced from the roadmap and tests.
 - **AC:** after N syncs with changes, a test can reconstruct an earlier day's membership and lanes from the stored
   records (see testing.md).
 
+### F12. Ticket detail (modal) with light edits
+- Clicking a ticket anywhere (or `Enter` on a focused row) opens it in a modal over the standup (ux-spec §14).
+- **Shows:**
+  - summary, the full description rendered from Jira's rich text (headings, lists, tables, panels, code, mentions,
+    status lozenges, inline cards, images)
+  - attachments (thumbnails and file cards)
+  - subtasks, linked issues and all comments
+  - a dense field panel with standard and custom fields; empty fields are folded into one "Not set" line
+- **Light edits, sent to Jira at once:**
+  - change status (via the issue's transitions)
+  - change assignee
+  - flag / unflag
+  - add a comment
+  - Everything else goes through **Open in Jira**.
+- **Refresh this ticket** (button and `R`): re-fetch just this issue from Jira without a board resync. There is a
+  10-second cooldown per ticket.
+- **Data:** Resync stores descriptions, comments, field values and attachment images locally (ADR 0015), so the modal
+  opens instantly and works offline (edits need a connection).
+- **AC:**
+  - Opening a synced ticket makes no network request and renders in under 100ms (p95, fixture).
+  - `J`/`K` step through the view's tickets without closing.
+  - Each ADF node in ux-spec §14.4 renders as specified. Unknown nodes show their text and "unsupported block".
+  - Every custom field kind in ux-spec §14.6 renders as specified, and empty fields have no rows.
+  - **Status change:** the row behind the modal updates at once. On Jira failure the change reverts with the reason.
+    The history records the change after the success re-fetch.
+  - A comment that fails to post keeps its text with Retry / Edit / Discard. Nothing retries on its own.
+  - Transitions that need a Jira screen open the browser instead.
+  - A draft comment survives closing the modal and restarting the app.
+  - Refresh re-fetches only that issue (the fake-Jira request log shows only that issue's requests). Changes are
+    historised, the row behind updates, and a second Refresh within 10 s is refused locally with no request.
+  - All Jira traffic goes through one throttle (jira-sync §3.1). A sync never exceeds the configured rate, and a 429
+    pauses every request until `Retry-After`.
+- **Storage:** Disconnect keeps synced content. It offers to delete it only when local content is over the storage
+  cap (default 2 GB, set in Display; ux-spec §14.11). Nothing is ever deleted automatically.
+
 ### F9. Display and accessibility
 - **Theme:** Light / Dark / System (default System). **Text size:** Standard / Large (TV), which scales the whole UI.
 - Full keyboard operation.
@@ -185,7 +220,8 @@ IDs are referenced from the roadmap and tests.
   visible focus.
 
 ## 5. Out of scope for v1
-- Editing Jira issues (transitions, assignment, comments). Cuisle is read-only against Jira.
+- Editing Jira issues beyond the light edits in F12 (no field editing, no description editing, no comment editing or
+  deleting, no transitions that need a Jira screen, no creating issues).
 - Mobile and tablet layouts; web or hosted version; multi-user sync of settings.
 - OAuth 2.0 (3LO) and scoped API tokens. Data Center or Server Jira.
 - Direct forge integrations (Forgejo/GitHub). Code activity comes only via Jira's dev panel.
@@ -207,4 +243,6 @@ IDs are referenced from the roadmap and tests.
 | D8 | Code signing | **Decided:** self-signed for now (ADR 0013). |
 | D9 | Deleted standups | Archived, never purged (history is kept). Archive/restore list is post-v1. |
 | D10 | History granularity | Status, assignee, flag, membership and config are historised. Summary, type and rank show current values in a past view. |
-| D7 | Ticket click | Opens the issue in the default browser. |
+| D7 | Ticket click | **Changed 2026-11-23:** opens the ticket modal (F12). Open in Jira is a button and `O`. |
+| D12 | Deleting synced content | **Decided:** only offered at Disconnect, and only when local content exceeds the storage cap (default 2 GB). |
+| D11 | Ticket content | **Decided:** sync it all up front (ADR 0015); comments newest first; light edits only. Layout A "Docket" only; the side-sheet and three-column variants were rejected as too busy. |

@@ -10,7 +10,7 @@
 //   "../../connect/ConnectScreen"); the form is absent until clicked. The standalone card is not wrapped by the section.
 // SPEC-NOTE: Disconnect is a two-step inline confirm (no window.confirm: webviews block native dialogs): clicking
 //   "Disconnect" calls nothing yet and reveals a button whose name matches /confirm/i plus a "Cancel" button;
-//   Confirm calls connection.disconnect() exactly once, Cancel calls nothing and hides the confirmation.
+//   Confirm calls connection.disconnect(false) exactly once, Cancel calls nothing and hides the confirmation.
 
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/preact";
@@ -130,7 +130,7 @@ describe("ConnectionSection: disconnect", () => {
     act(() => { screen.getByRole("button", { name: /^disconnect$/i }).click(); });
     fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
     await waitFor(() => expect(over["connection.disconnect"]).toHaveBeenCalledTimes(1));
-    expect(over["connection.disconnect"]).toHaveBeenCalledWith();
+    expect(over["connection.disconnect"]).toHaveBeenCalledWith(false);
   });
 
   it("Cancel hides the confirmation and disconnects nothing", () => {

@@ -642,10 +642,15 @@ func TestBuild_Counts_ActiveUnassignedDoneBacklog(t *testing.T) {
 }
 
 func TestBuild_Backlog_TopRowsByRankWithURLs(t *testing.T) {
-	v := build(t, mainWorld().snap, mainAsOf)
-	want := []BacklogItem{
-		{Key: "MOB-101", Summary: "Summary of MOB-101", Type: "story", URL: urlPrefix + "MOB-101"},
-		{Key: "MOB-102", Summary: "Summary of MOB-102", Type: "bug", URL: urlPrefix + "MOB-102"},
+	snap := mainWorld().snap
+	v := build(t, snap, mainAsOf)
+	localID := map[string]int64{}
+	for _, m := range snap.Members {
+		localID[m.Issue.Key] = m.LocalID
+	}
+	want := []BacklogItem{ // IssueID is the member's local id, so a backlog row can open the ticket modal (F12)
+		{IssueID: localID["MOB-101"], Key: "MOB-101", Summary: "Summary of MOB-101", Type: "story", URL: urlPrefix + "MOB-101"},
+		{IssueID: localID["MOB-102"], Key: "MOB-102", Summary: "Summary of MOB-102", Type: "bug", URL: urlPrefix + "MOB-102"},
 	}
 	if !reflect.DeepEqual(v.Backlog, want) {
 		t.Errorf("Backlog = %+v, want %+v", v.Backlog, want)

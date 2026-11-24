@@ -341,6 +341,7 @@ func (o *Orchestrator) Shutdown(ctx context.Context) error {
 		r.cancel()
 	}
 	o.mu.Unlock()
+	o.cancelMedia()
 
 	waited := make(chan struct{})
 	go func() {

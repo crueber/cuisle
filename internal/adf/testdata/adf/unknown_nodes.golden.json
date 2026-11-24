@@ -1,0 +1,37 @@
+{
+  "c": [
+    {
+      "t": "unknown",
+      "x": "Embedded Loom video"
+    },
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "before "
+        },
+        {
+          "t": "unknown"
+        },
+        {
+          "t": "text",
+          "x": " after"
+        }
+      ]
+    },
+    {
+      "t": "panel",
+      "a": {
+        "panel": "info"
+      },
+      "c": [
+        {
+          "t": "unknown",
+          "x": "col text"
+        }
+      ]
+    }
+  ],
+  "u": 3
+}

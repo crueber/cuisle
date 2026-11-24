@@ -77,3 +77,49 @@ Configure at 1920×1080 against configure-1920x1080.png:
   `default` as a positional argument and silently ignores `--bench-startup`.
 - JS budget raised to 50 KB gz (ADR 0014, maintainer's choice) at 45.33 KB, after status ordering, speaker removal and
   sync progress landed.
+
+## GitHub release (M8), from the v0.1.1 run (2026-11-23)
+- Go tests now pass on Windows, and the Linux release package builds.
+- **Windows packaging** fails in `windows:build:native` with PowerShell "Cannot find path '…\bin'": a step needs `bin/`
+  to exist first. Reproduce on a Windows runner and add the `mkdir`.
+- **Playwright perf budgets on GitHub's ubuntu runners** fail at the 4x CPU throttle (standup switch p95 66 ms vs 50,
+  person switch 43 vs 32, combobox 36 vs 32). They pass locally. Decide: a CI-specific throttle factor, or run perf
+  only on Forgejo. This needs Chris (the budgets are spec gates).
+- **macOS** was cancelled by fail-fast, so it has never run on GitHub. Consider `fail-fast: false` in the matrices.
+- v0.1.0 and v0.1.1 exist as tags with no release assets.
+
+## F12 open decisions (for Chris at the next checkpoint)
+- **CSS budget:** it is 12 KB gz today (10.5 KB used). The ADF stylesheet adds about 2.5 KB once the modal mounts it,
+  and the ticket views will add more. The CSS gate will fail at WP-T9 unless the budget rises (ADR 0002/0014) or the
+  styles are trimmed. A lazy ticket chunk doesn't help: size-limit counts all CSS files.
+- **WP-T0 follow-ups:**
+  - The 429 *wait* still uses the process-wide Policy gate, so a 429 on one connection pauses another. This is
+    harmless with one connection; fix it when multiple connections land.
+  - `SetDefaultPolicy`'s restore leaves `DefaultPolicy()` nil if it was never created (frozen `contract.go`).
+    `NewClient` falls back safely; clean up at the next contract change.
+  - Marking the connect, search and validate calls interactive goes to WP-T4. The `jira.max_rps` setting and the
+    `sync:throttled` hook (`jira.LimiterFor(conn).SetOnThrottle`) go to WP-T9.
+- **F12 follow-ups (not blocking M9):**
+  - DONE (see F12-followups.md): the Development group's Branch row and PR titles (migration 0004).
+  - DONE (see F12-followups.md): link and subtask initials, from the synced target's live assignee (`cache.TicketLink.LiveAssigneeID`).
+  - The registry-driven "Not set" line for custom fields can grow long on large Jira sites (`/field` is site-wide).
+    Consider bounding it to fields seen with a value on the board.
+
+## M9 (ticket modal) status, 2026-11-23
+All of WP-T0 to T9 are merged. Go, 1894 Vitest and 154 Playwright tests are green (ticket screenshots, axe on modal,
+combobox and lightbox in both themes, perf). JS is 64.1 KB of 70, CSS 15.7 KB of 18. Modal open p95 is 30 ms, a step
+14.5 ms, an optimistic write 18 ms. The request budgets hold (full sync non-dev 79, incremental 11).
+
+Remaining visual differences against `ticket-*.png`, for UAT:
+- The Open in Jira icon is not the mockup's arrow.
+- The rail is about 8 px narrower at 1440.
+- The footer keycap sizes differ slightly.
+- The composer's Send button sits below the box, not to its right.
+- The Status combobox has no "Filter transitions" row.
+- "Your text is kept." is on its own line.
+- The modal stays faintly visible behind the lightbox.
+- Priority has no icon.
+
+The data also differs from the mockups (Saffron golden vs hand-built). See also the F12 follow-ups above: dev branch and
+PR title, link assignee initials, and the hand-built `ticket_mob1421.json` still used by component tests (consider
+renaming it `*.handbuilt.json`).

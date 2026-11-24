@@ -34,6 +34,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -48,6 +49,7 @@ import (
 	"github.com/crueber/cuisle/internal/app"
 	"github.com/crueber/cuisle/internal/apperr"
 	"github.com/crueber/cuisle/internal/export"
+	"github.com/crueber/cuisle/internal/media"
 	"github.com/crueber/cuisle/internal/paths"
 	"github.com/crueber/cuisle/internal/secrets"
 	"github.com/crueber/cuisle/internal/settings"
@@ -205,10 +207,38 @@ type switchTransport struct {
 	inner http.RoundTripper
 	down  atomic.Bool
 	calls atomic.Int64
+
+	// writeStatus, when non-zero, answers every Jira WRITE (PUT, or POST to /issue/{id}/transitions|comment) with this
+	// status instead of reaching the fake, and counts the attempts in writeAttempts (to prove nothing retries).
+	writeStatus   atomic.Int64
+	retryAfter    atomic.Int64
+	writeAttempts atomic.Int64
+}
+
+func isJiraWrite(r *http.Request) bool {
+	p := r.URL.Path
+	if !strings.HasPrefix(p, "/rest/api/3/issue/") {
+		return false
+	}
+	return r.Method == http.MethodPut || (r.Method == http.MethodPost && (strings.HasSuffix(p, "/transitions") || strings.HasSuffix(p, "/comment")))
 }
 
 func (t *switchTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	t.calls.Add(1)
+	if st := int(t.writeStatus.Load()); st != 0 && isJiraWrite(r) {
+		t.writeAttempts.Add(1)
+		if r.Body != nil {
+			_ = r.Body.Close()
+		}
+		h := http.Header{"Content-Type": {"application/json"}}
+		if ra := t.retryAfter.Load(); ra > 0 {
+			h.Set("Retry-After", strconv.FormatInt(ra, 10))
+		}
+		return &http.Response{
+			StatusCode: st, Status: strconv.Itoa(st) + " " + http.StatusText(st), Header: h, Request: r, ProtoMajor: 1, ProtoMinor: 1,
+			Body: io.NopCloser(strings.NewReader(`{"errorMessages":["Field 'x' cannot be set."],"errors":{}}`)),
+		}, nil
+	}
 	if t.down.Load() {
 		if r.Body != nil {
 			_ = r.Body.Close()
@@ -418,7 +448,19 @@ type appOpt func(*appCfg)
 type appCfg struct {
 	fileDB  bool
 	latency time.Duration
+	media   bool
+	now     time.Time
+	fake    func(*jiratest.Options)
 }
+
+// withNow starts the fake clock (and the fake Jira's day) at t instead of baseTime.
+func withNow(t time.Time) appOpt { return func(c *appCfg) { c.now = t } }
+
+// withMedia wires a real media cache (temp folder) into the services and the sync media phase (F12).
+func withMedia() appOpt { return func(c *appCfg) { c.media = true } }
+
+// withFakeOptions adjusts the fake Jira's options (fault injection) before it starts.
+func withFakeOptions(fn func(*jiratest.Options)) appOpt { return func(c *appCfg) { c.fake = fn } }
 
 // withFileDB uses a file-backed DB (raw-bytes scans, DBBytes).
 func withFileDB() appOpt { return func(c *appCfg) { c.fileDB = true } }
@@ -448,6 +490,10 @@ type testApp struct {
 
 	opened []string // URLs passed to Deps.OpenURL
 	openMu sync.Mutex
+
+	mediaDir    string
+	Media       media.Cache // nil unless withMedia
+	openedFiles []string    // paths passed to Deps.OpenFile
 }
 
 // guard turns a panicking Wave 0 stub into a clean test failure instead of killing the whole test binary.
@@ -467,7 +513,11 @@ func newTestApp(t *testing.T, opts ...appOpt) *testApp {
 	for _, o := range opts {
 		o(&cfg)
 	}
-	ta := &testApp{t: t, Clock: &fakeClock{now: baseTime}, Em: &recEmitter{}, KR: newMemKeyring(), Log: &logBuf{}}
+	start := baseTime
+	if !cfg.now.IsZero() {
+		start = cfg.now
+	}
+	ta := &testApp{t: t, Clock: &fakeClock{now: start}, Em: &recEmitter{}, KR: newMemKeyring(), Log: &logBuf{}}
 	ta.Paths = paths.Paths{Data: t.TempDir(), Logs: t.TempDir()}
 	ta.SinkDir = t.TempDir()
 	ta.Fx = buildFixture(t)
@@ -480,8 +530,15 @@ func newTestApp(t *testing.T, opts ...appOpt) *testApp {
 		}
 	})
 	guard(t, "jiratest.NewServer", func() {
-		ta.Fake = jiratest.NewServer(t, ta.Fx.fx, jiratest.Options{Now: baseTime, Loc: testLoc, Latency: cfg.latency})
+		fo := jiratest.Options{Now: start, Loc: testLoc, Latency: cfg.latency}
+		if cfg.fake != nil {
+			cfg.fake(&fo)
+		}
+		ta.Fake = jiratest.NewServer(t, ta.Fx.fx, fo)
 	})
+	if cfg.media {
+		ta.mediaDir = t.TempDir()
+	}
 	guard(t, "sink.Register(file.New())", func() { sink.Register(file.New()) })
 	theRecorder.reset()
 	sink.Register(theRecorder)
@@ -500,6 +557,9 @@ func (ta *testApp) wire() {
 	if ta.Orch != nil {
 		_ = ta.Orch.Shutdown(ctx)
 	}
+	if ta.Svc != nil {
+		_ = ta.Svc.Shutdown(ctx) // background thumbnails of the previous wiring
+	}
 	logger := slog.New(slog.NewTextHandler(ta.Log, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	httpClient := &http.Client{Transport: ta.Net}
 	srcOpts := source.Options{HTTP: httpClient, Logger: logger, Now: ta.Clock.Now, UserAgent: "Cuisle/test (test)"}
@@ -516,9 +576,21 @@ func (ta *testApp) wire() {
 		},
 	}
 	guard(t, "settings.New", func() { d.Settings = settings.New(ta.DB, ta.Clock.Now) })
+	var store syncpkg.MediaStore
+	if ta.mediaDir != "" {
+		ta.Media = media.New(ta.mediaDir, ta.DB, app.MediaCap(d.Settings), media.Options{Now: ta.Clock.Now, Logger: logger})
+		d.Media = ta.Media
+		store = app.NewMediaStore(ta.Media)
+	}
+	d.OpenFile = func(path string) error {
+		ta.openMu.Lock()
+		ta.openedFiles = append(ta.openedFiles, path)
+		ta.openMu.Unlock()
+		return nil
+	}
 	guard(t, "sync.New", func() {
 		d.Sync = syncpkg.New(syncpkg.Options{
-			DB: ta.DB, Keyring: ta.KR, Emitter: ta.Em, Clock: ta.Clock, Logger: logger, SourceOpts: srcOpts,
+			DB: ta.DB, Keyring: ta.KR, Emitter: ta.Em, Clock: ta.Clock, Logger: logger, SourceOpts: srcOpts, Media: store,
 			AfterSync: func(c context.Context, standupID, runID int64) { _ = ta.Disp.AfterSync(c, standupID, runID) },
 		})
 	})
@@ -554,7 +626,10 @@ func (ta *testApp) wire() {
 			Logger: logger, Now: ta.Clock.Now, Sleep: func(time.Duration) {},
 		})
 	})
-	t.Cleanup(func() { _ = d.Sync.Shutdown(context.Background()) })
+	t.Cleanup(func() {
+		_ = d.Sync.Shutdown(context.Background())
+		_ = ta.Svc.Shutdown(context.Background())
+	})
 }
 
 // restart simulates quitting and relaunching the app: new Deps/Services/Orchestrator over the same DB and fake.
@@ -866,4 +941,10 @@ func (f *fxInfo) userName(accountID string) string {
 		}
 	}
 	return ""
+}
+
+func (ta *testApp) openedPaths() []string {
+	ta.openMu.Lock()
+	defer ta.openMu.Unlock()
+	return append([]string(nil), ta.openedFiles...)
 }

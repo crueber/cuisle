@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "cc "
+        },
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "silas",
+            "text": "@Silas M"
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "me",
+            "text": "@me"
+          }
+        },
+        {
+          "type": "text",
+          "text": ", "
+        },
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "ghost",
+            "text": "@Gone Person"
+          }
+        }
+      ]
+    }
+  ]
+}

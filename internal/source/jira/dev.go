@@ -50,9 +50,13 @@ type devDetail struct {
 		} `json:"repositories"`
 		PullRequests []struct {
 			ID             flexID `json:"id"`
+			Name           string `json:"name"` // the pull request title
 			Status         string `json:"status"`
 			LastUpdate     Time   `json:"lastUpdate"`
 			RepositoryName string `json:"repositoryName"`
+			Source         struct {
+				Branch string `json:"branch"`
+			} `json:"source"`
 		} `json:"pullRequests"`
 	} `json:"detail"`
 }
@@ -123,7 +127,7 @@ func (a *Adapter) devDetail(ctx context.Context, sourceID, appType, dataType str
 		for _, p := range d.PullRequests {
 			out = append(out, model.DevEvent{
 				Kind: model.DevPR, ID: p.RepositoryName + "#" + string(p.ID), Repo: p.RepositoryName,
-				At: p.LastUpdate.Time, Status: prStatus(p.Status),
+				At: p.LastUpdate.Time, Status: prStatus(p.Status), Title: p.Name, Branch: p.Source.Branch,
 			})
 		}
 	}

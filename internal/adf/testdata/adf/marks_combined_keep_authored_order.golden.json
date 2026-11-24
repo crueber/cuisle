@@ -1,0 +1,38 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "both",
+          "m": [
+            {
+              "t": "link",
+              "v": "https://x.example.com/"
+            },
+            {
+              "t": "strong"
+            },
+            {
+              "t": "em"
+            }
+          ]
+        },
+        {
+          "t": "text",
+          "x": " code link",
+          "m": [
+            {
+              "t": "code"
+            },
+            {
+              "t": "link",
+              "v": "https://y.example.com/"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

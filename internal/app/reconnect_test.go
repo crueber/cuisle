@@ -6,7 +6,7 @@ import "testing"
 func TestReconnectAfterDisconnect_SameSite(t *testing.T) {
 	ta := newTestApp(t)
 	id := ta.scrumStandup()
-	if err := ta.Svc.Connection.Disconnect(ctx); err != nil {
+	if err := ta.Svc.Connection.Disconnect(ctx, false); err != nil {
 		t.Fatalf("Disconnect: %v", err)
 	}
 	c, err := ta.Svc.Connection.Connect(ctx, ta.connectInput())

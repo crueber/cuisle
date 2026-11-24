@@ -84,6 +84,8 @@ vi.mock("./sections/StatusMapping", async () => { const { h } = await import("pr
 vi.mock("./sections/Export", async () => { const { h } = await import("preact"); return { ExportSection: (p: any) => { sec.set("Export", p); return h("section", {}, h("h2", {}, "Export")); } }; });
 vi.mock("./sections/Display", async () => { const { h } = await import("preact"); return { DisplaySection: (p: any) => { sec.set("Display", p); return h("section", {}, h("h2", {}, "Display")); } }; });
 vi.mock("./sections/Connection", async () => { const { h } = await import("preact"); return { ConnectionSection: (p: any) => { sec.set("Connection", p); return h("section", {}, h("h2", {}, "Connection")); } }; });
+vi.mock("./sections/Storage", async () => { const { h } = await import("preact"); return { StorageSection: (p: any) => { sec.set("Storage", p); return h("section", {}, h("h2", {}, "Storage")); } }; });
+vi.mock("./sections/TicketFields", async () => { const { h } = await import("preact"); return { TicketFieldsSection: (p: any) => { sec.set("Ticket fields", p); return h("section", {}, h("h2", {}, "Ticket fields")); } }; });
 
 function mkConfig(over: Partial<StandupConfig> = {}): StandupConfig {
   return {
@@ -147,9 +149,9 @@ const setWidth = (w: number) => Object.defineProperty(window, "innerWidth", { co
 const resize = (w: number) => { setWidth(w); act(() => { window.dispatchEvent(new Event("resize")); }); };
 const headingsInOrder = () =>
   screen.getAllByRole("heading").map((h) => h.textContent?.trim() ?? "").map((t) =>
-    ["Source", "Speakers", "Person view", "Pulse", "Whole board", "Status mapping", "Export", "Display", "Connection"].find((n) => t.startsWith(n)) ?? "",
+    ["Source", "Speakers", "Person view", "Pulse", "Whole board", "Status mapping", "Export", "Display", "Storage", "Connection", "Ticket fields"].find((n) => t.startsWith(n)) ?? "",
   ).filter(Boolean);
-const SECTION_NAMES = ["Source", "Speakers", "Person view", "Pulse", "Whole board", "Status mapping", "Export", "Display", "Connection"];
+const SECTION_NAMES = ["Source", "Speakers", "Person view", "Pulse", "Whole board", "Status mapping", "Export", "Display", "Storage", "Connection", "Ticket fields"];
 const scrollSpy = vi.fn();
 
 beforeEach(() => {
@@ -305,7 +307,7 @@ describe("ConfigureScreen: standups rail and title", () => {
 });
 
 describe("ConfigureScreen: sections and layout", () => {
-  it.each([800, 1500, 2400])("renders all nine sections at width %i", (w) => {
+  it.each([800, 1500, 2400])("renders all eleven sections at width %i", (w) => {
     setWidth(w);
     render(<ConfigureScreen />);
     for (const name of SECTION_NAMES) {
@@ -318,17 +320,17 @@ describe("ConfigureScreen: sections and layout", () => {
     render(<ConfigureScreen />);
     expect(screen.getAllByRole("heading").length).toBeGreaterThan(8);
     expect(screen.queryByRole("navigation")).toBeNull();
-    expect(headingsInOrder()).toEqual(["Source", "Person view", "Export", "Speakers", "Display", "Connection", "Pulse", "Whole board", "Status mapping"]);
+    expect(headingsInOrder()).toEqual(["Source", "Person view", "Export", "Speakers", "Display", "Storage", "Connection", "Pulse", "Whole board", "Status mapping", "Ticket fields"]);
   });
 
   it("2 columns (medium): a jump bar and sections in column order", () => {
     setWidth(1500);
     render(<ConfigureScreen />);
     expect(screen.getByRole("navigation")).toBeTruthy();
-    expect(headingsInOrder()).toEqual(["Source", "Speakers", "Whole board", "Export", "Person view", "Pulse", "Status mapping", "Display", "Connection"]);
+    expect(headingsInOrder()).toEqual(["Source", "Speakers", "Whole board", "Export", "Person view", "Pulse", "Status mapping", "Display", "Storage", "Connection", "Ticket fields"]);
   });
 
-  it("1 column (narrow): a jump bar with all nine pills and sections in one run", () => {
+  it("1 column (narrow): a jump bar with all eleven pills and sections in one run", () => {
     setWidth(800);
     render(<ConfigureScreen />);
     const nav = screen.getByRole("navigation");
@@ -365,7 +367,7 @@ describe("ConfigureScreen: sections and layout", () => {
       expect(sec.get(name).config).toBe(cfg);
       expect(sec.get(name).columns).toBe(3);
     }
-    for (const name of ["Display", "Connection"]) {
+    for (const name of ["Display", "Storage", "Connection", "Ticket fields"]) {
       expect(sec.get(name).columns).toBe(3);
       expect(sec.get(name).config).toBeUndefined();
     }

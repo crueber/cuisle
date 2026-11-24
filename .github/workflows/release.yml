@@ -31,11 +31,12 @@ jobs:
         include:
           - os: ubuntu-22.04
             name: linux
-          - os: macos-15
+          - os: macos-latest
             name: macos
           - os: windows-latest
             name: windows
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60 # a capacity-starved macOS queue fails clearly instead of hanging
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

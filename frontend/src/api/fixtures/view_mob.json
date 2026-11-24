@@ -4168,72 +4168,84 @@
   ],
   "backlog": [
     {
+      "issueId": 10001,
       "key": "MOB-1525",
       "summary": "Meal plan templates for busy weeks",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1525"
     },
     {
+      "issueId": 10002,
       "key": "MOB-1527",
       "summary": "Pantry expiry reminders",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1527"
     },
     {
+      "issueId": 10003,
       "key": "MOB-1533",
       "summary": "Recipe import from a web page",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/MOB-1533"
     },
     {
+      "issueId": 10004,
       "key": "MOB-1538",
       "summary": "Shared shopping list with live updates",
       "type": "task",
       "url": "https://example.atlassian.net/browse/MOB-1538"
     },
     {
+      "issueId": 10005,
       "key": "MOB-1539",
       "summary": "Price per serving on every recipe",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1539"
     },
     {
+      "issueId": 10006,
       "key": "MOB-1543",
       "summary": "Kids' portion sizes",
       "type": "spike",
       "url": "https://example.atlassian.net/browse/MOB-1543"
     },
     {
+      "issueId": 10007,
       "key": "MOB-1545",
       "summary": "Cooking classes in the app",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1545"
     },
     {
+      "issueId": 10008,
       "key": "MOB-1548",
       "summary": "Weekly nutrition summary",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/MOB-1548"
     },
     {
+      "issueId": 10009,
       "key": "MOB-1554",
       "summary": "Apple Watch timers",
       "type": "task",
       "url": "https://example.atlassian.net/browse/MOB-1554"
     },
     {
+      "issueId": 10010,
       "key": "MOB-1555",
       "summary": "Print-friendly recipe view",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1555"
     },
     {
+      "issueId": 10011,
       "key": "MOB-1557",
       "summary": "Recipe version history",
       "type": "story",
       "url": "https://example.atlassian.net/browse/MOB-1557"
     },
     {
+      "issueId": 10012,
       "key": "MOB-1560",
       "summary": "Smart reorder of staple items",
       "type": "bug",

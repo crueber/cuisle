@@ -1,0 +1,924 @@
+{
+  "issueId": 109,
+  "standupId": 1,
+  "asOf": 1795424400000,
+  "syncedAt": 1795424280000,
+  "updatedAt": 1795424100000,
+  "row": {
+    "id": 109,
+    "sourceId": "10108",
+    "key": "MOB-1429",
+    "summary": "Share a recipe as a link with a preview image",
+    "url": "https://example.atlassian.net/browse/MOB-1429",
+    "type": "bug",
+    "assignee": "iris",
+    "lane": "prog",
+    "statusName": "In Progress",
+    "daysInLane": 6,
+    "overLimit": true,
+    "blocked": true,
+    "doneAt": 0,
+    "pulse": {
+      "segs": [
+        {
+          "lane": "todo",
+          "from": 7,
+          "to": 15
+        },
+        {
+          "lane": "prog",
+          "from": 15,
+          "to": 21
+        }
+      ],
+      "marks": [
+        {
+          "day": 7,
+          "commits": 2,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 8,
+          "commits": 0,
+          "prs": 1,
+          "comments": 0
+        },
+        {
+          "day": 11,
+          "commits": 2,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 12,
+          "commits": 2,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 14,
+          "commits": 1,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 18,
+          "commits": 1,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 20,
+          "commits": 1,
+          "prs": 0,
+          "comments": 1
+        }
+      ],
+      "blocked": [
+        {
+          "from": 18,
+          "to": 20
+        }
+      ],
+      "label": "In Progress 6 days, previously To Do 8 days; 9 commits, 1 PR update, 4 comments in 21 days; blocked 3 days"
+    }
+  },
+  "url": "https://example.atlassian.net/browse/MOB-1429",
+  "parent": {
+    "issueId": 0,
+    "key": "MOB-1180",
+    "summary": "Sharing and social",
+    "typeKind": "epic"
+  },
+  "pulseDays": 21,
+  "axis": [
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "limitDays": 5,
+  "blockedDays": 3,
+  "description": {
+    "c": [
+      {
+        "t": "p",
+        "c": [
+          {
+            "t": "text",
+            "x": "Sharing a recipe link shows a stale preview image after the recipe photo changes. The CDN caches "
+          },
+          {
+            "t": "text",
+            "x": "/share/{recipe_id}.png",
+            "m": [
+              {
+                "t": "code"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": " for 24 h and the key has no version."
+          }
+        ]
+      },
+      {
+        "t": "media",
+        "a": {
+          "attachmentId": "301",
+          "name": "share-preview.png",
+          "mime": "image/png",
+          "bytes": 83018,
+          "width": 900,
+          "height": 560,
+          "layout": "center",
+          "caption": "Two shares of the same recipe, one minute apart · share-preview.png",
+          "cached": "full",
+          "block": true
+        }
+      }
+    ]
+  },
+  "attachments": [
+    {
+      "id": 301,
+      "name": "share-preview.png",
+      "ext": "PNG",
+      "mime": "image/png",
+      "bytes": 83018,
+      "authorInitials": "IC",
+      "authorName": "Iris Calloway",
+      "createdAt": 1795083480000,
+      "image": true,
+      "width": 900,
+      "height": 560,
+      "cached": "full",
+      "url": "/media/301",
+      "thumbUrl": "/media/301/thumb"
+    }
+  ],
+  "subtasks": [],
+  "subtasksDone": 0,
+  "linkGroups": [
+    {
+      "label": "IS BLOCKED BY",
+      "rows": [
+        {
+          "issueId": 0,
+          "key": "PLAT-444",
+          "summary": "Versioned image URLs on the CDN",
+          "typeKind": "task",
+          "statusName": "In Progress",
+          "statusLozenge": "prog",
+          "assigneeInitials": "OB",
+          "url": "https://example.atlassian.net/browse/PLAT-444",
+          "done": false
+        }
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": "10201",
+      "author": {
+        "accountId": "wren",
+        "name": "Wren Kowalski",
+        "initials": "WK",
+        "self": false
+      },
+      "createdAt": 1794915000000,
+      "updatedAt": 1794915000000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "QA: the preview stays stale on Android for up to a day; iOS refreshes after 5 min."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "10202",
+      "author": {
+        "accountId": "mock-user",
+        "name": "Mock User",
+        "initials": "MU",
+        "self": true
+      },
+      "createdAt": 1795010400000,
+      "updatedAt": 1795010400000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Raised in standup: moving this to the top of "
+              },
+              {
+                "t": "mention",
+                "a": {
+                  "accountId": "iris",
+                  "label": "Iris Calloway"
+                }
+              },
+              {
+                "t": "text",
+                "x": "'s list once PLAT-444 lands."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "10203",
+      "author": {
+        "accountId": "iris",
+        "name": "Iris Calloway",
+        "initials": "IC",
+        "self": false
+      },
+      "createdAt": 1795083600000,
+      "updatedAt": 1795083600000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Flagged. Can't fix this cleanly until image URLs are versioned."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "10204",
+      "author": {
+        "accountId": "noor",
+        "name": "Noor Abadi",
+        "initials": "NA",
+        "self": false
+      },
+      "createdAt": 1795191000000,
+      "updatedAt": 1795191900000,
+      "edited": true,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Repro on Android 14 only; the share sheet reuses the cached bitmap."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "10205",
+      "author": {
+        "accountId": "amara",
+        "name": "Amara Osei",
+        "initials": "AO",
+        "self": false
+      },
+      "createdAt": 1795255320000,
+      "updatedAt": 1795255320000,
+      "edited": false,
+      "visibility": "Developers only",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "CDN purge on publish is confirmed for web, not yet for the app bucket."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "10206",
+      "author": {
+        "accountId": "jonas",
+        "name": "Jonas Reyes",
+        "initials": "JR",
+        "self": false
+      },
+      "createdAt": 1795424100000,
+      "updatedAt": 1795424100000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "#421 adds "
+              },
+              {
+                "t": "text",
+                "x": "image_version",
+                "m": [
+                  {
+                    "t": "code"
+                  }
+                ]
+              },
+              {
+                "t": "text",
+                "x": " to the share URL; the cache key is "
+              },
+              {
+                "t": "text",
+                "x": "recipe_id:version",
+                "m": [
+                  {
+                    "t": "code"
+                  }
+                ]
+              },
+              {
+                "t": "text",
+                "x": "."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "newSince": 1795132800000,
+  "draft": {
+    "text": "Unblocked once #421 merges. I'll re-test on the Android beta. @Jonas Reyes can you pair at 2?",
+    "mentions": [
+      {
+        "start": 62,
+        "end": 74,
+        "accountId": "jonas",
+        "name": "Jonas Reyes"
+      }
+    ]
+  },
+  "rail": [
+    {
+      "id": "state",
+      "label": "State",
+      "rows": [
+        {
+          "fieldId": "status",
+          "label": "Status",
+          "kind": "status",
+          "edit": "status",
+          "text": "In Progress",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "assignee",
+          "label": "Assignee",
+          "kind": "user",
+          "edit": "assignee",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "iris",
+              "name": "Iris Calloway",
+              "initials": "IC",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "flagged",
+          "label": "Flag",
+          "kind": "flag",
+          "edit": "flag",
+          "text": "Flagged",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "3d",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": []
+    },
+    {
+      "id": "details",
+      "label": "Details",
+      "rows": [
+        {
+          "fieldId": "reporter",
+          "label": "Reporter",
+          "kind": "user",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "silas",
+              "name": "Silas Marchetti",
+              "initials": "SM",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "priority",
+          "label": "Priority",
+          "kind": "option",
+          "edit": "",
+          "text": "High",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "parent",
+          "label": "Parent",
+          "kind": "parent",
+          "edit": "",
+          "text": "MOB-1180",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "Sharing and social",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "sprint",
+          "label": "Sprint",
+          "kind": "sprint",
+          "edit": "",
+          "text": "MOB Sprint 47",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "ends 1 Dec",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "labels",
+          "label": "Labels",
+          "kind": "labels",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "sharing",
+            "cdn"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "components",
+          "label": "Components",
+          "kind": "components",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "Share sheet"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "environment",
+          "label": "Environment",
+          "kind": "paragraph",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": {
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "prod · Android 14"
+                  }
+                ]
+              }
+            ]
+          },
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": [
+        "Points",
+        "Due",
+        "Fix version",
+        "Time"
+      ]
+    },
+    {
+      "id": "custom",
+      "label": "Custom fields",
+      "rows": [
+        {
+          "fieldId": "customfield_10201",
+          "label": "Severity",
+          "kind": "option",
+          "edit": "",
+          "text": "S2 · Major",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10202",
+          "label": "Platforms hit",
+          "kind": "options",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "android",
+            "ios"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10203",
+          "label": "Support ticket",
+          "kind": "url",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "https://support.example.com/tickets/48213",
+          "urlLabel": "support.example.com › #48213"
+        },
+        {
+          "fieldId": "customfield_10204",
+          "label": "Root cause",
+          "kind": "cascade",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "Cache",
+            "Stale image key"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": [
+        "Regression since",
+        "Workaround"
+      ]
+    },
+    {
+      "id": "development",
+      "label": "Development",
+      "rows": [
+        {
+          "fieldId": "dev.pr.421",
+          "label": "#421",
+          "kind": "pr",
+          "edit": "",
+          "text": "Versioned image URLs",
+          "number": null,
+          "items": [
+            "OPEN"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "mob-web",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": []
+    },
+    {
+      "id": "dates",
+      "label": "Dates",
+      "rows": [
+        {
+          "fieldId": "created",
+          "label": "Created",
+          "kind": "datetime",
+          "edit": "",
+          "text": "2026-11-16",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "updated",
+          "label": "Updated",
+          "kind": "datetime",
+          "edit": "",
+          "text": "2026-11-23",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "watches",
+          "label": "Watchers",
+          "kind": "watchers",
+          "edit": "",
+          "text": "",
+          "number": 6,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": [
+        "Resolved"
+      ]
+    }
+  ],
+  "dev": {
+    "branch": "",
+    "commits": 0,
+    "lastCommitAt": 0,
+    "prs": [
+      {
+        "id": "421",
+        "title": "Versioned image URLs",
+        "repo": "mob-web",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "can": {
+    "transition": true,
+    "assign": true,
+    "flag": true,
+    "comment": true,
+    "reason": ""
+  },
+  "warnings": []
+}

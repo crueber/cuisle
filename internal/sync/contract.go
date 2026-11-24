@@ -5,12 +5,14 @@
 //
 //	WP-29 orchestrator*.go plan*.go hydrate*.go progress*.go   (runs, phases 0–6, progress, cancel)
 //	WP-30 apply*.go (+ internal/cache/apply*.go)               (phase 7 atomic apply)
+//	WP-T6 oneissue*.go content*.go media*.go                    (one-issue apply, content and media phases; ADR 0015)
 //
 // Imports allowed: source (never source/jira), cache, settings, secrets, model, store, apperr, stdlib.
 package sync
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	gosync "sync"
 	"time"
@@ -39,6 +41,25 @@ const (
 	EvSyncFinished   = "sync:finished"
 	EvDataChanged    = "data:changed"
 	EvConnectionAuth = "connection:auth"
+
+	// Ticket modal (ADR 0015). ticket:write_failed is emitted only by the app (internal/app).
+	EvTicketUpdated = "ticket:updated"
+	EvMediaReady    = "media:ready"
+	EvSyncThrottled = "sync:throttled" // the per-connection limiter paused or slowed (jira-sync.md §3.1)
+)
+
+// TicketUpdated causes and changed-part names (architecture.md §3.3).
+const (
+	CauseWrite = "write"
+	CauseSync  = "sync"
+
+	ChangedStatus      = "status"
+	ChangedAssignee    = "assignee"
+	ChangedFlag        = "flag"
+	ChangedComments    = "comments"
+	ChangedDescription = "description"
+	ChangedFields      = "fields"
+	ChangedAttachments = "attachments"
 )
 
 // Modes, triggers, phases, statuses.
@@ -53,6 +74,7 @@ const (
 	PhaseConfig = "config"
 	PhaseScan   = "scan"
 	PhaseApply  = "apply"
+	PhaseMedia  = "media" // lazy media phase, runs after sync:finished (jira-sync.md §2.14); source.PhaseContent precedes apply
 
 	StatusOK        = "ok"
 	StatusPartial   = "partial"
@@ -71,7 +93,7 @@ type SyncStarted struct {
 type SyncProgress struct {
 	RunID     int64  `json:"runId"`
 	StandupID int64  `json:"standupId"`
-	Phase     string `json:"phase"` // config|scan|issues|changelog|comments|dev|apply
+	Phase     string `json:"phase"` // config|scan|issues|changelog|comments|content|dev|apply|media
 	Done      int    `json:"done"`
 	Total     int    `json:"total"`
 }
@@ -100,6 +122,59 @@ type DataChanged struct {
 
 type ConnectionAuth struct {
 	State string `json:"state"` // ok|invalid|missing
+}
+
+// TicketUpdated: after a light write's refresh is applied (cause write, emitted by the app) and after a sync apply for
+// every hydrated issue (cause sync). The frontend acts only if that issue's modal is open.
+type TicketUpdated struct {
+	IssueID    int64    `json:"issueId"`
+	Key        string   `json:"key"`
+	StandupIDs []int64  `json:"standupIds"` // standups that have the issue as a current member
+	Cause      string   `json:"cause"`      // write|sync
+	Changed    []string `json:"changed"`    // Changed* names
+}
+
+// MediaReady: an image landed in the cache after the record apply (media phase or EnsureMedia).
+type MediaReady struct {
+	AttachmentID int64  `json:"attachmentId"`
+	IssueID      int64  `json:"issueId"`
+	Cached       string `json:"cached"` // full|thumb
+}
+
+// SyncThrottled: the per-connection limiter paused (429) or slowed (near-limit signal). Bridged to this event by the
+// app (the limiter lives in source/jira, which may not import sync).
+type SyncThrottled struct {
+	ResumeAt int64  `json:"resumeAt"` // Unix ms; 0 = slowed, not paused
+	Reason   string `json:"reason"`   // "rate_limited"|"near_limit"
+}
+
+// MediaStore is the part of internal/media's Cache that the media phase needs. sync may not import media
+// (architecture.md §2 table), so the app adapts media.Cache to it. Nil Options.Media = no media phase.
+type MediaStore interface {
+	// Put stores an original (deriving the thumbnail) and returns the cache state: "full"|"thumb"|"none".
+	Put(ctx context.Context, att model.Attachment, connectionID int64, r io.Reader) (cached string, err error)
+	// PutThumb stores a provider-made thumbnail.
+	PutThumb(ctx context.Context, att model.Attachment, connectionID int64, r io.Reader) error
+	// Evict trims originals to the cap (after the media phase).
+	Evict(ctx context.Context) (freedBytes int64, err error)
+}
+
+// IssueApplied is what ApplyIssue changed. The caller emits ticket:updated and data:changed from it.
+type IssueApplied struct {
+	IssueID       int64
+	Key           string
+	StandupIDs    []int64  // standups whose rev was bumped (current members)
+	Changed       []string // Changed* names
+	StatusChanged bool     // transition_cache row dropped
+	Skipped       bool     // stored row was newer (incoming updated older): issue row untouched, change rows merged
+}
+
+// IssueDelta is the known effect of a successful write, applied to the issue row only when the follow-up refresh
+// failed (jira-sync.md §4.8). Nil = unchanged. No change-table rows are invented.
+type IssueDelta struct {
+	StatusID   *string
+	AssigneeID *string // "" = unassigned
+	Flagged    *bool
 }
 
 // Status is the live state of one standup's sync (the app maps it to view.SyncStatus).
@@ -135,6 +210,8 @@ type Options struct {
 	HydrateConcurrency int
 	// ProgressInterval coalesces progress events (default 100 ms ⇒ ≤ 10/s).
 	ProgressInterval time.Duration
+	// Media receives image bytes in the lazy media phase (ADR 0015). Nil = no media phase.
+	Media MediaStore
 }
 
 // Orchestrator runs syncs. At most one run per standup, at most MaxParallel at once.

@@ -20,6 +20,19 @@ export interface DataChanged {
     "what": string;
 }
 
+/**
+ * MediaReady: an image landed in the cache after the record apply (media phase or EnsureMedia).
+ */
+export interface MediaReady {
+    "attachmentId": number;
+    "issueId": number;
+
+    /**
+     * full|thumb
+     */
+    "cached": string;
+}
+
 export interface SyncFinished {
     "runId": number;
     "standupId": number;
@@ -40,7 +53,7 @@ export interface SyncProgress {
     "standupId": number;
 
     /**
-     * config|scan|issues|changelog|comments|dev|apply
+     * config|scan|issues|changelog|comments|content|dev|apply|media
      */
     "phase": string;
     "done": number;
@@ -61,4 +74,44 @@ export interface SyncStats {
     "issues": number;
     "requests": number;
     "ms": number;
+}
+
+/**
+ * SyncThrottled: the per-connection limiter paused (429) or slowed (near-limit signal). Bridged to this event by the
+ * app (the limiter lives in source/jira, which may not import sync).
+ */
+export interface SyncThrottled {
+    /**
+     * Unix ms; 0 = slowed, not paused
+     */
+    "resumeAt": number;
+
+    /**
+     * "rate_limited"|"near_limit"
+     */
+    "reason": string;
+}
+
+/**
+ * TicketUpdated: after a light write's refresh is applied (cause write, emitted by the app) and after a sync apply for
+ * every hydrated issue (cause sync). The frontend acts only if that issue's modal is open.
+ */
+export interface TicketUpdated {
+    "issueId": number;
+    "key": string;
+
+    /**
+     * standups that have the issue as a current member
+     */
+    "standupIds": number[] | null;
+
+    /**
+     * write|sync
+     */
+    "cause": string;
+
+    /**
+     * Changed* names
+     */
+    "changed": string[] | null;
 }

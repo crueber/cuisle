@@ -1,0 +1,39 @@
+{
+  "c": [
+    {
+      "t": "expand",
+      "a": {
+        "title": "Details"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "open by default"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "t": "expand",
+      "a": {
+        "title": "Authored closed",
+        "collapsed": true
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "closed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

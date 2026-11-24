@@ -11,8 +11,10 @@ import (
 )
 
 const (
+	// jira-sync §3.1: 4 requests in flight and 8 req/s sustained (the limiter makes the burst twice the rate: 16). The rate
+	// is the hidden setting jira.max_rps (1-20); AIMD can only lower it at run time, never above this.
 	defaultConcurrency = 4
-	defaultRate        = 10.0
+	defaultRate        = 8.0
 	defaultMax429      = 5
 	defaultMaxGate     = 120 * time.Second
 	defaultMax5xx      = 3
@@ -21,7 +23,7 @@ const (
 	maxGateJitter      = 500 * time.Millisecond
 )
 
-// NewPolicy fills zero options with defaults (4, 10/s, 5, 120 s, 3, 500 ms).
+// NewPolicy fills zero options with defaults (4, 8/s, 5, 120 s, 3, 500 ms; jira-sync §3 and §3.1).
 func NewPolicy(opts PolicyOptions) *Policy {
 	if opts.Concurrency <= 0 {
 		opts.Concurrency = defaultConcurrency
@@ -52,18 +54,13 @@ func NewPolicy(opts PolicyOptions) *Policy {
 }
 
 // Acquire waits for the 429 gate, a token-bucket token and a semaphore slot. release must be called exactly once.
+//
+// Clients no longer call it: since WP-T0 the per-connection limiter (package limiter) owns the token bucket, the 429
+// gate and the priority lanes, and every Client takes only slot (gate + semaphore, process-wide). Acquire stays as the
+// policy's own contract.
 func (p *Policy) Acquire(ctx context.Context) (release func(), err error) {
-	for {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		wait := p.gateWait(time.Now())
-		if wait <= 0 {
-			break
-		}
-		if err := p.sleep(ctx, wait); err != nil {
-			return nil, err
-		}
+	if err := p.waitGate(ctx); err != nil {
+		return nil, err
 	}
 	for {
 		if err := ctx.Err(); err != nil {
@@ -77,6 +74,35 @@ func (p *Policy) Acquire(ctx context.Context) (release func(), err error) {
 			return nil, err
 		}
 	}
+	return p.takeSlot(ctx)
+}
+
+// slot waits for the policy gate and a semaphore slot, with no token bucket: the connection's limiter paces requests.
+// It is the limiter.Transport Slot hook of every Client, the process-wide in-flight cap across connections.
+func (p *Policy) slot(ctx context.Context) (release func(), err error) {
+	if err := p.waitGate(ctx); err != nil {
+		return nil, err
+	}
+	return p.takeSlot(ctx)
+}
+
+// waitGate sleeps until the policy's 429 gate (Close429) is open.
+func (p *Policy) waitGate(ctx context.Context) error {
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		wait := p.gateWait(time.Now())
+		if wait <= 0 {
+			return nil
+		}
+		if err := p.sleep(ctx, wait); err != nil {
+			return err
+		}
+	}
+}
+
+func (p *Policy) takeSlot(ctx context.Context) (release func(), err error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}

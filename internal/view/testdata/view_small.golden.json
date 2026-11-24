@@ -504,12 +504,14 @@
   ],
   "backlog": [
     {
+      "issueId": 101,
       "key": "MOB-101",
       "summary": "Summary of MOB-101",
       "type": "story",
       "url": "https://acme.atlassian.net/browse/MOB-101"
     },
     {
+      "issueId": 102,
       "key": "MOB-102",
       "summary": "Summary of MOB-102",
       "type": "bug",

@@ -19,7 +19,7 @@ import (
 
 // Convert maps the sample shape (standups[].{key,name,board,people[],tickets[{k,a,s,ty,t,days,bl,blD,ev[28],cm[28],
 // hist[{s,d}]}], backlog[]}) to a Fixture: one project + one board (scrum unless the sample says Kanban) per standup,
-// columns To Do / In Progress / Code Review / QA / Done, ev 1|2 → that many commits on day i−27, ev 3 → one PR,
+// columns To Do / In Progress / Code Review / QA / Done, ev 1|2 → that many commits on day i−27, ev 3 → one PR (title = the summary, branch = branchFor; later ones "(part N)" and "-N"),
 // cm true → one comment, bl/blD → flaggedDays [[-(blD−1), 0]], backlog in array order. Deterministic.
 func Convert(sample []byte) (*jiratest.Fixture, error) {
 	var doc sampleDoc
@@ -152,7 +152,12 @@ func convertTicket(tk sampleTicket, boardID int, scrum bool, nextPR *int) (jirat
 				is.Commits = append(is.Commits, day)
 			}
 		case 3:
-			is.PRs = append(is.PRs, jiratest.FxPR{ID: *nextPR, Day: day, Status: prStatus(day)})
+			pr := jiratest.FxPR{ID: *nextPR, Day: day, Status: prStatus(day), Title: tk.T, Branch: branchFor(tk.K, typ, tk.T)}
+			if n := len(is.PRs); n > 0 { // a ticket's later pull requests are follow-ups on their own branch
+				pr.Title += fmt.Sprintf(" (part %d)", n+1)
+				pr.Branch += fmt.Sprintf("-%d", n+1)
+			}
+			is.PRs = append(is.PRs, pr)
 			*nextPR++
 		}
 	}
@@ -162,6 +167,22 @@ func convertTicket(tk sampleTicket, boardID int, scrum bool, nextPR *int) (jirat
 		}
 	}
 	return is, nil
+}
+
+var nonSlug = regexp.MustCompile(`[^a-z0-9]+`)
+
+// branchFor is the pull request's source branch: "feature/MOB-1429-share-a-recipe-as" (a bug gets "fix/"), the key
+// followed by the first four words of the summary. The pull request title is the summary itself.
+func branchFor(key, typ, summary string) string {
+	prefix := "feature/"
+	if typ == "Bug" {
+		prefix = "fix/"
+	}
+	words := strings.Fields(nonSlug.ReplaceAllString(strings.ToLower(summary), " "))
+	if len(words) > 4 {
+		words = words[:4]
+	}
+	return prefix + key + "-" + strings.Join(words, "-")
 }
 
 // prStatus is deterministic: recent pull requests are still open, older ones merged.

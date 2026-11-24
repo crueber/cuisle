@@ -26,7 +26,25 @@ const (
 	EvSinkDelivered = "sink:delivered"
 	EvSinkFailed    = "sink:failed"
 	EvDayRolled     = "day:rolled"
+
+	EvTicketWriteFailed = "ticket:write_failed" // ADR 0015; ticket:updated and media:ready live in internal/sync
 )
+
+// Light-write actions (TicketWriteFailed.Action).
+const (
+	ActionTransition = "transition"
+	ActionAssign     = "assign"
+	ActionFlag       = "flag"
+	ActionComment    = "comment"
+)
+
+// MediaCacheInfo is Display › Storage's image cache line (AppService.MediaCache / ClearMediaCache).
+type MediaCacheInfo struct {
+	Bytes      int64 `json:"bytes"`      // cached originals (count against the cap)
+	ThumbBytes int64 `json:"thumbBytes"` // thumbnails (never evicted)
+	Files      int   `json:"files"`
+	CapMB      int   `json:"capMb"` // app setting media.cache_max_mb
+}
 
 type SaveAck struct {
 	Rev       int64 `json:"rev"`
@@ -166,4 +184,13 @@ type SinkFailed struct {
 
 type DayRolled struct {
 	Today string `json:"today"`
+}
+
+// TicketWriteFailed: a light write was rejected or could not be sent (also returned as the call's error).
+type TicketWriteFailed struct {
+	IssueID      int64  `json:"issueId"`
+	Key          string `json:"key"`
+	Action       string `json:"action"` // transition|assign|flag|comment
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
 }

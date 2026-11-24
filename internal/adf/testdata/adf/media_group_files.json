@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "mediaGroup",
+      "content": [
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-203",
+            "type": "file",
+            "collection": "contentId-1"
+          }
+        },
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-nope",
+            "type": "file",
+            "collection": "contentId-1"
+          }
+        }
+      ]
+    }
+  ]
+}

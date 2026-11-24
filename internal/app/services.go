@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
@@ -83,6 +85,35 @@ func (s *AppService) OpenIssue(ctx context.Context, issueKey string) (err error)
 	}
 	if err := s.d.OpenURL(prefix + issueKey); err != nil {
 		return apperr.Wrap(apperr.Internal, "Could not open the browser.", err)
+	}
+	return nil
+}
+
+// OpenURL opens an http, https or mailto link in the OS browser or mail client (links inside ticket text, ux-spec
+// §14.4). Anything else is refused; the webview itself never navigates.
+func (s *AppService) OpenURL(ctx context.Context, rawURL string) (err error) {
+	defer s.d.guard("OpenURL", &err)
+	u, perr := url.Parse(strings.TrimSpace(rawURL))
+	if perr != nil || len(rawURL) > 4096 {
+		return apperr.Validationf("url", "That is not a link.")
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "http", "https":
+		if u.Host == "" {
+			return apperr.Validationf("url", "That is not a link.")
+		}
+	case "mailto":
+		if u.Opaque == "" && u.Path == "" {
+			return apperr.Validationf("url", "That is not a link.")
+		}
+	default:
+		return apperr.Validationf("url", "Only web and mail links can be opened.")
+	}
+	if s.d.OpenURL == nil {
+		return apperr.New(apperr.Unsupported, "Opening links is not available here.")
+	}
+	if err := s.d.OpenURL(u.String()); err != nil {
+		return apperr.Wrap(apperr.Internal, "Could not open the link.", err)
 	}
 	return nil
 }

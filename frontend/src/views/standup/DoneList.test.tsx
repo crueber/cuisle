@@ -6,7 +6,7 @@
 //   - Rows:    one <button> per ticket in the given order; its text contains the key and the summary; the assignee's
 //              initials (SpeakerView.initials matched on TicketView.assignee) show as their own element inside the row;
 //              an unassigned or unknown assignee shows "··" (as in the approved board mockup).
-//              Clicking (or Enter) calls api().app.openIssue(key); DoneList has no onOpen prop.
+//              Clicking (or Enter) calls openTicketFromRow(key) (the ticket modal opens; WP-T9); DoneList has no onOpen prop.
 //
 // SPEC-NOTE: ux-spec §6.3 says `"15 this sprint" (or "14 days" / "since Friday")`; the heading text is read as
 //   "<count> <doneLabel>". Only the "this sprint" and "since Friday" forms are asserted; how "14 days" combines with the
@@ -40,9 +40,12 @@ function renderDone(over: Partial<DoneListProps> = {}) {
   return render(<DoneList tickets={SOME} label="this sprint" cols={2} speakers={SPEAKERS} {...over} />);
 }
 
+const rowOpen = vi.hoisted(() => ({ fn: (_key: string): unknown => undefined }));
+vi.mock("../../state/ticketSteps", () => ({ openTicketFromRow: (key: string) => rowOpen.fn(key) }));
 let openIssue: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   openIssue = vi.fn(async () => {});
+  rowOpen.fn = openIssue as unknown as (key: string) => unknown; // rows open the ticket modal (WP-T9); the opener is replaced by this spy
   setApi({ app: { openIssue } } as unknown as Api);
 });
 afterEach(() => setApi(wailsApi));

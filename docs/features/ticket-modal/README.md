@@ -21,6 +21,12 @@ His decisions (2026-11-23):
   variant were rejected as too busy.
 - **JS budget:** raised from 50 KB to ≤ 70 KB gz for all JS (ADR 0014 to be amended).
 - **Deleting synced content:** only offered at Disconnect, and only past the storage cap (default 2 GB; ux-spec §14.11).
+- **Refresh this ticket:** a ↻ Refresh button next to Open in Jira (and `R`) re-fetches *just that issue* (ux-spec §14.12).
+- **Throttling:** all Jira traffic goes through one limiter per connection (jira-sync §3.1).
+  - Proactive: a token bucket at 8 req/s, slowing down when Jira's headers say the limit is near.
+  - Reactive: a global pause on 429.
+  - An interactive lane, so bulk sync never starves the UI.
+  - Request budgets per sync, enforced as a CI gate.
 
 ## Contents
 | Path | What |
@@ -42,9 +48,11 @@ cp docs/features/ticket-modal/0015-*.md docs/adr/
 cp docs/features/ticket-modal/fixtures/media/*.png internal/source/jira/jiratest/testdata/media/   # or wherever J §6 says
 ```
 
-Dry-run results against `db470d3`:
-- **Clean 3-way:** ux-spec, product-spec, data-model, jira-sync, testing, ADR 0002, ADR 0008, `tokens.json` (light and
-  dark key sets stay identical).
+Dry-run results against `9807615`:
+- **Clean 3-way:** product-spec, data-model, jira-sync, testing, ADR 0002, ADR 0008, `tokens.json` (light and dark key
+  sets stay identical).
+- **`docs/ux-spec.md`, 1 conflict:** in the §9.4 table. Keep HEAD's **Export** row, and take the patch's **Connection** row
+  (Disconnect offers deletion only past the storage cap, §14.11).
 - **`AGENTS.md`, 1 conflict:** the ADR range. Take `docs/adr/0001…0015`.
 - **`docs/architecture.md`, 3 conflicts.** Resolve them like this:
   1. **`Source` interface:** keep HEAD's `Hydrate(ctx, ids, progress ProgressFunc)`, `Meta()` and `Requests()`. Append
@@ -73,6 +81,7 @@ After merging, sanity-check the text against reality:
 ## Step 2: milestone to add to `docs/roadmap.md`
 **M9: Ticket modal (F12, ADR 0015).** This milestone is backend + UI; M8 (release) is independent.
 
+0. **Limiter** (J §3.1): every Jira request goes through it, and the request budgets are a CI gate.
 1. **Adapter** (J §2.2, §2.8–2.10, §2.14, §2.15):
    - Field registry and kind mapping; `*all` hydrate; comment bodies; `FetchMedia`.
    - Writes: `Transitions`, `Transition`, `Assign`, `SetFlag`, `AddComment`, and `GetIssue`.
@@ -92,6 +101,7 @@ After merging, sanity-check the text against reality:
    - Comments with composer, draft, sending/failed states and the standup marker.
    - Field rail with Not-set folding and the Status/Assignee comboboxes and Flag switch; lightbox.
    - The "Updated in Jira · Reload" bar; row hover/focus; live update of the row behind the modal.
+   - Refresh this ticket (↻, `R`, 10 s cooldown) and the rate-limit label (U §14.12–14.13).
    - Configure → Ticket fields; Display → Storage (size, Clear image cache, cleanup-offer cap); Disconnect's
      over-cap delete offer (U §14.11).
 
@@ -108,17 +118,19 @@ After merging, sanity-check the text against reality:
 ## Step 3: work packages (same gate and dispatch template as agent-plan §3 and §5)
 | WP | Model | Owns | Depends | Reads | Done when |
 |---|---|---|---|---|---|
+| T0 | **Sonnet** | `internal/source/jira/limiter/*`, and wiring it into the existing client (`client*.go`, `policy*.go`) | contracts | J §1, §3, §3.1 | every test in T "Ticket refresh and throttling" for the limiter; transport-bypass test; request-budget gate on the fixture |
 | T1 | Haiku | `internal/adf` | contracts | U §14.4; A (adf); J §2.14 | every ADF fixture normalises to the golden tree; media and inline-card resolution; unknown-node fallback |
 | T2 | Haiku | `frontend/src/components/adf/*` | contracts | U §14.4; A §4.9 | one component per node; render snapshots; textColor contrast clamp (light and dark) |
 | T3 | Haiku | `internal/media` | contracts | A (media); D §2.5a | paths, thumbnails, cap and LRU eviction, thumbnails never evicted, clear-cache |
 | T4 | Haiku | `internal/source/jira/{fields,content,media}*.go` + jiratest content/media | contracts | J §2.2, §2.8–2.10, §2.14 | kind mapping table; `*all` hydrate; bodies; attachment and thumbnail fetch |
 | T5 | Haiku | `internal/source/jira/writes*.go` + jiratest writes/faults | contracts | J §2.15; ADR 0015 | needs-screen rule; assign; flag; comment ADF body; 400/401/403/409 mapping |
-| T6 | **Sonnet** | `internal/view/ticket*.go`, `internal/sync/oneissue*.go`, `internal/cache/ticket*.go`, migration | T1, T3, T4, T5 | U §14; D §2.5a, Q9; J §4.8 | golden `ticket_mob1421.golden.json` == mock fixture; Not-set folding; prefs order; one-issue apply records history; Get makes no network call |
-| T7 | Haiku | `frontend/src/views/ticket/{TicketModal,TicketHeader,FieldRail,StatusCombo,Lightbox}*` | T2 | U §14.1–14.3, §14.6–14.10 | geometry at 4 sizes; stepping and Esc unwinding; optimistic save and revert; no upscaling |
+| T6 | **Sonnet** | `internal/view/ticket*.go`, `internal/sync/oneissue*.go`, `internal/cache/ticket*.go`, migration | T0, T1, T3, T4, T5 | U §14; D §2.5a, Q9; J §4.8 | golden `ticket_mob1421.golden.json` == mock fixture; Not-set folding; prefs order; one-issue apply records history; Get makes no network call |
+| T7 | Haiku | `frontend/src/views/ticket/{TicketModal,TicketHeader,FieldRail,StatusCombo,Lightbox}*` | T2 | U §14.1–14.3, §14.6–14.10, §14.12–14.13 | geometry at 4 sizes; stepping and Esc unwinding; optimistic save and revert; no upscaling; Refresh button states (spinning, countdown, failed, rate-limited) |
 | T8 | Haiku | `frontend/src/views/ticket/{TicketContent,AnchorStrip,Attachments,IssueRows,Comments,Composer}*`, `configure/sections/{TicketFields,Storage}*`, Disconnect confirm | T2 | U §14.4–14.5, §14.8, §14.11 | anchor strip; sending/failed; draft autosave; marker; every comment drawn; field prefs and storage cap autosave; delete offer only over the cap |
-| T9 | Haiku → reviewer | `internal/app` (TicketService, routes, events, `Disconnect(ctx, deleteContent)` + storage usage), `cmd/cuisle`, bindings, `api/mock.ts` ticket fixtures | T6, T7, T8 | A §3; U §14.11 | wired end to end in `--fake-jira`; no-network-without-trigger test extended; Playwright screenshots vs `ticket-*.png`; axe |
+| T9 | Haiku → reviewer | `internal/app` (TicketService incl. `Refresh` + cooldown, routes, events incl. `sync:throttled`, `Disconnect(ctx, deleteContent)` + storage usage), `cmd/cuisle`, bindings, `api/mock.ts` ticket fixtures | T6, T7, T8 | A §3; U §14.11 | wired end to end in `--fake-jira`; no-network-without-trigger test extended; Playwright screenshots vs `ticket-*.png`; axe |
 
-T1–T5 run in parallel, then T6 alongside T7 and T8 (frontend against `api/mock.ts`), then T9.
+T0–T5 run in parallel (T0 touches the existing client, so merge it first and rebase T4 and T5 on it). Then T6 runs
+alongside T7 and T8 (frontend against `api/mock.ts`), then T9.
 
 **Before dispatching:** freeze the contracts first (adf node types, `media.Cache`, `TicketDetail`, `TicketService`,
 `Source` content and write methods). Update `docs/agent-plan.ownership.txt` with the T rows.

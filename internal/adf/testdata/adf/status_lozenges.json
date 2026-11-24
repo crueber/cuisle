@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "status",
+          "attrs": {
+            "text": "NEUTRAL",
+            "color": "neutral"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "BLUE",
+            "color": "blue"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "PURPLE",
+            "color": "purple"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "YELLOW",
+            "color": "yellow"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "GREEN",
+            "color": "green"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "RED",
+            "color": "red"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "Unknown colour",
+            "color": "teal"
+          }
+        },
+        {
+          "type": "status",
+          "attrs": {
+            "text": "no colour"
+          }
+        }
+      ]
+    }
+  ]
+}

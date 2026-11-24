@@ -10,18 +10,24 @@ import (
 )
 
 const (
-	hydrateSearchBatch = 100 // ids per search/jql request
+	hydrateSearchBatch = 50  // ids per search/jql request
 	hydrateBulkBatch   = 500 // ids per changelog/bulkfetch request
 	hydrateParallel    = 4   // requests in flight per phase
 )
 
-// Hydrate fetches full details for sourceIDs (jira-sync.md §2.8 hydrate set in batches of 100, 4 in flight; §2.9
-// changelog bulkfetch in batches of 500 with the documented fallbacks; §2.10 comment top-ups within 35 days),
-// reporting progress per phase. Output order follows sourceIDs.
+// hydrateFields is the search projection of jira-sync.md §2.8 (F12): everything except comments and worklog.
+var hydrateFields = []string{"*all", "-comment", "-worklog"}
+
+// Hydrate fetches the complete details (content, changelog and every comment) for sourceIDs: issue searches by id in
+// batches of 50 (4 in flight), then complete (§2.9 changelog, §2.10 comments). Output order follows sourceIDs.
 func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress source.ProgressFunc) ([]model.IssueDetail, error) {
 	ids := uniqueStrings(sourceIDs)
 	if len(ids) == 0 {
 		return []model.IssueDetail{}, nil
+	}
+	reg, err := a.registry(ctx)
+	if err != nil {
+		return nil, err
 	}
 	fields := a.fieldIDs()
 
@@ -29,8 +35,8 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 	issuesProg := newPhaseProgress(progress, source.PhaseIssues, len(ids))
 	batches := chunkStrings(ids, hydrateSearchBatch)
 	pages := make([][]wireIssue, len(batches))
-	err := forEachParallel(ctx, len(batches), func(ctx context.Context, i int) error {
-		issues, err := a.searchIssues(ctx, batches[i], fields.requestFields())
+	err = forEachParallel(ctx, len(batches), func(ctx context.Context, i int) error {
+		issues, err := a.searchIssues(ctx, batches[i], hydrateFields)
 		if err != nil {
 			return err
 		}
@@ -44,7 +50,7 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 	byID := map[string]*model.IssueDetail{}
 	for _, page := range pages {
 		for _, wi := range page {
-			d, err := mapIssue(wi, fields)
+			d, err := mapIssue(wi, fields, reg)
 			if err != nil {
 				return nil, err
 			}
@@ -57,8 +63,19 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 			hydrated = append(hydrated, d)
 		}
 	}
+	if err := a.complete(ctx, fields, hydrated, progress); err != nil {
+		return nil, err
+	}
+	out := make([]model.IssueDetail, 0, len(hydrated))
+	for _, d := range hydrated {
+		out = append(out, *d)
+	}
+	return out, nil
+}
 
-	// Phase 2: changelog, bulkfetched by id in batches of 500.
+// complete adds the changelog (bulkfetch in batches of 500, §2.9) and the complete comment list (§2.10) to the
+// hydrated issues, and records their issue types. Shared by Hydrate and GetIssue.
+func (a *Adapter) complete(ctx context.Context, fields hydrateFieldIDs, hydrated []*model.IssueDetail, progress source.ProgressFunc) error {
 	changeProg := newPhaseProgress(progress, source.PhaseChangelog, len(hydrated))
 	hidsAll := make([]string, 0, len(hydrated))
 	for _, d := range hydrated {
@@ -66,7 +83,7 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 	}
 	hbatches := chunkStrings(hidsAll, hydrateBulkBatch)
 	histories := make([]map[string][]wireHistory, len(hbatches))
-	err = forEachParallel(ctx, len(hbatches), func(ctx context.Context, i int) error {
+	err := forEachParallel(ctx, len(hbatches), func(ctx context.Context, i int) error {
 		h, err := a.changelogBatch(ctx, hbatches[i], fields.flagged)
 		if err != nil {
 			return err
@@ -76,7 +93,7 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	merged := map[string][]wireHistory{}
 	for _, h := range histories {
@@ -88,33 +105,19 @@ func (a *Adapter) Hydrate(ctx context.Context, sourceIDs []string, progress sour
 		applyChangelog(d, merged[d.SourceID], fields.flagged)
 	}
 
-	// Phase 3: comment top-ups for issues whose embedded comments are incomplete.
-	now := a.now()
-	var need []*model.IssueDetail
-	for _, d := range hydrated {
-		if needsTopUp(d, now) {
-			need = append(need, d)
-		}
-	}
-	commentProg := newPhaseProgress(progress, source.PhaseComments, len(need))
-	err = forEachParallel(ctx, len(need), func(ctx context.Context, i int) error {
-		if err := a.topUpComments(ctx, need[i], now); err != nil {
+	commentProg := newPhaseProgress(progress, source.PhaseComments, len(hydrated))
+	err = forEachParallel(ctx, len(hydrated), func(ctx context.Context, i int) error {
+		if err := a.fetchComments(ctx, hydrated[i]); err != nil {
 			return err
 		}
 		commentProg.add(1)
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	a.recordTypes(hydrated)
-
-	out := make([]model.IssueDetail, 0, len(hydrated))
-	for _, d := range hydrated {
-		out = append(out, *d)
-	}
-	return out, nil
+	return nil
 }
 
 // searchIssues runs one `id in (…)` search, following nextPageToken.

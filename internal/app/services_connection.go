@@ -159,9 +159,11 @@ func isLoopback(host string) bool {
 	return strings.EqualFold(host, "localhost") || host == "127.0.0.1" || host == "::1"
 }
 
-func (s *ConnectionService) Disconnect(ctx context.Context) (err error) {
+func (s *ConnectionService) Disconnect(ctx context.Context, deleteContent bool) (err error) {
 	defer s.d.guard("Disconnect", &err)
-	// Disconnect removes the keychain item. The connection row and every synced record stay.
+	// Disconnect removes the keychain item. The connection row and every record and history row stay. deleteContent
+	// (ux-spec §14.11, offered only past storage.cleanup_offer_mb) also deletes the synced content of the connection:
+	// descriptions, comment bodies, field values, links, transition caches, drafts and the media cache; then VACUUM.
 	d := s.d
 	row, ok, err := d.connRow(ctx)
 	if err != nil || !ok {
@@ -171,6 +173,11 @@ func (s *ConnectionService) Disconnect(ctx context.Context) (err error) {
 		return apperr.Wrap(apperr.KeychainUnavailable, "The keychain could not remove the token.", err)
 	}
 	d.setAuth(ctx, row, "missing")
+	if deleteContent {
+		if err := d.deleteContent(ctx, row.ID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

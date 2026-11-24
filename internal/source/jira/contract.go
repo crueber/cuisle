@@ -102,6 +102,10 @@ func (a *Adapter) Capabilities() source.Capabilities {
 		HasSprints: true, HasBacklogRank: true, HasFlagging: true, HasDevActivity: !a.devOff,
 		HasExtraFilter: true, HasAssigneeHistory: true, FilterLanguage: "JQL",
 		AuthFields: []string{"baseUrl", "account", "secret"},
+		// ADR 0015: the hooks live in WP-owned files (content.go: WP-T4, writes.go: WP-T5) so the frozen contract
+		// needn't change when those WPs land. Both default to "off".
+		Content: contentCapability(),
+		Writes:  writesCapabilities(a.meta),
 	}
 }
 

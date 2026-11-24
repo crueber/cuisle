@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "mediaSingle",
+      "attrs": {
+        "layout": "center"
+      },
+      "content": [
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-201",
+            "type": "file",
+            "collection": "contentId-1",
+            "alt": "unit-toggle-v3.png",
+            "width": 1200,
+            "height": 720
+          }
+        },
+        {
+          "type": "caption",
+          "content": [
+            {
+              "type": "text",
+              "text": "Unit toggle, v3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

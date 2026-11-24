@@ -1,0 +1,36 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "emoji",
+          "a": {
+            "emoji": "🧁",
+            "shortName": ":cupcake:"
+          }
+        },
+        {
+          "t": "text",
+          "x": " "
+        },
+        {
+          "t": "emoji",
+          "a": {
+            "shortName": ":partyparrot:"
+          }
+        },
+        {
+          "t": "text",
+          "x": " "
+        },
+        {
+          "t": "emoji",
+          "a": {
+            "shortName": ":wave:"
+          }
+        }
+      ]
+    }
+  ]
+}

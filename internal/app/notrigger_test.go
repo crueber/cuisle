@@ -32,9 +32,9 @@ type quietApp struct {
 }
 
 // newQuietApp builds the described state and then "restarts" the app with the given sync-on-open policy.
-func newQuietApp(t *testing.T, policy string) *quietApp {
+func newQuietApp(t *testing.T, policy string, opts ...appOpt) *quietApp {
 	t.Helper()
-	ta := newTestApp(t)
+	ta := newTestApp(t, opts...)
 	ta.connect()
 	// configured standups: one synced, one never synced
 	scrum := ta.newStandup(ta.Fx.scrumProject, ta.Fx.scrum)
@@ -42,6 +42,7 @@ func newQuietApp(t *testing.T, policy string) *quietApp {
 	// an enabled after_sync sink for every standup, created BEFORE the sync so the setup sync exercises it
 	ta.saveFileSink(0, "after_sync")
 	ta.syncNow(scrum.ID)
+	ta.Orch.WaitMedia() // the media phase runs after sync:finished; it must not land in the quiet window
 	// warm the autocomplete caches, as a user's earlier Configure session would have
 	if _, err := ta.Svc.Connection.SearchUsers(ctx, scrum.ID, "Zed"); err != nil {
 		t.Fatalf("SearchUsers: %v", err)

@@ -3,6 +3,8 @@
 **Read this first, then [README.md](README.md) in this folder for the detailed steps.**
 
 ## Where things stand
+- **If CI is still red, finish that first.** Chris said you were waiting on CI when this package arrived. Start this
+  feature once CI is green, or once it is blocked only on something Chris has to do (secrets).
 - v1 is complete. Every work package (01–38) is merged and every budget is green. What remains for v1 is CI secrets,
   UAT and the M8 release. That work is independent of this feature and stays tracked in `CLAUDE.md`.
 - Chris designed a new feature with Claude (design chat) and Fable (design advisor): **open any ticket inside Cuisle as
@@ -17,8 +19,8 @@ merge) is the written one. Where the two disagree, the spec wins.
 
 | File | Shows |
 |---|---|
-| `design/mockups/ticket-1920x1080.png` | **The main reference.** MOB-1421 at 1920×1080: header (type icon, mono key, parent crumb, "as of · synced", `‹ 7 / 20 ›` stepper, Open in Jira, ✕), summary, pulse strip, anchor strip, ADF description (link card, mention, info panel, task list, table, image, code block, warning panel, decision, expand), and the field rail (State / Details / Custom fields with sentence-case labels and a "Not set:" line). |
-| `design/mockups/ticket-edit-states-1920x1080.png` | MOB-1429 (blocked bug), scrolled to Comments. Shows the Status combobox open (in-app transitions; "screen · ↗ Jira" ones muted below a divider), Flag on with BLOCKED, the composer with text, a comment *sending…*, a comment that **failed** (Retry / Edit / Discard), and the "↑ 3 NEW SINCE STANDUP" marker. |
+| `design/mockups/ticket-1920x1080.png` | **The main reference.** MOB-1421 at 1920×1080: header (type icon, mono key, parent crumb, "as of · synced", `‹ 7 / 20 ›` stepper, **↻ Refresh**, Open in Jira, ✕), summary, pulse strip, anchor strip, ADF description (link card, mention, info panel, task list, table, image, code block, warning panel, decision, expand), and the field rail (State / Details / Custom fields with sentence-case labels and a "Not set:" line). |
+| `design/mockups/ticket-edit-states-1920x1080.png` | MOB-1429 (blocked bug), scrolled to Comments, just after a ticket Refresh ("refreshed 9:58 · just this ticket"). Shows the Status combobox open (in-app transitions; "screen · ↗ Jira" ones muted below a divider), Flag on with BLOCKED, the composer with text, a comment *sending…*, a comment that **failed** (Retry / Edit / Discard), and the "↑ 3 NEW SINCE STANDUP" marker. |
 | `design/mockups/ticket-lightbox-1920x1080.png` | The image lightbox: solid top bar with file meta, `100%`, `1 / 2`, Open file and ✕. The image is never upscaled; ← → step through images. |
 | `design/mockups/ticket-1440x900.png` | The same layout at 1440. |
 | `design/mockups/ticket-1280x720.png` | Short mode (`vh < 800`): smaller header and no keyboard footer. |
@@ -46,7 +48,7 @@ Chris can open it; you work from the PNGs.
    - `TicketService`
    - the `source.Source` content and write methods
    - the new migration
-   Then dispatch T1–T5 in parallel, then T6 alongside T7 and T8, then T9. Use the same gate, reviewer and worktree
+   Then dispatch T0–T5 in parallel (merge T0 first), then T6 alongside T7 and T8, then T9. Use the same gate, reviewer and worktree
    rules as v1.
 5. **Add `- [ ] M9 Ticket modal (F12, ADR 0015)` to the `CLAUDE.md` progress list.** Tick it when M9's DoD holds.
 
@@ -63,6 +65,20 @@ Chris can open it; you work from the PNGs.
   - History rows are never deleted. Details are in `ux-spec §14.11`; the API is `ConnectionService.Disconnect(ctx,
     deleteContent bool)`.
 - **Layout:** A ("Docket") only.
+- **Refresh this ticket:**
+  - A ↻ Refresh button sits between the stepper and Open in Jira (also `R` inside the modal).
+  - It re-fetches **only that issue** and applies it with the one-issue apply, so changes are historised.
+  - There is a 10 s per-issue cooldown, shown as a countdown on the button. See `ux-spec §14.12`.
+- **Throttling:** must not over-use the Jira API (`jira-sync §3.1`, AGENTS invariant 15).
+  - **One limiter per connection; every request goes through it:**
+    - a token bucket at 8 req/s, burst 16
+    - halves the rate on Jira's near-limit headers, then recovers slowly
+    - a global pause on 429 until `Retry-After`
+    - priority lanes (interactive > sync > media)
+    - per-issue write serialisation
+  - **Request budgets per sync** are a CI gate: a full fixture sync ≤ 150 requests, an incremental sync with
+    3 changes ≤ 25.
+  - **New work package T0 (Sonnet)** builds the limiter. Merge it first, because it wraps the existing client.
 
 ## Ground rules that still apply
 - AGENTS.md invariants. After the merge these include the new #13 (Jira writes are explicit user actions only) and #14

@@ -88,7 +88,7 @@ func TestParseFixture_RoundTripsAllFields(t *testing.T) {
 	if len(fx.Issues) != 9 || len(fx.Backlog) != 2 || fx.Boards[0].Sprint == nil || fx.Boards[0].Sprint.ID != 42 {
 		t.Errorf("parsed fixture lost data: %d issues, %d backlog", len(fx.Issues), len(fx.Backlog))
 	}
-	if fx.Issues[0].PRs[0] != (FxPR{ID: 12, Day: -1, Status: "MERGED"}) {
+	if fx.Issues[0].PRs[0] != (FxPR{ID: 12, Day: -1, Status: "MERGED", Title: "Add the login page", Branch: "feature/MOB-1-login-page"}) {
 		t.Errorf("PR = %+v", fx.Issues[0].PRs[0])
 	}
 }

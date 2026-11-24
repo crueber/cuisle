@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "a",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://ok.example.com/"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "b",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "mailto:dev@example.com"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "c",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "javascript:alert(1)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "d",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "data:text/html,<b>x</b>"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

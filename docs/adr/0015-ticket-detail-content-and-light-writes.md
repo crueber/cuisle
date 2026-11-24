@@ -44,6 +44,11 @@ edits means: add a comment, change status via transitions, change the assignee, 
   - Offline, the cached list is shown but disabled.
   - Transitions that need a Jira screen are listed with "↗ in Jira" and open the browser.
   - Assignee search uses the existing `SearchUsers` (Jira-backed typing).
+- **Refresh this ticket** (button and `R`) is an explicit trigger. It re-fetches only that issue and applies it with the
+  same one-issue apply used after writes. It has a 10 s per-issue cooldown.
+- **All Jira traffic goes through one throttle per connection** (jira-sync §3.1). The throttle is proactive (token
+  bucket, header-adaptive) and also reactive (a global pause on 429). It has an interactive lane that bulk sync never
+  starves. This protects the user's API allowance now that syncs fetch more per issue.
 - **Comment drafts autosave locally per issue.** They are never sent without Send.
 - **History:** comments append; an edited comment updates its body and keeps `updated_at`. The description and other
   field values keep their current value only (like summary under D10). Status, assignee and flag stay fully historised.

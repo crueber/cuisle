@@ -4,7 +4,7 @@
 //   - Heading: an <h2> whose text starts with "Backlog" (caps by CSS), plus an element whose own text is
 //              "top <rows> by rank" (rows = the configured count prop).
 //   - Rows:    one <button> per item in the given order; text contains the key and the summary. Click or Enter calls
-//              api().app.openIssue(key); BacklogList has no onOpen prop.
+//              openTicketFromRow(key) (the ticket modal opens; WP-T9); BacklogList has no onOpen prop.
 //   - Footnote: an element whose own text is exactly
 //              "Showing the top <rows> as set in Configure · <total - items.length> more ranked below in Jira", shown only
 //              when total > items.length.
@@ -24,16 +24,19 @@ import type { BacklogItem } from "../../api/types";
 import { BacklogList } from "./BacklogList";
 import type { BacklogListProps } from "./props";
 
-const item = (n: number): BacklogItem => ({ key: `MOB-${1500 + n}`, summary: `Backlog summary ${n}`, type: "story", url: `https://example.atlassian.net/browse/MOB-${1500 + n}` });
+const item = (n: number): BacklogItem => ({ issueId: 5000 + n, key: `MOB-${1500 + n}`, summary: `Backlog summary ${n}`, type: "story", url: `https://example.atlassian.net/browse/MOB-${1500 + n}` });
 const TWELVE = Array.from({ length: 12 }, (_, i) => item(i));
 
 function renderBacklog(over: Partial<BacklogListProps> = {}) {
   return render(<BacklogList items={TWELVE} total={40} rows={12} cols={3} {...over} />);
 }
 
+const rowOpen = vi.hoisted(() => ({ fn: (_key: string): unknown => undefined }));
+vi.mock("../../state/ticketSteps", () => ({ openTicketFromRow: (key: string) => rowOpen.fn(key) }));
 let openIssue: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   openIssue = vi.fn(async () => {});
+  rowOpen.fn = openIssue as unknown as (key: string) => unknown; // rows open the ticket modal (WP-T9); the opener is replaced by this spy
   setApi({ app: { openIssue } } as unknown as Api);
 });
 afterEach(() => setApi(wailsApi));

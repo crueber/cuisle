@@ -170,6 +170,25 @@ Columns:
 | 37 | Haiku | `build/**`, `scripts/publish/*`, `.forgejo/workflows/*`, `scripts/update-pins.sh`, `internal/relsign` | A §6.5; ADR 0013 | `task package` on Linux + macOS (local); publish plan-mode clean; release.yml lint |
 | 38 | Haiku pool | bug fixes from 33, 34 and W5 | per bug | per bug |
 
+#### Wave F12 (M9): ticket modal (ADR 0015)
+Orchestrator first: merge the docs (done), then freeze the contracts (`internal/adf` node types, `internal/media.Cache`,
+`view.TicketDetail` and friends, `TicketService` signatures, the `source.Source` content and write methods, migration
+`0003_ticket_content`). Then T0–T5 in parallel (**merge T0 first**; rebase T4 and T5 on it), then T6 alongside T7 and
+T8 (frontend against `api/mock.ts`), then T9. Gate, reviewer and worktree rules as above; WP ids are `WP-T0`…`WP-T9`.
+
+| WP | Model | Owns | Depends | Reads | Done when |
+|---|---|---|---|---|---|
+| T0 | **Sonnet** | `internal/source/jira/limiter/*`, wiring into `client*.go`, `policy*.go` | contracts | J §1, §3, §3.1 | every limiter test in T "Ticket refresh and throttling"; transport-bypass test; request-budget gate on the fixture |
+| T1 | Haiku | `internal/adf` | contracts | U §14.4; A §2.4; J §2.14 | every ADF fixture normalises to the golden tree; media and inline-card resolution; unknown-node fallback |
+| T2 | Haiku | `frontend/src/components/adf/*` | contracts | U §14.4; A §4.9 | one component per node; render snapshots; textColor contrast clamp (light and dark) |
+| T3 | Haiku | `internal/media` | contracts | A §2.4; D §2.5a | paths, thumbnails, cap and LRU eviction, thumbnails never evicted, clear-cache |
+| T4 | Haiku | `internal/source/jira/{fields,content,media}*.go`, jiratest content/media | contracts, T0 | J §2.2, §2.8–2.10, §2.14 | kind mapping table; `*all` hydrate; bodies; attachment and thumbnail fetch |
+| T5 | Haiku | `internal/source/jira/writes*.go`, jiratest writes/faults | contracts, T0 | J §2.15; ADR 0015 | needs-screen rule; assign; flag; comment ADF body; 400/401/403/409 mapping |
+| T6 | **Sonnet** | `internal/view/ticket*.go`, `internal/sync/{oneissue,content,media}*.go`, `internal/cache/{ticket,content}*.go` | T0, T1, T3, T4, T5 | U §14; D §2.5a, Q9; J §4.8 | golden `ticket_mob1421.golden.json` == mock fixture; Not-set folding; prefs order; one-issue apply records history; content/media phases; Get makes no network call |
+| T7 | Haiku | `frontend/src/views/ticket/{TicketModal,TicketHeader,FieldRail,StatusCombo,Lightbox}*` | T2 | U §14.1–14.3, §14.6–14.10, §14.12–14.13 | geometry at 4 sizes; stepping and Esc unwinding; optimistic save and revert; no upscaling; Refresh button states |
+| T8 | Haiku | `frontend/src/views/ticket/{TicketContent,AnchorStrip,Attachments,IssueRows,Comments,Composer}*`, `configure/sections/{TicketFields,Storage}*`, Disconnect confirm | T2 | U §14.4–14.5, §14.8, §14.11 | anchor strip; sending/failed; draft autosave; marker; every comment drawn; field prefs and storage cap autosave; delete offer only over the cap |
+| T9 | Haiku → reviewer | `internal/app` (TicketService incl. `Refresh` + cooldown, routes, events, `Disconnect(ctx, deleteContent)` + storage usage), `cmd/cuisle`, bindings, `api/mock.ts` ticket fixtures, App mount | T6, T7, T8 | A §3; U §14.11 | wired end to end in `--fake-jira`; no-network-without-trigger test extended; Playwright screenshots vs `ticket-*.png`; axe |
+
 ## 5. Dispatching a WP (orchestrator)
 
 ```text

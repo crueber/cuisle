@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "both",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://x.example.com/"
+              }
+            },
+            {
+              "type": "strong"
+            },
+            {
+              "type": "em"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " code link",
+          "marks": [
+            {
+              "type": "code"
+            },
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://y.example.com/"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

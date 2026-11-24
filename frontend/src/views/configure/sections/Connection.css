@@ -78,3 +78,10 @@
   font-size: var(--font-size-small);
   color: var(--color-alert-text);
 }
+
+.conn-offer {
+  padding: var(--space-3);
+  border: 2px solid var(--color-alert-bg);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}

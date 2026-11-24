@@ -1,0 +1,39 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "icon "
+        },
+        {
+          "t": "media",
+          "a": {
+            "attachmentId": "204",
+            "name": "icon.png",
+            "mime": "image/png",
+            "bytes": 4096,
+            "width": 32,
+            "height": 32,
+            "cached": "full"
+          }
+        },
+        {
+          "t": "text",
+          "x": " and file "
+        },
+        {
+          "t": "file",
+          "a": {
+            "attachmentId": "203",
+            "name": "unit-spec.pdf",
+            "mime": "application/pdf",
+            "bytes": 412000,
+            "cached": "none"
+          }
+        }
+      ]
+    }
+  ]
+}

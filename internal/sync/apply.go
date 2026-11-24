@@ -16,19 +16,33 @@ import (
 // removed_at, speaker merge (settings.MergeSpeakersTx), config history by fingerprint, sync state, rev bump. WP-30.
 // Any error rolls back everything, so a reader sees the old state or the new one in full. T is f.StartedAt.
 func (o *Orchestrator) apply(ctx context.Context, f *Fetched) (ApplyResult, error) {
+	res, _, err := o.applyWith(ctx, f, nil)
+	return res, err
+}
+
+// applyExtras carries what the frozen Fetched has no slot for (WP-T6): the field registry in, and the per-issue changes
+// out (ticket:updated, emitted by the runner after the commit).
+type applyExtras struct {
+	FieldDefs []model.FieldDef // stored with the references (field_def)
+}
+
+// applyWith is apply plus the extras. The returned updates name every hydrated issue that changed, with the standups
+// that have it as a current member (read after the membership step, inside the transaction).
+func (o *Orchestrator) applyWith(ctx context.Context, f *Fetched, ex *applyExtras) (ApplyResult, []TicketUpdated, error) {
 	var res ApplyResult
+	var updates []TicketUpdated
 	err := o.opts.DB.WriteTx(ctx, func(tx *sql.Tx) error {
 		var err error
-		res, err = o.applyTx(ctx, tx, f)
+		res, err = o.applyTx(ctx, tx, f, ex, &updates)
 		return err
 	})
 	if err != nil {
-		return ApplyResult{}, err
+		return ApplyResult{}, nil, err
 	}
-	return res, nil
+	return res, updates, nil
 }
 
-func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched) (ApplyResult, error) {
+func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched, ex *applyExtras, updates *[]TicketUpdated) (ApplyResult, error) {
 	T, connID, sid := f.StartedAt, f.ConnectionID, f.StandupID
 	var res ApplyResult
 
@@ -52,6 +66,11 @@ func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched) (App
 	}
 	if err := cache.ApplyConnectionTx(ctx, tx, connID, f.SourceMeta, f.DevState, T); err != nil {
 		return res, err
+	}
+	if ex != nil && len(ex.FieldDefs) > 0 {
+		if err := cache.ApplyFieldDefsTx(ctx, tx, connID, ex.FieldDefs, T); err != nil {
+			return res, err
+		}
 	}
 
 	// 2. Board snapshot, column map merge, status-lane rebuild.
@@ -77,9 +96,14 @@ func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched) (App
 	}
 
 	// 3. Issues and their change/comment rows.
+	var changed []issueChange
 	for _, d := range f.Details {
-		if _, err := cache.ApplyIssueTx(ctx, tx, connID, d, T); err != nil {
+		r, err := cache.ApplyIssueDetailTx(ctx, tx, connID, d, T)
+		if err != nil {
 			return res, err
+		}
+		if names := announcedNames(r); len(names) > 0 {
+			changed = append(changed, issueChange{issueID: r.IssueID, key: d.Key, changed: names})
 		}
 	}
 	res.Hydrated = len(f.Details)
@@ -135,6 +159,17 @@ func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched) (App
 	// 5. Membership, spans, removed_at.
 	if err := cache.ApplyMembersTx(ctx, tx, sid, refs, T); err != nil {
 		return res, err
+	}
+
+	// ticket:updated {cause: sync} for every hydrated issue that changed, with the standups that now contain it.
+	if updates != nil {
+		for _, c := range changed {
+			standups, err := cache.LiveStandupIDsTx(ctx, tx, c.issueID)
+			if err != nil {
+				return res, err
+			}
+			*updates = append(*updates, TicketUpdated{IssueID: c.issueID, Key: c.key, StandupIDs: standups, Cause: CauseSync, Changed: c.changed})
+		}
 	}
 
 	// 6. Speakers: assignees of board-role members only (from the cache, so unhydrated members count too).

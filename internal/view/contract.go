@@ -1,11 +1,15 @@
 // Package view builds the view models the UI renders (architecture.md §3.2, §5.2, ADR 0008).
 // Go computes every data-derived value; TypeScript only lays out.
 //
-// FROZEN CONTRACT: every type in this file (they generate frontend/src/bindings). Implementation of build.go: WP-31.
-// Imports allowed: model, pulse, cache, settings, stdlib. JSON names are lowerCamel; lists are never nil.
+// FROZEN CONTRACT: every type in this file (they generate frontend/src/bindings). Implementation of build.go: WP-31;
+// ticket*.go (BuildTicket, the TicketDetail family below): WP-T6.
+// Imports allowed: model, pulse, cache, settings, adf, stdlib. JSON names are lowerCamel; lists are never nil.
 package view
 
-import "github.com/crueber/cuisle/internal/pulse"
+import (
+	"github.com/crueber/cuisle/internal/adf"
+	"github.com/crueber/cuisle/internal/pulse"
+)
 
 type PulseSeg = pulse.Seg
 type PulseMark = pulse.Mark
@@ -92,6 +96,7 @@ type Pulse struct {
 }
 
 type BacklogItem struct {
+	IssueID int64  `json:"issueId"` // local issue id: opens the ticket modal (F12)
 	Key     string `json:"key"`
 	Summary string `json:"summary"`
 	Type    string `json:"type"`
@@ -218,4 +223,242 @@ type ConfigInput struct {
 	NeedsSync        bool
 	UnmappedStatuses []string
 	ActiveByAccount  map[string]int // active tickets per speaker, from the current snapshot (nil = unknown/0)
+}
+
+// ── Ticket modal (ADR 0015, ux-spec §14, architecture.md §3.2 "Ticket types") ──
+
+// TicketDetail is the ticket modal payload, built by BuildTicket from a snapshot and cache.Ticket (no network).
+type TicketDetail struct {
+	IssueID   int64 `json:"issueId"`
+	StandupID int64 `json:"standupId"`
+	AsOf      int64 `json:"asOf"`
+	SyncedAt  int64 `json:"syncedAt"`  // issue hydrated_at (header "as of 9:41 · synced"); 0 = never
+	UpdatedAt int64 `json:"updatedAt"` // the issue's provider updated time
+
+	Row    TicketView    `json:"row"` // the board row (key, summary, type, lane, days, blocked, pulse over PulseDays)
+	URL    string        `json:"url"`
+	Parent *IssueRefView `json:"parent"` // nil = no parent
+
+	PulseDays   int       `json:"pulseDays"` // header track length (21)
+	Axis        []AxisDay `json:"axis"`      // len == PulseDays
+	LimitDays   int       `json:"limitDays"` // lane limit, 0 = none
+	BlockedDays int       `json:"blockedDays"`
+
+	Description  *adf.Doc         `json:"description"` // nil when empty
+	Attachments  []AttachmentView `json:"attachments"` // images first, then files, each by created desc
+	Subtasks     []IssueRow       `json:"subtasks"`
+	SubtasksDone int              `json:"subtasksDone"`
+	LinkGroups   []LinkGroup      `json:"linkGroups"` // {Label "IS BLOCKED BY", Rows}
+	Comments     []CommentView    `json:"comments"`   // oldest first; the frontend orders per ticket.comment_order
+	NewSince     int64            `json:"newSince"`   // start of the previous working day (D3); 0 = none
+	Draft        CommentInput     `json:"draft"`
+
+	Rail     []RailGroup `json:"rail"` // state, details, custom, development, dates — in that order; empty groups omitted
+	Dev      *DevSummary `json:"dev"`  // nil if none/unavailable
+	Can      TicketCaps  `json:"can"`
+	Warnings []string    `json:"warnings"` // Warn* below
+}
+
+// Ticket warnings (TicketDetail.Warnings).
+const (
+	WarnMediaUnresolved = "media_unresolved" // a media node could not be matched to an attachment
+	WarnRefreshFailed   = "refresh_failed"   // a write succeeded but the follow-up refresh failed (known delta applied)
+	WarnNotOnBoard      = "not_on_board"     // the issue left the standup ("No longer on this board", ux-spec §14.12)
+)
+
+// IssueRefView is a compact reference to another issue (the parent).
+type IssueRefView struct {
+	IssueID  int64  `json:"issueId"` // 0 = not synced (opens the browser)
+	Key      string `json:"key"`
+	Summary  string `json:"summary"`
+	TypeKind string `json:"typeKind"`
+}
+
+// IssueRow is one subtask or linked-issue row.
+type IssueRow struct {
+	IssueID          int64  `json:"issueId"` // 0 = not synced → opens the browser
+	Key              string `json:"key"`
+	Summary          string `json:"summary"`
+	TypeKind         string `json:"typeKind"`
+	StatusName       string `json:"statusName"`
+	StatusLozenge    string `json:"statusLozenge"` // todo|prog|review|qa|done
+	AssigneeInitials string `json:"assigneeInitials"`
+	URL              string `json:"url"`
+	Done             bool   `json:"done"`
+}
+
+// LinkGroup is the links sharing one label.
+type LinkGroup struct {
+	Label string     `json:"label"` // upper case, e.g. "IS BLOCKED BY"
+	Rows  []IssueRow `json:"rows"`
+}
+
+// AttachmentView is one attachment tile or file card.
+type AttachmentView struct {
+	ID             int64  `json:"id"` // attachment row id (/media/{id}, EnsureMedia, OpenAttachment)
+	Name           string `json:"name"`
+	Ext            string `json:"ext"` // upper case without the dot, e.g. "PDF"
+	Mime           string `json:"mime"`
+	Bytes          int64  `json:"bytes"`
+	AuthorInitials string `json:"authorInitials"`
+	AuthorName     string `json:"authorName"`
+	CreatedAt      int64  `json:"createdAt"`
+	Image          bool   `json:"image"`
+	Width          int    `json:"width"` // 0 = unknown
+	Height         int    `json:"height"`
+	Cached         string `json:"cached"`   // full|thumb|none
+	URL            string `json:"url"`      // /media/{id}
+	ThumbURL       string `json:"thumbUrl"` // /media/{id}/thumb
+}
+
+// PersonRef is a person as the modal shows them.
+type PersonRef struct {
+	AccountID string `json:"accountId"`
+	Name      string `json:"name"`
+	Initials  string `json:"initials"`
+	Self      bool   `json:"self"` // the connected user
+}
+
+// CommentView is one stored comment.
+type CommentView struct {
+	ID         string    `json:"id"`
+	Author     PersonRef `json:"author"`
+	CreatedAt  int64     `json:"createdAt"`
+	UpdatedAt  int64     `json:"updatedAt"`
+	Edited     bool      `json:"edited"`
+	Visibility string    `json:"visibility"` // "" or e.g. "Developers only"
+	Body       adf.Doc   `json:"body"`
+}
+
+// CommentInput is composer text with its mentions (drafts and AddComment).
+type CommentInput struct {
+	Text     string    `json:"text"`
+	Mentions []Mention `json:"mentions"`
+}
+
+// Mention is an @-mention: a rune range of CommentInput.Text.
+type Mention struct {
+	Start     int    `json:"start"` // rune offsets, End exclusive
+	End       int    `json:"end"`
+	AccountID string `json:"accountId"`
+	Name      string `json:"name"`
+}
+
+// RailGroup is one group of the field rail. Fields without a value produce no row; their labels go to NotSet.
+type RailGroup struct {
+	ID     string    `json:"id"` // state|details|custom|development|dates
+	Label  string    `json:"label"`
+	Rows   []RailRow `json:"rows"`
+	NotSet []string  `json:"notSet"` // labels of empty fields, in rail order
+}
+
+// Rail group ids (RailGroup.ID), in rail order.
+const (
+	RailState       = "state"
+	RailDetails     = "details"
+	RailCustom      = "custom"
+	RailDevelopment = "development"
+	RailDates       = "dates"
+)
+
+// Rail-only row kinds (RailRow.Kind values beyond the model field kinds) and the members each one sets. Every other
+// row uses a model field kind (model.FieldKinds) with the member noted in ux-spec §14.6 (text → Text, number → Number,
+// options/labels/versions/components/groups/cascade → Items, user/users → Users, paragraph → Rich, unknown → Raw,
+// url → URL + URLLabel, date/datetime → Text "YYYY-MM-DD"/RFC 3339).
+// The Development group renders from its rail rows; TicketDetail.Dev carries the same facts structured.
+const (
+	RailKindStatus   = "status"   // Edit "status"; Text = status name (the swatch uses TicketDetail.Row.Lane)
+	RailKindFlag     = "flag"     // Edit "flag"; Text "Flagged"|"Not flagged"; Sub = blocked days ("3d") when flagged
+	RailKindParent   = "parent"   // Text = parent key, Sub = parent summary; Mono
+	RailKindSprint   = "sprint"   // Text = sprint name, Sub = "ends 1 Dec"
+	RailKindTime     = "time"     // Text "14h of 24h", Progress = spent/estimate 0..1; Mono
+	RailKindWatchers = "watchers" // Number; Mono
+	RailKindBranch   = "branch"   // Text = most recent PR source branch; Mono; no row when unknown
+	RailKindCommits  = "commits"  // Text "7 commits", Sub "last 2h"
+	RailKindPR       = "pr"       // Label "#418", Text = PR title (the repository when unknown), Sub = repository, Items = [status OPEN|MERGED|DECLINED|UNKNOWN]
+)
+
+// RailRow is one field row. Kind is a model field kind or a RailKind*; only the members relevant to it are set.
+type RailRow struct {
+	FieldID  string      `json:"fieldId"`
+	Label    string      `json:"label"`
+	Kind     string      `json:"kind"`
+	Edit     string      `json:"edit"` // ""|"status"|"assignee"|"flag"
+	Text     string      `json:"text"`
+	Number   *float64    `json:"number"`
+	Items    []string    `json:"items"`
+	Users    []PersonRef `json:"users"`
+	Rich     *adf.Doc    `json:"rich"`
+	Raw      string      `json:"raw"`
+	Mono     bool        `json:"mono"`
+	Sub      string      `json:"sub"`      // e.g. "ends 1 Dec"
+	Progress *float64    `json:"progress"` // time tracking 0..1
+	URL      string      `json:"url"`
+	URLLabel string      `json:"urlLabel"` // e.g. "support.example.com › #48213"
+}
+
+// TransitionList is the Status combobox content.
+type TransitionList struct {
+	Items     []TransitionOption `json:"items"`
+	FetchedAt int64              `json:"fetchedAt"`
+	Offline   bool               `json:"offline"` // cached list shown disabled
+}
+
+// TransitionOption is one transition.
+type TransitionOption struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	ToStatusName string `json:"toStatusName"`
+	ToLane       string `json:"toLane"` // lane of the target status in the standup (optimistic row update)
+	NeedsScreen  bool   `json:"needsScreen"`
+	URL          string `json:"url"` // issue URL for "↗ Jira"
+}
+
+// TicketCaps says which light writes the modal offers.
+type TicketCaps struct {
+	Transition bool   `json:"transition"`
+	Assign     bool   `json:"assign"`
+	Flag       bool   `json:"flag"`
+	Comment    bool   `json:"comment"`
+	Reason     string `json:"reason"` // "offline"|"auth"|"read_only"|""
+}
+
+// DevSummary is the rail's Development group.
+type DevSummary struct {
+	Branch       string  `json:"branch"`
+	Commits      int     `json:"commits"`
+	LastCommitAt int64   `json:"lastCommitAt"`
+	PRs          []DevPR `json:"prs"`
+}
+
+// DevPR is one pull request.
+type DevPR struct {
+	ID     string `json:"id"`     // display id without "#", e.g. "421"
+	Title  string `json:"title"`  // the PR title; the repository name when the title is not known
+	Repo   string `json:"repo"`   // repository name
+	Status string `json:"status"` // OPEN|MERGED|DECLINED|UNKNOWN
+}
+
+// TicketFieldPrefs is Configure › Ticket fields (per connection; ux-spec §14.8) and BuildTicket's rail order.
+type TicketFieldPrefs struct {
+	Pinned    []FieldPref   `json:"pinned"`    // pinned custom fields, in rail order
+	Hidden    []FieldPref   `json:"hidden"`    // hidden fields
+	Available []FieldOption `json:"available"` // custom fields that can be pinned (not pinned), A–Z
+}
+
+// FieldPref is one pinned or hidden field.
+type FieldPref struct {
+	FieldID  string `json:"fieldId"`
+	Name     string `json:"name"`
+	Kind     string `json:"kind"`
+	Position int    `json:"position"` // pinned order (0-based); -1 when only hidden
+	Hidden   bool   `json:"hidden"`
+}
+
+// FieldOption is a field the "Pin a field…" combobox offers.
+type FieldOption struct {
+	FieldID string `json:"fieldId"`
+	Name    string `json:"name"`
+	Kind    string `json:"kind"`
+	Custom  bool   `json:"custom"`
 }

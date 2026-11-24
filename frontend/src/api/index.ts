@@ -7,6 +7,7 @@ import * as ConnSvc from "../bindings/github.com/crueber/cuisle/internal/app/con
 import * as SyncSvc from "../bindings/github.com/crueber/cuisle/internal/app/syncservice";
 import * as SinkSvc from "../bindings/github.com/crueber/cuisle/internal/app/sinkservice";
 import * as HistorySvc from "../bindings/github.com/crueber/cuisle/internal/app/historyservice";
+import * as TicketSvc from "../bindings/github.com/crueber/cuisle/internal/app/ticketservice";
 import { wrap } from "./errors";
 import type * as T from "./types";
 
@@ -20,9 +21,13 @@ export interface Api {
     setAppSetting(key: string, value: string): Promise<T.SaveAck>;
     setUIState(patch: T.UIStatePatch): Promise<void>;
     openIssue(issueKey: string): Promise<void>;
+    /** Opens an http, https or mailto link in the OS (the webview never navigates). */
+    openUrl(url: string): Promise<void>;
     diagnostics(): Promise<T.Diagnostics>;
     reportPerf(marks: Record<string, number>): Promise<void>;
     logClientError(message: string, stack: string): Promise<void>;
+    mediaCache(): Promise<T.MediaCacheInfo>;
+    clearMediaCache(): Promise<T.MediaCacheInfo>;
   };
   standup: {
     list(): Promise<T.StandupTab[]>;
@@ -53,16 +58,38 @@ export interface Api {
   connection: {
     get(): Promise<T.Connection>;
     connect(input: T.ConnectInput): Promise<T.Connection>;
-    disconnect(): Promise<void>;
+    /** deleteContent: also delete synced content (offered only past storage.cleanup_offer_mb, ux-spec §14.11). */
+    disconnect(deleteContent: boolean): Promise<void>;
     searchSpaces(query: string): Promise<T.SpaceOption[]>;
     searchBoards(spaceKey: string, query: string): Promise<T.BoardOption[]>;
     searchUsers(standupId: number, query: string): Promise<T.UserOption[]>;
     validateFilter(standupId: number, expr: string): Promise<T.FilterCheck>;
+    ticketFields(): Promise<T.TicketFieldPrefs>;
+    pinTicketField(fieldId: string): Promise<T.TicketFieldPrefs>;
+    unpinTicketField(fieldId: string): Promise<T.TicketFieldPrefs>;
+    moveTicketField(fieldId: string, toPosition: number): Promise<T.SaveAck>;
+    setTicketFieldHidden(fieldId: string, hidden: boolean): Promise<T.TicketFieldPrefs>;
   };
   sync: {
     start(standupId: number, mode: T.SyncMode): Promise<number>;
     cancel(standupId: number): Promise<void>;
     status(): Promise<T.SyncStatus[]>;
+  };
+  /** Ticket modal (ADR 0015, ux-spec §14). `get` is local only; transitions, the writes, refresh, ensureMedia and
+   *  openAttachment are explicit network triggers. */
+  ticket: {
+    get(standupId: number, issueId: number): Promise<T.TicketDetail>;
+    transitions(issueId: number): Promise<T.TransitionList>;
+    transition(standupId: number, issueId: number, transitionId: string): Promise<T.TicketDetail>;
+    assign(standupId: number, issueId: number, accountId: string): Promise<T.TicketDetail>;
+    setFlag(standupId: number, issueId: number, flagged: boolean): Promise<T.TicketDetail>;
+    addComment(standupId: number, issueId: number, input: T.CommentInput): Promise<T.TicketDetail>;
+    refresh(standupId: number, issueId: number): Promise<T.TicketDetail>;
+    draft(issueId: number): Promise<T.CommentInput>;
+    saveDraft(issueId: number, input: T.CommentInput): Promise<T.SaveAck>;
+    ensureMedia(attachmentId: number): Promise<T.AttachmentView>;
+    openAttachment(attachmentId: number): Promise<void>;
+    searchMentions(standupId: number, query: string): Promise<T.UserOption[]>;
   };
   sink: {
     kinds(): Promise<T.SinkKind[]>;
@@ -90,9 +117,12 @@ export const wailsApi: Api = {
     setAppSetting: (k, v) => as(AppSvc.SetAppSetting(k, v)),
     setUIState: (p) => wrap(AppSvc.SetUIState(p)),
     openIssue: (k) => wrap(AppSvc.OpenIssue(k)),
+    openUrl: (u) => wrap(AppSvc.OpenURL(u)),
     diagnostics: () => as(AppSvc.Diagnostics()),
     reportPerf: (m) => wrap(AppSvc.ReportPerf(m)),
     logClientError: (m, s) => wrap(AppSvc.LogClientError(m, s)),
+    mediaCache: () => as(AppSvc.MediaCache()),
+    clearMediaCache: () => as(AppSvc.ClearMediaCache()),
   },
   standup: {
     list: () => as(arr(StandupSvc.List())),
@@ -123,16 +153,35 @@ export const wailsApi: Api = {
   connection: {
     get: () => as(ConnSvc.Connection()),
     connect: (i) => as(ConnSvc.Connect(i)),
-    disconnect: () => wrap(ConnSvc.Disconnect()),
+    disconnect: (del) => wrap(ConnSvc.Disconnect(del)),
     searchSpaces: (q) => as(arr(ConnSvc.SearchSpaces(q))),
     searchBoards: (k, q) => as(arr(ConnSvc.SearchBoards(k, q))),
     searchUsers: (id, q) => as(arr(ConnSvc.SearchUsers(id, q))),
     validateFilter: (id, e) => as(ConnSvc.ValidateFilter(id, e)),
+    ticketFields: () => as(ConnSvc.TicketFields()),
+    pinTicketField: (f) => as(ConnSvc.PinTicketField(f)),
+    unpinTicketField: (f) => as(ConnSvc.UnpinTicketField(f)),
+    moveTicketField: (f, to) => as(ConnSvc.MoveTicketField(f, to)),
+    setTicketFieldHidden: (f, h) => as(ConnSvc.SetTicketFieldHidden(f, h)),
   },
   sync: {
     start: (id, m) => wrap(SyncSvc.Start(id, m)),
     cancel: (id) => wrap(SyncSvc.Cancel(id)),
     status: () => as(arr(SyncSvc.Status())),
+  },
+  ticket: {
+    get: (st, id) => as(TicketSvc.Get(st, id)),
+    transitions: (id) => as(TicketSvc.Transitions(id)),
+    transition: (st, id, t) => as(TicketSvc.Transition(st, id, t)),
+    assign: (st, id, a) => as(TicketSvc.Assign(st, id, a)),
+    setFlag: (st, id, f) => as(TicketSvc.SetFlag(st, id, f)),
+    addComment: (st, id, i) => as(TicketSvc.AddComment(st, id, i)),
+    refresh: (st, id) => as(TicketSvc.Refresh(st, id)),
+    draft: (id) => as(TicketSvc.Draft(id)),
+    saveDraft: (id, i) => as(TicketSvc.SaveDraft(id, i)),
+    ensureMedia: (id) => as(TicketSvc.EnsureMedia(id)),
+    openAttachment: (id) => wrap(TicketSvc.OpenAttachment(id)),
+    searchMentions: (st, q) => as(arr(TicketSvc.SearchMentions(st, q))),
   },
   sink: {
     kinds: () => as(arr(SinkSvc.Kinds())),

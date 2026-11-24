@@ -201,7 +201,7 @@ sample.standups.forEach((s, si) => {
     });
   }
 
-  const backlog = s.backlog.slice(0, BACKLOG_ROWS).map((b) => ({ key: b.k, summary: b.t, type: b.ty, url: `https://example.atlassian.net/browse/${b.k}` }));
+  const backlog = s.backlog.slice(0, BACKLOG_ROWS).map((b, bi) => ({ issueId: id * 10000 + bi + 1, key: b.k, summary: b.t, type: b.ty, url: `https://example.atlassian.net/browse/${b.k}` }));
   const sprint = kind === "scrum" ? sprintOf(s.sprint) : null;
   const previewKey = pickPreview(tickets);
 
@@ -285,7 +285,7 @@ const app = {
   settings: { theme: "system", text_size: "standard", sync_on_open: "stale", sync_stale_hours: "6", history_retention_days: "0" },
   connection: {
     state: "ok", source: "jira", baseUrl: "https://example.atlassian.net", account: "mock.user", displayName: "Mock User", devActivity: "ok",
-    capabilities: { hasSprints: true, hasBacklogRank: true, hasFlagging: true, hasDevActivity: true, hasExtraFilter: true, hasAssigneeHistory: false, filterLanguage: "JQL", authFields: ["baseUrl", "account", "secret"] },
+    capabilities: { hasSprints: true, hasBacklogRank: true, hasFlagging: true, hasDevActivity: true, hasExtraFilter: true, hasAssigneeHistory: false, content: true, writes: { transition: true, assign: true, flag: true, comment: true }, filterLanguage: "JQL", authFields: ["baseUrl", "account", "secret"] },
   },
   ui: { lastStandupId: 1, lastView: "standup", lastPerson: { "1": "iris" }, window: null },
   sinkKinds: [

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "see "
+        },
+        {
+          "type": "text",
+          "text": "the docs",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://docs.example.com/a?b=1#c"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

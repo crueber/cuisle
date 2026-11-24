@@ -27,6 +27,8 @@ replaces that with a screen built for the meeting:
   turns red past the limit you set for that lane.
 - **The whole board on one screen.** A two-column overview of every person's work, with unassigned tickets first,
   plus what finished this sprint and the top of the backlog.
+- **Open any ticket in place.** A dense panel shows the description (images included), every comment, and all fields
+  including custom ones. Move, reassign, flag or comment without leaving standup.
 - **Several standups, one app.** Each team gets a tab. Press `1`–`9` to switch instantly.
 - **Nothing is hidden to make things fit.** Rows tighten first. If there's still too much, the screen scrolls with
   a "Scroll for more" bar.
@@ -156,7 +158,7 @@ task package    # a bundle for this OS in bin/
 - **Performance budgets are CI gates:**
   - cold start under 500 ms;
   - switching standups or people in under 50 ms;
-  - the JS bundle under 50 KB gzipped.
+  - the JS bundle under 70 KB gzipped.
 
 The design and the reasoning behind it are in [`docs/`](docs):
 - [product spec](docs/product-spec.md)

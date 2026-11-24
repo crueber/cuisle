@@ -206,7 +206,7 @@ func TestDisconnect_DeletesTheSecretKeepsEverythingElse(t *testing.T) {
 	mark := ta.networkCalls()
 	ta.Fake.ResetRequests()
 
-	noErr(t, ta.Svc.Connection.Disconnect(ctx), "Disconnect")
+	noErr(t, ta.Svc.Connection.Disconnect(ctx, false), "Disconnect")
 	if items := ta.KR.items(); len(items) != 0 {
 		t.Errorf("keychain items after Disconnect: %v", items)
 	}
@@ -231,12 +231,12 @@ func TestDisconnect_DeletesTheSecretKeepsEverythingElse(t *testing.T) {
 		t.Errorf("cached SearchSpaces = %+v", spaces)
 	}
 	ta.assertNoNetwork(mark, "Disconnect and cached lookups")
-	noErr(t, ta.Svc.Connection.Disconnect(ctx), "Disconnect (again)")
+	noErr(t, ta.Svc.Connection.Disconnect(ctx, false), "Disconnect (again)")
 }
 
 func TestDisconnect_WithoutAConnectionIsANoOp(t *testing.T) {
 	ta := newTestApp(t)
-	noErr(t, ta.Svc.Connection.Disconnect(ctx), "Disconnect")
+	noErr(t, ta.Svc.Connection.Disconnect(ctx, false), "Disconnect")
 }
 
 func TestSearchSpaces_OnlineFiltersByQueryAndFillsTheCache(t *testing.T) {

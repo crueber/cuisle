@@ -1,0 +1,2088 @@
+{
+  "issueId": 7,
+  "standupId": 1,
+  "asOf": 1795471200000,
+  "syncedAt": 1795471200000,
+  "updatedAt": 1795453200000,
+  "row": {
+    "id": 7,
+    "sourceId": "10007",
+    "key": "MOB-1421",
+    "summary": "Unit toggle between metric and US cups",
+    "url": "https://example.atlassian.net/browse/MOB-1421",
+    "type": "story",
+    "assignee": "u-iris",
+    "lane": "prog",
+    "statusName": "In Progress",
+    "daysInLane": 2,
+    "overLimit": false,
+    "blocked": false,
+    "doneAt": 0,
+    "pulse": {
+      "segs": [
+        {
+          "lane": "todo",
+          "from": 8,
+          "to": 18
+        },
+        {
+          "lane": "prog",
+          "from": 18,
+          "to": 21
+        }
+      ],
+      "marks": [
+        {
+          "day": 9,
+          "commits": 2,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 10,
+          "commits": 1,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 12,
+          "commits": 1,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 14,
+          "commits": 2,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 15,
+          "commits": 1,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 17,
+          "commits": 2,
+          "prs": 0,
+          "comments": 1
+        },
+        {
+          "day": 18,
+          "commits": 0,
+          "prs": 1,
+          "comments": 0
+        },
+        {
+          "day": 19,
+          "commits": 1,
+          "prs": 0,
+          "comments": 0
+        },
+        {
+          "day": 20,
+          "commits": 0,
+          "prs": 1,
+          "comments": 0
+        }
+      ],
+      "blocked": [],
+      "label": "In Progress 2 days, previously To Do 10 days; 10 commits, 2 PR updates, 3 comments in 21 days"
+    }
+  },
+  "url": "https://example.atlassian.net/browse/MOB-1421",
+  "parent": null,
+  "pulseDays": 21,
+  "axis": [
+    {
+      "date": "2026-11-03",
+      "label": "3",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-04",
+      "label": "4",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-05",
+      "label": "5",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-06",
+      "label": "6",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-07",
+      "label": "7",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-08",
+      "label": "8",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-09",
+      "label": "9",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-10",
+      "label": "10",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-11",
+      "label": "11",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-12",
+      "label": "12",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-13",
+      "label": "13",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-14",
+      "label": "14",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-15",
+      "label": "15",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-16",
+      "label": "16",
+      "weekend": false,
+      "monday": true
+    },
+    {
+      "date": "2026-11-17",
+      "label": "17",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-18",
+      "label": "18",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-19",
+      "label": "19",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-20",
+      "label": "20",
+      "weekend": false,
+      "monday": false
+    },
+    {
+      "date": "2026-11-21",
+      "label": "21",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-22",
+      "label": "22",
+      "weekend": true,
+      "monday": false
+    },
+    {
+      "date": "2026-11-23",
+      "label": "23",
+      "weekend": false,
+      "monday": true
+    }
+  ],
+  "limitDays": 5,
+  "blockedDays": 0,
+  "description": {
+    "c": [
+      {
+        "t": "h",
+        "a": {
+          "level": 1
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Unit toggle between metric and US cups"
+          }
+        ]
+      },
+      {
+        "t": "h",
+        "a": {
+          "level": 2
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Why"
+          }
+        ]
+      },
+      {
+        "t": "h",
+        "a": {
+          "level": 3
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Background"
+          }
+        ]
+      },
+      {
+        "t": "h",
+        "a": {
+          "level": 4
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Detail four"
+          }
+        ]
+      },
+      {
+        "t": "h",
+        "a": {
+          "level": 5
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Detail five"
+          }
+        ]
+      },
+      {
+        "t": "h",
+        "a": {
+          "level": 6
+        },
+        "c": [
+          {
+            "t": "text",
+            "x": "Detail six"
+          }
+        ]
+      },
+      {
+        "t": "p",
+        "c": [
+          {
+            "t": "text",
+            "x": "Plain text, "
+          },
+          {
+            "t": "text",
+            "x": "strong",
+            "m": [
+              {
+                "t": "strong"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "emphasis",
+            "m": [
+              {
+                "t": "em"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "struck",
+            "m": [
+              {
+                "t": "strike"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "underlined",
+            "m": [
+              {
+                "t": "underline"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "sub",
+            "m": [
+              {
+                "t": "sub"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": " and "
+          },
+          {
+            "t": "text",
+            "x": "sup",
+            "m": [
+              {
+                "t": "sup"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "coloured",
+            "m": [
+              {
+                "t": "color",
+                "v": "#bf2600"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": ", "
+          },
+          {
+            "t": "text",
+            "x": "inline code",
+            "m": [
+              {
+                "t": "code"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": " and a "
+          },
+          {
+            "t": "text",
+            "x": "link",
+            "m": [
+              {
+                "t": "link",
+                "v": "https://example.com/units"
+              }
+            ]
+          },
+          {
+            "t": "text",
+            "x": "."
+          },
+          {
+            "t": "br"
+          },
+          {
+            "t": "text",
+            "x": "A line after a hard break."
+          }
+        ]
+      },
+      {
+        "t": "code",
+        "x": "func Convert(cups float64) float64 {\n\treturn cups * 236.588\n}",
+        "a": {
+          "lang": "go"
+        }
+      },
+      {
+        "t": "quote",
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Cooks think in cups; the rest of the world thinks in millilitres."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "rule"
+      },
+      {
+        "t": "ul",
+        "c": [
+          {
+            "t": "li",
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Toggle in the recipe header"
+                  }
+                ]
+              },
+              {
+                "t": "ul",
+                "c": [
+                  {
+                    "t": "li",
+                    "c": [
+                      {
+                        "t": "p",
+                        "c": [
+                          {
+                            "t": "text",
+                            "x": "Remember the choice per user"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "li",
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Convert on the fly"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "ol",
+        "a": {
+          "order": 3
+        },
+        "c": [
+          {
+            "t": "li",
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Design"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "li",
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Build"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "task",
+        "c": [
+          {
+            "t": "taskItem",
+            "a": {
+              "done": true
+            },
+            "c": [
+              {
+                "t": "text",
+                "x": "Spec the rounding rules"
+              }
+            ]
+          },
+          {
+            "t": "taskItem",
+            "c": [
+              {
+                "t": "text",
+                "x": "Cover half cups"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "decision",
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Round to the nearest 5 ml"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "panel",
+        "a": {
+          "panel": "info"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Info panel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "panel",
+        "a": {
+          "panel": "note"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Note panel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "panel",
+        "a": {
+          "panel": "success"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Success panel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "panel",
+        "a": {
+          "panel": "warning"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Warning panel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "panel",
+        "a": {
+          "panel": "error"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Error panel"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "table",
+        "c": [
+          {
+            "t": "tr",
+            "a": {
+              "header": true
+            },
+            "c": [
+              {
+                "t": "th",
+                "a": {
+                  "colwidth": [
+                    120
+                  ]
+                },
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "Cups"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "th",
+                "a": {
+                  "colspan": 2
+                },
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "Equivalent"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "tr",
+            "c": [
+              {
+                "t": "td",
+                "a": {
+                  "rowspan": 2
+                },
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "1"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "td",
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "237 ml"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "td",
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "8 fl oz"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "tr",
+            "c": [
+              {
+                "t": "td",
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "118 ml"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "td",
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "4 fl oz"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "expand",
+        "a": {
+          "title": "Rounding table"
+        },
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Details inside an expand."
+              }
+            ]
+          },
+          {
+            "t": "expand",
+            "a": {
+              "title": "Edge cases"
+            },
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Nested expand."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "t": "p",
+        "c": [
+          {
+            "t": "text",
+            "x": "Status "
+          },
+          {
+            "t": "status",
+            "a": {
+              "lozenge": "review",
+              "label": "in review"
+            }
+          },
+          {
+            "t": "text",
+            "x": " mention "
+          },
+          {
+            "t": "mention",
+            "a": {
+              "label": "Silas Marchetti",
+              "accountId": "u-silas"
+            }
+          },
+          {
+            "t": "text",
+            "x": " date "
+          },
+          {
+            "t": "date",
+            "a": {
+              "date": "2026-12-31"
+            }
+          },
+          {
+            "t": "text",
+            "x": " emoji "
+          },
+          {
+            "t": "emoji",
+            "a": {
+              "emoji": "👍",
+              "shortName": ":thumbsup:"
+            }
+          },
+          {
+            "t": "text",
+            "x": " card "
+          },
+          {
+            "t": "card",
+            "a": {
+              "url": "https://acme.atlassian.net/browse/MOB-1428",
+              "issueId": 8,
+              "key": "MOB-1428",
+              "summary": "Cooking mode keeps the screen awake",
+              "typeKind": "story",
+              "statusName": "In Progress",
+              "statusLozenge": "prog"
+            }
+          },
+          {
+            "t": "text",
+            "x": " media "
+          },
+          {
+            "t": "file",
+            "a": {
+              "attachmentId": "4",
+              "name": "release-notes.pdf",
+              "mime": "application/pdf",
+              "bytes": 401,
+              "cached": "none"
+            }
+          }
+        ]
+      },
+      {
+        "t": "card",
+        "a": {
+          "url": "https://example.com/design/units",
+          "host": "example.com",
+          "path": "/design/units",
+          "block": true
+        }
+      },
+      {
+        "t": "media",
+        "a": {
+          "attachmentId": "1",
+          "name": "unit-toggle-v3.png",
+          "mime": "image/png",
+          "bytes": 182540,
+          "width": 1200,
+          "height": 720,
+          "layout": "center",
+          "caption": "The toggle in the recipe header",
+          "cached": "full",
+          "block": true
+        }
+      },
+      {
+        "t": "media",
+        "a": {
+          "attachmentId": "2",
+          "name": "share-preview.png",
+          "mime": "image/png",
+          "bytes": 83018,
+          "width": 900,
+          "height": 560,
+          "layout": "wide",
+          "cached": "full",
+          "block": true
+        }
+      },
+      {
+        "t": "media",
+        "a": {
+          "attachmentId": "3",
+          "name": "conversion-flow.png",
+          "mime": "image/png",
+          "bytes": 47477,
+          "width": 1200,
+          "height": 440,
+          "layout": "center",
+          "cached": "full",
+          "block": true
+        }
+      },
+      {
+        "t": "file",
+        "a": {
+          "attachmentId": "4",
+          "name": "release-notes.pdf",
+          "mime": "application/pdf",
+          "bytes": 401,
+          "cached": "none"
+        }
+      },
+      {
+        "t": "unknown",
+        "x": "Text of an app macro nobody renders."
+      }
+    ],
+    "u": 1
+  },
+  "attachments": [
+    {
+      "id": 3,
+      "name": "conversion-flow.png",
+      "ext": "PNG",
+      "mime": "image/png",
+      "bytes": 47477,
+      "authorInitials": "IC",
+      "authorName": "Iris Calloway",
+      "createdAt": 1795187700000,
+      "image": true,
+      "width": 1200,
+      "height": 440,
+      "cached": "full",
+      "url": "/media/3",
+      "thumbUrl": "/media/3/thumb"
+    },
+    {
+      "id": 2,
+      "name": "share-preview.png",
+      "ext": "PNG",
+      "mime": "image/png",
+      "bytes": 83018,
+      "authorInitials": "SM",
+      "authorName": "Silas Marchetti",
+      "createdAt": 1795101300000,
+      "image": true,
+      "width": 900,
+      "height": 560,
+      "cached": "full",
+      "url": "/media/2",
+      "thumbUrl": "/media/2/thumb"
+    },
+    {
+      "id": 1,
+      "name": "unit-toggle-v3.png",
+      "ext": "PNG",
+      "mime": "image/png",
+      "bytes": 182540,
+      "authorInitials": "IC",
+      "authorName": "Iris Calloway",
+      "createdAt": 1795014900000,
+      "image": true,
+      "width": 1200,
+      "height": 720,
+      "cached": "full",
+      "url": "/media/1",
+      "thumbUrl": "/media/1/thumb"
+    },
+    {
+      "id": 4,
+      "name": "release-notes.pdf",
+      "ext": "PDF",
+      "mime": "application/pdf",
+      "bytes": 401,
+      "authorInitials": "NA",
+      "authorName": "Noor Abadi",
+      "createdAt": 1795274100000,
+      "image": false,
+      "width": 0,
+      "height": 0,
+      "cached": "none",
+      "url": "/media/4",
+      "thumbUrl": "/media/4/thumb"
+    }
+  ],
+  "subtasks": [
+    {
+      "issueId": 11,
+      "key": "MOB-1436",
+      "summary": "Timer survives backgrounding on Android",
+      "typeKind": "task",
+      "statusName": "In Progress",
+      "statusLozenge": "prog",
+      "assigneeInitials": "IC",
+      "url": "https://example.atlassian.net/browse/MOB-1436",
+      "done": false
+    },
+    {
+      "issueId": 12,
+      "key": "MOB-1440",
+      "summary": "Drag meals between days in the planner",
+      "typeKind": "story",
+      "statusName": "To Do",
+      "statusLozenge": "todo",
+      "assigneeInitials": "IC",
+      "url": "https://example.atlassian.net/browse/MOB-1440",
+      "done": false
+    },
+    {
+      "issueId": 14,
+      "key": "MOB-1456",
+      "summary": "Onboarding: pick the cuisines you like",
+      "typeKind": "task",
+      "statusName": "To Do",
+      "statusLozenge": "todo",
+      "assigneeInitials": "IC",
+      "url": "https://example.atlassian.net/browse/MOB-1456",
+      "done": false
+    }
+  ],
+  "subtasksDone": 0,
+  "linkGroups": [
+    {
+      "label": "BLOCKS",
+      "rows": [
+        {
+          "issueId": 12,
+          "key": "MOB-1440",
+          "summary": "Drag meals between days in the planner",
+          "typeKind": "story",
+          "statusName": "To Do",
+          "statusLozenge": "todo",
+          "assigneeInitials": "IC",
+          "url": "https://example.atlassian.net/browse/MOB-1440",
+          "done": false
+        }
+      ]
+    },
+    {
+      "label": "IS BLOCKED BY",
+      "rows": [
+        {
+          "issueId": 8,
+          "key": "MOB-1428",
+          "summary": "Cooking mode keeps the screen awake",
+          "typeKind": "story",
+          "statusName": "In Progress",
+          "statusLozenge": "prog",
+          "assigneeInitials": "IC",
+          "url": "https://example.atlassian.net/browse/MOB-1428",
+          "done": false
+        }
+      ]
+    },
+    {
+      "label": "RELATES TO",
+      "rows": [
+        {
+          "issueId": 4,
+          "key": "MOB-1411",
+          "summary": "Scale ingredient amounts when servings change",
+          "typeKind": "story",
+          "statusName": "Code Review",
+          "statusLozenge": "review",
+          "assigneeInitials": "IC",
+          "url": "https://example.atlassian.net/browse/MOB-1411",
+          "done": false
+        }
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": "40024",
+      "author": {
+        "accountId": "u-iris",
+        "name": "Iris Calloway",
+        "initials": "IC",
+        "self": false
+      },
+      "createdAt": 1794330000000,
+      "updatedAt": 1794330000000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Kicking this off. "
+              },
+              {
+                "t": "mention",
+                "a": {
+                  "label": "Iris Calloway",
+                  "accountId": "u-iris"
+                }
+              },
+              {
+                "t": "text",
+                "x": " can you own the toggle?"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "40025",
+      "author": {
+        "accountId": "u-iris",
+        "name": "Iris Calloway",
+        "initials": "IC",
+        "self": false
+      },
+      "createdAt": 1794502800000,
+      "updatedAt": 1794502800000,
+      "edited": false,
+      "visibility": "Developers only",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Internal: the exchange table needs legal review before we ship."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "40026",
+      "author": {
+        "accountId": "u-iris",
+        "name": "Iris Calloway",
+        "initials": "IC",
+        "self": false
+      },
+      "createdAt": 1794589200000,
+      "updatedAt": 1794690000000,
+      "edited": true,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Sketch attached, still rough."
+              }
+            ]
+          },
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Edited to add the link: "
+              },
+              {
+                "t": "text",
+                "x": "figma",
+                "m": [
+                  {
+                    "t": "link",
+                    "v": "https://example.com/figma/units"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "40027",
+      "author": {
+        "accountId": "u-iris",
+        "name": "Iris Calloway",
+        "initials": "IC",
+        "self": false
+      },
+      "createdAt": 1795194000000,
+      "updatedAt": 1795194000000,
+      "edited": false,
+      "visibility": "",
+      "body": {
+        "c": [
+          {
+            "t": "p",
+            "c": [
+              {
+                "t": "text",
+                "x": "Ready for review."
+              }
+            ]
+          },
+          {
+            "t": "code",
+            "x": "Units.current = .metric",
+            "a": {
+              "lang": "swift"
+            }
+          },
+          {
+            "t": "ul",
+            "c": [
+              {
+                "t": "li",
+                "c": [
+                  {
+                    "t": "p",
+                    "c": [
+                      {
+                        "t": "text",
+                        "x": "Covers half cups "
+                      },
+                      {
+                        "t": "emoji",
+                        "a": {
+                          "emoji": "🎉",
+                          "shortName": ":tada:"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "newSince": 1795154400000,
+  "draft": {
+    "text": "",
+    "mentions": []
+  },
+  "rail": [
+    {
+      "id": "state",
+      "label": "State",
+      "rows": [
+        {
+          "fieldId": "status",
+          "label": "Status",
+          "kind": "status",
+          "edit": "status",
+          "text": "In Progress",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "assignee",
+          "label": "Assignee",
+          "kind": "user",
+          "edit": "assignee",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "u-iris",
+              "name": "Iris Calloway",
+              "initials": "IC",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "flagged",
+          "label": "Flag",
+          "kind": "flag",
+          "edit": "flag",
+          "text": "Not flagged",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": []
+    },
+    {
+      "id": "details",
+      "label": "Details",
+      "rows": [
+        {
+          "fieldId": "reporter",
+          "label": "Reporter",
+          "kind": "user",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "u-silas",
+              "name": "Silas Marchetti",
+              "initials": "SM",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "priority",
+          "label": "Priority",
+          "kind": "option",
+          "edit": "",
+          "text": "High",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "sprint",
+          "label": "Sprint",
+          "kind": "sprint",
+          "edit": "",
+          "text": "Sprint 42",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "ends 23 Nov",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10016",
+          "label": "Points",
+          "kind": "number",
+          "edit": "",
+          "text": "",
+          "number": 5,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "duedate",
+          "label": "Due",
+          "kind": "date",
+          "edit": "",
+          "text": "29 Nov 2026",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "labels",
+          "label": "Labels",
+          "kind": "labels",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "ux",
+            "units"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "components",
+          "label": "Components",
+          "kind": "components",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "Recipe card",
+            "Settings"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "fixVersions",
+          "label": "Fix version",
+          "kind": "versions",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "3.9"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "timetracking",
+          "label": "Time",
+          "kind": "time",
+          "edit": "",
+          "text": "4h of 8h",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": 0.5,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "environment",
+          "label": "Environment",
+          "kind": "paragraph",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": {
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "iOS 18.2, Pixel 9, staging build 4417"
+                  }
+                ]
+              }
+            ]
+          },
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": [
+        "Parent"
+      ]
+    },
+    {
+      "id": "custom",
+      "label": "Custom fields",
+      "rows": [
+        {
+          "fieldId": "customfield_10101",
+          "label": "Acceptance criteria",
+          "kind": "paragraph",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": {
+            "c": [
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Toggle persists across launches."
+                  }
+                ]
+              },
+              {
+                "t": "p",
+                "c": [
+                  {
+                    "t": "text",
+                    "x": "Half cups convert exactly."
+                  }
+                ]
+              }
+            ]
+          },
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10113",
+          "label": "Cost account",
+          "kind": "unknown",
+          "edit": "",
+          "text": "ACME-OPS",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10102",
+          "label": "Design link",
+          "kind": "url",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "https://example.com/design/units",
+          "urlLabel": "example.com › units"
+        },
+        {
+          "fieldId": "customfield_10111",
+          "label": "Design review at",
+          "kind": "datetime",
+          "edit": "",
+          "text": "21 Nov 2026 09:30",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10114",
+          "label": "Go-live",
+          "kind": "date",
+          "edit": "",
+          "text": "7 Dec 2026",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10110",
+          "label": "Introduced in",
+          "kind": "version",
+          "edit": "",
+          "text": "3.8",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10104",
+          "label": "Locales",
+          "kind": "options",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "en-US",
+            "de-DE"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10109",
+          "label": "Notify groups",
+          "kind": "groups",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "mobile-devs",
+            "design"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10108",
+          "label": "Owning group",
+          "kind": "group",
+          "edit": "",
+          "text": "mobile-devs",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10103",
+          "label": "Platform",
+          "kind": "option",
+          "edit": "",
+          "text": "iOS",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10105",
+          "label": "Region",
+          "kind": "cascade",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [
+            "EU",
+            "Berlin"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10100",
+          "label": "Release train",
+          "kind": "text",
+          "edit": "",
+          "text": "R-24.3",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10107",
+          "label": "Reviewers",
+          "kind": "users",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "u-otto",
+              "name": "Otto Brandt",
+              "initials": "OB",
+              "self": false
+            },
+            {
+              "accountId": "u-amara",
+              "name": "Amara Osei",
+              "initials": "AO",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10112",
+          "label": "Team",
+          "kind": "team",
+          "edit": "",
+          "text": "Mobile Core",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "customfield_10106",
+          "label": "Tester",
+          "kind": "user",
+          "edit": "",
+          "text": "",
+          "number": null,
+          "items": [],
+          "users": [
+            {
+              "accountId": "u-noor",
+              "name": "Noor Abadi",
+              "initials": "NA",
+              "self": false
+            }
+          ],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": []
+    },
+    {
+      "id": "development",
+      "label": "Development",
+      "rows": [
+        {
+          "fieldId": "dev.branch",
+          "label": "Branch",
+          "kind": "branch",
+          "edit": "",
+          "text": "feature/MOB-1421-unit-toggle-between-metric-3",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "dev.commits",
+          "label": "Commits",
+          "kind": "commits",
+          "edit": "",
+          "text": "20 commits",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "last 1d",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "dev.pr.17",
+          "label": "#17",
+          "kind": "pr",
+          "edit": "",
+          "text": "Unit toggle between metric and US cups (part 3)",
+          "number": null,
+          "items": [
+            "OPEN"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "mob-web",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "dev.pr.16",
+          "label": "#16",
+          "kind": "pr",
+          "edit": "",
+          "text": "Unit toggle between metric and US cups (part 2)",
+          "number": null,
+          "items": [
+            "OPEN"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "mob-web",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "dev.pr.15",
+          "label": "#15",
+          "kind": "pr",
+          "edit": "",
+          "text": "Unit toggle between metric and US cups",
+          "number": null,
+          "items": [
+            "MERGED"
+          ],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": false,
+          "sub": "mob-web",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": []
+    },
+    {
+      "id": "dates",
+      "label": "Dates",
+      "rows": [
+        {
+          "fieldId": "created",
+          "label": "Created",
+          "kind": "datetime",
+          "edit": "",
+          "text": "2026-11-11",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "updated",
+          "label": "Updated",
+          "kind": "datetime",
+          "edit": "",
+          "text": "2026-11-23",
+          "number": null,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        },
+        {
+          "fieldId": "watches",
+          "label": "Watchers",
+          "kind": "watchers",
+          "edit": "",
+          "text": "",
+          "number": 3,
+          "items": [],
+          "users": [],
+          "rich": null,
+          "raw": "",
+          "mono": true,
+          "sub": "",
+          "progress": null,
+          "url": "",
+          "urlLabel": ""
+        }
+      ],
+      "notSet": [
+        "Resolved"
+      ]
+    }
+  ],
+  "dev": {
+    "branch": "feature/MOB-1421-unit-toggle-between-metric-3",
+    "commits": 20,
+    "lastCommitAt": 1795366800000,
+    "prs": [
+      {
+        "id": "17",
+        "title": "Unit toggle between metric and US cups (part 3)",
+        "repo": "mob-web",
+        "status": "OPEN"
+      },
+      {
+        "id": "16",
+        "title": "Unit toggle between metric and US cups (part 2)",
+        "repo": "mob-web",
+        "status": "OPEN"
+      },
+      {
+        "id": "15",
+        "title": "Unit toggle between metric and US cups",
+        "repo": "mob-web",
+        "status": "MERGED"
+      }
+    ]
+  },
+  "can": {
+    "transition": true,
+    "assign": true,
+    "flag": true,
+    "comment": true,
+    "reason": ""
+  },
+  "warnings": []
+}

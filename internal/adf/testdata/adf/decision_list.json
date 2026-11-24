@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "decisionList",
+      "attrs": {
+        "localId": "0"
+      },
+      "content": [
+        {
+          "type": "decisionItem",
+          "attrs": {
+            "state": "DECIDED",
+            "localId": "1"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Ship it server-side"
+            }
+          ]
+        },
+        {
+          "type": "decisionItem",
+          "attrs": {
+            "state": "DECIDED",
+            "localId": "2"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Skip the migration"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

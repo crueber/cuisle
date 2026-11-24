@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "marks": [
+        {
+          "type": "alignment",
+          "attrs": {
+            "align": "center"
+          }
+        }
+      ],
+      "content": [
+        {
+          "type": "text",
+          "text": "keep",
+          "marks": [
+            {
+              "type": "strong"
+            },
+            {
+              "type": "backgroundColor",
+              "attrs": {
+                "color": "#ffff00"
+              }
+            },
+            {
+              "type": "annotation",
+              "attrs": {
+                "id": "a1",
+                "annotationType": "inlineComment"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " none",
+          "marks": [
+            {
+              "type": "border",
+              "attrs": {
+                "size": 1,
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " plain"
+        }
+      ]
+    }
+  ]
+}

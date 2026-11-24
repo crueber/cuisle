@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "bodiedExtension",
+      "attrs": {
+        "extensionType": "x",
+        "extensionKey": "y"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Embedded Loom "
+            }
+          ]
+        },
+        {
+          "type": "mysteryBlock",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "video"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "before "
+        },
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "x",
+            "extensionKey": "y"
+          }
+        },
+        {
+          "type": "text",
+          "text": " after"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "attrs": {
+        "panelType": "info"
+      },
+      "content": [
+        {
+          "type": "layoutSection",
+          "content": [
+            {
+              "type": "layoutColumn",
+              "attrs": {
+                "width": 50
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "col text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

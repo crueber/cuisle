@@ -84,6 +84,27 @@ export interface HistoryRange {
     "to": string;
 }
 
+/**
+ * MediaCacheInfo is Display › Storage's image cache line (AppService.MediaCache / ClearMediaCache).
+ */
+export interface MediaCacheInfo {
+    /**
+     * cached originals (count against the cap)
+     */
+    "bytes": number;
+
+    /**
+     * thumbnails (never evicted)
+     */
+    "thumbBytes": number;
+    "files": number;
+
+    /**
+     * app setting media.cache_max_mb
+     */
+    "capMb": number;
+}
+
 export interface OutboxItem {
     "id": number;
     "sinkId": number;
@@ -185,6 +206,21 @@ export interface SinkKind {
 }
 
 export type StandupPatch = settings$0.Patch;
+
+/**
+ * TicketWriteFailed: a light write was rejected or could not be sent (also returned as the call's error).
+ */
+export interface TicketWriteFailed {
+    "issueId": number;
+    "key": string;
+
+    /**
+     * transition|assign|flag|comment
+     */
+    "action": string;
+    "errorCode": string;
+    "errorMessage": string;
+}
 
 export type UIState = settings$0.UIState;
 

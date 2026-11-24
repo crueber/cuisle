@@ -9,6 +9,9 @@ import viewCase from "./fixtures/view_web.json";
 import viewDia from "./fixtures/view_data.json";
 import viewExp from "./fixtures/view_gro.json";
 import viewOps from "./fixtures/view_plat.json";
+import ticket1421Json from "./fixtures/ticket_mob1421.golden.json";
+import ticket1421HandbuiltJson from "./fixtures/ticket_mob1421.json";
+import ticket1429Json from "./fixtures/ticket_mob1429.json";
 
 export interface MockBoard extends T.BoardOption {
   spaceKey: string;
@@ -38,3 +41,16 @@ export const FIXTURE_CONFIGS = configJson as unknown as T.StandupConfig[];
 export const FIXTURE_VIEWS = [viewSvc, viewCase, viewDia, viewExp, viewOps] as unknown as T.StandupView[];
 export const FIXTURE_CATALOG = catalogJson as unknown as MockCatalog;
 export const FIXTURE_APP = appJson as unknown as MockApp;
+
+// F12 ticket modal. MOB-1421 (every ADF node, every field kind) is the Go golden internal/app/testdata/
+// ticket_mob1421.golden.json (the real stack's TicketDetail), with ids normalised to the mock's views by
+// tests/fixtures/ticketFixture.mjs; MOB-1429 (the edit states of ticket-edit-states-1920x1080.png) is hand-built. The
+// hand-built ticket_mob1421.json (mockup data) is kept only for the component unit tests. Assigned without a cast so
+// tsc checks them against TicketDetail.
+const ticketMob1421: T.TicketDetail = ticket1421Json;
+const ticketMob1421Handbuilt: T.TicketDetail = ticket1421HandbuiltJson;
+const ticketMob1429: T.TicketDetail = ticket1429Json;
+/** Ticket details with a fixture, keyed by issue id by the mock. */
+export const FIXTURE_TICKETS: T.TicketDetail[] = [ticketMob1421, ticketMob1429];
+/** The mockup-data MOB-1421 (MockOptions.handBuiltTickets): the T7 component tests assert its attachments, parent and bounds. */
+export const FIXTURE_TICKETS_HANDBUILT: T.TicketDetail[] = [ticketMob1421Handbuilt, ticketMob1429];

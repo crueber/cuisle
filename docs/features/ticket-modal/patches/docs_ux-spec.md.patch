@@ -1,5 +1,5 @@
 diff --git a/docs/ux-spec.md b/docs/ux-spec.md
-index 2a1ad88..4f0e952 100644
+index 2a1ad88..87e343a 100644
 --- a/docs/ux-spec.md
 +++ b/docs/ux-spec.md
 @@ -18,6 +18,7 @@ content column (window minus rail minus horizontal padding). Tokens are named as
@@ -37,7 +37,7 @@ index 2a1ad88..4f0e952 100644
  
  ### 9.5 Behaviour
  - **Autosave:** every control commits on change (Segmented, Switch, Stepper, Checkbox, Combobox select, list move).
-@@ -377,3 +378,220 @@ window at Large behaves like a 1536 window at Standard.
+@@ -377,3 +378,244 @@ window at Large behaves like a 1536 window at Standard.
  | No Connection section | Configure → Connection (app-wide), plus the first-run Connect screen |
  | No Export section | Configure → Export (per standup), §9.4 |
  | Footer hint "press D or K to open them" (old round) | Removed; lists are always drawn |
@@ -86,8 +86,8 @@ index 2a1ad88..4f0e952 100644
 +1. **Row 1, 52px (44 short).**
 +   - Left: type icon 22, key mono 22 bold (click copies the key), then `in ⚡ MOB-1200 Recipe units v2` (mono 13 muted;
 +     parent name dropped below 1280).
-+   - Right: `as of 9:41 · synced` (mono 13 muted), a stepper `‹ 7 / 20 ›` (38px outlined buttons), Open in Jira (icon
-+     only below 1280), and ✕ (44px).
++   - Right: `as of 9:41 · synced` (mono 13 muted), a stepper `‹ 7 / 20 ›` (38px outlined buttons), **↻ Refresh**
++     (§14.12), Open in Jira, and ✕ (44px). Refresh and Open in Jira are icon-only below 1280.
 +2. **Row 2:** summary 28/34 bold (22/28 short). It wraps to two lines and is never ellipsised.
 +3. **Row 3, pulse strip, 40px (28 short).**
 +   - Lane swatch and name (13 bold caps), then the 21-day track (600 / 440 / 440 / 300) with weekend shading.
@@ -237,14 +237,15 @@ index 2a1ad88..4f0e952 100644
 +| `C` | Focus the comment composer |
 +| `S` / `A` | Open the Status / Assignee combobox |
 +| `F` | Toggle flag |
++| `R` | Refresh this ticket from Jira (§14.12). While the modal is open, `R` never starts a board resync. |
 +| `O` | Open in Jira |
 +| `E` | Expand/collapse all expand blocks |
 +| `Backspace` | Back to the previous ticket in the inline-card stack |
 +| `Ctrl/Cmd+Enter` | Send comment |
 +| `Esc` | Unwind one layer (§14.1) |
 +
-+The footer (30px, `vh ≥ 800` only) lists `J K step · C comment · S status · A assignee · F flag · O open in Jira · Esc
-+close`. In short mode these hints live in the `?` popover.
++The footer (30px, `vh ≥ 800` only) lists `J K step · C comment · S status · A assignee · F flag · R refresh · O open in
++Jira · Esc close`. In short mode these hints live in the `?` popover.
 +
 +### 14.11 Storage and Disconnect
 +- **Display → Storage** shows local content size: the database plus the media cache (`1.2 GB · images 640 MB`). It has
@@ -258,3 +259,26 @@ index 2a1ad88..4f0e952 100644
 +  - Checking it deletes `issue_content` rows, comment bodies (bodies only; the comment rows stay), field values,
 +    transition caches, drafts, and the media cache for that connection. Then it runs `VACUUM`.
 +- There is no automatic deletion anywhere, and no prompt outside Disconnect.
++
++### 14.12 Refresh this ticket
++- **Button:** ↻ **Refresh**, between the stepper and Open in Jira (38px outlined; icon-only below 1280; `R`). It
++  re-fetches **only this issue**: fields, description, comments, attachments (new thumbnails), links, subtasks, and its
++  changelog. Then it applies it with the one-issue apply (jira-sync §4.8), so status, assignee and flag changes are
++  historised exactly as a sync would record them. Any cached transitions for the issue are dropped.
++- **While refreshing:** the icon spins and the meta text reads `refreshing…` after 250ms. The content does not reflow
++  until the result lands; then it swaps in one frame and the meta reads `refreshed 9:58 · just this ticket`.
++- **Live update behind the modal:** the row behind the modal, and any other standup containing the issue, update live
++  (`ticket:updated`, `data:changed`).
++- **Cooldown:** 10 s per issue. The button is disabled with a mono countdown (`↻ 8s`) to protect the API (jira-sync
++  §3.1). Stepping to another ticket and back does not reset it.
++- **Offline or failure:** the meta reads `Couldn't refresh · offline` (or Jira's reason) in alert text. The last synced
++  data stays.
++- **Not deleted, only tombstoned:** a refresh can show that the issue was deleted or moved out of the board. The modal
++  then shows a 36px banner "No longer on this board" and keeps the stored content (history, ADR 0011).
++- **Rate limiting:** when Jira is throttling (jira-sync §3.1), Refresh waits its turn in the interactive lane. The meta
++  reads `waiting for Jira (rate limit) · 6s`.
++
++### 14.13 Rate-limit visibility (whole app)
++When the limiter is paused by a 429, or slowed by a near-limit signal (jira-sync §3.1), the header sync status shows
++`Jira is rate-limiting · resuming in 12s`. This is a quiet mono label with the ↻ button still available, never a banner.
++Diagnostics show requests in the last hour, the current rate, and throttle events.

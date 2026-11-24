@@ -1,0 +1,61 @@
+/* StatusCombo (ux-spec §14.6 "Status combobox, open state"): `→ In Review` rows with a lane swatch; transitions that need a
+   Jira screen sit under a 2px rule-soft divider, fully muted, marked `screen · ↗ Jira`. Tokens only. */
+.sc-row {
+  display: block;
+  width: 100%;
+}
+.sc-row[data-divider="true"] {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 2px solid var(--color-rule-soft);
+}
+.sc-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sc-name {
+  flex: 1 1 auto;
+}
+.sc-sw {
+  flex: none;
+  width: calc(var(--scale) * 0.75rem);
+  height: calc(var(--scale) * 0.75rem);
+  background: var(--color-lane-backlog);
+}
+.sc-sw[data-lane="todo"],
+.sc-now[data-lane="todo"] {
+  background: var(--color-lane-todo);
+}
+.sc-sw[data-lane="prog"],
+.sc-now[data-lane="prog"] {
+  background: var(--color-lane-prog);
+}
+.sc-sw[data-lane="review"],
+.sc-now[data-lane="review"] {
+  background: var(--color-lane-review);
+}
+.sc-sw[data-lane="qa"],
+.sc-now[data-lane="qa"] {
+  background: var(--color-lane-qa);
+}
+.sc-sw[data-lane="done"],
+.sc-now[data-lane="done"] {
+  background: var(--color-lane-done);
+}
+.sc-row[data-muted="true"] {
+  color: var(--color-muted);
+  opacity: 0.8;
+}
+.sc-screen {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  color: var(--color-muted);
+}
+.sc-offline {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  color: var(--color-alert-text);
+}

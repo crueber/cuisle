@@ -1,0 +1,65 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "status",
+          "a": {
+            "label": "NEUTRAL",
+            "lozenge": "todo"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "BLUE",
+            "lozenge": "prog"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "PURPLE",
+            "lozenge": "review"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "YELLOW",
+            "lozenge": "qa"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "GREEN",
+            "lozenge": "done"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "RED",
+            "lozenge": "alert"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "Unknown colour",
+            "lozenge": "todo"
+          }
+        },
+        {
+          "t": "status",
+          "a": {
+            "label": "no colour",
+            "lozenge": "todo"
+          }
+        }
+      ]
+    }
+  ]
+}

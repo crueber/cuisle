@@ -1,0 +1,1800 @@
+{
+ "_doc": "Content overlay for the fake Jira (ADR 0015). Keyed by issue key; merged over the generated content of the fixture issues. fieldDefs are appended to the GET /rest/api/3/field answer (Jira wire shape). issues.<key>.fields are Jira wire values served verbatim in the *all projection and GET /issue/{id}; dateFields/dateTimeFields map a field id to a day offset from today (date 'YYYY-MM-DD', datetime 09:30 local). attachments[].file names a file in testdata/media (size and bytes come from disk) and mediaFileId is the uuid served at /media/file/<uuid>/binary after the 303 from /attachment/content/<id>; day is the created day. comments[i] adds body, visibility and an optional editedDay (updated = that day 11:00) to the i-th comment (oldest first) the fixture already gives the issue; comment count and dates do not change. links[].direction is relative to this issue (inward: the other issue is inwardIssue). subtasks are keys of existing issues.",
+ "fieldDefs": [
+  {
+   "id": "summary",
+   "key": "summary",
+   "name": "Summary",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Summary"
+   ],
+   "schema": {
+    "type": "string",
+    "system": "summary"
+   }
+  },
+  {
+   "id": "description",
+   "key": "description",
+   "name": "Description",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Description"
+   ],
+   "schema": {
+    "type": "string",
+    "system": "description"
+   }
+  },
+  {
+   "id": "environment",
+   "key": "environment",
+   "name": "Environment",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Environment"
+   ],
+   "schema": {
+    "type": "string",
+    "system": "environment"
+   }
+  },
+  {
+   "id": "priority",
+   "key": "priority",
+   "name": "Priority",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Priority"
+   ],
+   "schema": {
+    "type": "priority",
+    "system": "priority"
+   }
+  },
+  {
+   "id": "reporter",
+   "key": "reporter",
+   "name": "Reporter",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Reporter"
+   ],
+   "schema": {
+    "type": "user",
+    "system": "reporter"
+   }
+  },
+  {
+   "id": "duedate",
+   "key": "duedate",
+   "name": "Due date",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Due date"
+   ],
+   "schema": {
+    "type": "date",
+    "system": "duedate"
+   }
+  },
+  {
+   "id": "labels",
+   "key": "labels",
+   "name": "Labels",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Labels"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "string",
+    "system": "labels"
+   }
+  },
+  {
+   "id": "components",
+   "key": "components",
+   "name": "Components",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Components"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "component",
+    "system": "components"
+   }
+  },
+  {
+   "id": "fixVersions",
+   "key": "fixVersions",
+   "name": "Fix versions",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Fix versions"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "version",
+    "system": "fixVersions"
+   }
+  },
+  {
+   "id": "project",
+   "key": "project",
+   "name": "Project",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Project"
+   ],
+   "schema": {
+    "type": "project",
+    "system": "project"
+   }
+  },
+  {
+   "id": "timetracking",
+   "key": "timetracking",
+   "name": "Time tracking",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Time tracking"
+   ],
+   "schema": {
+    "type": "timetracking",
+    "system": "timetracking"
+   }
+  },
+  {
+   "id": "watches",
+   "key": "watches",
+   "name": "Watchers",
+   "custom": false,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Watchers"
+   ],
+   "schema": {
+    "type": "watches",
+    "system": "watches"
+   }
+  },
+  {
+   "id": "customfield_10016",
+   "key": "customfield_10016",
+   "name": "Story point estimate",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Story point estimate"
+   ],
+   "schema": {
+    "type": "number",
+    "customId": 10016,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float"
+   }
+  },
+  {
+   "id": "customfield_10100",
+   "key": "customfield_10100",
+   "name": "Release train",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Release train"
+   ],
+   "schema": {
+    "type": "string",
+    "customId": 10100,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield"
+   }
+  },
+  {
+   "id": "customfield_10101",
+   "key": "customfield_10101",
+   "name": "Acceptance criteria",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Acceptance criteria"
+   ],
+   "schema": {
+    "type": "string",
+    "customId": 10101,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea"
+   }
+  },
+  {
+   "id": "customfield_10102",
+   "key": "customfield_10102",
+   "name": "Design link",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Design link"
+   ],
+   "schema": {
+    "type": "string",
+    "customId": 10102,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:url"
+   }
+  },
+  {
+   "id": "customfield_10103",
+   "key": "customfield_10103",
+   "name": "Platform",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Platform"
+   ],
+   "schema": {
+    "type": "option",
+    "customId": 10103,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select"
+   }
+  },
+  {
+   "id": "customfield_10104",
+   "key": "customfield_10104",
+   "name": "Locales",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Locales"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "option",
+    "customId": 10104,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiselect"
+   }
+  },
+  {
+   "id": "customfield_10105",
+   "key": "customfield_10105",
+   "name": "Region",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Region"
+   ],
+   "schema": {
+    "type": "option-with-child",
+    "customId": 10105,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect"
+   }
+  },
+  {
+   "id": "customfield_10106",
+   "key": "customfield_10106",
+   "name": "Tester",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Tester"
+   ],
+   "schema": {
+    "type": "user",
+    "customId": 10106,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:userpicker"
+   }
+  },
+  {
+   "id": "customfield_10107",
+   "key": "customfield_10107",
+   "name": "Reviewers",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Reviewers"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "user",
+    "customId": 10107,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker"
+   }
+  },
+  {
+   "id": "customfield_10108",
+   "key": "customfield_10108",
+   "name": "Owning group",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Owning group"
+   ],
+   "schema": {
+    "type": "group",
+    "customId": 10108,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:grouppicker"
+   }
+  },
+  {
+   "id": "customfield_10109",
+   "key": "customfield_10109",
+   "name": "Notify groups",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Notify groups"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "group",
+    "customId": 10109,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multigrouppicker"
+   }
+  },
+  {
+   "id": "customfield_10110",
+   "key": "customfield_10110",
+   "name": "Introduced in",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Introduced in"
+   ],
+   "schema": {
+    "type": "version",
+    "customId": 10110,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:version"
+   }
+  },
+  {
+   "id": "customfield_10111",
+   "key": "customfield_10111",
+   "name": "Design review at",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Design review at"
+   ],
+   "schema": {
+    "type": "datetime",
+    "customId": 10111,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datetime"
+   }
+  },
+  {
+   "id": "customfield_10112",
+   "key": "customfield_10112",
+   "name": "Team",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Team"
+   ],
+   "schema": {
+    "type": "team",
+    "customId": 10112,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team"
+   }
+  },
+  {
+   "id": "customfield_10113",
+   "key": "customfield_10113",
+   "name": "Cost account",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Cost account"
+   ],
+   "schema": {
+    "type": "any",
+    "customId": 10113,
+    "custom": "com.tempoplugin.tempo-accounts:accounts.customfield"
+   }
+  },
+  {
+   "id": "customfield_10114",
+   "key": "customfield_10114",
+   "name": "Go-live",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Go-live"
+   ],
+   "schema": {
+    "type": "date",
+    "customId": 10114,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datepicker"
+   }
+  },
+  {
+   "id": "customfield_10120",
+   "key": "customfield_10120",
+   "name": "Customer quote",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Customer quote"
+   ],
+   "schema": {
+    "type": "string",
+    "customId": 10120,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield"
+   }
+  },
+  {
+   "id": "customfield_10121",
+   "key": "customfield_10121",
+   "name": "Rollout notes",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Rollout notes"
+   ],
+   "schema": {
+    "type": "string",
+    "customId": 10121,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea"
+   }
+  },
+  {
+   "id": "customfield_10122",
+   "key": "customfield_10122",
+   "name": "Markets",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Markets"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "option",
+    "customId": 10122,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes"
+   }
+  },
+  {
+   "id": "customfield_10123",
+   "key": "customfield_10123",
+   "name": "Risk",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Risk"
+   ],
+   "schema": {
+    "type": "option",
+    "customId": 10123,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons"
+   }
+  },
+  {
+   "id": "customfield_10124",
+   "key": "customfield_10124",
+   "name": "Escalation contacts",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Escalation contacts"
+   ],
+   "schema": {
+    "type": "array",
+    "items": "user",
+    "customId": 10124,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker"
+   }
+  },
+  {
+   "id": "customfield_10125",
+   "key": "customfield_10125",
+   "name": "Budget",
+   "custom": true,
+   "orderable": true,
+   "navigable": true,
+   "searchable": true,
+   "clauseNames": [
+    "Budget"
+   ],
+   "schema": {
+    "type": "number",
+    "customId": 10125,
+    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float"
+   }
+  }
+ ],
+ "issues": {
+  "MOB-1421": {
+   "fields": {
+    "description": {
+     "type": "doc",
+     "version": 1,
+     "content": [
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 1
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Unit toggle between metric and US cups"
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 2
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Why"
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 3
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Background"
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 4
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Detail four"
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 5
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Detail five"
+        }
+       ]
+      },
+      {
+       "type": "heading",
+       "attrs": {
+        "level": 6
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "Detail six"
+        }
+       ]
+      },
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Plain text, "
+        },
+        {
+         "type": "text",
+         "text": "strong",
+         "marks": [
+          {
+           "type": "strong"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "emphasis",
+         "marks": [
+          {
+           "type": "em"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "struck",
+         "marks": [
+          {
+           "type": "strike"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "underlined",
+         "marks": [
+          {
+           "type": "underline"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "sub",
+         "marks": [
+          {
+           "type": "subsup",
+           "attrs": {
+            "type": "sub"
+           }
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": " and "
+        },
+        {
+         "type": "text",
+         "text": "sup",
+         "marks": [
+          {
+           "type": "subsup",
+           "attrs": {
+            "type": "sup"
+           }
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "coloured",
+         "marks": [
+          {
+           "type": "textColor",
+           "attrs": {
+            "color": "#bf2600"
+           }
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": ", "
+        },
+        {
+         "type": "text",
+         "text": "inline code",
+         "marks": [
+          {
+           "type": "code"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": " and a "
+        },
+        {
+         "type": "text",
+         "text": "link",
+         "marks": [
+          {
+           "type": "link",
+           "attrs": {
+            "href": "https://example.com/units"
+           }
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "text": "."
+        },
+        {
+         "type": "hardBreak"
+        },
+        {
+         "type": "text",
+         "text": "A line after a hard break."
+        }
+       ]
+      },
+      {
+       "type": "codeBlock",
+       "attrs": {
+        "language": "go"
+       },
+       "content": [
+        {
+         "type": "text",
+         "text": "func Convert(cups float64) float64 {\n\treturn cups * 236.588\n}"
+        }
+       ]
+      },
+      {
+       "type": "blockquote",
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Cooks think in cups; the rest of the world thinks in millilitres."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "rule"
+      },
+      {
+       "type": "bulletList",
+       "content": [
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Toggle in the recipe header"
+            }
+           ]
+          },
+          {
+           "type": "bulletList",
+           "content": [
+            {
+             "type": "listItem",
+             "content": [
+              {
+               "type": "paragraph",
+               "content": [
+                {
+                 "type": "text",
+                 "text": "Remember the choice per user"
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Convert on the fly"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "orderedList",
+       "attrs": {
+        "order": 3
+       },
+       "content": [
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Design"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "listItem",
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Build"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "taskList",
+       "attrs": {
+        "localId": "tl-1"
+       },
+       "content": [
+        {
+         "type": "taskItem",
+         "attrs": {
+          "localId": "ti-1",
+          "state": "DONE"
+         },
+         "content": [
+          {
+           "type": "text",
+           "text": "Spec the rounding rules"
+          }
+         ]
+        },
+        {
+         "type": "taskItem",
+         "attrs": {
+          "localId": "ti-2",
+          "state": "TODO"
+         },
+         "content": [
+          {
+           "type": "text",
+           "text": "Cover half cups"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "decisionList",
+       "attrs": {
+        "localId": "dl-1"
+       },
+       "content": [
+        {
+         "type": "decisionItem",
+         "attrs": {
+          "localId": "di-1",
+          "state": "DECIDED"
+         },
+         "content": [
+          {
+           "type": "text",
+           "text": "Round to the nearest 5 ml"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "panel",
+       "attrs": {
+        "panelType": "info"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Info panel"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "panel",
+       "attrs": {
+        "panelType": "note"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Note panel"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "panel",
+       "attrs": {
+        "panelType": "success"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Success panel"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "panel",
+       "attrs": {
+        "panelType": "warning"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Warning panel"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "panel",
+       "attrs": {
+        "panelType": "error"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Error panel"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+       },
+       "content": [
+        {
+         "type": "tableRow",
+         "content": [
+          {
+           "type": "tableHeader",
+           "attrs": {
+            "colwidth": [
+             120
+            ]
+           },
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "Cups"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "tableHeader",
+           "attrs": {
+            "colspan": 2
+           },
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "Equivalent"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableRow",
+         "content": [
+          {
+           "type": "tableCell",
+           "attrs": {
+            "rowspan": 2
+           },
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "1"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "tableCell",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "237 ml"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "tableCell",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "8 fl oz"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tableRow",
+         "content": [
+          {
+           "type": "tableCell",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "118 ml"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "tableCell",
+           "content": [
+            {
+             "type": "paragraph",
+             "content": [
+              {
+               "type": "text",
+               "text": "4 fl oz"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "expand",
+       "attrs": {
+        "title": "Rounding table"
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Details inside an expand."
+          }
+         ]
+        },
+        {
+         "type": "nestedExpand",
+         "attrs": {
+          "title": "Edge cases"
+         },
+         "content": [
+          {
+           "type": "paragraph",
+           "content": [
+            {
+             "type": "text",
+             "text": "Nested expand."
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Status "
+        },
+        {
+         "type": "status",
+         "attrs": {
+          "text": "in review",
+          "color": "purple",
+          "localId": "st-1"
+         }
+        },
+        {
+         "type": "text",
+         "text": " mention "
+        },
+        {
+         "type": "mention",
+         "attrs": {
+          "id": "u-silas",
+          "text": "@Silas Marchetti"
+         }
+        },
+        {
+         "type": "text",
+         "text": " date "
+        },
+        {
+         "type": "date",
+         "attrs": {
+          "timestamp": "1798675200000"
+         }
+        },
+        {
+         "type": "text",
+         "text": " emoji "
+        },
+        {
+         "type": "emoji",
+         "attrs": {
+          "shortName": ":thumbsup:",
+          "id": "1f44d",
+          "text": "👍"
+         }
+        },
+        {
+         "type": "text",
+         "text": " card "
+        },
+        {
+         "type": "inlineCard",
+         "attrs": {
+          "url": "https://acme.atlassian.net/browse/MOB-1428"
+         }
+        },
+        {
+         "type": "text",
+         "text": " media "
+        },
+        {
+         "type": "mediaInline",
+         "attrs": {
+          "id": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e54",
+          "collection": "",
+          "type": "file"
+         }
+        }
+       ]
+      },
+      {
+       "type": "blockCard",
+       "attrs": {
+        "url": "https://example.com/design/units"
+       }
+      },
+      {
+       "type": "mediaSingle",
+       "attrs": {
+        "layout": "center",
+        "width": 100
+       },
+       "content": [
+        {
+         "type": "media",
+         "attrs": {
+          "id": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e51",
+          "type": "file",
+          "collection": "",
+          "alt": "unit-toggle-v3.png",
+          "width": 1200,
+          "height": 720
+         }
+        },
+        {
+         "type": "caption",
+         "content": [
+          {
+           "type": "text",
+           "text": "The toggle in the recipe header"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "mediaSingle",
+       "attrs": {
+        "layout": "wide"
+       },
+       "content": [
+        {
+         "type": "media",
+         "attrs": {
+          "id": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e52",
+          "type": "file",
+          "collection": "",
+          "alt": "share-preview.png",
+          "width": 900,
+          "height": 560
+         }
+        }
+       ]
+      },
+      {
+       "type": "mediaSingle",
+       "attrs": {
+        "layout": "center"
+       },
+       "content": [
+        {
+         "type": "media",
+         "attrs": {
+          "id": "9c0a1f7e-0000-4000-8000-00000000dead",
+          "type": "file",
+          "collection": "",
+          "alt": "conversion-flow.png"
+         }
+        }
+       ]
+      },
+      {
+       "type": "mediaGroup",
+       "content": [
+        {
+         "type": "media",
+         "attrs": {
+          "id": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e54",
+          "type": "file",
+          "collection": "",
+          "alt": "release-notes.pdf"
+         }
+        }
+       ]
+      },
+      {
+       "type": "bodiedExtension",
+       "attrs": {
+        "extensionType": "com.example.app",
+        "extensionKey": "mystery-macro",
+        "parameters": {}
+       },
+       "content": [
+        {
+         "type": "paragraph",
+         "content": [
+          {
+           "type": "text",
+           "text": "Text of an app macro nobody renders."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "environment": {
+     "type": "doc",
+     "version": 1,
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "iOS 18.2, Pixel 9, staging build 4417"
+        }
+       ]
+      }
+     ]
+    },
+    "priority": {
+     "self": "x",
+     "id": "2",
+     "name": "High"
+    },
+    "reporter": {
+     "accountId": "u-silas",
+     "displayName": "Silas Marchetti",
+     "active": true,
+     "accountType": "atlassian"
+    },
+    "labels": [
+     "ux",
+     "units"
+    ],
+    "components": [
+     {
+      "id": "10301",
+      "name": "Recipe card"
+     },
+     {
+      "id": "10302",
+      "name": "Settings"
+     }
+    ],
+    "fixVersions": [
+     {
+      "id": "10401",
+      "name": "3.9"
+     }
+    ],
+    "project": {
+     "id": "10001",
+     "key": "MOB",
+     "name": "Saffron Mobile"
+    },
+    "timetracking": {
+     "originalEstimate": "1d",
+     "remainingEstimate": "4h",
+     "timeSpent": "4h",
+     "originalEstimateSeconds": 28800,
+     "remainingEstimateSeconds": 14400,
+     "timeSpentSeconds": 14400
+    },
+    "watches": {
+     "self": "x",
+     "watchCount": 3,
+     "isWatching": false
+    },
+    "customfield_10016": 5,
+    "customfield_10100": "R-24.3",
+    "customfield_10101": {
+     "type": "doc",
+     "version": 1,
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Toggle persists across launches."
+        }
+       ]
+      },
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "Half cups convert exactly."
+        }
+       ]
+      }
+     ]
+    },
+    "customfield_10102": "https://example.com/design/units",
+    "customfield_10103": {
+     "self": "x",
+     "value": "iOS",
+     "id": "10201"
+    },
+    "customfield_10104": [
+     {
+      "value": "en-US",
+      "id": "1"
+     },
+     {
+      "value": "de-DE",
+      "id": "2"
+     }
+    ],
+    "customfield_10105": {
+     "value": "EU",
+     "id": "11",
+     "child": {
+      "value": "Berlin",
+      "id": "12"
+     }
+    },
+    "customfield_10106": {
+     "accountId": "u-noor",
+     "displayName": "Noor Abadi",
+     "active": true,
+     "accountType": "atlassian"
+    },
+    "customfield_10107": [
+     {
+      "accountId": "u-otto",
+      "displayName": "Otto Brandt",
+      "active": true,
+      "accountType": "atlassian"
+     },
+     {
+      "accountId": "u-amara",
+      "displayName": "Amara Osei",
+      "active": true,
+      "accountType": "atlassian"
+     }
+    ],
+    "customfield_10108": {
+     "name": "mobile-devs",
+     "groupId": "g-1"
+    },
+    "customfield_10109": [
+     {
+      "name": "mobile-devs"
+     },
+     {
+      "name": "design"
+     }
+    ],
+    "customfield_10110": {
+     "id": "10402",
+     "name": "3.8"
+    },
+    "customfield_10112": {
+     "id": "team-7",
+     "name": "Mobile Core"
+    },
+    "customfield_10113": {
+     "id": 7,
+     "name": "ACME-OPS"
+    },
+    "customfield_10120": null,
+    "customfield_10121": null,
+    "customfield_10122": [],
+    "customfield_10123": null,
+    "customfield_10124": [],
+    "customfield_10125": null
+   },
+   "dateFields": {
+    "duedate": 6,
+    "customfield_10114": 14
+   },
+   "dateTimeFields": {
+    "customfield_10111": -2
+   },
+   "attachments": [
+    {
+     "id": "20001",
+     "filename": "unit-toggle-v3.png",
+     "mimeType": "image/png",
+     "author": "u-iris",
+     "day": -5,
+     "file": "unit-toggle-v3.png",
+     "mediaFileId": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e51"
+    },
+    {
+     "id": "20002",
+     "filename": "share-preview.png",
+     "mimeType": "image/png",
+     "author": "u-silas",
+     "day": -4,
+     "file": "share-preview.png",
+     "mediaFileId": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e52"
+    },
+    {
+     "id": "20003",
+     "filename": "conversion-flow.png",
+     "mimeType": "image/png",
+     "author": "u-iris",
+     "day": -3,
+     "file": "conversion-flow.png",
+     "mediaFileId": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e53"
+    },
+    {
+     "id": "20004",
+     "filename": "release-notes.pdf",
+     "mimeType": "application/pdf",
+     "author": "u-noor",
+     "day": -2,
+     "file": "release-notes.pdf",
+     "mediaFileId": "3f1c9a52-7d4e-4b6a-9c2e-0a1b2c3d4e54"
+    }
+   ],
+   "comments": [
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Kicking this off. "
+         },
+         {
+          "type": "mention",
+          "attrs": {
+           "id": "u-iris",
+           "text": "@Iris Calloway"
+          }
+         },
+         {
+          "type": "text",
+          "text": " can you own the toggle?"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Internal: the exchange table needs legal review before we ship."
+         }
+        ]
+       }
+      ]
+     },
+     "visibility": {
+      "type": "role",
+      "value": "Developers",
+      "identifier": "10360"
+     }
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sketch attached, still rough."
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Edited to add the link: "
+         },
+         {
+          "type": "text",
+          "text": "figma",
+          "marks": [
+           {
+            "type": "link",
+            "attrs": {
+             "href": "https://example.com/figma/units"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "editedDay": -9
+    },
+    {
+     "body": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ready for review."
+         }
+        ]
+       },
+       {
+        "type": "codeBlock",
+        "attrs": {
+         "language": "swift"
+        },
+        "content": [
+         {
+          "type": "text",
+          "text": "Units.current = .metric"
+         }
+        ]
+       },
+       {
+        "type": "bulletList",
+        "content": [
+         {
+          "type": "listItem",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Covers half cups "
+             },
+             {
+              "type": "emoji",
+              "attrs": {
+               "shortName": ":tada:",
+               "text": "🎉"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "links": [
+    {
+     "id": "50001",
+     "type": {
+      "name": "Blocks",
+      "inward": "is blocked by",
+      "outward": "blocks"
+     },
+     "direction": "inward",
+     "key": "MOB-1428"
+    },
+    {
+     "id": "50002",
+     "type": {
+      "name": "Blocks",
+      "inward": "is blocked by",
+      "outward": "blocks"
+     },
+     "direction": "outward",
+     "key": "MOB-1440"
+    },
+    {
+     "id": "50003",
+     "type": {
+      "name": "Relates",
+      "inward": "relates to",
+      "outward": "relates to"
+     },
+     "direction": "outward",
+     "key": "MOB-1411"
+    }
+   ],
+   "subtasks": [
+    "MOB-1436",
+    "MOB-1440",
+    "MOB-1456"
+   ]
+  }
+ }
+}

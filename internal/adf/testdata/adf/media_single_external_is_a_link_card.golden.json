@@ -1,0 +1,13 @@
+{
+  "c": [
+    {
+      "t": "card",
+      "a": {
+        "url": "https://img.example.com/pics/a.png",
+        "host": "img.example.com",
+        "path": "/pics/a.png",
+        "block": true
+      }
+    }
+  ]
+}

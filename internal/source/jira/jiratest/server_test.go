@@ -126,7 +126,7 @@ func tinyFixture() *Fixture {
 		Issues: []FxIssue{
 			{Key: "MOB-1", Type: "Story", Summary: "Login page", Assignee: "u-ann", Board: 1, InSprint: true,
 				History: []FxHistory{{Status: "To Do", Days: 3}, {Status: "In Progress", Days: 2}},
-				Commits: []int{-1, 0, 0}, PRs: []FxPR{{ID: 12, Day: -1, Status: "MERGED"}}, Comments: []int{-3, -1, 0}},
+				Commits: []int{-1, 0, 0}, PRs: []FxPR{{ID: 12, Day: -1, Status: "MERGED", Title: "Add the login page", Branch: "feature/MOB-1-login-page"}}, Comments: []int{-3, -1, 0}},
 			{Key: "MOB-2", Type: "Bug", Summary: "Crash on save", Board: 1, InSprint: true,
 				History: []FxHistory{{Status: "To Do", Days: 1}}},
 			{Key: "MOB-3", Type: "Task", Summary: "Write docs", Assignee: "u-bob", Board: 1, InSprint: true,
@@ -1225,6 +1225,9 @@ func TestDevStatus_DetailPullRequestListsPRs(t *testing.T) {
 	assertLocalDayHour(t, "pr lastUpdate", parseJiraTime(t, jget(pr, "lastUpdate")), testNow, nyc, -1, 11)
 	if jstr(jget(pr, "repositoryName")) == "" {
 		t.Errorf("pr lacks repositoryName: %v", pr)
+	}
+	if jstr(jget(pr, "name")) != "Add the login page" || jstr(jget(jget(pr, "source"), "branch")) != "feature/MOB-1-login-page" {
+		t.Errorf("pr name/source.branch = %v / %v, want the fixture's title and branch", jget(pr, "name"), jget(pr, "source"))
 	}
 }
 

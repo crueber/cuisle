@@ -1,0 +1,27 @@
+{
+  "c": [
+    {
+      "t": "decision",
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "Ship it server-side"
+            }
+          ]
+        },
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "Skip the migration"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

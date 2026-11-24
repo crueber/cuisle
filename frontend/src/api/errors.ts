@@ -2,6 +2,7 @@
 export type ErrorCode =
   | "validation" | "not_found" | "conflict" | "auth_missing" | "auth_invalid" | "forbidden" | "offline" | "timeout"
   | "rate_limited" | "source_http" | "filter_invalid" | "keychain_unavailable" | "sink_failed" | "unsupported"
+  | "write_rejected" | "transition_needs_screen" | "permission_denied" | "media_unavailable" | "cooldown"
   | "not_implemented" | "db" | "cancelled" | "internal";
 
 export class AppError extends Error {
@@ -9,19 +10,23 @@ export class AppError extends Error {
   readonly detail: string;
   readonly retryable: boolean;
   readonly field: string;
-  constructor(code: ErrorCode, message: string, detail = "", retryable = false, field = "") {
+  /** When to try again in ms (cooldown, rate_limited); 0 = not applicable. */
+  readonly retryInMs: number;
+  constructor(code: ErrorCode, message: string, detail = "", retryable = false, field = "", retryInMs = 0) {
     super(message);
     this.name = "AppError";
     this.code = code;
     this.detail = detail;
     this.retryable = retryable;
     this.field = field;
+    this.retryInMs = retryInMs;
   }
 }
 
 const CODES = new Set<string>([
   "validation", "not_found", "conflict", "auth_missing", "auth_invalid", "forbidden", "offline", "timeout",
   "rate_limited", "source_http", "filter_invalid", "keychain_unavailable", "sink_failed", "unsupported",
+  "write_rejected", "transition_needs_screen", "permission_denied", "media_unavailable", "cooldown",
   "not_implemented", "db", "cancelled", "internal",
 ]);
 
@@ -43,6 +48,7 @@ export function toAppError(e: unknown): AppError {
       typeof c.detail === "string" ? c.detail : "",
       c.retryable === true,
       typeof c.field === "string" ? c.field : "",
+      typeof c.retryInMs === "number" ? c.retryInMs : 0,
     );
   }
   return new AppError("internal", "Something went wrong.", err?.message ?? String(e));

@@ -82,6 +82,10 @@ function onStarted(p: SyncStarted): void {
 }
 
 function onProgress(p: { runId: number; standupId: number; phase: string; done: number; total: number }): void {
+  // The media phase keeps ticking after sync:finished (jira-sync §2.14), and a progress event can outlive its run: only
+  // the run that is currently running may move the status (a late tick must not turn an idle standup into a progress bar).
+  const cur = syncStatus.value.get(p.standupId);
+  if (!cur || cur.state !== "running" || cur.runId !== p.runId) return;
   patchStatus(p.standupId, { phase: p.phase, done: p.done, total: p.total });
 }
 

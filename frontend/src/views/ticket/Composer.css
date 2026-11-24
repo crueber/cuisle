@@ -1,0 +1,91 @@
+/* Comment composer (ux-spec §14.5). Tokens only (AGENTS invariant 11). */
+.cmp {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.cmp[data-disabled="true"] {
+  opacity: 0.6;
+}
+
+.cmp-badge {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--size-control-height);
+  height: var(--size-control-height);
+  border-radius: var(--radius-pill);
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-bold);
+}
+
+.cmp-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.cmp-box {
+  width: 100%;
+  min-height: calc(var(--scale) * 2.375rem);
+  max-height: calc(var(--scale) * 7.5rem);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-field-bg);
+  color: var(--color-fg);
+  font: inherit;
+  font-size: calc(var(--scale) * 0.9375rem);
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.cmp-box:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.cmp-picker {
+  max-width: calc(var(--scale) * 22.5rem);
+}
+
+.cmp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.cmp-hint {
+  margin-right: auto;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.8125rem);
+  color: var(--color-muted);
+}
+
+.cmp-reason {
+  font-size: calc(var(--scale) * 0.8125rem);
+  color: var(--color-alert-text);
+}
+
+.cmp-send {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-4);
+  border: 2px solid var(--color-button-bg);
+  border-radius: var(--radius-control);
+  background: var(--color-button-bg);
+  color: var(--color-button-fg);
+  font: inherit;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.cmp-send:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

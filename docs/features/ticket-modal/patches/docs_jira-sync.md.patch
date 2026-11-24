@@ -1,5 +1,5 @@
 diff --git a/docs/jira-sync.md b/docs/jira-sync.md
-index f395ecf..dcd5b4b 100644
+index f395ecf..4aec568 100644
 --- a/docs/jira-sync.md
 +++ b/docs/jira-sync.md
 @@ -16,9 +16,13 @@ How the neutral interface maps onto this document:
@@ -181,7 +181,54 @@ index f395ecf..dcd5b4b 100644
  ## 3. Request policy
  
  | Condition | Handling |
-@@ -258,26 +365,34 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress
+@@ -231,6 +338,46 @@ Offline → `person` `LIKE` search. Empty query → people already known for the
+ | 404 board/filter | `not_found`: "This board no longer exists" — Configure shows the Source section in error. |
+ | DNS failure / no route / TLS error before any response | `offline` (TLS errors are logged in detail). No retry loop; the user presses Resync again. |
+ 
++### 3.1 Throttling: one limiter per connection (ADR 0015)
++Jira Cloud rate-limits API-token traffic with **per-second burst limits** and **per-issue write limits**. Over a limit,
++it answers `429` with `Retry-After`. Responses may carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
++`X-RateLimit-Reset`, `X-RateLimit-NearLimit: true` (under 20% left), `RateLimit-Reason`, and the structured
++`RateLimit` / `RateLimit-Policy` headers (`"jira-burst-based";r=90;t=1`). The newer points-based hourly quotas apply to
++Connect/Forge apps, not API-token traffic. Cuisle still parses those headers if present, so the same code works if that
++changes. Headers are often absent until you are near a limit, so Cuisle must be polite **proactively**, not only after
++a 429. (Source: developer.atlassian.com/cloud/jira/platform/rate-limiting, checked 2026-11-23.)
++
++**`internal/source/jira/limiter`** wraps the HTTP client. Every request goes through it: sync, content, media,
++transitions, writes, ticket refresh, combobox search, Connect. There is one limiter per connection (site + account),
++shared by all standups and all goroutines.
++
++| Mechanism | Default | Rule |
++|---|---|---|
++| Token bucket (sustained rate) | **8 req/s**, burst 16 | Hidden setting `jira.max_rps` (1–20); there is no UI for it, and Diagnostics shows it. |
++| Concurrency | 4 in flight (2 for media) | As in §1; media downloads also count against the bucket. |
++| Priority lanes | interactive > sync > media | *Interactive:* writes, transitions, ticket Refresh, combobox search, Connect, validate. *Sync:* plan, scan, hydrate, comments, dev-status. *Media:* attachment and thumbnail downloads. A waiting interactive request takes the next token; bulk work can't starve it. Media runs only when no sync request is waiting. |
++| Adaptive slow-down (AIMD) | — | If a response has `X-RateLimit-NearLimit: true`, or `Remaining/Limit < 0.2` (from either header family), halve the rate, with a floor of 1 req/s. Recover by +1 req/s every 30 s with no near-limit signal, up to the configured max. |
++| 429 | — | Close the **global gate** for this connection (all lanes) until `Retry-After` (fallback: `X-RateLimit-Reset` or `RateLimit` `t=`; else 5 s), plus 0–500 ms jitter. Halve the rate. Sync requests retry per §3; **writes do not retry** (ADR 0015): they fail `rate_limited` with `retryInMs`, and the UI says "Jira is rate-limiting · try again in 6s". |
++| Per-issue writes | 1 in flight per issue | Writes and Refresh for the same issue serialise (`conflict` if one is already running). This respects Jira's per-issue write limit. |
++| Ticket Refresh cooldown | 10 s per issue | Enforced in `TicketService` before the limiter; it returns `cooldown{retryInMs}` with no request. |
++| Manual Resync | coalesced | `R` while a sync runs is a no-op that focuses the progress. Sync-on-open stays at most once per stale window (§4.1). |
++
++**Request economy** (keep syncs cheap; this is what keeps a 5-standup user far below the limits):
++- Scan-and-diff hydrates only changed issues (§4.2). Comments are fetched only for issues whose `updated` changed.
++  Attachments are downloaded once (by id) and thumbnails never re-fetched. Dev-status uses fingerprints (§2.11).
++- Field discovery (`/field`) runs once per connection per day, or on a full sync, not on every run.
++- Standups that share a board share one scan inside a run (the same board and filter are planned once).
++- **Budget check:** `sync_run.requests` and `sync_run.throttled` are recorded per run.
++  - A full sync of the MOB fixture board (55 issues) must stay under **150 requests**.
++  - An incremental sync with 3 changed issues must stay under **25**.
++  - Both are asserted against jiratest's request log.
++
++**Visibility:**
++- The limiter emits `sync:throttled {resumeAt, reason}`. The header shows `Jira is rate-limiting · resuming in 12s`
++  (ux-spec §14.13).
++- Diagnostics keep the last hour's requests per lane, the current rate, and throttle events. `--debug` logs every
++  limiter decision.
++
+ ## 4. Sync algorithm (`internal/sync`)
+ 
+ ### 4.1 Triggers and modes
+@@ -258,26 +405,34 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress
  
  ```
  0. preflight   keychain token (missing → auth_missing); GET /myself
@@ -223,7 +270,7 @@ index f395ecf..dcd5b4b 100644
  
  ### 4.4 Cancellation
  
-@@ -287,7 +402,7 @@ App quit cancels all runs the same way. Switching standups or screens does **not
+@@ -287,7 +442,7 @@ App quit cancels all runs the same way. Switching standups or screens does **not
  
  ### 4.5 Partial results
  
@@ -232,7 +279,7 @@ index f395ecf..dcd5b4b 100644
  warnings (existing rows for the failed issues are kept). Any failure in phases 0–4 aborts the run with **no** apply:
  the UI keeps showing the previous snapshot with the previous "synced" time.
  
-@@ -299,8 +414,10 @@ One `BEGIN IMMEDIATE` on the writer connection (`T` = the run's `started_at`):
+@@ -299,8 +454,10 @@ One `BEGIN IMMEDIATE` on the writer connection (`T` = the run's `started_at`):
     `dev_activity_state`.
  2. Merge `standup_column_map` (auto-map new columns), rebuild `standup_status_lane`; update `standup` board snapshot
     (`board_name`, `board_type`, `board_meta`).
@@ -245,7 +292,7 @@ index f395ecf..dcd5b4b 100644
  4. Upsert `dev_commit`; insert new `dev_pr_event`; set `dev_fingerprint`, `dev_checked_at`.
  5. Membership: rewrite `standup_issue` for this standup from the scanned lists (with `rank_index`), and maintain
     `standup_issue_span` — open spans for new members/roles at `T`, close spans (`valid_to = T`) for issues no longer
-@@ -333,6 +450,25 @@ with last-writer-wins on identical source data.
+@@ -333,6 +490,25 @@ with last-writer-wins on identical source data.
  | Extra JQL invalid | Run fails fast `filter_invalid`; Configure shows Jira's parse error under the field. |
  | Rate limited | Header `Syncing… waiting for Jira (12 s)` during gate; fails `rate_limited` after 120 s cumulative. |
  
@@ -271,7 +318,7 @@ index f395ecf..dcd5b4b 100644
  ## 5. Mapping synced facts → pulse inputs (`internal/pulse`, pure functions)
  
  Inputs per ticket: current status id, `created_at`, ordered status changes, flag changes, comment/commit/PR-event
-@@ -473,9 +609,21 @@ client — pagination tokens, 429 handling, decoding — is what gets exercised.
+@@ -473,9 +649,21 @@ client — pagination tokens, 429 handling, decoding — is what gets exercised.
    `AND/OR/()`, `ORDER BY Rank`), `fields` projection, `nextPageToken` paging (opaque base64 offsets), `approximate-count`;
    `changelog/bulkfetch` with `fieldIds`; issue comments; dev-status summary/detail (instance type `GitHub`);
    assignable user search; `jql/parse` (accepts anything the subset parses).

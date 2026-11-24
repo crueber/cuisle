@@ -4,8 +4,11 @@
 export type {
     ConnectionAuth,
     DataChanged,
+    MediaReady,
     SyncFinished,
     SyncProgress,
     SyncStarted,
-    SyncStats
+    SyncStats,
+    SyncThrottled,
+    TicketUpdated
 } from "./models.js";

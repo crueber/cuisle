@@ -30,6 +30,13 @@
       "hasDevActivity": true,
       "hasExtraFilter": true,
       "hasAssigneeHistory": false,
+      "content": true,
+      "writes": {
+        "transition": true,
+        "assign": true,
+        "flag": true,
+        "comment": true
+      },
       "filterLanguage": "JQL",
       "authFields": [
         "baseUrl",

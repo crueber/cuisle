@@ -13,8 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-15, windows-latest]
+        os: [ubuntu-22.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60 # a capacity-starved macOS queue fails clearly instead of hanging
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -50,6 +51,8 @@ jobs:
       - name: Playwright (perf + a11y + screenshots, mock mode)
         if: runner.os == 'Linux'
         working-directory: frontend
+        env:
+          PERF_CPU_THROTTLE: "2" # shared runners are ~2x slower than the 4x-throttled reference machine (tests/perf/measure.ts)
         run: npx playwright install --with-deps chromium && npx playwright test tests/perf tests/a11y  # screens: macOS-only baselines (tests/screens/README.md)
       - name: Package smoke
         shell: bash

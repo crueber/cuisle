@@ -635,6 +635,16 @@ func TestMigrate_RecordTablesSurviveEveryHistoricalVersion(t *testing.T) {
 				t.Errorf("%d issues have a non-NULL note, want 0", n)
 			}
 
+			// 0003 backfills comment.updated_at from created_at for rows synced before content existed.
+			if n < 3 {
+				if bad := scalarInt(t, raw, "SELECT count(*) FROM comment WHERE updated_at != created_at"); bad != 0 {
+					t.Errorf("%d comments have updated_at != created_at after 0003, want 0", bad)
+				}
+				if bad := scalarInt(t, raw, "SELECT count(*) FROM standup_sync_state WHERE needs_sync = 0"); bad != 0 {
+					t.Errorf("%d standups have needs_sync = 0 after 0003, want 0", bad)
+				}
+			}
+
 			// A few values, not just counts.
 			if got := scalarStr(t, raw, "SELECT from_status_id || '>' || to_status_id FROM status_change WHERE history_id='h2'"); got != "10>11" {
 				t.Errorf("status_change h2 = %q, want 10>11", got)
@@ -663,6 +673,44 @@ func TestMigrate_RecordTablesSurviveEveryHistoricalVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+// 0004 adds nullable title and branch to dev_pr_event without touching a row, and forgets the dev fingerprints so
+// the next sync fills them in.
+func TestMigrate_0004_DevBranchTitle_KeepsRowsAndResetsFingerprints(t *testing.T) {
+	defer recoverStub(t)
+	head := embeddedList(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, head[:3], dir)
+	seedFile(t, raw, filepath.Join("testdata", "v3.sql"))
+	mustExec(t, raw, "UPDATE issue SET dev_fingerprint = 'fp-dev', dev_checked_at = 3500 WHERE id = 1")
+	before := rowCounts(t, raw)
+
+	applied, _, err := migrate(t, raw, head, dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{4}) {
+		t.Fatalf("Migrate = %v, %v; want [4], nil", applied, err)
+	}
+	if got := rowCounts(t, raw); !reflect.DeepEqual(got, before) {
+		t.Errorf("row counts changed by 0004:\n got %v\nwant %v", got, before)
+	}
+	for _, c := range []string{"title", "branch"} {
+		if !hasColumn(t, raw, "dev_pr_event", c) {
+			t.Errorf("dev_pr_event.%s missing", c)
+		}
+		if n := scalarInt(t, raw, "SELECT count(*) FROM dev_pr_event WHERE "+c+" IS NOT NULL"); n != 0 {
+			t.Errorf("%d existing PR rows have a non-NULL %s, want 0", n, c)
+		}
+	}
+	if got := scalarStr(t, raw, "SELECT pr_key || '/' || status || '/' || at FROM dev_pr_event ORDER BY at LIMIT 1"); got != "svc#12/OPEN/1770" {
+		t.Errorf("first PR event = %q, want svc#12/OPEN/1770 (kept)", got)
+	}
+	if n := scalarInt(t, raw, "SELECT count(*) FROM issue WHERE dev_fingerprint IS NOT NULL"); n != 0 {
+		t.Errorf("%d issues keep a dev fingerprint, want 0 (re-read once)", n)
+	}
+	if n := scalarInt(t, raw, "SELECT dev_checked_at FROM issue WHERE id = 1"); n != 3500 {
+		t.Errorf("dev_checked_at = %d, want 3500 (untouched)", n)
+	}
+	assertIntegrity(t, raw)
 }
 
 // ---- LoadMigrations -------------------------------------------------------------------------------------------

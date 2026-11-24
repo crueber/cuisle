@@ -11,6 +11,10 @@ export interface EventMap {
   "sink:delivered": T.SinkDelivered;
   "sink:failed": T.SinkFailed;
   "day:rolled": T.DayRolled;
+  "ticket:updated": T.TicketUpdated;
+  "ticket:write_failed": T.TicketWriteFailed;
+  "media:ready": T.MediaReady;
+  "sync:throttled": T.SyncThrottled;
 }
 export type EventName = keyof EventMap;
 

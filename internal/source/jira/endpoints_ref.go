@@ -35,6 +35,7 @@ func (a *Adapter) Test(ctx context.Context) (model.Account, error) {
 
 // SearchSpaces: GET /rest/api/3/project/search (§2.3).
 func (a *Adapter) SearchSpaces(ctx context.Context, query string) ([]model.Space, error) {
+	ctx = WithInteractive(ctx) // Interactive lane (jira-sync §3.1): the user is waiting
 	q := url.Values{"maxResults": {"20"}, "orderBy": {"name"}, "typeKey": {"software"}, "status": {"live"}}
 	if query != "" {
 		q.Set("query", query)
@@ -55,6 +56,7 @@ func (a *Adapter) SearchSpaces(ctx context.Context, query string) ([]model.Space
 // SearchBoards: GET /rest/agile/1.0/board (§2.4). Board.Kind is normalised (simple → scrum/kanban via sprint probe).
 // Paging happens only without a name, stops on isLast, an empty page, or after refBoardCap boards.
 func (a *Adapter) SearchBoards(ctx context.Context, spaceKey, query string) ([]model.Board, error) {
+	ctx = WithInteractive(ctx) // Interactive lane (jira-sync §3.1): the user is waiting
 	out := []model.Board{}
 	startAt := 0
 	for {
@@ -183,6 +185,7 @@ func (a *Adapter) discoverFields(ctx context.Context) error {
 
 // SearchUsers: GET /rest/api/3/user/assignable/search (§2.12); keeps active atlassian accounts (Kind "user").
 func (a *Adapter) SearchUsers(ctx context.Context, spaceKey, query string) ([]model.Person, error) {
+	ctx = WithInteractive(ctx) // Interactive lane (jira-sync §3.1): the user is waiting
 	q := url.Values{"project": {spaceKey}, "maxResults": {"20"}}
 	if query != "" {
 		q.Set("query", query)
@@ -202,6 +205,7 @@ func (a *Adapter) SearchUsers(ctx context.Context, spaceKey, query string) ([]mo
 
 // ValidateFilter: POST /rest/api/3/jql/parse?validation=strict (§2.8). ORDER BY → ok=false locally, no request.
 func (a *Adapter) ValidateFilter(ctx context.Context, expr string) (bool, []string, error) {
+	ctx = WithInteractive(ctx) // Interactive lane (jira-sync §3.1): the user is waiting
 	if refOrderByRe.MatchString(expr) {
 		return false, []string{"Remove ORDER BY: Cuisle orders the tickets itself."}, nil
 	}

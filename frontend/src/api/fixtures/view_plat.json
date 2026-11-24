@@ -1253,36 +1253,42 @@
   ],
   "backlog": [
     {
+      "issueId": 50001,
       "key": "PLAT-466",
       "summary": "Document API gateway",
       "type": "task",
       "url": "https://example.atlassian.net/browse/PLAT-466"
     },
     {
+      "issueId": 50002,
       "key": "PLAT-470",
       "summary": "Migrate build cache",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/PLAT-470"
     },
     {
+      "issueId": 50003,
       "key": "PLAT-473",
       "summary": "Benchmark staging database",
       "type": "task",
       "url": "https://example.atlassian.net/browse/PLAT-473"
     },
     {
+      "issueId": 50004,
       "key": "PLAT-475",
       "summary": "Upgrade feature flags",
       "type": "story",
       "url": "https://example.atlassian.net/browse/PLAT-475"
     },
     {
+      "issueId": 50005,
       "key": "PLAT-481",
       "summary": "Harden log retention",
       "type": "task",
       "url": "https://example.atlassian.net/browse/PLAT-481"
     },
     {
+      "issueId": 50006,
       "key": "PLAT-484",
       "summary": "Automate CDN rules",
       "type": "bug",

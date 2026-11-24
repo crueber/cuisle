@@ -3,7 +3,6 @@ package jiratest
 import (
 	"encoding/json"
 	"net/http"
-	"slices"
 	"sort"
 	"time"
 )
@@ -104,49 +103,6 @@ func (s *Server) matchingIssues(q *JQL) []*DSIssue {
 		})
 	}
 	return out
-}
-
-// issueJSON renders one issue. An empty field list means every known field; otherwise only the requested ones.
-func (s *Server) issueJSON(is *DSIssue, requested []string) map[string]any {
-	want := func(name string) bool { return len(requested) == 0 || slices.Contains(requested, name) }
-	f := map[string]any{}
-	if want("summary") {
-		f["summary"] = is.Summary
-	}
-	if want("issuetype") {
-		f["issuetype"] = s.issueTypeJSON(is.TypeID)
-	}
-	if want("status") {
-		f["status"] = s.statusJSON(is.StatusID)
-	}
-	if want("assignee") {
-		f["assignee"] = s.assigneeJSON(is.Assignee)
-	}
-	if want("created") {
-		f["created"] = jiraTime(is.Created)
-	}
-	if want("updated") {
-		f["updated"] = jiraTime(is.Updated)
-	}
-	if want("resolutiondate") {
-		f["resolutiondate"] = optionalTime(is.Resolved)
-	}
-	if want("parent") {
-		f["parent"] = nil
-	}
-	if want("comment") {
-		f["comment"] = commentJSON(is)
-	}
-	if want(SprintFieldID) {
-		f[SprintFieldID] = s.sprintsJSON(is)
-	}
-	if want(RankFieldID) {
-		f[RankFieldID] = is.Rank
-	}
-	if want(FlaggedFieldID) {
-		f[FlaggedFieldID] = flaggedJSON(is)
-	}
-	return map[string]any{"id": is.ID, "key": is.Key, "fields": f}
 }
 
 func (s *Server) issueTypeJSON(typeID string) map[string]any {

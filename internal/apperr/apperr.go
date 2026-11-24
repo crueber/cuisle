@@ -27,10 +27,16 @@ const (
 	KeychainUnavailable Code = "keychain_unavailable"
 	SinkFailed          Code = "sink_failed"
 	Unsupported         Code = "unsupported"
-	NotImplementedCode  Code = "not_implemented"
-	DB                  Code = "db"
-	Cancelled           Code = "cancelled"
-	Internal            Code = "internal"
+	// Ticket modal (ADR 0015; architecture.md §3.2, §3.4, jira-sync.md §2.15).
+	WriteRejected         Code = "write_rejected"          // provider refused the change; Message carries its reason
+	TransitionNeedsScreen Code = "transition_needs_screen" // the transition needs a provider screen: open in the browser
+	PermissionDenied      Code = "permission_denied"       // 403 on a write
+	MediaUnavailable      Code = "media_unavailable"       // attachment bytes could not be fetched or decoded
+	Cooldown              Code = "cooldown"                // TicketService.Refresh within 10 s of the last one; no request sent
+	NotImplementedCode    Code = "not_implemented"
+	DB                    Code = "db"
+	Cancelled             Code = "cancelled"
+	Internal              Code = "internal"
 )
 
 // Error is the only error type that crosses the Wails bridge.
@@ -40,7 +46,15 @@ type Error struct {
 	Detail    string `json:"detail"`  // technical; shown in "Details", written to the log at debug
 	Retryable bool   `json:"retryable"`
 	Field     string `json:"field"` // validation: the patch field name
+	// RetryInMs tells the UI when to try again (cooldown, rate_limited); 0 = not applicable (F12, jira-sync §3.1).
+	RetryInMs int64 `json:"retryInMs,omitempty"`
 	cause     error
+}
+
+// WithRetryIn sets RetryInMs and returns e (for cooldown and rate_limited errors).
+func (e *Error) WithRetryIn(ms int64) *Error {
+	e.RetryInMs = ms
+	return e
 }
 
 // Error returns "code: message" only. Wails logs this string at ERR, so Detail is deliberately excluded.

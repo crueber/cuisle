@@ -23,6 +23,7 @@ import (
 	"github.com/crueber/cuisle/internal/buildinfo"
 	"github.com/crueber/cuisle/internal/cache"
 	"github.com/crueber/cuisle/internal/logx"
+	"github.com/crueber/cuisle/internal/media"
 	"github.com/crueber/cuisle/internal/paths"
 	"github.com/crueber/cuisle/internal/secrets"
 	"github.com/crueber/cuisle/internal/settings"
@@ -102,7 +103,10 @@ func run() int {
 	sink.Register(file.New())
 
 	clock := app.SystemClock{}
-	emitter := &app.WailsEmitter{} // App is set once the application exists
+	wailsEmitter := &app.WailsEmitter{} // App is set once the application exists
+	throttle := &throttleBridge{inner: wailsEmitter, db: db, logger: logger}
+	var emitter syncpkg.Emitter = throttle
+	applyMaxRPS(startup, settings.New(db, time.Now), logger)
 	httpClient := newHTTPClient()
 	srcOpts := source.Options{HTTP: httpClient, Logger: logger, Now: time.Now, UserAgent: buildinfo.UserAgent()}
 
@@ -115,8 +119,11 @@ func run() int {
 	if probe != nil {
 		deps.PerfSink = probe.Sink
 	}
+	deps.Media = media.New(filepath.Join(p.Data, "media"), db, app.MediaCap(deps.Settings), media.Options{Logger: logger})
+	deps.OpenFile = func(path string) error { return openFile(wapp, path) }
 	deps.Sync = syncpkg.New(syncpkg.Options{
 		DB: db, Keyring: kr, Emitter: emitter, Clock: clock, Logger: logger, SourceOpts: srcOpts,
+		Media: app.NewMediaStore(deps.Media),
 		AfterSync: func(ctx context.Context, standupID, runID int64) {
 			if err := deps.Sinks.AfterSync(ctx, standupID, runID); err != nil {
 				logger.Warn("after-sync delivery", "standup", standupID, "run", runID, "err", err)
@@ -128,6 +135,7 @@ func run() int {
 	})
 	app.RegisterEvents()
 	svcs := app.NewServices(deps)
+	throttle.attach() // an existing connection's limiter feeds sync:throttled; Connect re-attaches (connection:auth)
 
 	var fakeSrv *jiratest.Server
 	if fake && !benchSeeded(startup, svcs, probe) {
@@ -180,6 +188,9 @@ func run() int {
 				if err := deps.Sync.Shutdown(stop); err != nil {
 					logger.Warn("sync did not stop in time", "err", err)
 				}
+				if err := svcs.Shutdown(stop); err != nil {
+					logger.Warn("background work did not stop in time", "err", err)
+				}
 				if fakeSrv != nil {
 					fakeSrv.Close()
 				}
@@ -202,14 +213,14 @@ func run() int {
 		Services:    svcs.Bound(),
 		Assets: application.AssetOptions{
 			Handler:    application.AssetFileServerFS(dist),
-			Middleware: app.BootMiddleware(svcs),
+			Middleware: app.AssetMiddleware(svcs),
 		},
 		MarshalError:   apperr.Marshal,
 		SingleInstance: &application.SingleInstanceOptions{UniqueID: "crueber.cuisle"},
 		Mac:            application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
 		OnShutdown:     cleanupAll,
 	})
-	emitter.App = wapp
+	wailsEmitter.App = wapp
 
 	var saved *app.WindowState
 	theme := settings.AppDefaults[settings.KeyTheme]
@@ -235,6 +246,11 @@ func run() int {
 			if probe != nil {
 				return // bench mode never syncs
 			}
+			go func() { // orphan sweep and cap check of the image cache, off the cold-start path (ADR 0015)
+				if _, err := deps.Media.Evict(appCtx); err != nil && appCtx.Err() == nil {
+					logger.Warn("image cache cleanup failed", "err", err)
+				}
+			}()
 			openMu.Lock()
 			defer openMu.Unlock()
 			openTimer = time.AfterFunc(syncOnOpenDelay, func() {
@@ -277,11 +293,13 @@ func newHTTPClient() *http.Client {
 	return &http.Client{Transport: tr, Timeout: 30 * time.Second}
 }
 
-// openURL opens an http(s) link in the OS browser through Wails.
+// openURL opens an http(s) or mailto link in the OS browser or mail client through Wails.
 func openURL(a *application.App, raw string) error {
 	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return apperr.New(apperr.Validation, "Only web links can be opened.")
+	web := u != nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+	mail := u != nil && u.Scheme == "mailto" && (u.Opaque != "" || u.Path != "")
+	if err != nil || !(web || mail) {
+		return apperr.New(apperr.Validation, "Only web and mail links can be opened.")
 	}
 	if a == nil {
 		return apperr.New(apperr.Internal, "The application is not running.")
@@ -293,4 +311,12 @@ func openURL(a *application.App, raw string) error {
 func fail(what string, err error) int {
 	fmt.Fprintf(os.Stderr, "cuisle: %s: %v\n", what, err)
 	return 1
+}
+
+// openFile opens a downloaded attachment with the OS default application through Wails.
+func openFile(a *application.App, path string) error {
+	if a == nil {
+		return apperr.New(apperr.Internal, "The application is not running.")
+	}
+	return a.Browser.OpenFile(path)
 }

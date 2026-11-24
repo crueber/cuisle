@@ -1,0 +1,46 @@
+/* Ticket anchor strip (ux-spec §14.4): 32px, pinned to the top of the content column. Scales with --scale. Tokens only. */
+.anchor {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-4);
+  min-height: calc(var(--scale) * 2rem);
+  padding: 0 var(--space-4);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+
+.anchor-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--color-fg);
+  font: inherit;
+  font-size: calc(var(--scale) * 0.8125rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.anchor-item[aria-current="true"] {
+  border-bottom-color: var(--color-fg);
+}
+
+.anchor-item:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.anchor-count {
+  margin-left: var(--space-1);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}

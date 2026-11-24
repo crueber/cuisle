@@ -1,0 +1,48 @@
+/* Configure > Display > Storage. Section frame lives in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.sto {
+  gap: var(--space-3);
+}
+
+.sto-size {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+}
+
+.sto-size strong {
+  font-size: var(--font-size-h1-compact);
+  font-weight: var(--font-weight-bold);
+}
+
+.sto-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.sto-btn {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.sto-btn:hover {
+  background: var(--color-rule-soft);
+}
+
+.sto-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.sto-alert {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-alert-text);
+}

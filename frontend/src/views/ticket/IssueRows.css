@@ -1,0 +1,123 @@
+/* Ticket subtasks and linked issues (ux-spec §14.4): 34px rows. Scales with --scale.
+   Section head classes live in TicketContent.css. Tokens only. */
+.ir-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ir-group {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.ir-group-label {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.ir-row {
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+
+.ir-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: calc(var(--scale) * 2.125rem);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ir-btn:hover {
+  background: var(--color-rail-bg);
+}
+
+.ir-btn:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: -3px;
+}
+
+.ir-type {
+  flex: none;
+  display: inline-flex;
+}
+
+.ir-key {
+  flex: none;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.875rem);
+  font-weight: var(--font-weight-bold);
+}
+
+.ir-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(var(--scale) * 0.9375rem);
+}
+
+.ir-status {
+  flex: none;
+  padding: 2px var(--space-2);
+  border-radius: 2px;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.6875rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+  background: var(--color-lozenge-todo-bg);
+  color: var(--color-lozenge-todo-fg);
+}
+
+.ir-status[data-lane="prog"] {
+  background: var(--color-lozenge-prog-bg);
+  color: var(--color-lozenge-prog-fg);
+}
+
+.ir-status[data-lane="review"] {
+  background: var(--color-lozenge-review-bg);
+  color: var(--color-lozenge-review-fg);
+}
+
+.ir-status[data-lane="qa"] {
+  background: var(--color-lozenge-qa-bg);
+  color: var(--color-lozenge-qa-fg);
+}
+
+.ir-status[data-lane="done"] {
+  background: var(--color-lozenge-done-bg);
+  color: var(--color-lozenge-done-fg);
+}
+
+.ir-status[data-lane="alert"] {
+  background: var(--color-lozenge-alert-bg);
+  color: var(--color-lozenge-alert-fg);
+}
+
+.ir-assignee {
+  flex: none;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  color: var(--color-muted);
+}
+
+/* Done rows are muted and struck through (a list row, not a task list). */
+.ir-row[data-done="true"] .ir-key,
+.ir-row[data-done="true"] .ir-summary {
+  color: var(--color-done-fg);
+  text-decoration: line-through;
+}

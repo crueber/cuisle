@@ -20,6 +20,8 @@ import { ExportSection } from "./sections/Export";
 import { PersonViewSection } from "./sections/PersonView";
 import { PulseSection } from "./sections/Pulse";
 import { SourceSection } from "./sections/Source";
+import { StorageSection } from "./sections/Storage";
+import { TicketFieldsSection } from "./sections/TicketFields";
 import { SpeakersSection } from "./sections/Speakers";
 import { StatusMappingSection } from "./sections/StatusMapping";
 import { WholeBoardSection } from "./sections/WholeBoard";
@@ -27,7 +29,7 @@ import "../../styles/configure.css";
 
 type SectionId =
   | "sec-source" | "sec-speakers" | "sec-person" | "sec-pulse" | "sec-board"
-  | "sec-mapping" | "sec-export" | "sec-display" | "sec-connection";
+  | "sec-mapping" | "sec-export" | "sec-display" | "sec-storage" | "sec-connection" | "sec-ticket-fields";
 
 const LABELS: Record<SectionId, string> = {
   "sec-source": "Source",
@@ -38,23 +40,26 @@ const LABELS: Record<SectionId, string> = {
   "sec-mapping": "Status mapping",
   "sec-export": "Export",
   "sec-display": "Display",
+  "sec-storage": "Storage",
   "sec-connection": "Connection",
+  "sec-ticket-fields": "Ticket fields",
 };
 
 const ORDER: SectionId[] = [
-  "sec-source", "sec-speakers", "sec-person", "sec-pulse", "sec-board", "sec-mapping", "sec-export", "sec-display", "sec-connection",
+  "sec-source", "sec-speakers", "sec-person", "sec-pulse", "sec-board", "sec-mapping", "sec-export", "sec-display", "sec-storage", "sec-connection",
+  "sec-ticket-fields",
 ];
 
 /** Column membership per ux-spec §9.2 (column-major DOM order). */
 const COLUMNS: Record<1 | 2 | 3, SectionId[][]> = {
   3: [
     ["sec-source", "sec-person", "sec-export"],
-    ["sec-speakers", "sec-display", "sec-connection"],
-    ["sec-pulse", "sec-board", "sec-mapping"],
+    ["sec-speakers", "sec-display", "sec-storage", "sec-connection"],
+    ["sec-pulse", "sec-board", "sec-mapping", "sec-ticket-fields"],
   ],
   2: [
     ["sec-source", "sec-speakers", "sec-board", "sec-export"],
-    ["sec-person", "sec-pulse", "sec-mapping", "sec-display", "sec-connection"],
+    ["sec-person", "sec-pulse", "sec-mapping", "sec-display", "sec-storage", "sec-connection", "sec-ticket-fields"],
   ],
   1: [ORDER],
 };
@@ -82,7 +87,9 @@ function renderSection(id: SectionId, columns: 1 | 2 | 3, cfg: StandupConfig) {
     case "sec-mapping": return <StatusMappingSection {...p} />;
     case "sec-export": return <ExportSection {...p} />;
     case "sec-display": return <DisplaySection {...app} />;
+    case "sec-storage": return <StorageSection {...app} />;
     case "sec-connection": return <ConnectionSection {...app} />;
+    case "sec-ticket-fields": return <TicketFieldsSection {...app} />;
   }
 }
 

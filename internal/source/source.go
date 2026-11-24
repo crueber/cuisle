@@ -5,6 +5,7 @@ package source
 import (
 	"context"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"sort"
@@ -22,8 +23,27 @@ type Capabilities struct {
 	HasDevActivity     bool     `json:"hasDevActivity"`
 	HasExtraFilter     bool     `json:"hasExtraFilter"`
 	HasAssigneeHistory bool     `json:"hasAssigneeHistory"`
+	Content            bool     `json:"content"`        // Hydrate returns IssueContent + full comments; Fields/FetchMedia/GetIssue work (ADR 0015)
+	Writes             Writes   `json:"writes"`         // all false = read-only source
 	FilterLanguage     string   `json:"filterLanguage"` // "JQL"
 	AuthFields         []string `json:"authFields"`     // e.g. ["baseUrl","account","secret"]
+}
+
+// Writes are the light writes a source supports (ADR 0015). Each is an explicit user action, never automatic.
+type Writes struct {
+	Transition bool `json:"transition"`
+	Assign     bool `json:"assign"`
+	Flag       bool `json:"flag"` // Jira: false when no Flagged field was discovered
+	Comment    bool `json:"comment"`
+}
+
+// MediaBlob is one attachment body (original or provider-made thumbnail) streamed from the source. The caller closes
+// Body. Bytes is -1 when unknown.
+type MediaBlob struct {
+	Body        io.ReadCloser
+	Mime        string
+	Bytes       int64
+	MediaFileID string // media id learned while fetching (Jira: from the redirect URL); "" if not learned
 }
 
 // Progress phases reported by adapters during Hydrate (architecture.md §3.3 sync:progress).
@@ -31,6 +51,7 @@ const (
 	PhaseIssues    = "issues"
 	PhaseChangelog = "changelog"
 	PhaseComments  = "comments"
+	PhaseContent   = "content" // descriptions, field values, attachment metadata (ADR 0015)
 	PhaseDev       = "dev"
 )
 
@@ -57,6 +78,24 @@ type Source interface {
 	Meta() map[string]any
 	// Requests returns the number of HTTP requests and rate-limit responses since the Source was opened.
 	Requests() (requests, throttled int)
+
+	// ── Content (Capabilities.Content; ADR 0015). ErrUnsupported when !Capabilities.Content. ──
+
+	// Fields returns the field registry, including custom fields, each with its neutral Kind.
+	Fields(ctx context.Context) ([]model.FieldDef, error)
+	// FetchMedia streams an attachment's original (thumb=false) or the provider-made thumbnail (thumb=true).
+	FetchMedia(ctx context.Context, att model.Attachment, thumb bool) (MediaBlob, error)
+	// GetIssue is the single-issue refresh: Hydrate of one id (nil progress), always complete (content + comments).
+	GetIssue(ctx context.Context, sourceID string) (model.IssueDetail, error)
+
+	// ── Writes (Capabilities.Writes). Explicit user actions only: one attempt, never retried; each returns after the
+	// provider accepted the change. ErrUnsupported when the matching Writes flag is false. ──
+
+	Transitions(ctx context.Context, sourceID string) ([]model.Transition, error)
+	Transition(ctx context.Context, sourceID, transitionID string) error
+	Assign(ctx context.Context, sourceID, accountID string) error // "" = unassign
+	SetFlag(ctx context.Context, sourceID string, flagged bool) error
+	AddComment(ctx context.Context, sourceID string, c model.NewComment) (commentID string, err error)
 }
 
 type PlanInput struct {
@@ -154,4 +193,20 @@ func Kinds() []string {
 // IsUnsupported reports whether err is ErrUnsupported or carries code unsupported.
 func IsUnsupported(err error) bool {
 	return errors.Is(err, ErrUnsupported) || apperr.Is(err, apperr.Unsupported)
+}
+
+// interactiveKey marks a context as a user-initiated request (F12, jira-sync §3.1).
+type interactiveKey struct{}
+
+// WithInteractive marks ctx as a user-initiated request: Connect, a ticket Refresh, opening the Status combobox, a
+// light write, a mention search. Adapters with a rate limiter serve such requests ahead of sync and media traffic.
+// The core marks contexts this way because it may not import a concrete adapter (layering rule).
+func WithInteractive(ctx context.Context) context.Context {
+	return context.WithValue(ctx, interactiveKey{}, true)
+}
+
+// IsInteractive reports whether ctx was marked by WithInteractive.
+func IsInteractive(ctx context.Context) bool {
+	v, _ := ctx.Value(interactiveKey{}).(bool)
+	return v
 }

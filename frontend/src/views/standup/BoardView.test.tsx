@@ -14,7 +14,7 @@
 //                 Pressing it calls onSelectPerson(speaker.id) ("unassigned" for the unassigned lane).
 //   - Lane rows:  the other <button>s in the lane (text contains the key); each contains a track (PulseTrack with lane=true
 //                 and days = view.pulseDays) and a days chip "<n>d" (min 1d, data-alert like the person view). Clicking
-//                 calls api().app.openIssue(key).
+//                 calls openTicketFromRow(key) (the ticket modal opens; WP-T9).
 //   - Axis row:   per column, an element with the text "last 21 days" and an element with the text "today".
 //
 // SPEC-NOTE: the subtitle line, with counts taken from view.counts, reads exactly (separators " · ", whitespace collapsed)
@@ -141,7 +141,7 @@ function build(): { view: StandupView; silasRowOrder: string[]; doneKeys: string
   const orphan = tk("done", ""); // done with no assignee
   tickets.push(orphan);
   doneKeys.push(orphan.key);
-  const backlog: BacklogItem[] = Array.from({ length: 12 }, (_, i) => ({ key: `MOB-${5000 + i}`, summary: `Backlog ${i}`, type: "story", url: "" }));
+  const backlog: BacklogItem[] = Array.from({ length: 12 }, (_, i) => ({ issueId: 5000 + i, key: `MOB-${5000 + i}`, summary: `Backlog ${i}`, type: "story", url: "" }));
   const view: StandupView = {
     standupId: 1, rev: 1, generatedAt: 1, today: "2026-11-23", asOf: 1, live: true, name: "Saffron Mobile", spaceKey: "MOB", boardName: "Board", boardType: "scrum", scope: "sprint",
     sprint: { id: "42", name: "Sprint 42", startAt: 1, endAt: 2, daysLeft: 0, endsLabel: "ends today" },
@@ -155,9 +155,12 @@ function build(): { view: StandupView; silasRowOrder: string[]; doneKeys: string
 }
 
 // ───────────────────────── harness ─────────────────────────
+const rowOpen = vi.hoisted(() => ({ fn: (_key: string): unknown => undefined }));
+vi.mock("../../state/ticketSteps", () => ({ openTicketFromRow: (key: string) => rowOpen.fn(key) }));
 let openIssue: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   openIssue = vi.fn(async () => {});
+  rowOpen.fn = openIssue as unknown as (key: string) => unknown; // rows open the ticket modal (WP-T9); the opener is replaced by this spy
   setApi({ app: { openIssue } } as unknown as Api);
 });
 afterEach(() => setApi(wailsApi));

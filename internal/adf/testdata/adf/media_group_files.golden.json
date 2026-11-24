@@ -1,0 +1,20 @@
+{
+  "c": [
+    {
+      "t": "file",
+      "a": {
+        "attachmentId": "203",
+        "name": "unit-spec.pdf",
+        "mime": "application/pdf",
+        "bytes": 412000,
+        "cached": "none"
+      }
+    },
+    {
+      "t": "file",
+      "a": {
+        "missing": true
+      }
+    }
+  ]
+}

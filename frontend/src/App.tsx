@@ -4,8 +4,11 @@ import { useEffect } from "preact/hooks";
 import { standups } from "./state/app";
 import { route } from "./state/route";
 import { currentView } from "./state/standup";
+import { backTicket, closeTicket, openLinkedTicket, stepToTicket, ticketSession } from "./state/ticket";
 import { banners, toasts, dismissBanner, dismissToast, keyLegendOpen, runToastAction, switcherOpen } from "./state/ui";
 import { StandupScreen } from "./views/standup/StandupScreen";
+import { TicketModal } from "./views/ticket/TicketModal";
+import { useViewport } from "./views/useViewport";
 import { ConfigureScreen } from "./views/configure/ConfigureScreen";
 import { ConnectScreen } from "./views/connect/ConnectScreen";
 import { ReconnectScreen } from "./views/connect/ReconnectScreen";
@@ -29,12 +32,19 @@ export function App() {
   const options = currentView.value?.options;
   const legendOpen = keyLegendOpen.value;
   const wantSwitcher = switcherOpen.value;
+  const ticket = ticketSession.value;
+  const { vw, vh } = useViewport();
 
   // Popovers never outlive the screen they were opened on.
   useEffect(() => {
     keyLegendOpen.value = false;
     switcherOpen.value = false;
   }, [r]);
+
+  // The ticket modal is an overlay of the standup screen: leaving that screen (Configure, Connect) closes it.
+  useEffect(() => {
+    if (r.view !== "standup" && ticketSession.peek() !== null) closeTicket();
+  }, [r.view]);
 
   useEffect(() => {
     if (!wantSwitcher) return;
@@ -59,6 +69,20 @@ export function App() {
           {r.view === "configure" && <ConfigureScreen />}
         </>
       )}
+      {ticket && r.view === "standup" ? (
+        <TicketModal
+          standupId={ticket.standupId}
+          issueId={ticket.issueId}
+          steps={ticket.steps}
+          stack={ticket.stack}
+          vw={vw}
+          vh={vh}
+          onStep={stepToTicket}
+          onOpenLinked={openLinkedTicket}
+          onBack={() => void backTicket()}
+          onClose={closeTicket}
+        />
+      ) : null}
       <KeyLegend
         open={legendOpen && r.view === "standup"}
         onClose={() => {

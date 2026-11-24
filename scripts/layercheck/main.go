@@ -31,11 +31,13 @@ var allowed = map[string][]string{
 	"internal/settings":             {"internal/store", "internal/model", "internal/apperr"},
 	"internal/cache":                {"internal/store", "internal/model", "internal/apperr"},
 	"internal/source":               {"internal/model", "internal/apperr"},
-	"internal/source/jira":          {"internal/source", "internal/model", "internal/apperr"},
+	"internal/source/jira":          {"internal/source", "internal/model", "internal/apperr", "internal/adf", "internal/source/jira/limiter"}, // adf: comment bodies (F12, jira-sync §2.15); limiter: WP-T0
 	"internal/source/jira/jiratest": {},
 	"internal/sync":                 {"internal/source", "internal/cache", "internal/settings", "internal/secrets", "internal/model", "internal/store", "internal/apperr"},
 	"internal/history":              {"internal/cache", "internal/store", "internal/settings", "internal/model", "internal/apperr"},
-	"internal/view":                 {"internal/model", "internal/cache", "internal/settings", "internal/pulse"},
+	"internal/adf":                  {"internal/model"},
+	"internal/media":                {"internal/model", "internal/store", "internal/paths", "internal/apperr"},
+	"internal/view":                 {"internal/model", "internal/cache", "internal/settings", "internal/pulse", "internal/adf"},
 	"internal/export":               {"internal/view", "internal/model", "internal/pulse"},
 	"internal/sink":                 {"internal/export", "internal/model", "internal/secrets", "internal/store", "internal/apperr"},
 	"internal/sink/file":            {"internal/sink", "internal/export", "internal/model", "internal/apperr"},
@@ -54,6 +56,7 @@ var testOnly = map[string][]string{
 	"internal/sink":        {"internal/store/storetest", "internal/view", "internal/pulse", "internal/sink/file"},
 	"internal/sink/file":   {"internal/view", "internal/pulse"},
 	"internal/export":      {},
+	"internal/media":       {"internal/store/storetest"},
 	"internal/source/jira": {"internal/source/jira/jiratest"},
 }
 

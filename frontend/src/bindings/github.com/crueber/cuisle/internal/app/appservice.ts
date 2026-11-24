@@ -13,6 +13,13 @@ export function Bootstrap(): $CancellablePromise<$models.Bootstrap> {
     return $Call.ByID(1090435812);
 }
 
+/**
+ * ClearMediaCache removes originals and thumbnails ("Clear image cache"). Images download again on demand.
+ */
+export function ClearMediaCache(): $CancellablePromise<$models.MediaCacheInfo> {
+    return $Call.ByID(4210277321);
+}
+
 export function Diagnostics(): $CancellablePromise<$models.Diagnostics> {
     return $Call.ByID(3154268830);
 }
@@ -21,8 +28,23 @@ export function LogClientError(message: string, stack: string): $CancellableProm
     return $Call.ByID(326825795, message, stack);
 }
 
+/**
+ * MediaCache reports the image cache size; the cap is app setting media.cache_max_mb.
+ */
+export function MediaCache(): $CancellablePromise<$models.MediaCacheInfo> {
+    return $Call.ByID(2273813380);
+}
+
 export function OpenIssue(issueKey: string): $CancellablePromise<void> {
     return $Call.ByID(550706477, issueKey);
+}
+
+/**
+ * OpenURL opens an http, https or mailto link in the OS browser or mail client (links inside ticket text, ux-spec
+ * §14.4). Anything else is refused; the webview itself never navigates.
+ */
+export function OpenURL(rawURL: string): $CancellablePromise<void> {
+    return $Call.ByID(1174248519, rawURL);
 }
 
 export function ReportPerf(marks: { [_ in string]?: number } | null): $CancellablePromise<void> {

@@ -49,7 +49,7 @@ const sp = (id: string, name: string, active: number): SpeakerView => ({
 });
 const SPEAKERS = [sp("p1", "Iris", 6), sp("p2", "Silas", 6), sp("p3", "Noor", 6)];
 
-const BACKLOG: BacklogItem[] = Array.from({ length: 12 }, (_, i) => ({ key: `MOB-${5000 + i}`, summary: `Backlog ${i}`, type: "story", url: "" }));
+const BACKLOG: BacklogItem[] = Array.from({ length: 12 }, (_, i) => ({ issueId: 5000 + i, key: `MOB-${5000 + i}`, summary: `Backlog ${i}`, type: "story", url: "" }));
 
 function makeView(): StandupView {
   counter = 0;

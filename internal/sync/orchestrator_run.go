@@ -39,6 +39,8 @@ type runner struct {
 	warnings []string
 	applied  ApplyResult
 	stamps   map[string]cache.IssueStamp // cached issue stamps of the scanned ids
+
+	fieldDefs []model.FieldDef // the field registry the content phase read (stored with the apply)
 }
 
 // outcome is how a run ended.
@@ -91,6 +93,10 @@ func (o *Orchestrator) execute(ctx context.Context, r *run, requested string) {
 		}
 	}()
 	rn.finish(ctx, out)
+	// Phase 9 runs after sync:finished and never changes the run's status (jira-sync.md §4.3).
+	if (out.status == StatusOK || out.status == StatusPartial) && rn.f != nil && rn.src != nil {
+		rn.mediaPhase(rn.f)
+	}
 }
 
 // runTimeout is the limit for one sync run (jira-sync.md section 1). A var so tests can shorten it.
@@ -132,11 +138,14 @@ func (rn *runner) run(ctx context.Context) outcome {
 	rn.prog.report(PhaseApply, 0, 1)
 	actx, acancel := context.WithCancel(context.WithoutCancel(ctx))
 	defer acancel()
-	res, err := o.apply(actx, rn.f)
+	res, updates, err := o.applyWith(actx, rn.f, &applyExtras{FieldDefs: rn.fieldDefs})
 	if err != nil {
 		return rn.failed(ctx, err)
 	}
 	rn.applied = res
+	for _, u := range updates {
+		o.emit(EvTicketUpdated, u)
+	}
 	rn.prog.report(PhaseApply, 1, 1)
 	rn.logf(ctx, "info", PhaseApply, "applied")
 
@@ -260,6 +269,9 @@ func (rn *runner) syncPhases(ctx context.Context) error {
 		return err
 	}
 	if err := rn.hydratePhase(ctx, f, members); err != nil {
+		return err
+	}
+	if err := rn.contentPhase(ctx, f); err != nil {
 		return err
 	}
 	if err := rn.devPhase(ctx, f, members, lanes); err != nil {

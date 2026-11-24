@@ -117,7 +117,7 @@ func wp06AssertNear(t *testing.T, got, want time.Duration) {
 func TestPolicy_NewPolicy_FillsDefaults(t *testing.T) {
 	p := NewPolicy(PolicyOptions{})
 	o := p.opts
-	if o.Concurrency != 4 || o.RatePerSecond != 10 || o.Max429Retries != 5 || o.MaxGate != 120*time.Second ||
+	if o.Concurrency != 4 || o.RatePerSecond != 8 || o.Max429Retries != 5 || o.MaxGate != 120*time.Second ||
 		o.MaxRetries5xx != 3 || o.BaseBackoff != 500*time.Millisecond {
 		t.Fatalf("defaults = %+v", o)
 	}
@@ -234,7 +234,7 @@ func TestPolicy_Acquire_LaterGateIsNotShortenedByEarlierOne(t *testing.T) {
 
 func TestPolicy_Acquire_FreshDefaultPolicyDoesNotSleep(t *testing.T) {
 	s := &wp06Sleeper{t: t}
-	p := NewPolicy(PolicyOptions{Sleep: s.Sleep, Jitter: func() float64 { return 0.5 }}) // default 10 requests/s
+	p := NewPolicy(PolicyOptions{Sleep: s.Sleep, Jitter: func() float64 { return 0.5 }}) // default 8 requests/s (jira-sync §3.1)
 	s.pol = p
 	release, err := p.Acquire(context.Background())
 	if err != nil {

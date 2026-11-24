@@ -96,7 +96,9 @@ type FxHistory struct {
 type FxPR struct {
 	ID     int    `json:"id"`
 	Day    int    `json:"day"`
-	Status string `json:"status"` // OPEN|MERGED|DECLINED
+	Status string `json:"status"`           // OPEN|MERGED|DECLINED
+	Title  string `json:"title,omitempty"`  // pull request title; "" = the server derives none
+	Branch string `json:"branch,omitempty"` // source branch name
 }
 
 type FxBacklog struct {
@@ -192,6 +194,8 @@ type DSPR struct {
 	Repo       string
 	Status     string // OPEN|MERGED|DECLINED
 	LastUpdate time.Time
+	Title      string // pull request title (dev-status pullRequests[].name)
+	Branch     string // source branch (pullRequests[].source.branch)
 }
 
 // ── Server ──
@@ -216,6 +220,9 @@ type Options struct {
 	DevStatus string // "ok" (default) | "404" | "403" | "garbage"
 	PageSize  int    // 0 = honour maxResults; >0 caps every page (forces paging)
 	Addr      string // listen address; "" = 127.0.0.1:0 (random port). If it is taken, a random port is used.
+	// F12 faults (jira-sync §6). Handlers: WP-T6.
+	RefreshFails   bool // GET /issue/{id} answers 500 after a successful write to that issue (the refresh_failed path)
+	StaleChangelog bool // a write applies, but changelog/bulkfetch omits its entry until the next Mutate
 }
 
 // Request is one logged request (for "no network without a trigger" and request-budget tests).

@@ -24,6 +24,11 @@ export const DataChanged = "data:changed";
 export const DayRolled = "day:rolled";
 
 /**
+ * Name of the custom event "media:ready".
+ */
+export const MediaReady = "media:ready";
+
+/**
  * Name of the custom event "sink:delivered".
  */
 export const SinkDelivered = "sink:delivered";
@@ -47,4 +52,19 @@ export const SyncProgress = "sync:progress";
  * Name of the custom event "sync:started".
  */
 export const SyncStarted = "sync:started";
+
+/**
+ * Name of the custom event "sync:throttled".
+ */
+export const SyncThrottled = "sync:throttled";
+
+/**
+ * Name of the custom event "ticket:updated".
+ */
+export const TicketUpdated = "ticket:updated";
+
+/**
+ * Name of the custom event "ticket:write_failed".
+ */
+export const TicketWriteFailed = "ticket:write_failed";
 

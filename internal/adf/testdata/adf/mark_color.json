@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "plain "
+        },
+        {
+          "type": "text",
+          "text": "red",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "#bf2600"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " green",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "#00875a"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

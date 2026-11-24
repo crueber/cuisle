@@ -1,15 +1,27 @@
 // Configure > Connection section (app-wide; ux-spec §9.4 Connection, product-spec F1).
 // Shows the site and account, offers Reconnect (the Connect form inline, reconnect mode) and Disconnect behind an
 // inline two-step confirm (no window.confirm: webviews block native dialogs).
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { api, toAppError } from "../../../api";
-import { connection } from "../../../state/app";
+import type { Diagnostics, MediaCacheInfo } from "../../../api/types";
+import { Checkbox } from "../../../components/Checkbox";
+import { connection, settings } from "../../../state/app";
 import { ConnectScreen } from "../../connect/ConnectScreen";
 import type { AppSectionProps } from "../props";
+import { formatBytes } from "./Storage";
 import "./Connection.css";
+
+const MIB = 1048576;
+const DEFAULT_CAP_MB = 2048;
 
 function hostOf(baseUrl: string): string {
   return baseUrl.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
+/** The cleanup cap in bytes (storage.cleanup_offer_mb is MiB). */
+function capBytes(): number {
+  const n = Number.parseInt(settings.value["storage.cleanup_offer_mb"] ?? "", 10);
+  return (Number.isNaN(n) ? DEFAULT_CAP_MB : n) * MIB;
 }
 
 export function ConnectionSection(props: AppSectionProps) {
@@ -19,12 +31,51 @@ export function ConnectionSection(props: AppSectionProps) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [offer, setOffer] = useState<string | null>(null); // formatted content size, only when over the cap
+  const [deleteContent, setDeleteContent] = useState(false);
+  const lookup = useRef(0); // invalidates a size lookup that answers after Cancel or a re-open
+
+  /** Reads the local content size when the confirm opens. Confirm never waits for it; failure means no offer. */
+  const readSize = () => {
+    const id = ++lookup.current;
+    const cap = capBytes();
+    let sizes: Promise<[Diagnostics, MediaCacheInfo]>;
+    try {
+      sizes = Promise.all([api().app.diagnostics(), api().app.mediaCache()]);
+    } catch {
+      return; // no offer: the safe default (keep synced content)
+    }
+    sizes
+      .then(([d, m]) => {
+        if (id !== lookup.current) return;
+        const total = d.dbBytes + m.bytes + m.thumbBytes;
+        if (total > cap) setOffer(formatBytes(total));
+      })
+      .catch(() => {
+        // No offer: the safe default (keep synced content).
+      });
+  };
+
+  const openConfirm = () => {
+    setOffer(null);
+    setDeleteContent(false);
+    setConfirming(true);
+    readSize();
+  };
+
+  const cancel = () => {
+    lookup.current++;
+    setConfirming(false);
+    setOffer(null);
+    setDeleteContent(false);
+  };
 
   const disconnect = () => {
+    lookup.current++;
     setBusy(true);
     setError("");
     api()
-      .connection.disconnect()
+      .connection.disconnect(deleteContent)
       .then(() => api().connection.get())
       .then((c) => {
         connection.value = c;
@@ -33,6 +84,8 @@ export function ConnectionSection(props: AppSectionProps) {
       .finally(() => {
         setBusy(false);
         setConfirming(false);
+        setOffer(null);
+        setDeleteContent(false);
       });
   };
 
@@ -65,16 +118,27 @@ export function ConnectionSection(props: AppSectionProps) {
             <button type="button" class="conn-btn conn-danger" disabled={busy} onClick={disconnect}>
               Confirm disconnect
             </button>
-            <button type="button" class="conn-btn" onClick={() => setConfirming(false)}>
+            <button type="button" class="conn-btn" onClick={cancel}>
               Cancel
             </button>
           </>
         ) : (
-          <button type="button" class="conn-btn" onClick={() => setConfirming(true)}>
+          <button type="button" class="conn-btn" onClick={openConfirm}>
             Disconnect
           </button>
         )}
       </div>
+
+      {confirming && offer ? (
+        <div class="conn-offer">
+          <Checkbox
+            id="conn-delete-content"
+            label={`Also delete synced content (${offer}): descriptions, comments and images. History of status, assignee and flags is kept.`}
+            checked={deleteContent}
+            onChange={setDeleteContent}
+          />
+        </div>
+      ) : null}
 
       {error ? (
         <p class="conn-alert" role="alert">

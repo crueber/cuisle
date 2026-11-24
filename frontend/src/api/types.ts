@@ -8,6 +8,7 @@ import type * as K from "../bindings/github.com/crueber/cuisle/internal/sink/mod
 import type * as St from "../bindings/github.com/crueber/cuisle/internal/settings/models";
 import type * as So from "../bindings/github.com/crueber/cuisle/internal/source/models";
 import type * as B from "../bindings/github.com/crueber/cuisle/internal/buildinfo/models";
+import type * as Adf from "../bindings/github.com/crueber/cuisle/internal/adf/models";
 
 type IsMap<T> = T extends readonly unknown[] ? false : T extends object ? (string extends keyof T ? true : `${number}` extends keyof T ? true : false) : false;
 type FixField<F> = [Exclude<F, null | undefined>] extends [readonly (infer U)[]]
@@ -17,10 +18,14 @@ type FixField<F> = [Exclude<F, null | undefined>] extends [readonly (infer U)[]]
     : null extends F
       ? Fix<Exclude<F, null>> | null
       : Fix<F>;
+// Optional struct members (Go `omitempty`, e.g. the adf node tree) stay optional, because Go really omits them; maps
+// keep their index signatures as before.
 export type Fix<T> = T extends readonly (infer U)[]
   ? Fix<U>[]
   : T extends object
-    ? { [K in keyof T]-?: undefined extends T[K] ? FixField<T[K]> | undefined : FixField<T[K]> }
+    ? IsMap<T> extends true
+      ? { [K in keyof T]-?: undefined extends T[K] ? FixField<T[K]> | undefined : FixField<T[K]> }
+      : { [K in keyof T]: FixField<Exclude<T[K], undefined>> }
     : T;
 
 // ── view models ──
@@ -46,6 +51,32 @@ export type SpaceOption = Fix<V.SpaceOption>;
 export type BoardOption = Fix<V.BoardOption>;
 export type FilterCheck = Fix<V.FilterCheck>;
 
+// ── ticket modal (ADR 0015, ux-spec §14) ──
+export type TicketDetail = Fix<V.TicketDetail>;
+export type IssueRefView = Fix<V.IssueRefView>;
+export type IssueRow = Fix<V.IssueRow>;
+export type LinkGroup = Fix<V.LinkGroup>;
+export type AttachmentView = Fix<V.AttachmentView>;
+export type PersonRef = Fix<V.PersonRef>;
+export type CommentView = Fix<V.CommentView>;
+export type CommentInput = Fix<V.CommentInput>;
+export type Mention = Fix<V.Mention>;
+export type RailGroup = Fix<V.RailGroup>;
+export type RailRow = Fix<V.RailRow>;
+export type TransitionList = Fix<V.TransitionList>;
+export type TransitionOption = Fix<V.TransitionOption>;
+export type TicketCaps = Fix<V.TicketCaps>;
+export type DevSummary = Fix<V.DevSummary>;
+export type DevPR = Fix<V.DevPR>;
+export type TicketFieldPrefs = Fix<V.TicketFieldPrefs>;
+export type FieldPref = Fix<V.FieldPref>;
+export type FieldOption = Fix<V.FieldOption>;
+/** Parsed rich text (Go internal/adf): the frontend never sees raw ADF. */
+export type AdfDoc = Fix<Adf.Doc>;
+export type AdfNode = Fix<Adf.Node>;
+export type AdfMark = Fix<Adf.Mark>;
+export type AdfAttrs = Fix<Adf.Attrs>;
+
 // ── app I/O ──
 export type Bootstrap = Fix<A.Bootstrap>;
 export type Connection = Fix<A.Connection>;
@@ -66,6 +97,8 @@ export type UIState = Fix<St.UIState>;
 export type WindowState = Fix<St.WindowState>;
 export type BuildInfo = Fix<B.Info>;
 export type Capabilities = Fix<So.Capabilities>;
+export type Writes = Fix<So.Writes>;
+export type MediaCacheInfo = Fix<A.MediaCacheInfo>;
 export type SinkField = Fix<K.Field>;
 export type SinkCapabilities = Fix<K.Capabilities>;
 
@@ -78,6 +111,10 @@ export type ConnectionAuth = Fix<S.ConnectionAuth>;
 export type SinkDelivered = Fix<A.SinkDelivered>;
 export type SinkFailed = Fix<A.SinkFailed>;
 export type DayRolled = Fix<A.DayRolled>;
+export type TicketUpdated = Fix<S.TicketUpdated>;
+export type TicketWriteFailed = Fix<A.TicketWriteFailed>;
+export type MediaReady = Fix<S.MediaReady>;
+export type SyncThrottled = Fix<S.SyncThrottled>;
 
 // ── string unions used across the UI ──
 export type Lane = "todo" | "prog" | "review" | "qa" | "done";
@@ -91,6 +128,22 @@ export type SyncMode = "incremental" | "full";
 export type Theme = "light" | "dark" | "system";
 export type TextSize = "standard" | "large";
 export type SpeakerSort = "shuffle" | "az" | "active";
+export type CommentOrder = "newest" | "oldest"; // app setting ticket.comment_order
+export type MediaCached = "full" | "thumb" | "none";
+export type TicketWriteAction = "transition" | "assign" | "flag" | "comment";
+export type RailGroupId = "state" | "details" | "custom" | "development" | "dates";
+export type RailEdit = "" | "status" | "assignee" | "flag";
+/** RailRow.kind: a field kind or a rail-only kind (Go view.RailKind*; member conventions documented there). */
+export type FieldKind =
+  | "text" | "paragraph" | "number" | "date" | "datetime" | "url" | "option" | "options" | "cascade" | "user" | "users"
+  | "group" | "groups" | "version" | "versions" | "component" | "components" | "labels" | "project" | "team" | "unknown";
+export type RailKind = FieldKind | "status" | "flag" | "parent" | "sprint" | "time" | "watchers" | "branch" | "commits" | "pr";
+/** Normalised ADF node types (Go adf.Node* constants; ux-spec §14.4). */
+export type AdfNodeType =
+  | "p" | "h" | "text" | "br" | "ul" | "ol" | "li" | "task" | "taskItem" | "decision" | "quote" | "rule" | "code"
+  | "panel" | "table" | "tr" | "th" | "td" | "expand" | "status" | "mention" | "date" | "emoji" | "card" | "media"
+  | "file" | "unknown";
+export type AdfMarkType = "strong" | "em" | "strike" | "underline" | "sub" | "sup" | "code" | "link" | "color";
 
 /** window.__CUISLE_BOOT__ set by /boot.js before the module entry. */
 declare global {

@@ -1,0 +1,37 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "a",
+          "m": [
+            {
+              "t": "link",
+              "v": "https://ok.example.com/"
+            }
+          ]
+        },
+        {
+          "t": "text",
+          "x": "b",
+          "m": [
+            {
+              "t": "link",
+              "v": "mailto:dev@example.com"
+            }
+          ]
+        },
+        {
+          "t": "text",
+          "x": "c"
+        },
+        {
+          "t": "text",
+          "x": "d"
+        }
+      ]
+    }
+  ]
+}

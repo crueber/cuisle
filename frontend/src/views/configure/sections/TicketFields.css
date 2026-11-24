@@ -1,0 +1,101 @@
+/* Configure > Ticket fields. Section frame lives in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.tf {
+  gap: var(--space-3);
+}
+
+.tf-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tf-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-rule-soft);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.tf-name {
+  flex: 1 1 auto;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tf-btn {
+  min-height: var(--size-button-height);
+  min-width: var(--size-button-height);
+  padding: 0 var(--space-2);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.tf-btn:hover {
+  background: var(--color-rule-soft);
+}
+
+.tf-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.tf-hide {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-micro);
+  letter-spacing: var(--font-tracking-tag);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* The Switch keeps its accessible name ("Hide <field>") while the visible row already shows the field name. */
+.tf-hide .switch-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.tf-hidden {
+  margin-top: var(--space-2);
+}
+
+.tf-toggle {
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.tf-empty,
+.tf-alert {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+.tf-empty {
+  color: var(--color-muted);
+}
+
+.tf-alert {
+  color: var(--color-alert-text);
+}

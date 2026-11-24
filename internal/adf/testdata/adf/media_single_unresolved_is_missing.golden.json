@@ -1,0 +1,14 @@
+{
+  "c": [
+    {
+      "t": "media",
+      "a": {
+        "width": 640,
+        "height": 480,
+        "layout": "wide",
+        "missing": true,
+        "block": true
+      }
+    }
+  ]
+}

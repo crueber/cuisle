@@ -1,0 +1,939 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Home cooks in the US want cups and spoons; everyone else wants grams and millilitres. Add a per-user unit preference and a toggle on the recipe page. Part of "
+        },
+        {
+          "type": "inlineCard",
+          "attrs": {
+            "url": "https://example.atlassian.net/browse/MOB-1200"
+          }
+        },
+        {
+          "type": "text",
+          "text": "; product owner "
+        },
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "silas",
+            "text": "@Silas Marchetti"
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "attrs": {
+        "panelType": "info"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Conversions use the density table in "
+            },
+            {
+              "type": "text",
+              "text": "Admin › Ingredients",
+              "marks": [
+                {
+                  "type": "strong"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": ". Volume ↔ weight only converts when the ingredient has a density; otherwise the original unit stays."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Acceptance criteria"
+        }
+      ]
+    },
+    {
+      "type": "taskList",
+      "attrs": {
+        "localId": "0"
+      },
+      "content": [
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "DONE",
+            "localId": "1"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "The toggle on the recipe page is saved per user"
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "DONE",
+            "localId": "2"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Amounts re-render without a reload and stay in "
+            },
+            {
+              "type": "status",
+              "attrs": {
+                "text": "METRIC",
+                "color": "green"
+              }
+            },
+            {
+              "type": "text",
+              "text": " or "
+            },
+            {
+              "type": "status",
+              "attrs": {
+                "text": "US",
+                "color": "blue"
+              }
+            },
+            {
+              "type": "text",
+              "text": " across recipes"
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "DONE",
+            "localId": "3"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "The shopping list uses the same unit as the recipe"
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "TODO",
+            "localId": "4"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "US mode shows fractions (⅓, ¼, ½), never decimals"
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "TODO",
+            "localId": "5"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Conversions never round below 1 g or ⅛ tsp ("
+            },
+            {
+              "type": "text",
+              "text": "rounding rules",
+              "marks": [
+                {
+                  "type": "link",
+                  "attrs": {
+                    "href": "https://docs.example.com/recipes/rounding"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": ")"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Conversion rules"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "colwidth": [
+                  210
+                ]
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Ingredient type"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "colwidth": [
+                  146
+                ]
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Metric"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "colwidth": [
+                  260
+                ]
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "US"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "attrs": {
+                "colwidth": [
+                  196
+                ]
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Rounding"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Liquids"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "ml"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "cups, tbsp, tsp"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "nearest ⅛ tsp"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Flour and sugar"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "g"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "cups (by density)"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "nearest 5 g / ⅛ cup"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Butter"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "g"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "tbsp, sticks "
+                    },
+                    {
+                      "type": "status",
+                      "attrs": {
+                        "text": "NEW",
+                        "color": "blue"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "nearest ½ tbsp"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Whole items"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "—"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "—"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "never converted"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "mediaSingle",
+      "attrs": {
+        "layout": "center"
+      },
+      "content": [
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-201",
+            "type": "file",
+            "collection": "contentId-1",
+            "alt": "unit-toggle-v3.png",
+            "width": 1200,
+            "height": 720
+          }
+        },
+        {
+          "type": "caption",
+          "content": [
+            {
+              "type": "text",
+              "text": "Unit toggle, v3: metric and US side by side"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 4
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Edge cases"
+        }
+      ]
+    },
+    {
+      "type": "orderedList",
+      "attrs": {
+        "order": 1
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Recipes authored in "
+                },
+                {
+                  "type": "text",
+                  "text": "both",
+                  "marks": [
+                    {
+                      "type": "em"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " systems keep the author's unit as the source of truth"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Scaling a recipe converts "
+                },
+                {
+                  "type": "text",
+                  "text": "after",
+                  "marks": [
+                    {
+                      "type": "underline"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " scaling, never before"
+                }
+              ]
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Temperatures convert °C ↔ °F; "
+                        },
+                        {
+                          "type": "text",
+                          "text": "gas marks",
+                          "marks": [
+                            {
+                              "type": "strike"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": " are out of scope"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Densities are g/cm"
+                        },
+                        {
+                          "type": "text",
+                          "text": "3",
+                          "marks": [
+                            {
+                              "type": "subsup",
+                              "attrs": {
+                                "type": "sup"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", stored as H"
+                        },
+                        {
+                          "type": "text",
+                          "text": "2",
+                          "marks": [
+                            {
+                              "type": "subsup",
+                              "attrs": {
+                                "type": "sub"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": "O-relative values"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "“I just want to bake my grandmother's recipe without a calculator.” — support ticket"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "rule"
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "language": "kotlin"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "fun convert(amount: Double, from: Unit, to: Unit, density: Double?): Double =\n    if (from.kind == to.kind) amount * from.factor / to.factor\n    else density?.let { amount * from.factor * it / to.factor } ?: amount"
+        }
+      ]
+    },
+    {
+      "type": "decisionList",
+      "attrs": {
+        "localId": "0"
+      },
+      "content": [
+        {
+          "type": "decisionItem",
+          "attrs": {
+            "state": "DECIDED",
+            "localId": "1"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Store the user's preference server-side, not per device"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "expand",
+      "attrs": {
+        "title": "Density coverage",
+        "collapsed": true
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Measured on 1,200 recipes: 94% have a density for every ingredient; "
+            },
+            {
+              "type": "text",
+              "text": "6%",
+              "marks": [
+                {
+                  "type": "textColor",
+                  "attrs": {
+                    "color": "#bf2600"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " fall back to the original unit."
+            },
+            {
+              "type": "hardBreak"
+            },
+            {
+              "type": "text",
+              "text": "Run "
+            },
+            {
+              "type": "text",
+              "text": "./gradlew :recipes:densityReport",
+              "marks": [
+                {
+                  "type": "code"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": " to regenerate."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Beta starts "
+        },
+        {
+          "type": "date",
+          "attrs": {
+            "timestamp": "1796083200000"
+          }
+        },
+        {
+          "type": "text",
+          "text": " for "
+        },
+        {
+          "type": "text",
+          "text": "beta-us",
+          "marks": [
+            {
+              "type": "code"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "emoji",
+          "attrs": {
+            "shortName": ":cupcake:",
+            "id": "1f9c1",
+            "text": "🧁"
+          }
+        },
+        {
+          "type": "text",
+          "text": "; the spec was due "
+        },
+        {
+          "type": "date",
+          "attrs": {
+            "timestamp": "1794960000000"
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Design notes: "
+        },
+        {
+          "type": "inlineCard",
+          "attrs": {
+            "url": "https://docs.example.com/recipes/units-v2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "mediaSingle",
+      "attrs": {
+        "layout": "wide"
+      },
+      "content": [
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-202",
+            "type": "file",
+            "collection": "contentId-1",
+            "alt": "conversion-flow.png"
+          }
+        }
+      ]
+    },
+    {
+      "type": "mediaGroup",
+      "content": [
+        {
+          "type": "media",
+          "attrs": {
+            "id": "m-203",
+            "type": "file",
+            "collection": "contentId-1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "bodiedExtension",
+      "attrs": {
+        "extensionType": "com.loom",
+        "extensionKey": "embed"
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Embedded Loom video: unit toggle walkthrough"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

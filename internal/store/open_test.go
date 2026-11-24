@@ -22,15 +22,17 @@ import (
 
 // the 33 tables of 0001_init.sql plus the runner-owned schema_migration.
 var tablesOf0001 = []string{
-	"app_setting", "assignee_change", "board", "board_column", "board_column_status", "comment", "connection",
-	"dev_commit", "dev_pr_event", "flag_change", "issue", "issue_type", "person", "schema_migration", "sink",
-	"sink_outbox", "space", "sprint", "standup", "standup_column_map", "standup_config_history", "standup_issue",
-	"standup_issue_span", "standup_lane", "standup_settings", "standup_speaker", "standup_speaker_removed", "standup_status_lane",
-	"standup_sync_state", "standup_ui_state", "status", "status_change", "sync_log", "sync_run", "ui_state",
+	"app_setting", "assignee_change", "attachment", "board", "board_column", "board_column_status", "comment",
+	"connection", "dev_commit", "dev_pr_event", "field_def", "flag_change", "issue", "issue_content",
+	"issue_field_value", "issue_link", "issue_type", "person", "schema_migration", "sink", "sink_outbox", "space",
+	"sprint", "standup", "standup_column_map", "standup_config_history", "standup_issue", "standup_issue_span",
+	"standup_lane", "standup_settings", "standup_speaker", "standup_speaker_removed", "standup_status_lane",
+	"standup_sync_state", "standup_ui_state", "status", "status_change", "sync_log", "sync_run", "ticket_draft",
+	"ticket_field_pref", "transition_cache", "ui_state",
 }
 
-// headVersion is the newest embedded migration (0002_lane_order_removed_speakers).
-const headVersion = 2
+// headVersion is the newest embedded migration (0004_dev_branch_title).
+const headVersion = 4
 
 func TestOpen_FreshFile_ReportsMigrationAndNoRecovery(t *testing.T) {
 	defer recoverStub(t)
@@ -38,8 +40,8 @@ func TestOpen_FreshFile_ReportsMigrationAndNoRecovery(t *testing.T) {
 	if info.SchemaVersion != headVersion {
 		t.Errorf("SchemaVersion = %d, want %d", info.SchemaVersion, headVersion)
 	}
-	if !reflect.DeepEqual(info.Migrated, []int{1, 2}) {
-		t.Errorf("Migrated = %v, want [1 2]", info.Migrated)
+	if !reflect.DeepEqual(info.Migrated, []int{1, 2, 3, 4}) {
+		t.Errorf("Migrated = %v, want [1 2 3 4]", info.Migrated)
 	}
 	if info.BackupPath != "" {
 		t.Errorf("BackupPath = %q, want empty (nothing to back up on a new file)", info.BackupPath)
@@ -59,7 +61,7 @@ func TestOpen_FreshFile_WriterPragmas(t *testing.T) {
 		{"busy_timeout", "5000"},
 		{"temp_store", "2"},   // MEMORY
 		{"auto_vacuum", "2"},  // INCREMENTAL, set when the file is created
-		{"user_version", "2"}, // headVersion
+		{"user_version", "4"}, // headVersion
 		{"query_only", "0"},
 	}
 	for _, c := range want {

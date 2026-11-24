@@ -198,6 +198,50 @@ Feature IDs (F1…F11) refer to [product-spec.md](product-spec.md). Section refs
 
 ---
 
+## M9: Ticket modal (F12, ADR 0015)
+Backend and UI. M8 (release) is independent. Design hand-off: `docs/features/ticket-modal/` and
+`design/mockups/ticket-*.png`.
+
+0. **Limiter** (J §3.1): every Jira request goes through one limiter per connection, and the request budgets are a CI
+   gate: issue and content traffic ≤ 250 requests for a full fixture sync and ≤ 50 for an incremental with 3 changes,
+   plus a separate dev-status cap (jira-sync §3.1).
+1. **Adapter** (J §2.2, §2.8–2.10, §2.14, §2.15):
+   - Field registry and kind mapping; `*all` hydrate; comment bodies; `FetchMedia`.
+   - Writes: `Transitions`, `Transition`, `Assign`, `SetFlag`, `AddComment`, and `GetIssue`.
+   - jiratest content, media, writes and faults. The fixture `MOB-1421` covers every ADF node and field kind.
+2. **Sync:**
+   - `content` and `media` phases.
+   - One-issue apply for write re-fetches, which records history like a sync.
+   - Never overwrite newer data.
+   - Migration `0003_ticket_content` (D §2.5a, §3).
+3. **Backend:**
+   - `internal/adf` and `internal/media` (cache, 320×200 thumbnails, cap, eviction).
+   - `view.BuildTicket` → `TicketDetail`; `TicketService`; field prefs; media cache settings.
+   - The `/media/{id}[/thumb]` routes.
+   - Events `ticket:updated`, `ticket:write_failed`, `media:ready`, `sync:throttled`.
+4. **UI** (ux-spec §14):
+   - Modal geometry at 4 sizes; header with pulse strip and stepper.
+   - Anchor strip; ADF components; attachments, subtasks and links.
+   - Comments with composer, draft, sending/failed states and the standup marker.
+   - Field rail with Not-set folding, the Status/Assignee comboboxes and the Flag switch; lightbox.
+   - The "Updated in Jira · Reload" bar; row hover/focus; live update of the row behind the modal.
+   - Refresh this ticket (↻, `R`, 10 s cooldown) and the rate-limit label (U §14.12–14.13).
+   - Configure → Ticket fields; Display → Storage (size, Clear image cache, cleanup-offer cap); Disconnect's over-cap
+     delete offer (U §14.11).
+
+**DoD:**
+- Parity with `ticket-*.png` at all four sizes.
+- `TicketService.Get` makes no network request; modal open p95 < 100 ms on the fixture.
+- **ADF and field coverage:** an ADF golden covers every node in U §14.4; a field-kind matrix covers every kind in
+  U §14.6.
+- **Writes:** success / failure / revert / no auto-retry / history-recorded tests pass against jiratest.
+- **Drafts:** a draft survives a restart.
+- **Privacy:** exports and logs contain no comment bodies (scan tests).
+- **Throttling:** the request-budget gate passes; the transport-bypass test proves every request goes through the limiter.
+- **Quality gates:** axe is clean (modal, combobox, lightbox), and every budget is green (JS ≤ 70 KB gz).
+
+---
+
 ## Later (v1.x candidates)
 - **History view UI** (the store, the `asOf` builder and `HistoryService` are ready) and historical range exports
 - **More sinks:** webhook, CSV, Markdown notes, Linear, GitHub Projects, Asana, Notion, Azure Boards

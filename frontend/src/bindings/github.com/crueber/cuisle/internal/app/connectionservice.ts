@@ -21,8 +21,16 @@ export function Connection(): $CancellablePromise<$models.Connection> {
     return $Call.ByID(146741257);
 }
 
-export function Disconnect(): $CancellablePromise<void> {
-    return $Call.ByID(3424857723);
+export function Disconnect(deleteContent: boolean): $CancellablePromise<void> {
+    return $Call.ByID(3424857723, deleteContent);
+}
+
+export function MoveTicketField(fieldID: string, toPosition: number): $CancellablePromise<$models.SaveAck> {
+    return $Call.ByID(2205848588, fieldID, toPosition);
+}
+
+export function PinTicketField(fieldID: string): $CancellablePromise<view$0.TicketFieldPrefs> {
+    return $Call.ByID(2241582252, fieldID);
 }
 
 export function SearchBoards(spaceKey: string, query: string): $CancellablePromise<view$0.BoardOption[] | null> {
@@ -35,6 +43,18 @@ export function SearchSpaces(query: string): $CancellablePromise<view$0.SpaceOpt
 
 export function SearchUsers(standupID: number, query: string): $CancellablePromise<$models.UserOption[] | null> {
     return $Call.ByID(3467634223, standupID, query);
+}
+
+export function SetTicketFieldHidden(fieldID: string, hidden: boolean): $CancellablePromise<view$0.TicketFieldPrefs> {
+    return $Call.ByID(3842228553, fieldID, hidden);
+}
+
+export function TicketFields(): $CancellablePromise<view$0.TicketFieldPrefs> {
+    return $Call.ByID(2519048620);
+}
+
+export function UnpinTicketField(fieldID: string): $CancellablePromise<view$0.TicketFieldPrefs> {
+    return $Call.ByID(2503454259, fieldID);
 }
 
 export function ValidateFilter(standupID: number, expr: string): $CancellablePromise<view$0.FilterCheck> {

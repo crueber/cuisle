@@ -1,5 +1,5 @@
 diff --git a/docs/product-spec.md b/docs/product-spec.md
-index 59762e2..6ce26ee 100644
+index 59762e2..69930bb 100644
 --- a/docs/product-spec.md
 +++ b/docs/product-spec.md
 @@ -87,7 +87,7 @@ IDs are referenced from the roadmap and tests.
@@ -11,7 +11,7 @@ index 59762e2..6ce26ee 100644
  
  ### F4. Whole board
  - Shown when no speaker is selected (rail "Whole board", `B`).
-@@ -175,6 +175,35 @@ IDs are referenced from the roadmap and tests.
+@@ -175,6 +175,41 @@ IDs are referenced from the roadmap and tests.
  - **AC:** after N syncs with changes, a test can reconstruct an earlier day's membership and lanes from the stored
    records (see testing.md).
  
@@ -29,6 +29,8 @@ index 59762e2..6ce26ee 100644
 +  - flag / unflag
 +  - add a comment
 +  - Everything else goes through **Open in Jira**.
++- **Refresh this ticket** (button and `R`): re-fetch just this issue from Jira without a board resync. There is a
++  10-second cooldown per ticket.
 +- **Data:** Resync stores descriptions, comments, field values and attachment images locally (ADR 0015), so the modal
 +  opens instantly and works offline (edits need a connection).
 +- **AC:**
@@ -41,13 +43,17 @@ index 59762e2..6ce26ee 100644
 +  - A comment that fails to post keeps its text with Retry / Edit / Discard. Nothing retries on its own.
 +  - Transitions that need a Jira screen open the browser instead.
 +  - A draft comment survives closing the modal and restarting the app.
++  - Refresh re-fetches only that issue (the fake-Jira request log shows only that issue's requests). Changes are
++    historised, the row behind updates, and a second Refresh within 10 s is refused locally with no request.
++  - All Jira traffic goes through one throttle (jira-sync §3.1). A sync never exceeds the configured rate, and a 429
++    pauses every request until `Retry-After`.
 +- **Storage:** Disconnect keeps synced content. It offers to delete it only when local content is over the storage
 +  cap (default 2 GB, set in Display; ux-spec §14.11). Nothing is ever deleted automatically.
 +
  ### F9. Display and accessibility
  - **Theme:** Light / Dark / System (default System). **Text size:** Standard / Large (TV), which scales the whole UI.
  - Full keyboard operation.
-@@ -185,7 +214,8 @@ IDs are referenced from the roadmap and tests.
+@@ -185,7 +220,8 @@ IDs are referenced from the roadmap and tests.
    visible focus.
  
  ## 5. Out of scope for v1
@@ -57,7 +63,7 @@ index 59762e2..6ce26ee 100644
  - Mobile and tablet layouts; web or hosted version; multi-user sync of settings.
  - OAuth 2.0 (3LO) and scoped API tokens. Data Center or Server Jira.
  - Direct forge integrations (Forgejo/GitHub). Code activity comes only via Jira's dev panel.
-@@ -207,4 +237,6 @@ IDs are referenced from the roadmap and tests.
+@@ -207,4 +243,6 @@ IDs are referenced from the roadmap and tests.
  | D8 | Code signing | **Decided:** self-signed for now (ADR 0013). |
  | D9 | Deleted standups | Archived, never purged (history is kept). Archive/restore list is post-v1. |
  | D10 | History granularity | Status, assignee, flag, membership and config are historised. Summary, type and rank show current values in a past view. |

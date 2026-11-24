@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "language": "kotlin"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "fun main() {\n"
+        },
+        {
+          "type": "text",
+          "text": "    println(\"hi\")\n}"
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "content": [
+        {
+          "type": "text",
+          "text": "no language here"
+        }
+      ]
+    }
+  ]
+}

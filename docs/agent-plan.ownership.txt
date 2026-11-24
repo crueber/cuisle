@@ -1,8 +1,8 @@
 # Work-package file allowlists (agent-plan.md §5). Format: WP-NN <glob>. "**" matches across directories.
 # Tests and testdata live beside the code and belong to the same WP. docs/wp-notes/WP-NN.md is always allowed for WP-NN.
 # Frozen for everyone (checked separately): internal/**/contract*.go, internal/model/**, internal/app/types.go,
-# internal/store/migrations/0001_init.sql, frontend/src/api/types.ts, frontend/src/api/index.ts, frontend/src/api/errors.ts,
-# frontend/src/api/events.ts, frontend/src/components/props.ts, frontend/src/views/*/props.ts, go.mod, go.sum,
+# internal/store/migrations/0001_init.sql, internal/store/migrations/0003_ticket_content.sql, frontend/src/api/types.ts, frontend/src/api/index.ts, frontend/src/api/errors.ts,
+# frontend/src/api/events.ts, frontend/src/components/props.ts, frontend/src/components/adf/props.ts, frontend/src/views/*/props.ts, go.mod, go.sum,
 # frontend/package.json, frontend/package-lock.json, frontend/src/bindings/**, docs/** (except wp-notes).
 
 WP-01 internal/paths/**
@@ -198,3 +198,65 @@ WP-38F frontend/tests/a11y/**
 WP-38B internal/**
 WP-38B cmd/cuisle/**
 WP-38B docs/wp-notes/WP-38B.md
+
+# Wave F12 (M9, ticket modal; ADR 0015)
+WP-T0 internal/source/jira/limiter/**
+WP-T0 internal/source/jira/client*.go
+WP-T0 internal/source/jira/policy*.go
+WP-T1 internal/adf/**
+WP-T2 frontend/src/components/adf/**
+WP-T3 internal/media/**
+WP-T4 internal/source/jira/fields*.go
+WP-T4 internal/source/jira/content*.go
+WP-T4 internal/source/jira/media*.go
+WP-T4 internal/source/jira/jiratest/**
+WP-T5 internal/source/jira/writes*.go
+WP-T5 internal/source/jira/jiratest/**
+WP-T6 internal/view/ticket*.go
+WP-T6 internal/sync/oneissue*.go
+WP-T6 internal/sync/content*.go
+WP-T6 internal/sync/media*.go
+WP-T6 internal/cache/ticket*.go
+WP-T6 internal/cache/content*.go
+WP-T6 internal/app/testdata/ticket_*.golden.json
+WP-T7 frontend/src/views/ticket/TicketModal*
+WP-T7 frontend/src/views/ticket/TicketHeader*
+WP-T7 frontend/src/views/ticket/FieldRail*
+WP-T7 frontend/src/views/ticket/StatusCombo*
+WP-T7 frontend/src/views/ticket/Lightbox*
+WP-T8 frontend/src/views/ticket/TicketContent*
+WP-T8 frontend/src/views/ticket/AnchorStrip*
+WP-T8 frontend/src/views/ticket/Attachments*
+WP-T8 frontend/src/views/ticket/IssueRows*
+WP-T8 frontend/src/views/ticket/Comments*
+WP-T8 frontend/src/views/ticket/Composer*
+WP-T8 frontend/src/views/configure/sections/TicketFields*
+WP-T8 frontend/src/views/configure/sections/Storage*
+WP-T8 frontend/src/views/configure/sections/Connection*
+WP-T9 internal/app/**
+WP-T9 cmd/cuisle/**
+WP-T9 frontend/src/api/mock*.ts
+WP-T9 frontend/src/api/fixtures/**
+WP-T9 frontend/tests/**
+# F12 gap closures (docs/wp-notes/F12-freeze.md)
+WP-T4 internal/source/jira/content.go
+WP-T4 internal/source/jira/hydrate*.go
+WP-T4 internal/source/jira/endpoints_*.go
+WP-T5 internal/source/jira/writes.go
+WP-T6 internal/sync/**
+WP-T6 internal/cache/**
+WP-T6 internal/store/migrate_test.go
+WP-T6 internal/store/testdata/**
+WP-T7 frontend/src/state/ticket*.ts
+WP-T9 frontend/src/keys*.ts
+WP-T9 frontend/src/views/standup/**
+WP-T9 frontend/src/App.tsx
+WP-T0 internal/sync/budget_test.go
+WP-T6 internal/source/jira/jiratest/**
+WP-T9 frontend/src/state/ticketSteps*.ts
+# WP-T9 integration additions (orchestrator-authorised; frozen files are merged by hand after review)
+WP-T9 frontend/src/views/configure/**
+WP-T9 frontend/src/state/sync*.ts
+WP-T9 frontend/src/api/index.ts
+WP-T9 frontend/src/bindings/**
+WP-T9 frontend/src/components/**

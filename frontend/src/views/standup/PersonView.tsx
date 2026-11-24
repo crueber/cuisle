@@ -1,13 +1,12 @@
 // Implementation: WP-24. Person view (ux-spec §5): title row, axis row, groups in walk order, more bar.
 // Owns the scroll position: the density and "below the fold" summary come from the layout functions (WP-13).
 import { useEffect, useRef, useState } from "preact/hooks";
-import { api, toAppError } from "../../api";
 import { atEnd as isAtEnd, belowFold } from "../../layout/below";
 import { chooseDensity, type GroupCount } from "../../layout/density";
 import { legendMode, mainPadding, titleSizes, trackWidth } from "../../layout/responsive";
 import { axisLabelMode } from "../../layout/track";
 import { textScale } from "../../state/app";
-import { showBanner } from "../../state/ui";
+import { openTicketFromRow } from "../../state/ticketSteps";
 import "../../styles/person.css";
 import { Legend } from "./Legend";
 import { MoreBar } from "./MoreBar";
@@ -19,12 +18,6 @@ import { TrackBackdrop } from "./TrackBackdrop";
 const MORE_BAR_H = 36;
 /** Header (64), axis row (30) and bottom padding (10) sit outside the scroll area. */
 const FIXED_CHROME = 64 + 30 + 10;
-
-function openIssue(key: string): void {
-  api()
-    .app.openIssue(key)
-    .catch((e: unknown) => showBanner({ kind: "error", message: toAppError(e).message, dismissible: true }));
-}
 
 export function PersonView({ view, person, groups: allGroups, mainW, vh }: PersonViewProps) {
   // Only lanes that have tickets are shown (ux-spec §5.3).
@@ -148,7 +141,7 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
                       keyCh={keyCh}
                       days={days}
                       options={view.options}
-                      onOpen={openIssue}
+                      onOpen={openTicketFromRow}
                     />
                   ))}
                 </div>

@@ -1,0 +1,59 @@
+{
+  "c": [
+    {
+      "t": "p",
+      "c": [
+        {
+          "t": "text",
+          "x": "inline "
+        },
+        {
+          "t": "card",
+          "a": {
+            "issueId": 900,
+            "key": "MOB-1200",
+            "summary": "Recipe units v2",
+            "typeKind": "epic",
+            "statusName": "In Progress",
+            "statusLozenge": "prog",
+            "url": "https://example.atlassian.net/browse/MOB-1200"
+          }
+        },
+        {
+          "t": "text",
+          "x": " and "
+        },
+        {
+          "t": "card",
+          "a": {
+            "url": "https://docs.example.com/recipes/units-v2",
+            "host": "docs.example.com",
+            "path": "/recipes/units-v2"
+          }
+        }
+      ]
+    },
+    {
+      "t": "card",
+      "a": {
+        "issueId": 901,
+        "key": "MOB-1429",
+        "summary": "Edit states",
+        "typeKind": "story",
+        "statusName": "In Review",
+        "statusLozenge": "review",
+        "url": "https://example.atlassian.net/browse/MOB-1429",
+        "block": true
+      }
+    },
+    {
+      "t": "card",
+      "a": {
+        "url": "https://docs.example.com/big/page",
+        "host": "docs.example.com",
+        "path": "/big/page",
+        "block": true
+      }
+    }
+  ]
+}

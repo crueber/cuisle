@@ -1,0 +1,32 @@
+{
+  "c": [
+    {
+      "t": "media",
+      "a": {
+        "attachmentId": "201",
+        "name": "unit-toggle-v3.png",
+        "mime": "image/png",
+        "bytes": 182540,
+        "width": 600,
+        "height": 360,
+        "layout": "wide",
+        "cached": "full",
+        "block": true
+      }
+    },
+    {
+      "t": "media",
+      "a": {
+        "attachmentId": "202",
+        "name": "conversion-flow.png",
+        "mime": "image/png",
+        "bytes": 47477,
+        "width": 1200,
+        "height": 440,
+        "layout": "full-width",
+        "cached": "thumb",
+        "block": true
+      }
+    }
+  ]
+}

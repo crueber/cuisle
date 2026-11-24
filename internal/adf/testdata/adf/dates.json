@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "date",
+          "attrs": {
+            "timestamp": "1796083200000"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "date",
+          "attrs": {
+            "timestamp": "1794960000000"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "date",
+          "attrs": {
+            "timestamp": "1795392000000"
+          }
+        }
+      ]
+    }
+  ]
+}

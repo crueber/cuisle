@@ -58,6 +58,7 @@ func Start(fx *Fixture, opts Options) (*Server, error) {
 
 // Close stops the server.
 func (s *Server) Close() {
+	s.f12Forget()
 	if s.srv != nil {
 		_ = s.srv.Close()
 	}
@@ -80,6 +81,7 @@ func (s *Server) ResetRequests() {
 func (s *Server) Mutate(fn func(ds *Dataset)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.f12Mutated() // StaleChangelog: the lagging entries are served again
 	fn(s.ds)
 }
 
@@ -122,7 +124,8 @@ func (s *Server) serve(rec *bufResponse, r *http.Request) {
 }
 
 func (s *Server) dispatch(w *bufResponse, r *http.Request) {
-	if s.unauthorized || !authorised(r) {
+	// Media is pre-signed by Jira and needs no credentials (jira-sync §2.14).
+	if !strings.HasPrefix(r.URL.Path, "/media/file/") && (s.unauthorized || !authorised(r)) {
 		writeError(w, http.StatusUnauthorized, "Client must be authenticated to access this resource.")
 		return
 	}
@@ -136,7 +139,9 @@ func (s *Server) dispatch(w *bufResponse, r *http.Request) {
 		writeError(w, code, "Injected failure.")
 		return
 	}
+	wrote, entries := s.f12Before(r)
 	s.routes().ServeHTTP(w, r)
+	s.f12After(wrote, entries, w.status)
 }
 
 // injectFailure applies the first FailStatus entry whose prefix matches and still has budget. Each entry keeps its
@@ -173,6 +178,15 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /rest/api/3/search/jql", s.handleSearch)
 	mux.HandleFunc("POST /rest/api/3/search/approximate-count", s.handleApproxCount)
 	mux.HandleFunc("POST /rest/api/3/jql/parse", s.handleJQLParse)
+	mux.HandleFunc("GET /rest/api/3/issue/{id}", s.handleIssueGet)
+	mux.HandleFunc("GET /rest/api/3/attachment/content/{id}", s.handleAttachmentContent)
+	mux.HandleFunc("GET /rest/api/3/attachment/thumbnail/{id}", s.handleThumbnail)
+	mux.HandleFunc("GET /media/file/{uuid}/binary", s.handleMedia)
+	mux.HandleFunc("GET /rest/api/3/issue/{id}/transitions", s.handleTransitions)
+	mux.HandleFunc("POST /rest/api/3/issue/{id}/transitions", s.handleTransitionPost)
+	mux.HandleFunc("PUT /rest/api/3/issue/{id}/assignee", s.handleAssign)
+	mux.HandleFunc("PUT /rest/api/3/issue/{id}", s.handleIssuePut)
+	mux.HandleFunc("POST /rest/api/3/issue/{id}/comment", s.handleCommentPost)
 	return mux
 }
 

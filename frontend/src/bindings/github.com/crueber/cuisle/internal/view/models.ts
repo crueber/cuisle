@@ -3,11 +3,61 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as adf$0 from "../adf/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as pulse$0 from "../pulse/models.js";
+
+/**
+ * AttachmentView is one attachment tile or file card.
+ */
+export interface AttachmentView {
+    /**
+     * attachment row id (/media/{id}, EnsureMedia, OpenAttachment)
+     */
+    "id": number;
+    "name": string;
+
+    /**
+     * upper case without the dot, e.g. "PDF"
+     */
+    "ext": string;
+    "mime": string;
+    "bytes": number;
+    "authorInitials": string;
+    "authorName": string;
+    "createdAt": number;
+    "image": boolean;
+
+    /**
+     * 0 = unknown
+     */
+    "width": number;
+    "height": number;
+
+    /**
+     * full|thumb|none
+     */
+    "cached": string;
+
+    /**
+     * /media/{id}
+     */
+    "url": string;
+
+    /**
+     * /media/{id}/thumb
+     */
+    "thumbUrl": string;
+}
 
 export type AxisDay = pulse$0.AxisDay;
 
 export interface BacklogItem {
+    /**
+     * local issue id: opens the ticket modal (F12)
+     */
+    "issueId": number;
     "key": string;
     "summary": string;
     "type": string;
@@ -36,6 +86,31 @@ export interface ColumnMapping {
     "order": number;
 }
 
+/**
+ * CommentInput is composer text with its mentions (drafts and AddComment).
+ */
+export interface CommentInput {
+    "text": string;
+    "mentions": Mention[] | null;
+}
+
+/**
+ * CommentView is one stored comment.
+ */
+export interface CommentView {
+    "id": string;
+    "author": PersonRef;
+    "createdAt": number;
+    "updatedAt": number;
+    "edited": boolean;
+
+    /**
+     * "" or e.g. "Developers only"
+     */
+    "visibility": string;
+    "body": adf$0.Doc;
+}
+
 export interface Counts {
     "active": number;
     "unassigned": number;
@@ -43,10 +118,105 @@ export interface Counts {
     "backlog": number;
 }
 
+/**
+ * DevPR is one pull request.
+ */
+export interface DevPR {
+    /**
+     * display id without "#", e.g. "421"
+     */
+    "id": string;
+
+    /**
+     * the PR title; the repository name when the title is not known
+     */
+    "title": string;
+
+    /**
+     * repository name
+     */
+    "repo": string;
+
+    /**
+     * OPEN|MERGED|DECLINED|UNKNOWN
+     */
+    "status": string;
+}
+
+/**
+ * DevSummary is the rail's Development group.
+ */
+export interface DevSummary {
+    "branch": string;
+    "commits": number;
+    "lastCommitAt": number;
+    "prs": DevPR[] | null;
+}
+
+/**
+ * FieldOption is a field the "Pin a field…" combobox offers.
+ */
+export interface FieldOption {
+    "fieldId": string;
+    "name": string;
+    "kind": string;
+    "custom": boolean;
+}
+
+/**
+ * FieldPref is one pinned or hidden field.
+ */
+export interface FieldPref {
+    "fieldId": string;
+    "name": string;
+    "kind": string;
+
+    /**
+     * pinned order (0-based); -1 when only hidden
+     */
+    "position": number;
+    "hidden": boolean;
+}
+
 export interface FilterCheck {
     "ok": boolean;
     "errors": string[] | null;
     "checkedAt": number;
+}
+
+/**
+ * IssueRefView is a compact reference to another issue (the parent).
+ */
+export interface IssueRefView {
+    /**
+     * 0 = not synced (opens the browser)
+     */
+    "issueId": number;
+    "key": string;
+    "summary": string;
+    "typeKind": string;
+}
+
+/**
+ * IssueRow is one subtask or linked-issue row.
+ */
+export interface IssueRow {
+    /**
+     * 0 = not synced → opens the browser
+     */
+    "issueId": number;
+    "key": string;
+    "summary": string;
+    "typeKind": string;
+    "statusName": string;
+
+    /**
+     * todo|prog|review|qa|done
+     */
+    "statusLozenge": string;
+    "assigneeInitials": string;
+    "url": string;
+    "done": boolean;
 }
 
 export interface LaneInfo {
@@ -64,6 +234,44 @@ export interface LaneInfo {
     "columns": string[] | null;
 }
 
+/**
+ * LinkGroup is the links sharing one label.
+ */
+export interface LinkGroup {
+    /**
+     * upper case, e.g. "IS BLOCKED BY"
+     */
+    "label": string;
+    "rows": IssueRow[] | null;
+}
+
+/**
+ * Mention is an @-mention: a rune range of CommentInput.Text.
+ */
+export interface Mention {
+    /**
+     * rune offsets, End exclusive
+     */
+    "start": number;
+    "end": number;
+    "accountId": string;
+    "name": string;
+}
+
+/**
+ * PersonRef is a person as the modal shows them.
+ */
+export interface PersonRef {
+    "accountId": string;
+    "name": string;
+    "initials": string;
+
+    /**
+     * the connected user
+     */
+    "self": boolean;
+}
+
 export interface Pulse {
     "segs": PulseSeg[] | null;
     "marks": PulseMark[] | null;
@@ -76,6 +284,60 @@ export type PulseMark = pulse$0.Mark;
 export type PulseSeg = pulse$0.Seg;
 
 export type PulseSpan = pulse$0.Span;
+
+/**
+ * RailGroup is one group of the field rail. Fields without a value produce no row; their labels go to NotSet.
+ */
+export interface RailGroup {
+    /**
+     * state|details|custom|development|dates
+     */
+    "id": string;
+    "label": string;
+    "rows": RailRow[] | null;
+
+    /**
+     * labels of empty fields, in rail order
+     */
+    "notSet": string[] | null;
+}
+
+/**
+ * RailRow is one field row. Kind is a model field kind or a RailKind*; only the members relevant to it are set.
+ */
+export interface RailRow {
+    "fieldId": string;
+    "label": string;
+    "kind": string;
+
+    /**
+     * ""|"status"|"assignee"|"flag"
+     */
+    "edit": string;
+    "text": string;
+    "number": number | null;
+    "items": string[] | null;
+    "users": PersonRef[] | null;
+    "rich": adf$0.Doc | null;
+    "raw": string;
+    "mono": boolean;
+
+    /**
+     * e.g. "ends 1 Dec"
+     */
+    "sub": string;
+
+    /**
+     * time tracking 0..1
+     */
+    "progress": number | null;
+    "url": string;
+
+    /**
+     * e.g. "support.example.com › #48213"
+     */
+    "urlLabel": string;
+}
 
 export interface SpaceOption {
     "id": string;
@@ -267,6 +529,131 @@ export interface SyncStatus {
     "needsSync": boolean;
 }
 
+/**
+ * TicketCaps says which light writes the modal offers.
+ */
+export interface TicketCaps {
+    "transition": boolean;
+    "assign": boolean;
+    "flag": boolean;
+    "comment": boolean;
+
+    /**
+     * "offline"|"auth"|"read_only"|""
+     */
+    "reason": string;
+}
+
+/**
+ * TicketDetail is the ticket modal payload, built by BuildTicket from a snapshot and cache.Ticket (no network).
+ */
+export interface TicketDetail {
+    "issueId": number;
+    "standupId": number;
+    "asOf": number;
+
+    /**
+     * issue hydrated_at (header "as of 9:41 · synced"); 0 = never
+     */
+    "syncedAt": number;
+
+    /**
+     * the issue's provider updated time
+     */
+    "updatedAt": number;
+
+    /**
+     * the board row (key, summary, type, lane, days, blocked, pulse over PulseDays)
+     */
+    "row": TicketView;
+    "url": string;
+
+    /**
+     * nil = no parent
+     */
+    "parent": IssueRefView | null;
+
+    /**
+     * header track length (21)
+     */
+    "pulseDays": number;
+
+    /**
+     * len == PulseDays
+     */
+    "axis": AxisDay[] | null;
+
+    /**
+     * lane limit, 0 = none
+     */
+    "limitDays": number;
+    "blockedDays": number;
+
+    /**
+     * nil when empty
+     */
+    "description": adf$0.Doc | null;
+
+    /**
+     * images first, then files, each by created desc
+     */
+    "attachments": AttachmentView[] | null;
+    "subtasks": IssueRow[] | null;
+    "subtasksDone": number;
+
+    /**
+     * {Label "IS BLOCKED BY", Rows}
+     */
+    "linkGroups": LinkGroup[] | null;
+
+    /**
+     * oldest first; the frontend orders per ticket.comment_order
+     */
+    "comments": CommentView[] | null;
+
+    /**
+     * start of the previous working day (D3); 0 = none
+     */
+    "newSince": number;
+    "draft": CommentInput;
+
+    /**
+     * state, details, custom, development, dates — in that order; empty groups omitted
+     */
+    "rail": RailGroup[] | null;
+
+    /**
+     * nil if none/unavailable
+     */
+    "dev": DevSummary | null;
+    "can": TicketCaps;
+
+    /**
+     * Warn* below
+     */
+    "warnings": string[] | null;
+}
+
+/**
+ * TicketFieldPrefs is Configure › Ticket fields (per connection; ux-spec §14.8) and BuildTicket's rail order.
+ */
+export interface TicketFieldPrefs {
+    /**
+     * pinned custom fields, in rail order
+     */
+    "pinned": FieldPref[] | null;
+
+    /**
+     * hidden fields
+     */
+    "hidden": FieldPref[] | null;
+
+    /**
+     * custom fields that can be pinned (not pinned), A–Z
+     */
+    "available": FieldOption[] | null;
+}
+
 export interface TicketView {
     "id": number;
     "sourceId": string;
@@ -294,6 +681,39 @@ export interface TicketView {
     "blocked": boolean;
     "doneAt": number;
     "pulse": Pulse;
+}
+
+/**
+ * TransitionList is the Status combobox content.
+ */
+export interface TransitionList {
+    "items": TransitionOption[] | null;
+    "fetchedAt": number;
+
+    /**
+     * cached list shown disabled
+     */
+    "offline": boolean;
+}
+
+/**
+ * TransitionOption is one transition.
+ */
+export interface TransitionOption {
+    "id": string;
+    "name": string;
+    "toStatusName": string;
+
+    /**
+     * lane of the target status in the standup (optimistic row update)
+     */
+    "toLane": string;
+    "needsScreen": boolean;
+
+    /**
+     * issue URL for "↗ Jira"
+     */
+    "url": string;
 }
 
 export interface ViewOptions {

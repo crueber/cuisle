@@ -109,11 +109,12 @@ tasks:
       SCRIPT: "{{.SCRIPT}}"
 
   frontend:run:npm:
-    # Calls the local binaries directly (no npm run): npm script spawning is blocked in some sandboxes.
+    # Calls the tools' JS entry points through node (no npm run / npx, which some sandboxes block). Not the
+    # node_modules/.bin shims either: those are POSIX scripts that Windows (cmd.exe) can't run.
     # Mirrors package.json "build" and "build:dev".
     dir: frontend
     cmds:
-      - '{{if eq .SCRIPT "build:dev"}}./node_modules/.bin/vite build --minify false --mode development{{else}}./node_modules/.bin/tsc --noEmit && ./node_modules/.bin/vite build{{end}}'
+      - '{{if eq .SCRIPT "build:dev"}}node node_modules/vite/bin/vite.js build --minify false --mode development{{else}}node node_modules/typescript/bin/tsc --noEmit && node node_modules/vite/bin/vite.js build{{end}}'
     vars:
       SCRIPT: "{{.SCRIPT}}"
 
@@ -215,7 +216,7 @@ tasks:
   frontend:dev:npm:
     dir: frontend
     cmds:
-      - ./node_modules/.bin/vite --port {{.VITE_PORT}} --strictPort
+      - node node_modules/vite/bin/vite.js --port {{.VITE_PORT}} --strictPort
 
   frontend:dev:yarn:
     dir: frontend

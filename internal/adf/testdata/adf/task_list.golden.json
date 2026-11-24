@@ -1,0 +1,51 @@
+{
+  "c": [
+    {
+      "t": "task",
+      "c": [
+        {
+          "t": "taskItem",
+          "a": {
+            "done": true
+          },
+          "c": [
+            {
+              "t": "text",
+              "x": "done thing"
+            }
+          ]
+        },
+        {
+          "t": "taskItem",
+          "c": [
+            {
+              "t": "text",
+              "x": "open "
+            },
+            {
+              "t": "status",
+              "a": {
+                "label": "NEW",
+                "lozenge": "prog"
+              }
+            }
+          ]
+        },
+        {
+          "t": "task",
+          "c": [
+            {
+              "t": "taskItem",
+              "c": [
+                {
+                  "t": "text",
+                  "x": "nested open"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

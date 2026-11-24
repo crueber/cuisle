@@ -1626,72 +1626,84 @@
   ],
   "backlog": [
     {
+      "issueId": 30001,
       "key": "DATA-301",
       "summary": "Clean up ingredient taxonomy",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-301"
     },
     {
+      "issueId": 30002,
       "key": "DATA-304",
       "summary": "Version nutrition import",
       "type": "task",
       "url": "https://example.atlassian.net/browse/DATA-304"
     },
     {
+      "issueId": 30003,
       "key": "DATA-305",
       "summary": "Rebuild recipe tagging",
       "type": "spike",
       "url": "https://example.atlassian.net/browse/DATA-305"
     },
     {
+      "issueId": 30004,
       "key": "DATA-308",
       "summary": "Backfill allergen rules",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-308"
     },
     {
+      "issueId": 30005,
       "key": "DATA-314",
       "summary": "Validate search index",
       "type": "bug",
       "url": "https://example.atlassian.net/browse/DATA-314"
     },
     {
+      "issueId": 30006,
       "key": "DATA-315",
       "summary": "Speed up image pipeline",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-315"
     },
     {
+      "issueId": 30007,
       "key": "DATA-319",
       "summary": "Document duplicate detection",
       "type": "task",
       "url": "https://example.atlassian.net/browse/DATA-319"
     },
     {
+      "issueId": 30008,
       "key": "DATA-320",
       "summary": "Monitor unit conversions",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-320"
     },
     {
+      "issueId": 30009,
       "key": "DATA-322",
       "summary": "Clean up seasonality table",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-322"
     },
     {
+      "issueId": 30010,
       "key": "DATA-328",
       "summary": "Version ratings model",
       "type": "task",
       "url": "https://example.atlassian.net/browse/DATA-328"
     },
     {
+      "issueId": 30011,
       "key": "DATA-334",
       "summary": "Rebuild ingredient taxonomy",
       "type": "story",
       "url": "https://example.atlassian.net/browse/DATA-334"
     },
     {
+      "issueId": 30012,
       "key": "DATA-339",
       "summary": "Backfill nutrition import",
       "type": "bug",

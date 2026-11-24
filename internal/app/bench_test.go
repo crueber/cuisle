@@ -475,3 +475,27 @@ func TestWriteBenchDataset(t *testing.T) {
 	}
 	seedDatasetL(t, filepath.Join(dir, paths.DBFile))
 }
+
+// BenchmarkTicketDetail is TicketService.Get on dataset L (snapshot, ticket, fields in use and BuildTicketWith in one
+// call; the dataset has no synced content, so this is the floor). Budget: <= 25 ms per op (architecture §6.1).
+func BenchmarkTicketDetail(b *testing.B) {
+	path, id := seededDB(b)
+	b.Run("L", func(b *testing.B) {
+		ctx := context.Background()
+		db := openBenchDB(b, path)
+		defer func() { _ = db.Close(ctx) }()
+		svcs := app.NewServices(benchDeps(db))
+		v, err := svcs.Standup.View(ctx, id)
+		if err != nil || len(v.Tickets) == 0 {
+			b.Fatalf("View: %v (%d tickets)", err, len(v.Tickets))
+		}
+		issue := v.Tickets[len(v.Tickets)/2].ID
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			if _, err := svcs.Ticket.Get(ctx, id, issue); err != nil {
+				b.Fatalf("Get: %v", err)
+			}
+		}
+	})
+}

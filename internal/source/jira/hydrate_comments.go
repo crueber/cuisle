@@ -2,72 +2,79 @@ package jira
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strconv"
-	"time"
 
 	"github.com/crueber/cuisle/internal/model"
 )
 
-// topUpHorizon is how far back comments are kept for the Configure/pulse views (jira-sync.md §2.10).
-const topUpHorizon = 35 * 24 * time.Hour
+// commentPageSize is maxResults of GET /rest/api/3/issue/{id}/comment (jira-sync.md §2.10).
+const commentPageSize = 100
 
-// needsTopUp reports whether the embedded comments are incomplete and the oldest embedded comment is still within
-// the horizon (an older oldest comment means the horizon is already covered).
-func needsTopUp(d *model.IssueDetail, now time.Time) bool {
-	if d.CommentTotal <= len(d.Comments) {
-		return false
-	}
-	cutoff := now.Add(-topUpHorizon)
-	for _, c := range d.Comments {
-		if c.At.Before(cutoff) {
-			return false
-		}
-	}
-	return true
+// wireCommentFull is one comment of the comment endpoint. The e-mail of an author is never decoded.
+type wireCommentFull struct {
+	ID         flexID          `json:"id"`
+	Created    Time            `json:"created"`
+	Updated    Time            `json:"updated"`
+	Author     *wireUser       `json:"author"`
+	Body       json.RawMessage `json:"body"`
+	Visibility *struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"visibility"`
 }
 
-// topUpComments reads newest-first comment pages until a page reaches past the horizon or the total is exhausted.
-// Results are merged into d.Comments without duplicates; comment bodies are never decoded.
-func (a *Adapter) topUpComments(ctx context.Context, d *model.IssueDetail, now time.Time) error {
-	cutoff := now.Add(-topUpHorizon)
-	seen := make(map[string]bool, len(d.Comments))
-	for _, c := range d.Comments {
-		seen[c.ID] = true
+// commentOf maps a comment; UpdatedAt equals At when the provider sends no update time.
+func commentOf(wc wireCommentFull) model.Comment {
+	c := model.Comment{ID: string(wc.ID), At: wc.Created.Time, UpdatedAt: wc.Updated.Time}
+	if c.UpdatedAt.IsZero() {
+		c.UpdatedAt = c.At
 	}
+	if wc.Author != nil {
+		c.AuthorID = wc.Author.AccountID
+	}
+	if !isEmptyJSON(wc.Body) {
+		c.Body = model.RichText{Format: model.RichTextADF, Raw: wc.Body}
+	}
+	if wc.Visibility != nil && (wc.Visibility.Type != "" || wc.Visibility.Value != "") {
+		c.Visibility = &model.Visibility{Type: wc.Visibility.Type, Value: wc.Visibility.Value}
+	}
+	return c
+}
+
+// fetchComments reads the complete comment list of d, oldest first, by pages of 100 advancing startAt by the number
+// of comments received, until startAt reaches the total or a page is empty. Authors are added to d.People.
+func (a *Adapter) fetchComments(ctx context.Context, d *model.IssueDetail) error {
 	path := "/rest/api/3/issue/" + url.PathEscape(d.SourceID) + "/comment"
-	start := 0
+	var out []model.Comment
+	start, total := 0, 0
 	for {
 		var page struct {
-			Total    int           `json:"total"`
-			Comments []wireComment `json:"comments"`
+			Total    int               `json:"total"`
+			Comments []wireCommentFull `json:"comments"`
 		}
-		q := url.Values{"orderBy": {"-created"}, "maxResults": {"100"}, "startAt": {strconv.Itoa(start)}}
+		q := url.Values{
+			"orderBy":    {"created"},
+			"maxResults": {strconv.Itoa(commentPageSize)},
+			"startAt":    {strconv.Itoa(start)},
+		}
 		if err := a.c.GetJSON(ctx, path, q, &page); err != nil {
 			return MapError(err)
 		}
-		var oldest time.Time
-		for i, wc := range page.Comments {
-			c := commentOf(wc)
-			if i == 0 || c.At.Before(oldest) {
-				oldest = c.At
-			}
-			if seen[c.ID] {
-				continue
-			}
-			seen[c.ID] = true
-			d.Comments = append(d.Comments, c)
+		total = page.Total
+		for _, wc := range page.Comments {
+			out = append(out, commentOf(wc))
 			if wc.Author != nil {
 				addPerson(d, personOf(wc.Author))
 			}
 		}
 		start += len(page.Comments)
-		limit := d.CommentTotal
-		if page.Total > limit {
-			limit = page.Total
-		}
-		if len(page.Comments) == 0 || start >= limit || oldest.Before(cutoff) {
-			return nil
+		if len(page.Comments) == 0 || start >= total {
+			break
 		}
 	}
+	d.Comments = out
+	d.CommentTotal = total
+	return nil
 }

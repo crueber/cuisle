@@ -209,10 +209,12 @@ func (d *Deps) live(ctx context.Context, row cache.ConnRow, fn func(src source.S
 		if ctx.Err() != nil {
 			return false, ctx.Err()
 		}
+		d.noteNet(err)
 		d.noteSourceError(ctx, row, err)
 		d.log().Debug("source call failed, answering from the cache", "err", err)
 		return false, nil
 	}
+	d.noteNet(nil)
 	return true, nil
 }
 

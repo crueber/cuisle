@@ -18,11 +18,15 @@ declare module "@wailsio/runtime" {
             "connection:auth": sync$0.ConnectionAuth;
             "data:changed": sync$0.DataChanged;
             "day:rolled": app$0.DayRolled;
+            "media:ready": sync$0.MediaReady;
             "sink:delivered": app$0.SinkDelivered;
             "sink:failed": app$0.SinkFailed;
             "sync:finished": sync$0.SyncFinished;
             "sync:progress": sync$0.SyncProgress;
             "sync:started": sync$0.SyncStarted;
+            "sync:throttled": sync$0.SyncThrottled;
+            "ticket:updated": sync$0.TicketUpdated;
+            "ticket:write_failed": app$0.TicketWriteFailed;
         }
     }
 }

@@ -16,9 +16,13 @@ How the neutral interface maps onto this document:
 | `ValidateFilter` | §2.8 (`jql/parse`) |
 | `Plan` | §2.8 query table (JQL strings are the opaque `Query.Expr`) |
 | `Scan` | §2.8 scan field set (+ approximate count for the backlog) |
-| `Hydrate` | §2.8 hydrate field set + §2.9 changelog + §2.10 comments, mapped to `model.IssueDetail` |
+| `Hydrate` | §2.8 hydrate field set (`*all`) + §2.9 changelog + §2.10 comments with bodies, mapped to `model.IssueDetail` incl. `IssueContent` |
+| `Fields` | §2.2 field registry + kind mapping |
+| `FetchMedia` | §2.14 |
+| `GetIssue` | §2.15 refresh (single-issue `Hydrate`) |
+| `Transitions` / `Transition` / `Assign` / `SetFlag` / `AddComment` | §2.15 |
 | `DevActivity` | §2.11 |
-| `Capabilities` | `{HasSprints, HasBacklogRank, HasFlagging, HasDevActivity, HasExtraFilter, HasAssigneeHistory: true; FilterLanguage: "JQL"}` (`HasDevActivity` flips to false when the probe fails) |
+| `Capabilities` | `{HasSprints, HasBacklogRank, HasFlagging, HasDevActivity, HasExtraFilter, HasAssigneeHistory, Content: true; Writes: {Transition, Assign, Flag, Comment: true}; FilterLanguage: "JQL"}` (`HasDevActivity` flips to false when the probe fails) |
 
 ## 1. Client basics (`internal/source/jira`)
 
@@ -28,7 +32,8 @@ How the neutral interface maps onto this document:
   run, never logged). Headers: `Accept: application/json`, `Content-Type: application/json` on POST,
   `User-Agent: Cuisle/<version> (<os>)`.
 - Timeouts: 10 s connect, 30 s per request, 5 min per sync run. HTTP/2, keep-alive, one shared `http.Client`.
-- Concurrency: one global semaphore of **4** in-flight requests across all runs; plus a token bucket of 10 requests/s.
+- Concurrency: one global semaphore of **4** in-flight requests across all runs (media at most 2); every request goes
+  through the per-connection limiter of §3.1 (token bucket 8 requests/s, burst 16; WP-T0).
 - Decoding: `encoding/json` into narrow DTOs (only the fields listed below); unknown fields ignored. Timestamps accept
   both ISO-8601 with offset (`2026-11-23T09:15:02.123+0000`) and epoch milliseconds (number or numeric string).
 - Every method takes `ctx`; cancellation aborts the in-flight request.
@@ -49,6 +54,45 @@ Once per site per 24 h and on every full sync. Resolve and store in `connection.
 - `flagged_field_id`: custom field with `name == "Flagged"` (untranslated name; fallback `clauseNames` contains `Flagged`)
 
 Missing Flagged field → blocked detection uses status names only (warning `no_flagged_field`).
+
+**Field registry (`Source.Fields` → `field_def`, ADR 0015).** Every entry of the same response becomes a `field_def` row
+(`field_id = id`, `name`, `custom`, `custom_type = schema.custom`, `schema_json = schema`), with `kind` from the first
+matching rule:
+
+| `schema.type` | `schema.items` / `schema.custom` (suffix) / `schema.system` | Kind |
+|---|---|---|
+| `string` | custom `:textarea`; system `description`, `environment` | `paragraph` (value is ADF) |
+| `string` | custom `:url` | `url` |
+| `string` | anything else (`:textfield`, `summary`, epic name, …) | `text` |
+| `number` | (story points, `:float`, time in seconds) | `number` |
+| `date` | | `date` |
+| `datetime` | | `datetime` |
+| `option` | `:select`, `:radiobuttons` | `option` |
+| `array` | items `option` (`:multiselect`, `:multicheckboxes`) | `options` |
+| `option-with-child` | `:cascadingselect` | `cascade` |
+| `user` | | `user` |
+| `array` | items `user` (`:multiuserpicker`, people, request participants) | `users` |
+| `group` | | `group` |
+| `array` | items `group` | `groups` |
+| `version` | | `version` |
+| `array` | items `version` (fix versions, affects versions) | `versions` |
+| `array` | items `component` | `components` |
+| `array` | items `string`, system `labels` or custom `:labels` | `labels` |
+| `project` | | `project` |
+| `team` or custom `com.atlassian.teams:rm-teams-custom-field-team` / `com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team` | | `team` |
+| `priority`, `resolution`, `issuetype`, `status`, `securitylevel` | (objects with `name`) | `option` |
+| anything else (Tempo account, Assets/Insight objects, `sd-*` service-desk types, `any`, app-specific) | | `unknown` (raw JSON kept; shown mono) |
+
+Value decoding by kind: `option` → `.value` or `.name`; `options`/`versions`/`components` → each `.value`/`.name`;
+`cascade` → `[.value, .child.value]`; `user(s)` → `.accountId` (+ person upsert); `group(s)` → `.name`; `team` → `.name`
+(fallback `.title`); `paragraph` → the ADF object; `unknown` → the raw value (strings unquoted). `null`, `""`, `[]` and
+objects with no displayable member mean **not set** (no `issue_field_value` row).
+Fields excluded from `issue_field_value` because they are modelled elsewhere or are noise: `summary`, `status`,
+`assignee`, `issuetype`, `created`, `updated`, `resolutiondate`, `parent`, `comment`, `attachment`, `issuelinks`,
+`subtasks`, `description`, `environment`, `worklog`, `watches`/`votes` (only `watches.watchCount` is read), the sprint/rank/flagged
+fields, `lastViewed`, `statuscategorychangedate`, `workratio`, `progress`, `aggregateprogress`, and development-summary
+custom fields (`:devsummarycf`). Time tracking (`timetracking.{originalEstimateSeconds, remainingEstimateSeconds, timeSpentSeconds}`)
+is stored as one `unknown`-kind value with a fixed id `timetracking` that the view renders as "14h of 24h".
 
 ### 2.3 Space autocomplete — `GET /rest/api/3/project/search`
 Params: `query=<text>`, `maxResults=20`, `orderBy=name`, `typeKey=software`, `status=live`.
@@ -105,14 +149,22 @@ Two field sets:
 
 - **Scan** (cheap, all members): `fields: ["updated"]`, `maxResults: 1000` (server may return fewer; follow tokens).
   Returns `issues[].{id, key, fields.updated}` in JQL order.
-- **Hydrate** (changed/new issues only), `maxResults: 100`, JQL `id in (<≤100 ids>) `:
-  `fields: ["summary","issuetype","status","assignee","created","updated","resolutiondate","parent","comment",
-  "<sprint_field_id>","<rank_field_id>","<flagged_field_id>"]`.
-  Read: `summary`; `issuetype.{id,name,subtask,hierarchyLevel}`; `status.{id,name,statusCategory.key}`;
+- **Hydrate** (changed/new issues only), `maxResults: 50`, JQL `id in (<≤50 ids>)` (follow `nextPageToken` if the server
+  returns fewer): `fields: ["*all", "-comment", "-worklog"]` — everything, including all custom fields, because the ticket
+  modal shows them (ADR 0015); comments come from §2.10.
+  Read for the record: `summary`; `issuetype.{id,name,subtask,hierarchyLevel}`; `status.{id,name,statusCategory.key}`;
   `assignee.{accountId,displayName,active,accountType}` (may be null); `created`, `updated`, `resolutiondate`;
-  `parent.key`; sprint field `[].{id,name,state,startDate,endDate,completeDate,boardId}`; rank field (string);
-  flagged field (non-empty array ⇒ flagged); `comment.{total, comments[].{id, created, author.accountId}}`
-  (comment bodies are skipped by the decoder and never stored).
+  `parent.{id,key,fields.summary,fields.issuetype.id}`; sprint field `[].{id,name,state,startDate,endDate,completeDate,boardId}`;
+  rank field (string); flagged field (non-empty array ⇒ flagged).
+  Read for content: `description` and `environment` (ADF objects, stored verbatim as JSON text);
+  `attachment[].{id, filename, mimeType, size, created, author.accountId}`;
+  `issuelinks[].{id, type.{name,inward,outward}, inwardIssue|outwardIssue.{id,key,fields.{summary,status.id,issuetype.id}}}`;
+  `subtasks[].{id,key,fields.{summary,status.id,issuetype.id}}` (neither payload carries an assignee, so a link or subtask
+  row's initials are resolved locally at read time from the target's current `issue.assignee_account_id` when the target
+  is a synced issue, and are empty otherwise; no extra request); `watches.watchCount`; `reporter`, `priority`, `labels`,
+  `components`, `fixVersions`, `duedate`, `timetracking` and **every other key** decoded through the field registry (§2.2)
+  into `model.FieldValue`s. Unknown keys (no `field_def`) are stored as kind `unknown` and trigger a registry refresh on
+  the next sync.
 
 JQL is built by the adapter's `Plan(PlanInput)` (the orchestrator never sees JQL); `{X}` = `AND (<extra_filter>)` when non-empty; `{K}` = `AND (<board_meta.subQuery>)`
 for kanban when present. Status id lists come from `standup_status_lane` (`W` = working lanes todo/prog/review/qa,
@@ -161,12 +213,14 @@ One paged call for many issues instead of `expand=changelog` (bloats search page
   `fieldIds` (filter client-side); if still failing, per-issue `GET /rest/api/3/issue/{id}/changelog?maxResults=100`
   with `startAt` paging at concurrency 4.
 
-### 2.10 Comments
-Primary source is the `comment` field in the hydrate query (§2.8). Top-up only when
-`comment.total > len(comment.comments)` **and** the embedded page does not already reach back past the **backfill horizon**
-(35 days = the longest pulse window plus slack; this bounds first-time fetching only — stored comments are never aged out): `GET /rest/api/3/issue/{id}/comment?orderBy=-created&maxResults=100&startAt=n`, stop at the first page whose
-oldest comment is older than 35 days. Read `comments[].{id, created, author.accountId}`. Stored rows: timestamp + author only.
-Comments by `accountType == "app"` authors (automation/bots) are stored but excluded from marks.
+### 2.10 Comments — `GET /rest/api/3/issue/{id}/comment`
+Params: `orderBy=created`, `maxResults=100`, `startAt=n`; page until `startAt + len ≥ total`. Called **only for hydrated
+issues** (new, or `updated` changed in the scan diff — adding/editing a comment bumps `updated`), always the complete list.
+Read `comments[].{id, created, updated, author.{accountId,displayName,accountType}, body, visibility.{type,value}}`.
+Stored per comment: timestamps, author, **`body` as ADF JSON** (`comment.body_adf`), visibility (ADR 0015).
+Upsert by id; a stored comment absent from a complete fetch gets `deleted_at`. Bodies are never logged or exported.
+Comments by `accountType == "app"` authors (automation/bots) are stored and shown, but excluded from pulse marks.
+(This replaces the earlier "embedded comment field + top-up" approach; the search no longer requests `comment`.)
 
 ### 2.11 Development information (internal API, best effort)
 Not a public API: no stability guarantee. All failures degrade to warnings.
@@ -180,8 +234,12 @@ Not a public API: no stability guarantee. All failures degrade to warnings.
    - `GET /rest/dev-status/latest/issue/detail?issueId={id}&applicationType={type}&dataType=repository`
      → `detail[].repositories[].{name, commits[].{id, authorTimestamp, merge}}` → upsert `dev_commit`.
    - `GET /rest/dev-status/latest/issue/detail?issueId={id}&applicationType={type}&dataType=pullrequest`
-     → `detail[].pullRequests[].{id, status, lastUpdate, repositoryId, repositoryName}` → insert `dev_pr_event`
-     `(pr_key, status, at=lastUpdate)` if that triple is new.
+     → `detail[].pullRequests[].{id, name, status, lastUpdate, repositoryId, repositoryName, source.branch}` → insert
+     `dev_pr_event` `(pr_key, status, at=lastUpdate)` if that triple is new; `name` is stored as `title` and
+     `source.branch` as `branch` (both nullable; a re-observation of the same triple fills NULLs or a renamed title and
+     never blanks them). The ticket modal's Branch row is the most recently updated PR's source branch; commits carry no
+     branch in these responses, and no `dataType=branch` request is made. A title change alone does not change the
+     summary fingerprint, so it is picked up the next time the PR's state or update time changes.
 
 **Dev targets** (the only issues queried each sync; issue `updated` does not change when commits arrive, so these are
 re-checked every sync): members with role `board` whose lane is `prog`, `review` or `qa`; plus members that changed
@@ -215,9 +273,65 @@ Offline → `person` `LIKE` search. Empty query → people already known for the
 | Backlog count | `POST /rest/api/3/search/approximate-count` | each sync |
 | JQL check | `POST /rest/api/3/jql/parse` | typing extra filter |
 | Changelog | `POST /rest/api/3/changelog/bulkfetch` | hydrated issues |
-| Comments top-up | `GET /rest/api/3/issue/{id}/comment` | rare |
+| Comments (with bodies) | `GET /rest/api/3/issue/{id}/comment` | hydrated issues |
+| Attachment bytes / thumbnail | `GET /rest/api/3/attachment/content/{id}`, `GET /rest/api/3/attachment/thumbnail/{id}` | media phase; explicit open on cache miss |
+| Single issue refresh | `GET /rest/api/3/issue/{id}?fields=*all,-comment,-worklog` | after each light write |
+| Transitions | `GET /rest/api/3/issue/{id}/transitions?expand=transitions.fields` | Status combobox opened |
+| Transition / assign / flag / comment | `POST …/transitions`, `PUT …/assignee`, `PUT /rest/api/3/issue/{id}`, `POST …/comment` | explicit user action |
 | Dev summary / detail | `GET /rest/dev-status/latest/issue/summary`, `.../detail` | dev targets |
 | Users | `GET /rest/api/3/user/assignable/search` | typing |
+
+### 2.14 Attachments and media (`Source.FetchMedia`, ADR 0015)
+
+- **Original**: `GET /rest/api/3/attachment/content/{id}` with redirects **not** auto-followed. Jira answers `303` with a
+  `Location` on the media service; the adapter (a) extracts the media file id from that URL
+  (`…/file/<uuid>/binary…`) → `attachment.media_file_id`, then (b) follows the redirect **without** the `Authorization`
+  header (the URL is pre-signed) and streams the body to `media.Cache.Put`. A `200` with a body (no redirect) is also accepted.
+- **Thumbnail fallback**: `GET /rest/api/3/attachment/thumbnail/{id}?width=320&height=200&fallbackToDefault=false` — used
+  only when the original is over 25 MB or cannot be decoded locally; otherwise thumbnails are generated by `internal/media`.
+- **What is downloaded during sync**: image attachments (`mimeType` png/jpeg/gif/webp/bmp, ≤ 25 MB) of hydrated issues that
+  have no thumbnail yet. Non-image files are metadata only and download on click (`TicketService.OpenAttachment`).
+  If the cache is at its cap the original is still fetched once to make the thumbnail, then evicted by LRU.
+- **Media-node → attachment mapping** (ADF `media` nodes carry `attrs.id` = media file id, `attrs.alt`, sometimes
+  `width/height`; there is no documented join to attachment ids). Resolution order, performed by `adf.Resolver` at view time:
+  1. `attachment.media_file_id == attrs.id` (captured from the redirect above — exact).
+  2. For attachments whose media id is still unknown (non-images never downloaded): one header-only request
+     `GET /attachment/content/{id}` (redirect not followed) per such attachment **during the media phase**, only for issues
+     whose ADF references an unresolved media id.
+  3. `attrs.alt` equals the attachment `name` (unique within the issue).
+  4. Position: n-th unresolved media node ↔ n-th remaining attachment by `created` (only when the counts match).
+  5. Unresolved → node rendered as "attachment unavailable ↗" (opens the issue); warning `media_unresolved`.
+  External media (`attrs.type == "external"`, a URL) is rendered as a link card, never fetched.
+- **When**: the media phase runs **after** the record apply (§4.3 phase 9) in a pool of 2 downloads, cancellable and
+  resumable (it simply picks attachments with `is_image=1 AND thumb_path IS NULL AND removed_at IS NULL`). Each landed
+  image emits `media:ready`. The modal shows a framed placeholder with the stored dimensions until then. Failures set
+  `attachment.fetch_error` and are retried on the next sync (not in a loop). A sync's status is not affected by media.
+
+### 2.15 Light writes (`Capabilities.Writes`; explicit user actions only)
+
+| Action | Request | Notes |
+|---|---|---|
+| List transitions | `GET /rest/api/3/issue/{id}/transitions?expand=transitions.fields` | Read `transitions[].{id, name, to.{id,name}, hasScreen, isAvailable, fields{<id>: {required, hasDefaultValue}}}`. Drop `isAvailable == false`. `NeedsScreen = hasScreen && any field with required && !hasDefaultValue` — a screen with only optional fields is transitioned directly. Cached in `transition_cache`. |
+| Transition | `POST /rest/api/3/issue/{id}/transitions` body `{"transition":{"id":"31"}}` → `204` | `NeedsScreen` transitions are never posted (UI opens the browser; a direct call returns `transition_needs_screen`). |
+| Assign | `PUT /rest/api/3/issue/{id}/assignee` body `{"accountId":"5b10…"}`; unassign `{"accountId":null}` → `204` | |
+| Flag / unflag | `PUT /rest/api/3/issue/{id}` body `{"fields":{"<flagged_field_id>":[{"value":"Impediment"}]}}`; unflag `{"fields":{"<flagged_field_id>":null}}` → `204` | No Flagged field discovered → `Capabilities.Writes.Flag = false`. |
+| Add comment | `POST /rest/api/3/issue/{id}/comment` body `{"body": <ADF>}` → `201 {id,…}` | ADF built by `adf.FromPlainText`: blank-line-separated paragraphs, single newlines → `hardBreak`, mention ranges → `{"type":"mention","attrs":{"id":"<accountId>","text":"@Name"}}`. No visibility restriction is ever set by Cuisle. |
+| Refresh | `GET /rest/api/3/issue/{id}?fields=*all,-comment,-worklog` + `POST /changelog/bulkfetch` for that id + §2.10 comments | = `Source.GetIssue`; result applied by `sync.ApplyIssue` (§4.8). |
+
+Error mapping for writes (never retried automatically; the 429/5xx retry policy of §3 is **not** applied to POST/PUT writes —
+one attempt only, so an action is never sent twice):
+
+| Response | Code | Message shown |
+|---|---|---|
+| `400` with `errorMessages[]` / `errors{}` | `write_rejected` | Jira's first message verbatim (e.g. a workflow validator's text) |
+| `400` on a transition complaining about a required field / screen | `transition_needs_screen` | "This transition needs more information — open in Jira" |
+| `401` | `auth_invalid` | "Jira rejected the token — Reconnect" (also flips `connection:auth`) |
+| `403` | `permission_denied` | "You don't have permission to do that in Jira" |
+| `404` | `not_found` | "This issue no longer exists or you can't see it" |
+| `409` | `conflict` | "The issue changed in Jira — reload and try again" (the refresh still runs) |
+| `429` | `rate_limited` | "Jira is busy — try again in a moment" (`Retry-After` shown) |
+| network failure before a response | `offline` | "Can't reach Jira" |
+| network failure **after** the request was sent | `timeout` | "Jira didn't answer — checking…" then a refresh decides whether the change landed |
 
 ## 3. Request policy
 
@@ -231,6 +345,51 @@ Offline → `person` `LIKE` search. Empty query → people already known for the
 | 404 board/filter | `not_found`: "This board no longer exists" — Configure shows the Source section in error. |
 | DNS failure / no route / TLS error before any response | `offline` (TLS errors are logged in detail). No retry loop; the user presses Resync again. |
 | An https:// address that answers in plain http | `offline` with "That address answers over http, not https. Check the site address." (http is only allowed for loopback, e.g. the fake Jira). |
+
+### 3.1 Throttling: one limiter per connection (ADR 0015)
+Jira Cloud rate-limits API-token traffic with **per-second burst limits** and **per-issue write limits**. Over a limit,
+it answers `429` with `Retry-After`. Responses may carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+`X-RateLimit-Reset`, `X-RateLimit-NearLimit: true` (under 20% left), `RateLimit-Reason`, and the structured
+`RateLimit` / `RateLimit-Policy` headers (`"jira-burst-based";r=90;t=1`). The newer points-based hourly quotas apply to
+Connect/Forge apps, not API-token traffic. Cuisle still parses those headers if present, so the same code works if that
+changes. Headers are often absent until you are near a limit, so Cuisle must be polite **proactively**, not only after
+a 429. (Source: developer.atlassian.com/cloud/jira/platform/rate-limiting, checked 2026-11-23.)
+
+**`internal/source/jira/limiter`** wraps the HTTP client. Every request goes through it: sync, content, media,
+transitions, writes, ticket refresh, combobox search, Connect. There is one limiter per connection (site + account),
+shared by all standups and all goroutines.
+
+| Mechanism | Default | Rule |
+|---|---|---|
+| Token bucket (sustained rate) | **8 req/s**, burst 16 | Hidden setting `jira.max_rps` (1–20); there is no UI for it, and Diagnostics shows it. |
+| Concurrency | 4 in flight (2 for media) | As in §1; media downloads also count against the bucket. |
+| Priority lanes | interactive > sync > media | *Interactive:* writes, transitions, ticket Refresh, combobox search, Connect, validate. *Sync:* plan, scan, hydrate, comments, dev-status. *Media:* attachment and thumbnail downloads. A waiting interactive request takes the next token; bulk work can't starve it. Media runs only when no sync request is waiting. |
+| Adaptive slow-down (AIMD) | — | If a response has `X-RateLimit-NearLimit: true`, or `Remaining/Limit < 0.2` (from either header family), halve the rate, with a floor of 1 req/s. Recover by +1 req/s every 30 s with no near-limit signal, up to the configured max. |
+| 429 | — | Close the **global gate** for this connection (all lanes) until `Retry-After` (fallback: `X-RateLimit-Reset` or `RateLimit` `t=`; else 5 s), plus 0–500 ms jitter. Halve the rate. Sync requests retry per §3; **writes do not retry** (ADR 0015): they fail `rate_limited` with `retryInMs`, and the UI says "Jira is rate-limiting · try again in 6s". |
+| Per-issue writes | 1 in flight per issue | Writes and Refresh for the same issue serialise (`conflict` if one is already running). This respects Jira's per-issue write limit. |
+| Ticket Refresh cooldown | 10 s per issue | Enforced in `TicketService` before the limiter; it returns `cooldown{retryInMs}` with no request. |
+| Manual Resync | coalesced | `R` while a sync runs is a no-op that focuses the progress. Sync-on-open stays at most once per stale window (§4.1). |
+
+**Request economy** (keep syncs cheap; this is what keeps a 5-standup user far below the limits):
+- Scan-and-diff hydrates only changed issues (§4.2). Comments are fetched only for issues whose `updated` changed.
+  Attachments are downloaded once (by id) and thumbnails never re-fetched. Dev-status uses fingerprints (§2.11).
+- Field discovery (`/field`) runs once per connection per day, or on a full sync, not on every run.
+- Standups that share a board share one scan inside a run (the same board and filter are planned once).
+- **Budget check:** `sync_run.requests` and `sync_run.throttled` are recorded per run. Decided by Chris on 2026-11-23,
+  after measuring v1 at 159 requests for a full sync and 38 for an incremental, almost all of it dev-status:
+  - **Issue and content traffic** (everything except `/rest/dev-status/**`):
+    - A full sync of the MOB fixture board (55 issues) must stay at or under **250 requests**.
+    - An incremental sync with 3 changed issues must stay at or under **50**.
+  - **Dev-status has its own cap:**
+    - At most 1 summary request per active dev target per sync.
+    - Detail requests only for targets whose summary fingerprint changed (§2.11), at most 2 per such target.
+  - All of these are asserted against jiratest's request log.
+
+**Visibility:**
+- The limiter emits `sync:throttled {resumeAt, reason}`. The header shows `Jira is rate-limiting · resuming in 12s`
+  (ux-spec §14.13).
+- Diagnostics keep the last hour's requests per lane, the current rate, and throttle events. `--debug` logs every
+  limiter decision.
 
 ## 4. Sync algorithm (`internal/sync`)
 
@@ -259,26 +418,34 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress 
 
 ```
 0. preflight   keychain token (missing → auth_missing); GET /myself
-1. config      [parallel] board configuration · active sprints · (full: fields, statuses)
+1. config      [parallel] board configuration · active sprints · (full: fields → field_def, statuses)
                → recompute column map + status lanes in memory; build queries (§2.8)
 2. scan        [parallel per query] search/jql with fields=["updated"]
                → ordered id lists per role; total = distinct ids
                diff vs cache:  toHydrate = new ids ∪ ids whose updated ≠ issue.updated_at   (full: all ids)
                                toClose   = current members of this standup not in the scan (span closed; rows kept)
-3. issues      hydrate toHydrate in batches of 100 ids (`id in (...)`), 4 batches in flight
+3. issues      hydrate toHydrate in batches of 50 ids (`id in (...)`, fields=*all), 4 batches in flight
+               → record fields + content (description, field values, links, subtasks, attachment metadata)
 4. changelog   bulkfetch for toHydrate (batches of 500)
-5. comments    top-ups only (§2.10), concurrency 4
+5. content     full comments with bodies for toHydrate (§2.10), concurrency 4            [progress phase "content"]
 6. dev         dev targets (§2.11): summary → changed? → details; concurrency 4
 7. apply       single write transaction (§4.6); then trim operational rows (separate tx)
 8. sinks       enqueue + deliver for sinks with send_on='after_sync' (ok/partial runs only; architecture.md §2.3)
+9. media       image downloads + thumbnails for attachments without one (§2.14), pool of 2   [progress phase "media"]
+               runs after sync:finished has been emitted; reported through sync:progress {phase:"media"} and media:ready;
+               cancellable; never changes the run's status
 ```
 
 Ordering guarantees: phase N+1 starts only when N finished, except 4–6 which run concurrently with each other once 3 is
-complete. Request budget, incremental with no changes: 1 (`myself`) + 2 (config, sprints) + ≤ 3 scans + 1 (count)
-+ 1 per dev target.
+complete. `sync:progress.phase` ∈ `config|scan|issues|changelog|content|dev|apply|media` (`content` replaces the former
+`comments`). Request budget, incremental with no changes: 1 (`myself`) + 2 (config, sprints) + ≤ 3 scans + 1 (count)
++ 1 per dev target — unchanged, because content is fetched only for issues in the diff. Per changed issue: +1 hydrate
+share (1 request per 50), +1 changelog share, +⌈comments/100⌉ (min 1) comment requests, +1 per new image attachment.
+First full sync of a 300-issue board: ≈ 6 hydrate + 1 changelog + ≈ 300 comment requests + dev targets + images; at 4
+concurrent requests ≈ 30–60 s before images (budget in architecture.md §6.1 updated to ≤ 60 s).
 
-Users: assignees and comment authors seen in hydrate responses are collected into the snapshot (`person` upserts);
-no separate user calls.
+Users: assignees, reporters, comment authors and user-field values seen in hydrate responses are collected into the
+snapshot (`person` upserts); no separate user calls.
 
 ### 4.4 Cancellation
 
@@ -288,7 +455,7 @@ App quit cancels all runs the same way. Switching standups or screens does **not
 
 ### 4.5 Partial results
 
-If phases 0–4 succeed and only comments/dev had per-issue failures, the run applies and finishes `partial` with
+If phases 0–4 succeed and only content (comments) or dev had per-issue failures, the run applies and finishes `partial` with
 warnings (existing rows for the failed issues are kept). Any failure in phases 0–4 aborts the run with **no** apply:
 the UI keeps showing the previous snapshot with the previous "synced" time.
 
@@ -300,8 +467,10 @@ One `BEGIN IMMEDIATE` on the writer connection (`T` = the run's `started_at`):
    `dev_activity_state`.
 2. Merge `standup_column_map` (auto-map new columns), rebuild `standup_status_lane`; update `standup` board snapshot
    (`board_name`, `board_type`, `board_meta`).
-3. Upsert hydrated `issue` rows (by `connection_id, source_id`); for each, **upsert** `status_change`,
-   `assignee_change`, `flag_change`, `comment` by natural key — never delete. Set `last_seen_at = T` on every scanned issue.
+3. Upsert hydrated `issue` rows (by `connection_id, source_id`; skipped when the stored `updated_at` is newer); for each,
+   **upsert** `status_change`, `assignee_change`, `flag_change`, `comment` (with body) by natural key — never delete — and,
+   when `content_hash` changed, replace `issue_content`, `issue_field_value`, `issue_link` and upsert `attachment` metadata
+   (`removed_at` for vanished ones). Emit `ticket:updated {cause:"sync"}` per changed issue after commit. Set `last_seen_at = T` on every scanned issue.
 4. Upsert `dev_commit`; insert new `dev_pr_event`; set `dev_fingerprint`, `dev_checked_at`.
 5. Membership: rewrite `standup_issue` for this standup from the scanned lists (with `rank_index`), and maintain
    `standup_issue_span` — open spans for new members/roles at `T`, close spans (`valid_to = T`) for issues no longer
@@ -333,6 +502,25 @@ with last-writer-wins on identical source data.
 | Board/filter forbidden or gone | Run fails; tab shows a warning dot; Configure › Source shows the message on the Board field. |
 | Extra JQL invalid | Run fails fast `filter_invalid`; Configure shows Jira's parse error under the field. |
 | Rate limited | Header `Syncing… waiting for Jira (12 s)` during gate; fails `rate_limited` after 120 s cumulative. |
+
+### 4.8 Light writes and the one-issue apply (ADR 0015)
+
+`TicketService.{Transition,Assign,SetFlag,AddComment}` → per-issue mutex → `Source.<write>` (one attempt, §2.15) →
+`Source.GetIssue` → `sync.ApplyIssue(detail)`:
+
+- One `BEGIN IMMEDIATE`: step 3 of §4.6 for that single issue (issue row, **merged** change tables — the status /
+  assignee / flag change made by the write is recorded from Jira's own changelog entry, with Jira's timestamp and
+  history id), comments, content tables, attachment rows; delete its `transition_cache` row if the status changed;
+  bump `rev` of every standup that has the issue as a current member. Membership, spans, config history and sync state
+  are **not** touched (a transition to Done does not remove the issue from the board until a sync says so).
+- Emit `ticket:updated {cause:"write"}` and `data:changed {what:"view"}`; enqueue nothing for sinks (a write is not a sync).
+- If `GetIssue` fails after the write succeeded: apply the known delta to the `issue` row only (new `status_id` /
+  `assignee_account_id` / `flagged`, no change-table rows), return the detail with warning `refresh_failed`; the next sync
+  hydrates the issue (its `updated` differs) and merges the real changelog entries.
+- Concurrency with a running sync: both go through the single writer; whichever applies second **skips issue rows whose
+  incoming `updated` is older than the stored `updated_at`** (change/comment rows are still merged — they are append-only).
+- Writes are refused locally, before any request, when `connection.auth_state != 'ok'` (`auth_missing`/`auth_invalid`) or
+  the capability is absent (`unsupported`).
 
 ## 5. Mapping synced facts → pulse inputs (`internal/pulse`, pure functions)
 
@@ -475,9 +663,21 @@ client — pagination tokens, 429 handling, decoding — is what gets exercised.
   `AND/OR/()`, `ORDER BY Rank`), `fields` projection, `nextPageToken` paging (opaque base64 offsets), `approximate-count`;
   `changelog/bulkfetch` with `fieldIds`; issue comments; dev-status summary/detail (instance type `GitHub`);
   assignable user search; `jql/parse` (accepts anything the subset parses).
+- **Content and writes (ADR 0015)**: every fixture issue carries a `description` (one fixture issue, `MOB-1421`, contains
+  **every ADF node of ux-spec §14.4** plus one unknown node), `comments[]` with ADF bodies (one with
+  `visibility: {type:"role", value:"Developers"}`, one edited), `attachments[]` (three images served from
+  `testdata/media/*.png|jpg` — copied from the round-6 design assets — plus one PDF), custom fields covering **every
+  `FieldValue.Kind`** incl. one unknown app field and several empty ones, `issuelinks`, `subtasks`. Endpoints: `*all` field
+  projection, `GET /issue/{id}`, paged `GET /issue/{id}/comment`, `GET /attachment/content/{id}` (303 to a local
+  `/media/file/<uuid>/binary` URL, exercising the media-id capture) and `/attachment/thumbnail/{id}`,
+  `GET/POST /issue/{id}/transitions` (the fixture workflow includes one `hasScreen` transition with a required field),
+  `PUT /issue/{id}/assignee`, `PUT /issue/{id}` (Flagged), `POST /issue/{id}/comment`. Writes mutate the dataset **and
+  append changelog entries**, so the refresh sees real history. The request log records method + path for the
+  no-network-on-open assertions.
 - **Fault injection** (`jiratest.Options`, also env `CUISLE_FAKE_FAULTS="429:every=7,retry=1;latency=80ms;devstatus=404"`):
   `Latency`, `Throttle{Every, RetryAfter}`, `FailStatus{PathPrefix, Code, Count}`, `DevStatus: "ok"|"404"|"403"|"garbage"`,
-  `PageSize` (force tiny pages), `Unauthorized` (flip to 401 mid-run), `Mutate(func(*Dataset))` between syncs (move an
+  `PageSize` (force tiny pages), `Unauthorized` (flip to 401 mid-run), `Writes: "ok"|"400"|"403"|"409"|"timeout-after-send"` (per action), `RefreshFails` (GetIssue 500 after a successful write),
+  `Media: "ok"|"404"|"slow"|"no-redirect"`, `StaleChangelog` (write succeeded but changelog lags), `Mutate(func(*Dataset))` between syncs (move an
   issue, add a commit) for incremental tests.
 - **Tests that must exist** (integration, `internal/sync`): first full sync populates all tables; incremental with no
   changes makes exactly the budgeted requests and hydrates 0 issues; issue removed from sprint disappears; status change

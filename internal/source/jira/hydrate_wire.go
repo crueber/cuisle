@@ -61,17 +61,6 @@ type wireSprint struct {
 	CompleteDate Time   `json:"completeDate"`
 }
 
-type wireComment struct {
-	ID      flexID    `json:"id"`
-	Created Time      `json:"created"`
-	Author  *wireUser `json:"author"`
-}
-
-type wireComments struct {
-	Total    int           `json:"total"`
-	Comments []wireComment `json:"comments"`
-}
-
 type wireItem struct {
 	FieldID string `json:"fieldId"`
 	Field   string `json:"field"`
@@ -96,17 +85,6 @@ func (a *Adapter) fieldIDs() hydrateFieldIDs {
 	return hydrateFieldIDs{sprint: a.meta.SprintFieldID, rank: a.meta.RankFieldID, flagged: a.meta.FlaggedFieldID}
 }
 
-// requestFields is the exact search field set of jira-sync.md §2.8.
-func (f hydrateFieldIDs) requestFields() []string {
-	out := []string{"summary", "issuetype", "status", "assignee", "created", "updated", "resolutiondate", "parent", "comment"}
-	for _, id := range []string{f.sprint, f.rank, f.flagged} {
-		if id != "" {
-			out = append(out, id)
-		}
-	}
-	return out
-}
-
 // decodeField decodes one field when present and not null.
 func decodeField(fields map[string]json.RawMessage, key string, out any) error {
 	raw, ok := fields[key]
@@ -119,8 +97,9 @@ func decodeField(fields map[string]json.RawMessage, key string, out any) error {
 	return nil
 }
 
-// mapIssue turns a search hit into an IssueDetail with embedded comments and people (no changelog yet).
-func mapIssue(wi wireIssue, f hydrateFieldIDs) (model.IssueDetail, error) {
+// mapIssue turns a search or single-issue hit into an IssueDetail with its content and people (no changelog or
+// comments yet; those are added by Adapter.complete). The comment key of the hit is ignored (jira-sync §2.10).
+func mapIssue(wi wireIssue, f hydrateFieldIDs, reg *fieldRegistry) (model.IssueDetail, error) {
 	var d model.IssueDetail
 	d.SourceID, d.Key = wi.ID, wi.Key
 	fs := wi.Fields
@@ -194,28 +173,12 @@ func mapIssue(wi wireIssue, f hydrateFieldIDs) (model.IssueDetail, error) {
 		})
 	}
 
-	var cs *wireComments
-	if err := decodeField(fs, "comment", &cs); err != nil {
+	c, err := buildContent(&d, fs, reg, f)
+	if err != nil {
 		return d, err
 	}
-	if cs != nil {
-		d.CommentTotal = cs.Total
-		for _, wc := range cs.Comments {
-			d.Comments = append(d.Comments, commentOf(wc))
-			if wc.Author != nil {
-				addPerson(&d, personOf(wc.Author))
-			}
-		}
-	}
+	d.Content = c
 	return d, nil
-}
-
-func commentOf(wc wireComment) model.Comment {
-	c := model.Comment{ID: string(wc.ID), At: wc.Created.Time}
-	if wc.Author != nil {
-		c.AuthorID = wc.Author.AccountID
-	}
-	return c
 }
 
 func personOf(u *wireUser) model.Person {

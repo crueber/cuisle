@@ -12,8 +12,8 @@ import (
 
 var frozen = []string{
 	"internal/**/contract*.go", "internal/model/**", "internal/app/types.go", "internal/app/deps.go",
-	"internal/store/migrations/0001_init.sql", "frontend/src/api/types.ts", "frontend/src/api/index.ts",
-	"frontend/src/api/errors.ts", "frontend/src/api/events.ts", "frontend/src/components/props.ts",
+	"internal/store/migrations/0001_init.sql", "internal/store/migrations/0003_ticket_content.sql", "frontend/src/api/types.ts", "frontend/src/api/index.ts",
+	"frontend/src/api/errors.ts", "frontend/src/api/events.ts", "frontend/src/components/props.ts", "frontend/src/components/adf/props.ts",
 	"frontend/src/views/*/props.ts", "go.mod", "go.sum", "frontend/package.json", "frontend/package-lock.json",
 	"frontend/src/bindings/**", "AGENTS.md", "CLAUDE.md", "Taskfile.yml", "frontend/src/App.tsx", "frontend/src/main.tsx",
 }

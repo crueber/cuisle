@@ -4,7 +4,10 @@
 // IDs are the provider's ids as strings. Times are time.Time here; the database stores Unix ms UTC.
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Lane ids (architecture.md conventions).
 const (
@@ -118,11 +121,21 @@ type FlagChange struct {
 	Flagged bool // state after the change
 }
 
-// Comment is metadata only, never the body.
+// Comment is one comment on an issue. Since ADR 0015 the body is stored locally; it is never exported, logged or put
+// into crash output (AGENTS.md invariant 12). Sources without Capabilities.Content leave Body empty (Raw nil).
 type Comment struct {
-	ID       string
-	At       time.Time
-	AuthorID string
+	ID         string
+	At         time.Time   // created
+	UpdatedAt  time.Time   // = At until edited; "edited" when after At (zero from metadata-only sources = not edited)
+	AuthorID   string      // "" = unknown/anonymous
+	Body       RichText    // zero (Raw nil) when the source did not return a body
+	Visibility *Visibility // nil = visible to everyone
+}
+
+// Visibility restricts who can see a comment in the provider.
+type Visibility struct {
+	Type  string // "role"|"group"
+	Value string // e.g. "Developers"
 }
 
 const (
@@ -137,6 +150,8 @@ type DevEvent struct {
 	At     time.Time
 	Status string // pr: OPEN|MERGED|DECLINED|UNKNOWN
 	Merge  bool   // commit: merge commit
+	Title  string // pr: pull request title ("" = unknown; rows synced before migration 0004)
+	Branch string // pr: source branch name ("" = unknown)
 }
 
 // IssueDetail is what Source.Hydrate returns for one issue.
@@ -148,10 +163,152 @@ type IssueDetail struct {
 	StatusChanges   []StatusChange
 	AssigneeChanges []AssigneeChange
 	FlagChanges     []FlagChange
-	Comments        []Comment
+	Comments        []Comment // complete list when Capabilities.Content (bodies included), else possibly truncated metadata
 	CommentTotal    int
-	People          []Person // assignees and comment authors seen
-	Sprints         []Sprint // sprints referenced by the issue's sprint field
+	People          []Person      // assignees and comment authors seen
+	Sprints         []Sprint      // sprints referenced by the issue's sprint field
+	Content         *IssueContent // nil when !Capabilities.Content
+}
+
+// ── Ticket content (ADR 0015; architecture.md §2.1) ──
+
+// RichTextADF is the neutral rich-text format: Atlassian Document Format JSON. Other sources convert to it.
+const RichTextADF = "adf"
+
+// RichText is rich content as received (parsed only at view-build time by internal/adf).
+type RichText struct {
+	Format string          `json:"format"` // "adf"
+	Raw    json.RawMessage `json:"raw"`    // the document JSON verbatim; nil = empty
+}
+
+// IsEmpty reports whether there is no content.
+func (r RichText) IsEmpty() bool { return len(r.Raw) == 0 || string(r.Raw) == "null" }
+
+// Attachment is attachment metadata. Bytes live in internal/media, never in the model.
+type Attachment struct {
+	LocalID     int64 // attachment row id (the /media/{id} id); set by the cache, 0 from sources
+	ID          string
+	Name        string
+	Mime        string
+	Bytes       int64
+	AuthorID    string
+	CreatedAt   time.Time
+	MediaFileID string // id used by rich-text media nodes; "" if unknown (jira-sync.md §2.14)
+	Width       int    // 0 = unknown
+	Height      int
+}
+
+// Field kinds (FieldDef.Kind, FieldValue.Kind; data-model.md field_def.kind CHECK).
+const (
+	FieldText       = "text"
+	FieldParagraph  = "paragraph"
+	FieldNumber     = "number"
+	FieldDate       = "date"
+	FieldDateTime   = "datetime"
+	FieldURL        = "url"
+	FieldOption     = "option"
+	FieldOptions    = "options"
+	FieldCascade    = "cascade"
+	FieldUser       = "user"
+	FieldUsers      = "users"
+	FieldGroup      = "group"
+	FieldGroups     = "groups"
+	FieldVersion    = "version"
+	FieldVersions   = "versions"
+	FieldComponent  = "component"
+	FieldComponents = "components"
+	FieldLabels     = "labels"
+	FieldProject    = "project"
+	FieldTeam       = "team"
+	FieldUnknown    = "unknown"
+)
+
+// FieldKinds lists every field kind, in the order of the data-model CHECK constraint.
+var FieldKinds = []string{FieldText, FieldParagraph, FieldNumber, FieldDate, FieldDateTime, FieldURL, FieldOption,
+	FieldOptions, FieldCascade, FieldUser, FieldUsers, FieldGroup, FieldGroups, FieldVersion, FieldVersions,
+	FieldComponent, FieldComponents, FieldLabels, FieldProject, FieldTeam, FieldUnknown}
+
+// FieldDef is one entry of the per-connection field registry (field discovery, jira-sync.md §2.2).
+type FieldDef struct {
+	ID         string // "priority", "customfield_10042"
+	Name       string
+	Kind       string // one of FieldKinds
+	Custom     bool
+	CustomType string          // provider type key, e.g. com.atlassian.jira.plugin.system.customfieldtypes:select
+	Schema     json.RawMessage // provider schema verbatim
+}
+
+// FieldValue is the current value of one non-empty field. Stored as issue_field_value.value_json (the JSON names
+// below are that storage format; empty members are omitted).
+type FieldValue struct {
+	FieldID string          `json:"fieldId,omitempty"`
+	Kind    string          `json:"kind,omitempty"`   // one of FieldKinds
+	Text    string          `json:"text,omitempty"`   // text, option, url, date ("YYYY-MM-DD"), datetime (RFC 3339), group/project/team/version/component name
+	Number  *float64        `json:"number,omitempty"` // number (story points, …)
+	Items   []string        `json:"items,omitempty"`  // options, labels, versions, components, groups; cascade = [parent, child]
+	Users   []string        `json:"users,omitempty"`  // account ids (user, users)
+	Rich    *RichText       `json:"rich,omitempty"`   // paragraph
+	Raw     json.RawMessage `json:"raw,omitempty"`    // unknown: provider value verbatim
+}
+
+// IssueLink is one link to another issue, direction applied ("is blocked by" vs "blocks").
+type IssueLink struct {
+	ID            string
+	TypeName      string // provider link type name, e.g. "Blocks"
+	Label         string // "is blocked by"
+	Outward       bool
+	OtherSourceID string
+	OtherKey      string
+	OtherSummary  string
+	OtherStatusID string
+	OtherTypeID   string
+}
+
+// IssueRef is a display snapshot of another issue (subtask, parent).
+type IssueRef struct {
+	SourceID   string
+	Key        string
+	Summary    string
+	StatusID   string
+	TypeID     string
+	AssigneeID string
+}
+
+// IssueContent is the ticket content Hydrate/GetIssue return when Capabilities.Content.
+type IssueContent struct {
+	Description *RichText // nil = empty
+	Environment *RichText
+	Attachments []Attachment
+	Fields      []FieldValue // every non-empty field value except those modelled on Issue; empties are implied by FieldDef
+	Links       []IssueLink
+	Subtasks    []IssueRef
+	Parent      *IssueRef
+	Watchers    int    // -1 unknown
+	Hash        string // content hash; unchanged hash → no rewrite
+}
+
+// Transition is one workflow transition offered for an issue (Source.Transitions).
+type Transition struct {
+	ID           string
+	Name         string
+	ToStatusID   string
+	ToStatusName string
+	NeedsScreen  bool // a provider screen with required fields: never posted, the UI opens the browser
+}
+
+// Mention is an @-mention inside composer text: a rune range of Text.
+// The JSON names are the ticket_draft.mentions_json storage format ([{start,end,accountId,name}]).
+type Mention struct {
+	Start     int    `json:"start"` // rune offset into NewComment.Text
+	End       int    `json:"end"`   // exclusive
+	AccountID string `json:"accountId"`
+	Name      string `json:"name"`
+}
+
+// NewComment is what the composer sends (Source.AddComment); adf.FromPlainText turns it into ADF.
+type NewComment struct {
+	Text     string
+	Mentions []Mention
 }
 
 type DevActivity struct {

@@ -14,7 +14,12 @@ export const breakpoint = {
   "config-three-cols-min-mainw": 1500,
   "config-two-cols-min-mainw": 960,
   "lists-side-by-side-min-mainw": 1140,
-  "tall-min-vh": 800
+  "tall-min-vh": 800,
+  "modal-short-max-vh": 800,
+  "modal-strip-max-vw": 900,
+  "rail-label-narrow-max": 420,
+  "rail-stack-max": 340,
+  "modal-icon-only-max-vw": 1280
 };
 
 export const motion = {
@@ -73,5 +78,41 @@ export const size = {
     "lane": 11
   },
   "tick-width": 4,
-  "today-line": 3
+  "today-line": 3,
+  "modal": {
+    "max-w": 1320,
+    "max-h": 1000,
+    "margin-1920": 40,
+    "margin-1440": 32,
+    "margin-1280": 24,
+    "margin-1024": 12,
+    "content-max": 880,
+    "rail-min": 380,
+    "pad": 32,
+    "pad-1280": 24,
+    "pad-1024": 20,
+    "header-row": 52,
+    "header-row-short": 44,
+    "footer": 30,
+    "state-strip": 44
+  },
+  "rail-label": 132,
+  "rail-label-narrow": 120,
+  "anchor-strip": 32,
+  "pulse-strip": {
+    "tall": 40,
+    "short": 28
+  },
+  "file-card": {
+    "w": 240,
+    "h": 56,
+    "ext": 46
+  },
+  "thumb": {
+    "w": 160,
+    "h": 100
+  },
+  "issue-row": 34,
+  "updated-bar": 36,
+  "lightbox-bar": 64
 };

@@ -392,7 +392,9 @@
         {
           "id": 1,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Swipe to check off items on the shopping list",
+          "branch": "feature/MOB-1390-swipe-to-check-off"
         }
       ],
       "comments": [
@@ -457,17 +459,23 @@
         {
           "id": 2,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Recipe card crops the hero photo on small phones",
+          "branch": "fix/MOB-1399-recipe-card-crops-the"
         },
         {
           "id": 3,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Recipe card crops the hero photo on small phones (part 2)",
+          "branch": "fix/MOB-1399-recipe-card-crops-the-2"
         },
         {
           "id": 4,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Recipe card crops the hero photo on small phones (part 3)",
+          "branch": "fix/MOB-1399-recipe-card-crops-the-3"
         }
       ],
       "comments": [
@@ -513,12 +521,16 @@
         {
           "id": 5,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Offline mode for saved recipes",
+          "branch": "feature/MOB-1407-offline-mode-for-saved"
         },
         {
           "id": 6,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Offline mode for saved recipes (part 2)",
+          "branch": "feature/MOB-1407-offline-mode-for-saved-2"
         }
       ],
       "comments": [
@@ -571,27 +583,37 @@
         {
           "id": 7,
           "day": -22,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Scale ingredient amounts when servings change",
+          "branch": "feature/MOB-1411-scale-ingredient-amounts-when"
         },
         {
           "id": 8,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Scale ingredient amounts when servings change (part 2)",
+          "branch": "feature/MOB-1411-scale-ingredient-amounts-when-2"
         },
         {
           "id": 9,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Scale ingredient amounts when servings change (part 3)",
+          "branch": "feature/MOB-1411-scale-ingredient-amounts-when-3"
         },
         {
           "id": 10,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Scale ingredient amounts when servings change (part 4)",
+          "branch": "feature/MOB-1411-scale-ingredient-amounts-when-4"
         },
         {
           "id": 11,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Scale ingredient amounts when servings change (part 5)",
+          "branch": "feature/MOB-1411-scale-ingredient-amounts-when-5"
         }
       ],
       "comments": [
@@ -651,12 +673,16 @@
         {
           "id": 12,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Pantry scanner misreads barcodes in low light",
+          "branch": "fix/MOB-1413-pantry-scanner-misreads-barcodes"
         },
         {
           "id": 13,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Pantry scanner misreads barcodes in low light (part 2)",
+          "branch": "fix/MOB-1413-pantry-scanner-misreads-barcodes-2"
         }
       ],
       "comments": [
@@ -709,7 +735,9 @@
         {
           "id": 14,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Defrost reminder for tomorrow's planned meal",
+          "branch": "feature/MOB-1414-defrost-reminder-for-tomorrow"
         }
       ],
       "comments": [
@@ -762,17 +790,23 @@
         {
           "id": 15,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Unit toggle between metric and US cups",
+          "branch": "feature/MOB-1421-unit-toggle-between-metric"
         },
         {
           "id": 16,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Unit toggle between metric and US cups (part 2)",
+          "branch": "feature/MOB-1421-unit-toggle-between-metric-2"
         },
         {
           "id": 17,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Unit toggle between metric and US cups (part 3)",
+          "branch": "feature/MOB-1421-unit-toggle-between-metric-3"
         }
       ],
       "comments": [
@@ -823,17 +857,23 @@
         {
           "id": 18,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Cooking mode keeps the screen awake",
+          "branch": "feature/MOB-1428-cooking-mode-keeps-the"
         },
         {
           "id": 19,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Cooking mode keeps the screen awake (part 2)",
+          "branch": "feature/MOB-1428-cooking-mode-keeps-the-2"
         },
         {
           "id": 20,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Cooking mode keeps the screen awake (part 3)",
+          "branch": "feature/MOB-1428-cooking-mode-keeps-the-3"
         }
       ],
       "comments": [
@@ -894,7 +934,9 @@
         {
           "id": 21,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Share a recipe as a link with a preview image",
+          "branch": "fix/MOB-1429-share-a-recipe-as"
         }
       ],
       "comments": [
@@ -943,12 +985,16 @@
         {
           "id": 22,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Search filters for vegan, gluten-free and halal",
+          "branch": "feature/MOB-1431-search-filters-for-vegan"
         },
         {
           "id": 23,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Search filters for vegan, gluten-free and halal (part 2)",
+          "branch": "feature/MOB-1431-search-filters-for-vegan-2"
         }
       ],
       "comments": [
@@ -999,17 +1045,23 @@
         {
           "id": 24,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Timer survives backgrounding on Android",
+          "branch": "feature/MOB-1436-timer-survives-backgrounding-on"
         },
         {
           "id": 25,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Timer survives backgrounding on Android (part 2)",
+          "branch": "feature/MOB-1436-timer-survives-backgrounding-on-2"
         },
         {
           "id": 26,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Timer survives backgrounding on Android (part 3)",
+          "branch": "feature/MOB-1436-timer-survives-backgrounding-on-3"
         }
       ],
       "comments": [
@@ -1139,22 +1191,30 @@
         {
           "id": 27,
           "day": -27,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Dark mode contrast on ingredient checkboxes",
+          "branch": "feature/MOB-1464-dark-mode-contrast-on"
         },
         {
           "id": 28,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Dark mode contrast on ingredient checkboxes (part 2)",
+          "branch": "feature/MOB-1464-dark-mode-contrast-on-2"
         },
         {
           "id": 29,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Dark mode contrast on ingredient checkboxes (part 3)",
+          "branch": "feature/MOB-1464-dark-mode-contrast-on-3"
         },
         {
           "id": 30,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Dark mode contrast on ingredient checkboxes (part 4)",
+          "branch": "feature/MOB-1464-dark-mode-contrast-on-4"
         }
       ],
       "comments": [
@@ -1211,12 +1271,16 @@
         {
           "id": 31,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Voice \"next step\" command in cooking mode",
+          "branch": "fix/MOB-1473-voice-next-step-command"
         },
         {
           "id": 32,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Voice \"next step\" command in cooking mode (part 2)",
+          "branch": "fix/MOB-1473-voice-next-step-command-2"
         }
       ],
       "comments": [
@@ -1278,17 +1342,23 @@
         {
           "id": 33,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash when rotating during video playback",
+          "branch": "feature/MOB-1481-crash-when-rotating-during"
         },
         {
           "id": 34,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash when rotating during video playback (part 2)",
+          "branch": "feature/MOB-1481-crash-when-rotating-during-2"
         },
         {
           "id": 35,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash when rotating during video playback (part 3)",
+          "branch": "feature/MOB-1481-crash-when-rotating-during-3"
         }
       ],
       "comments": [
@@ -1346,12 +1416,16 @@
         {
           "id": 36,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Personal notes on a saved recipe",
+          "branch": "feature/MOB-1486-personal-notes-on-a"
         },
         {
           "id": 37,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Personal notes on a saved recipe (part 2)",
+          "branch": "feature/MOB-1486-personal-notes-on-a-2"
         }
       ],
       "comments": [
@@ -1408,17 +1482,23 @@
         {
           "id": 38,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Nutrition panel rounds fibre down to zero",
+          "branch": "fix/MOB-1490-nutrition-panel-rounds-fibre"
         },
         {
           "id": 39,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Nutrition panel rounds fibre down to zero (part 2)",
+          "branch": "fix/MOB-1490-nutrition-panel-rounds-fibre-2"
         },
         {
           "id": 40,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Nutrition panel rounds fibre down to zero (part 3)",
+          "branch": "fix/MOB-1490-nutrition-panel-rounds-fibre-3"
         }
       ],
       "comments": [
@@ -1477,12 +1557,16 @@
         {
           "id": 41,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Export the weekly plan to a calendar",
+          "branch": "feature/MOB-1497-export-the-weekly-plan"
         },
         {
           "id": 42,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Export the weekly plan to a calendar (part 2)",
+          "branch": "feature/MOB-1497-export-the-weekly-plan-2"
         }
       ],
       "comments": [
@@ -1538,7 +1622,9 @@
         {
           "id": 43,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Accessibility labels on the rating stars",
+          "branch": "feature/MOB-1501-accessibility-labels-on-the"
         }
       ],
       "comments": [
@@ -1586,12 +1672,16 @@
         {
           "id": 44,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Image cache grows without a limit",
+          "branch": "feature/MOB-1508-image-cache-grows-without"
         },
         {
           "id": 45,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Image cache grows without a limit (part 2)",
+          "branch": "feature/MOB-1508-image-cache-grows-without-2"
         }
       ],
       "comments": [
@@ -1638,12 +1728,16 @@
         {
           "id": 46,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Pull to refresh on the home feed",
+          "branch": "fix/MOB-1509-pull-to-refresh-on"
         },
         {
           "id": 47,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Pull to refresh on the home feed (part 2)",
+          "branch": "fix/MOB-1509-pull-to-refresh-on-2"
         }
       ],
       "comments": [
@@ -1725,7 +1819,9 @@
         {
           "id": 48,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Substitutions sheet for missing ingredients",
+          "branch": "fix/MOB-1519-substitutions-sheet-for-missing"
         }
       ],
       "comments": [
@@ -1783,7 +1879,9 @@
         {
           "id": 49,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Two-column recipe layout on tablets",
+          "branch": "feature/MOB-1524-two-column-recipe-layout"
         }
       ],
       "comments": [
@@ -1843,12 +1941,16 @@
         {
           "id": 50,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Deep links open the wrong recipe tab",
+          "branch": "feature/MOB-1528-deep-links-open-the"
         },
         {
           "id": 51,
           "day": -1,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Deep links open the wrong recipe tab (part 2)",
+          "branch": "feature/MOB-1528-deep-links-open-the-2"
         }
       ],
       "comments": [
@@ -1904,12 +2006,16 @@
         {
           "id": 52,
           "day": -24,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Haptic tap when a timer finishes",
+          "branch": "feature/MOB-1536-haptic-tap-when-a"
         },
         {
           "id": 53,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Haptic tap when a timer finishes (part 2)",
+          "branch": "feature/MOB-1536-haptic-tap-when-a-2"
         }
       ],
       "comments": [
@@ -1965,17 +2071,23 @@
         {
           "id": 54,
           "day": -26,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Collections: group recipes into cookbooks",
+          "branch": "fix/MOB-1539-collections-group-recipes-into"
         },
         {
           "id": 55,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Collections: group recipes into cookbooks (part 2)",
+          "branch": "fix/MOB-1539-collections-group-recipes-into-2"
         },
         {
           "id": 56,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Collections: group recipes into cookbooks (part 3)",
+          "branch": "fix/MOB-1539-collections-group-recipes-into-3"
         }
       ],
       "comments": [
@@ -2052,17 +2164,23 @@
         {
           "id": 57,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Duplicate items after merging two lists",
+          "branch": "feature/MOB-1550-duplicate-items-after-merging"
         },
         {
           "id": 58,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Duplicate items after merging two lists (part 2)",
+          "branch": "feature/MOB-1550-duplicate-items-after-merging-2"
         },
         {
           "id": 59,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Duplicate items after merging two lists (part 3)",
+          "branch": "feature/MOB-1550-duplicate-items-after-merging-3"
         }
       ],
       "comments": [
@@ -2107,22 +2225,30 @@
         {
           "id": 60,
           "day": -25,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Show prep time and cook time separately",
+          "branch": "feature/MOB-1554-show-prep-time-and"
         },
         {
           "id": 61,
           "day": -22,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Show prep time and cook time separately (part 2)",
+          "branch": "feature/MOB-1554-show-prep-time-and-2"
         },
         {
           "id": 62,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Show prep time and cook time separately (part 3)",
+          "branch": "feature/MOB-1554-show-prep-time-and-3"
         },
         {
           "id": 63,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Show prep time and cook time separately (part 4)",
+          "branch": "feature/MOB-1554-show-prep-time-and-4"
         }
       ],
       "comments": [
@@ -2178,22 +2304,30 @@
         {
           "id": 64,
           "day": -24,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Render fractions (½, ¼) in ingredient lists",
+          "branch": "fix/MOB-1559-render-fractions-in-ingredient"
         },
         {
           "id": 65,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Render fractions (½, ¼) in ingredient lists (part 2)",
+          "branch": "fix/MOB-1559-render-fractions-in-ingredient-2"
         },
         {
           "id": 66,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Render fractions (½, ¼) in ingredient lists (part 3)",
+          "branch": "fix/MOB-1559-render-fractions-in-ingredient-3"
         },
         {
           "id": 67,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Render fractions (½, ¼) in ingredient lists (part 4)",
+          "branch": "fix/MOB-1559-render-fractions-in-ingredient-4"
         }
       ],
       "comments": [
@@ -2240,12 +2374,16 @@
         {
           "id": 68,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Retry failed photo uploads in the background",
+          "branch": "feature/MOB-1566-retry-failed-photo-uploads"
         },
         {
           "id": 69,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Retry failed photo uploads in the background (part 2)",
+          "branch": "feature/MOB-1566-retry-failed-photo-uploads-2"
         }
       ],
       "comments": [
@@ -2354,7 +2492,9 @@
         {
           "id": 70,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Allergy warnings on recipe cards",
+          "branch": "fix/MOB-1575-allergy-warnings-on-recipe"
         }
       ],
       "comments": [
@@ -2399,12 +2539,16 @@
         {
           "id": 71,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Friendlier empty state for the shopping list",
+          "branch": "feature/MOB-1578-friendlier-empty-state-for"
         },
         {
           "id": 72,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Friendlier empty state for the shopping list (part 2)",
+          "branch": "feature/MOB-1578-friendlier-empty-state-for-2"
         }
       ],
       "comments": [
@@ -2461,12 +2605,16 @@
         {
           "id": 73,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Cut cold start time on older phones",
+          "branch": "fix/MOB-1585-cut-cold-start-time"
         },
         {
           "id": 74,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Cut cold start time on older phones (part 2)",
+          "branch": "fix/MOB-1585-cut-cold-start-time-2"
         }
       ],
       "comments": [
@@ -2517,12 +2665,16 @@
         {
           "id": 75,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Ask for a rating after cooking mode",
+          "branch": "feature/MOB-1592-ask-for-a-rating"
         },
         {
           "id": 76,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Ask for a rating after cooking mode (part 2)",
+          "branch": "feature/MOB-1592-ask-for-a-rating-2"
         }
       ],
       "comments": [
@@ -2610,12 +2762,16 @@
         {
           "id": 77,
           "day": -26,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Seasonal produce badge on recipes",
+          "branch": "feature/MOB-1608-seasonal-produce-badge-on"
         },
         {
           "id": 78,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Seasonal produce badge on recipes (part 2)",
+          "branch": "feature/MOB-1608-seasonal-produce-badge-on-2"
         }
       ],
       "comments": [
@@ -2654,17 +2810,23 @@
         {
           "id": 79,
           "day": -25,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Keyboard covers the notes field",
+          "branch": "feature/MOB-1613-keyboard-covers-the-notes"
         },
         {
           "id": 80,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Keyboard covers the notes field (part 2)",
+          "branch": "feature/MOB-1613-keyboard-covers-the-notes-2"
         },
         {
           "id": 81,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Keyboard covers the notes field (part 3)",
+          "branch": "feature/MOB-1613-keyboard-covers-the-notes-3"
         }
       ],
       "comments": [
@@ -2780,17 +2942,23 @@
         {
           "id": 82,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash breadcrumbs for the meal planner",
+          "branch": "fix/MOB-1629-crash-breadcrumbs-for-the"
         },
         {
           "id": 83,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash breadcrumbs for the meal planner (part 2)",
+          "branch": "fix/MOB-1629-crash-breadcrumbs-for-the-2"
         },
         {
           "id": 84,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Crash breadcrumbs for the meal planner (part 3)",
+          "branch": "fix/MOB-1629-crash-breadcrumbs-for-the-3"
         }
       ],
       "comments": [
@@ -2841,7 +3009,9 @@
         {
           "id": 85,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Hand the shopping list to grocery delivery",
+          "branch": "feature/MOB-1633-hand-the-shopping-list"
         }
       ],
       "comments": [
@@ -2900,7 +3070,9 @@
         {
           "id": 86,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Resume long recipe videos where you left off",
+          "branch": "feature/MOB-1636-resume-long-recipe-videos"
         }
       ],
       "comments": [
@@ -2959,7 +3131,9 @@
         {
           "id": 87,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Wine pairing suggestions panel",
+          "branch": "feature/MOB-1637-wine-pairing-suggestions-panel"
         }
       ],
       "comments": [
@@ -3077,7 +3251,9 @@
         {
           "id": 88,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Colour-blind safe palette for diet tags",
+          "branch": "fix/MOB-1647-colour-blind-safe-palette"
         }
       ],
       "comments": [
@@ -3206,7 +3382,9 @@
         {
           "id": 89,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Remove deprecated recipe API calls",
+          "branch": "feature/MOB-1663-remove-deprecated-recipe-api"
         }
       ],
       "comments": [
@@ -3266,17 +3444,23 @@
         {
           "id": 90,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up checkout",
+          "branch": "fix/WEB-820-speed-up-checkout"
         },
         {
           "id": 91,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up checkout (part 2)",
+          "branch": "fix/WEB-820-speed-up-checkout-2"
         },
         {
           "id": 92,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up checkout (part 3)",
+          "branch": "fix/WEB-820-speed-up-checkout-3"
         }
       ],
       "comments": [
@@ -3323,7 +3507,9 @@
         {
           "id": 93,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Fix rounding in basket",
+          "branch": "feature/WEB-823-fix-rounding-in-basket"
         }
       ],
       "comments": [
@@ -3377,7 +3563,9 @@
         {
           "id": 94,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign promo codes",
+          "branch": "fix/WEB-825-redesign-promo-codes"
         }
       ],
       "comments": [
@@ -3420,7 +3608,9 @@
         {
           "id": 95,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for gift cards",
+          "branch": "feature/WEB-826-add-tests-for-gift"
         }
       ],
       "comments": []
@@ -3498,7 +3688,9 @@
         {
           "id": 96,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Audit accessibility of address book",
+          "branch": "feature/WEB-839-audit-accessibility-of-address"
         }
       ],
       "comments": [
@@ -3551,17 +3743,23 @@
         {
           "id": 97,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify invoices",
+          "branch": "fix/WEB-848-simplify-invoices"
         },
         {
           "id": 98,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify invoices (part 2)",
+          "branch": "fix/WEB-848-simplify-invoices-2"
         },
         {
           "id": 99,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify invoices (part 3)",
+          "branch": "fix/WEB-848-simplify-invoices-3"
         }
       ],
       "comments": [
@@ -3623,12 +3821,16 @@
         {
           "id": 100,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Log errors from payment sheet",
+          "branch": "feature/WEB-856-log-errors-from-payment"
         },
         {
           "id": 101,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Log errors from payment sheet (part 2)",
+          "branch": "feature/WEB-856-log-errors-from-payment-2"
         }
       ],
       "comments": [
@@ -3670,12 +3872,16 @@
         {
           "id": 102,
           "day": -24,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up subscription page",
+          "branch": "fix/WEB-860-speed-up-subscription-page"
         },
         {
           "id": 103,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up subscription page (part 2)",
+          "branch": "fix/WEB-860-speed-up-subscription-page-2"
         }
       ],
       "comments": [
@@ -3715,17 +3921,23 @@
         {
           "id": 104,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Fix rounding in receipts",
+          "branch": "feature/WEB-862-fix-rounding-in-receipts"
         },
         {
           "id": 105,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Fix rounding in receipts (part 2)",
+          "branch": "feature/WEB-862-fix-rounding-in-receipts-2"
         },
         {
           "id": 106,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Fix rounding in receipts (part 3)",
+          "branch": "feature/WEB-862-fix-rounding-in-receipts-3"
         }
       ],
       "comments": [
@@ -3803,17 +4015,23 @@
         {
           "id": 107,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for basket",
+          "branch": "feature/WEB-875-add-tests-for-basket"
         },
         {
           "id": 108,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for basket (part 2)",
+          "branch": "feature/WEB-875-add-tests-for-basket-2"
         },
         {
           "id": 109,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for basket (part 3)",
+          "branch": "feature/WEB-875-add-tests-for-basket-3"
         }
       ],
       "comments": [
@@ -3863,7 +4081,9 @@
         {
           "id": 110,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Localise promo codes",
+          "branch": "feature/WEB-881-localise-promo-codes"
         }
       ],
       "comments": [
@@ -4007,12 +4227,16 @@
         {
           "id": 111,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up invoices",
+          "branch": "feature/WEB-899-speed-up-invoices"
         },
         {
           "id": 112,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up invoices (part 2)",
+          "branch": "feature/WEB-899-speed-up-invoices-2"
         }
       ],
       "comments": [
@@ -4067,7 +4291,9 @@
         {
           "id": 113,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Fix rounding in payment sheet",
+          "branch": "feature/WEB-904-fix-rounding-in-payment"
         }
       ],
       "comments": [
@@ -4120,42 +4346,58 @@
         {
           "id": 114,
           "day": -26,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page",
+          "branch": "feature/WEB-907-redesign-subscription-page"
         },
         {
           "id": 115,
           "day": -24,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page (part 2)",
+          "branch": "feature/WEB-907-redesign-subscription-page-2"
         },
         {
           "id": 116,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page (part 3)",
+          "branch": "feature/WEB-907-redesign-subscription-page-3"
         },
         {
           "id": 117,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page (part 4)",
+          "branch": "feature/WEB-907-redesign-subscription-page-4"
         },
         {
           "id": 118,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page (part 5)",
+          "branch": "feature/WEB-907-redesign-subscription-page-5"
         },
         {
           "id": 119,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign subscription page (part 6)",
+          "branch": "feature/WEB-907-redesign-subscription-page-6"
         },
         {
           "id": 120,
           "day": -1,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Redesign subscription page (part 7)",
+          "branch": "feature/WEB-907-redesign-subscription-page-7"
         },
         {
           "id": 121,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Redesign subscription page (part 8)",
+          "branch": "feature/WEB-907-redesign-subscription-page-8"
         }
       ],
       "comments": [
@@ -4216,27 +4458,37 @@
         {
           "id": 122,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for receipts",
+          "branch": "feature/WEB-912-add-tests-for-receipts"
         },
         {
           "id": 123,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for receipts (part 2)",
+          "branch": "feature/WEB-912-add-tests-for-receipts-2"
         },
         {
           "id": 124,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for receipts (part 3)",
+          "branch": "feature/WEB-912-add-tests-for-receipts-3"
         },
         {
           "id": 125,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Add tests for receipts (part 4)",
+          "branch": "feature/WEB-912-add-tests-for-receipts-4"
         },
         {
           "id": 126,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Add tests for receipts (part 5)",
+          "branch": "feature/WEB-912-add-tests-for-receipts-5"
         }
       ],
       "comments": [
@@ -4329,17 +4581,23 @@
         {
           "id": 127,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Audit accessibility of basket",
+          "branch": "fix/WEB-915-audit-accessibility-of-basket"
         },
         {
           "id": 128,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Audit accessibility of basket (part 2)",
+          "branch": "fix/WEB-915-audit-accessibility-of-basket-2"
         },
         {
           "id": 129,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Audit accessibility of basket (part 3)",
+          "branch": "fix/WEB-915-audit-accessibility-of-basket-3"
         }
       ],
       "comments": [
@@ -4404,27 +4662,37 @@
         {
           "id": 130,
           "day": -27,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify promo codes",
+          "branch": "feature/WEB-917-simplify-promo-codes"
         },
         {
           "id": 131,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify promo codes (part 2)",
+          "branch": "feature/WEB-917-simplify-promo-codes-2"
         },
         {
           "id": 132,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Simplify promo codes (part 3)",
+          "branch": "feature/WEB-917-simplify-promo-codes-3"
         },
         {
           "id": 133,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Simplify promo codes (part 4)",
+          "branch": "feature/WEB-917-simplify-promo-codes-4"
         },
         {
           "id": 134,
           "day": -1,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Simplify promo codes (part 5)",
+          "branch": "feature/WEB-917-simplify-promo-codes-5"
         }
       ],
       "comments": [
@@ -4473,7 +4741,9 @@
         {
           "id": 135,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Log errors from gift cards",
+          "branch": "feature/WEB-924-log-errors-from-gift"
         }
       ],
       "comments": [
@@ -4520,22 +4790,30 @@
         {
           "id": 136,
           "day": -27,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up order history",
+          "branch": "feature/WEB-933-speed-up-order-history"
         },
         {
           "id": 137,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up order history (part 2)",
+          "branch": "feature/WEB-933-speed-up-order-history-2"
         },
         {
           "id": 138,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up order history (part 3)",
+          "branch": "feature/WEB-933-speed-up-order-history-3"
         },
         {
           "id": 139,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Speed up order history (part 4)",
+          "branch": "feature/WEB-933-speed-up-order-history-4"
         }
       ],
       "comments": [
@@ -4617,12 +4895,16 @@
         {
           "id": 140,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign invoices",
+          "branch": "feature/WEB-943-redesign-invoices"
         },
         {
           "id": 141,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Redesign invoices (part 2)",
+          "branch": "feature/WEB-943-redesign-invoices-2"
         }
       ],
       "comments": [
@@ -4734,17 +5016,23 @@
         {
           "id": 142,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Backfill ingredient taxonomy",
+          "branch": "feature/DATA-234-backfill-ingredient-taxonomy"
         },
         {
           "id": 143,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Backfill ingredient taxonomy (part 2)",
+          "branch": "feature/DATA-234-backfill-ingredient-taxonomy-2"
         },
         {
           "id": 144,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Backfill ingredient taxonomy (part 3)",
+          "branch": "feature/DATA-234-backfill-ingredient-taxonomy-3"
         }
       ],
       "comments": [
@@ -4804,27 +5092,37 @@
         {
           "id": 145,
           "day": -27,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate nutrition import",
+          "branch": "feature/DATA-242-validate-nutrition-import"
         },
         {
           "id": 146,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate nutrition import (part 2)",
+          "branch": "feature/DATA-242-validate-nutrition-import-2"
         },
         {
           "id": 147,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate nutrition import (part 3)",
+          "branch": "feature/DATA-242-validate-nutrition-import-3"
         },
         {
           "id": 148,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate nutrition import (part 4)",
+          "branch": "feature/DATA-242-validate-nutrition-import-4"
         },
         {
           "id": 149,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate nutrition import (part 5)",
+          "branch": "feature/DATA-242-validate-nutrition-import-5"
         }
       ],
       "comments": [
@@ -4879,12 +5177,16 @@
         {
           "id": 150,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up recipe tagging",
+          "branch": "feature/DATA-245-speed-up-recipe-tagging"
         },
         {
           "id": 151,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up recipe tagging (part 2)",
+          "branch": "feature/DATA-245-speed-up-recipe-tagging-2"
         }
       ],
       "comments": [
@@ -4968,7 +5270,9 @@
         {
           "id": 152,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor search index",
+          "branch": "feature/DATA-252-monitor-search-index"
         }
       ],
       "comments": [
@@ -5072,7 +5376,9 @@
         {
           "id": 153,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Version duplicate detection",
+          "branch": "feature/DATA-264-version-duplicate-detection"
         }
       ],
       "comments": [
@@ -5120,12 +5426,16 @@
         {
           "id": 154,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Rebuild unit conversions",
+          "branch": "feature/DATA-265-rebuild-unit-conversions"
         },
         {
           "id": 155,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Rebuild unit conversions (part 2)",
+          "branch": "feature/DATA-265-rebuild-unit-conversions-2"
         }
       ],
       "comments": [
@@ -5209,17 +5519,23 @@
         {
           "id": 156,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate ratings model",
+          "branch": "feature/DATA-276-validate-ratings-model"
         },
         {
           "id": 157,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Validate ratings model (part 2)",
+          "branch": "feature/DATA-276-validate-ratings-model-2"
         },
         {
           "id": 158,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Validate ratings model (part 3)",
+          "branch": "feature/DATA-276-validate-ratings-model-3"
         }
       ],
       "comments": [
@@ -5275,12 +5591,16 @@
         {
           "id": 159,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up ingredient taxonomy",
+          "branch": "feature/DATA-285-speed-up-ingredient-taxonomy"
         },
         {
           "id": 160,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Speed up ingredient taxonomy (part 2)",
+          "branch": "feature/DATA-285-speed-up-ingredient-taxonomy-2"
         }
       ],
       "comments": [
@@ -5341,7 +5661,9 @@
         {
           "id": 161,
           "day": 0,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Document nutrition import",
+          "branch": "feature/DATA-290-document-nutrition-import"
         }
       ],
       "comments": [
@@ -5392,27 +5714,37 @@
         {
           "id": 162,
           "day": -22,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor recipe tagging",
+          "branch": "feature/DATA-291-monitor-recipe-tagging"
         },
         {
           "id": 163,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor recipe tagging (part 2)",
+          "branch": "feature/DATA-291-monitor-recipe-tagging-2"
         },
         {
           "id": 164,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor recipe tagging (part 3)",
+          "branch": "feature/DATA-291-monitor-recipe-tagging-3"
         },
         {
           "id": 165,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor recipe tagging (part 4)",
+          "branch": "feature/DATA-291-monitor-recipe-tagging-4"
         },
         {
           "id": 166,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Monitor recipe tagging (part 5)",
+          "branch": "feature/DATA-291-monitor-recipe-tagging-5"
         }
       ],
       "comments": [
@@ -5464,12 +5796,16 @@
         {
           "id": 167,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Clean up allergen rules",
+          "branch": "feature/DATA-298-clean-up-allergen-rules"
         },
         {
           "id": 168,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Clean up allergen rules (part 2)",
+          "branch": "feature/DATA-298-clean-up-allergen-rules-2"
         }
       ],
       "comments": [
@@ -5517,12 +5853,16 @@
         {
           "id": 169,
           "day": -22,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Version search index",
+          "branch": "feature/DATA-303-version-search-index"
         },
         {
           "id": 170,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Version search index (part 2)",
+          "branch": "feature/DATA-303-version-search-index-2"
         }
       ],
       "comments": [
@@ -5709,12 +6049,16 @@
         {
           "id": 171,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Launch referral flow",
+          "branch": "feature/GRO-148-launch-referral-flow"
         },
         {
           "id": 172,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Launch referral flow (part 2)",
+          "branch": "feature/GRO-148-launch-referral-flow-2"
         }
       ],
       "comments": [
@@ -5823,27 +6167,37 @@
         {
           "id": 173,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Refresh trial banner",
+          "branch": "feature/GRO-160-refresh-trial-banner"
         },
         {
           "id": 174,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Refresh trial banner (part 2)",
+          "branch": "feature/GRO-160-refresh-trial-banner-2"
         },
         {
           "id": 175,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Refresh trial banner (part 3)",
+          "branch": "feature/GRO-160-refresh-trial-banner-3"
         },
         {
           "id": 176,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Refresh trial banner (part 4)",
+          "branch": "feature/GRO-160-refresh-trial-banner-4"
         },
         {
           "id": 177,
           "day": -1,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Refresh trial banner (part 5)",
+          "branch": "feature/GRO-160-refresh-trial-banner-5"
         }
       ],
       "comments": [
@@ -5926,7 +6280,9 @@
         {
           "id": 178,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Personalise win-back offer",
+          "branch": "feature/GRO-169-personalise-win-back-offer"
         }
       ],
       "comments": [
@@ -5995,22 +6351,30 @@
         {
           "id": 179,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Tidy up app store listing",
+          "branch": "fix/GRO-170-tidy-up-app-store"
         },
         {
           "id": 180,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Tidy up app store listing (part 2)",
+          "branch": "fix/GRO-170-tidy-up-app-store-2"
         },
         {
           "id": 181,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Tidy up app store listing (part 3)",
+          "branch": "fix/GRO-170-tidy-up-app-store-3"
         },
         {
           "id": 182,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Tidy up app store listing (part 4)",
+          "branch": "fix/GRO-170-tidy-up-app-store-4"
         }
       ],
       "comments": [
@@ -6063,12 +6427,16 @@
         {
           "id": 183,
           "day": -14,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Translate newsletter signup",
+          "branch": "feature/GRO-171-translate-newsletter-signup"
         },
         {
           "id": 184,
           "day": -5,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Translate newsletter signup (part 2)",
+          "branch": "feature/GRO-171-translate-newsletter-signup-2"
         }
       ],
       "comments": [
@@ -6151,12 +6519,16 @@
         {
           "id": 185,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Launch landing pages",
+          "branch": "feature/GRO-182-launch-landing-pages"
         },
         {
           "id": 186,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Launch landing pages (part 2)",
+          "branch": "feature/GRO-182-launch-landing-pages-2"
         }
       ],
       "comments": [
@@ -6198,17 +6570,23 @@
         {
           "id": 187,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Test A/B framework",
+          "branch": "feature/GRO-183-test-a-b-framework"
         },
         {
           "id": 188,
           "day": -13,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Test A/B framework (part 2)",
+          "branch": "feature/GRO-183-test-a-b-framework-2"
         },
         {
           "id": 189,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Test A/B framework (part 3)",
+          "branch": "feature/GRO-183-test-a-b-framework-3"
         }
       ],
       "comments": [
@@ -6273,7 +6651,9 @@
         {
           "id": 190,
           "day": -12,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Refresh referral flow",
+          "branch": "fix/GRO-192-refresh-referral-flow"
         }
       ],
       "comments": [
@@ -6359,7 +6739,9 @@
         {
           "id": 191,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Personalise trial banner",
+          "branch": "feature/GRO-209-personalise-trial-banner"
         }
       ],
       "comments": [
@@ -6452,17 +6834,23 @@
         {
           "id": 192,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Translate win-back offer",
+          "branch": "fix/GRO-221-translate-win-back-offer"
         },
         {
           "id": 193,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Translate win-back offer (part 2)",
+          "branch": "fix/GRO-221-translate-win-back-offer-2"
         },
         {
           "id": 194,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Translate win-back offer (part 3)",
+          "branch": "fix/GRO-221-translate-win-back-offer-3"
         }
       ],
       "comments": [
@@ -6521,12 +6909,16 @@
         {
           "id": 195,
           "day": -25,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Track app store listing",
+          "branch": "feature/GRO-229-track-app-store-listing"
         },
         {
           "id": 196,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Track app store listing (part 2)",
+          "branch": "feature/GRO-229-track-app-store-listing-2"
         }
       ],
       "comments": [
@@ -6599,7 +6991,9 @@
         {
           "id": 197,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Upgrade API gateway",
+          "branch": "feature/PLAT-414-upgrade-api-gateway"
         }
       ],
       "comments": [
@@ -6654,22 +7048,30 @@
         {
           "id": 198,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Harden build cache",
+          "branch": "fix/PLAT-421-harden-build-cache"
         },
         {
           "id": 199,
           "day": -18,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Harden build cache (part 2)",
+          "branch": "fix/PLAT-421-harden-build-cache-2"
         },
         {
           "id": 200,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Harden build cache (part 3)",
+          "branch": "fix/PLAT-421-harden-build-cache-3"
         },
         {
           "id": 201,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Harden build cache (part 4)",
+          "branch": "fix/PLAT-421-harden-build-cache-4"
         }
       ],
       "comments": [
@@ -6814,17 +7216,23 @@
         {
           "id": 202,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size log retention",
+          "branch": "feature/PLAT-439-right-size-log-retention"
         },
         {
           "id": 203,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size log retention (part 2)",
+          "branch": "feature/PLAT-439-right-size-log-retention-2"
         },
         {
           "id": 204,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Right-size log retention (part 3)",
+          "branch": "feature/PLAT-439-right-size-log-retention-3"
         }
       ],
       "comments": [
@@ -6877,17 +7285,23 @@
         {
           "id": 205,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Document CDN rules",
+          "branch": "fix/PLAT-444-document-cdn-rules"
         },
         {
           "id": 206,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Document CDN rules (part 2)",
+          "branch": "fix/PLAT-444-document-cdn-rules-2"
         },
         {
           "id": 207,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Document CDN rules (part 3)",
+          "branch": "fix/PLAT-444-document-cdn-rules-3"
         }
       ],
       "comments": [
@@ -6943,22 +7357,30 @@
         {
           "id": 208,
           "day": -25,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Migrate secrets rotation",
+          "branch": "feature/PLAT-449-migrate-secrets-rotation"
         },
         {
           "id": 209,
           "day": -21,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Migrate secrets rotation (part 2)",
+          "branch": "feature/PLAT-449-migrate-secrets-rotation-2"
         },
         {
           "id": 210,
           "day": -19,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Migrate secrets rotation (part 3)",
+          "branch": "feature/PLAT-449-migrate-secrets-rotation-3"
         },
         {
           "id": 211,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Migrate secrets rotation (part 4)",
+          "branch": "feature/PLAT-449-migrate-secrets-rotation-4"
         }
       ],
       "comments": [
@@ -7023,32 +7445,44 @@
         {
           "id": 212,
           "day": -23,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers",
+          "branch": "feature/PLAT-455-benchmark-queue-workers"
         },
         {
           "id": 213,
           "day": -20,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers (part 2)",
+          "branch": "feature/PLAT-455-benchmark-queue-workers-2"
         },
         {
           "id": 214,
           "day": -10,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers (part 3)",
+          "branch": "feature/PLAT-455-benchmark-queue-workers-3"
         },
         {
           "id": 215,
           "day": -9,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers (part 4)",
+          "branch": "feature/PLAT-455-benchmark-queue-workers-4"
         },
         {
           "id": 216,
           "day": -8,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers (part 5)",
+          "branch": "feature/PLAT-455-benchmark-queue-workers-5"
         },
         {
           "id": 217,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Benchmark queue workers (part 6)",
+          "branch": "feature/PLAT-455-benchmark-queue-workers-6"
         }
       ],
       "comments": [
@@ -7101,12 +7535,16 @@
         {
           "id": 218,
           "day": -24,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Upgrade status page",
+          "branch": "feature/PLAT-460-upgrade-status-page"
         },
         {
           "id": 219,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Upgrade status page (part 2)",
+          "branch": "feature/PLAT-460-upgrade-status-page-2"
         }
       ],
       "comments": []
@@ -7171,27 +7609,37 @@
         {
           "id": 220,
           "day": -7,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Automate API gateway",
+          "branch": "fix/PLAT-467-automate-api-gateway"
         },
         {
           "id": 221,
           "day": -4,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Automate API gateway (part 2)",
+          "branch": "fix/PLAT-467-automate-api-gateway-2"
         },
         {
           "id": 222,
           "day": -3,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Automate API gateway (part 3)",
+          "branch": "fix/PLAT-467-automate-api-gateway-3"
         },
         {
           "id": 223,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Automate API gateway (part 4)",
+          "branch": "fix/PLAT-467-automate-api-gateway-4"
         },
         {
           "id": 224,
           "day": -1,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Automate API gateway (part 5)",
+          "branch": "fix/PLAT-467-automate-api-gateway-5"
         }
       ],
       "comments": [
@@ -7268,37 +7716,51 @@
         {
           "id": 225,
           "day": -27,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database",
+          "branch": "feature/PLAT-478-right-size-staging-database"
         },
         {
           "id": 226,
           "day": -17,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database (part 2)",
+          "branch": "feature/PLAT-478-right-size-staging-database-2"
         },
         {
           "id": 227,
           "day": -16,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database (part 3)",
+          "branch": "feature/PLAT-478-right-size-staging-database-3"
         },
         {
           "id": 228,
           "day": -15,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database (part 4)",
+          "branch": "feature/PLAT-478-right-size-staging-database-4"
         },
         {
           "id": 229,
           "day": -11,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database (part 5)",
+          "branch": "feature/PLAT-478-right-size-staging-database-5"
         },
         {
           "id": 230,
           "day": -6,
-          "status": "MERGED"
+          "status": "MERGED",
+          "title": "Right-size staging database (part 6)",
+          "branch": "feature/PLAT-478-right-size-staging-database-6"
         },
         {
           "id": 231,
           "day": -2,
-          "status": "OPEN"
+          "status": "OPEN",
+          "title": "Right-size staging database (part 7)",
+          "branch": "feature/PLAT-478-right-size-staging-database-7"
         }
       ],
       "comments": [

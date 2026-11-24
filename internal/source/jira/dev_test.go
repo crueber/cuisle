@@ -16,7 +16,7 @@ package jira
 // verbatim, issueId is the sourceID. A summary without instance types makes no detail call.
 // SPEC-NOTE: Events: commits {Kind "commit", ID sha, Repo = repositories[].name, At = authorTimestamp, Merge}, merge
 // commits ARE returned (the cache excludes them from marks); PR events {Kind "pr", ID "<repositoryName>#<id>", Repo =
-// repositoryName, At = lastUpdate, Status = status, Merge false}. A status other than OPEN|MERGED|DECLINED becomes
+// repositoryName, At = lastUpdate, Status = status, Title = name, Branch = source.branch ("" when absent), Merge false}. A status other than OPEN|MERGED|DECLINED becomes
 // "UNKNOWN". Event order is not pinned.
 // SPEC-NOTE: Probe failure = the summary call answers 401, 403, 404 or a non-JSON body (200 text/html). The result is
 // source.ErrUnsupported (source.IsUnsupported), Capabilities().HasDevActivity false, Meta()["devActivity"] ==
@@ -77,8 +77,8 @@ const wp19BitbucketRepoDetail = `{"detail":[{"repositories":[{"name":"acme/legac
 	{"id":"ghi789","authorTimestamp":"2026-11-18T08:00:00.000+0100","merge":false}]}]}]}`
 
 const wp19GitHubPRDetail = `{"detail":[{"pullRequests":[
-	{"id":"12","name":"Fix retries","status":"MERGED","lastUpdate":"2026-11-20T09:00:00.000+0100","repositoryId":"r1","repositoryName":"acme/api"},
-	{"id":"13","name":"Docs","status":"OPEN","lastUpdate":"2026-11-21T09:00:00.000+0000","repositoryId":"r2","repositoryName":"acme/web"},
+	{"id":"12","name":"Fix retries","status":"MERGED","lastUpdate":"2026-11-20T09:00:00.000+0100","repositoryId":"r1","repositoryName":"acme/api","source":{"branch":"fix/retries","url":"https://example.invalid/b"},"destination":{"branch":"main"}},
+	{"id":"13","name":"Docs","status":"OPEN","lastUpdate":"2026-11-21T09:00:00.000+0000","repositoryId":"r2","repositoryName":"acme/web","source":{"branch":"feature/docs"}},
 	{"id":"14","name":"Odd","status":"SUPERSEDED","lastUpdate":"2026-11-21T10:00:00.000+0000","repositoryId":"r2","repositoryName":"acme/web"}]}]}`
 
 func wp19DevRoutes(t *testing.T, summary string) map[string]wp19Route {
@@ -230,9 +230,9 @@ func TestDevActivity_ChangedFingerprintFetchesDetailPerInstanceTypeAndMapsEvents
 		{Kind: model.DevCommit, ID: "abc123", Repo: "acme/api", At: at("2026-11-19T10:00:00.000+0000"), Merge: false},
 		{Kind: model.DevCommit, ID: "def456", Repo: "acme/api", At: at("2026-11-20T10:00:00.000+0000"), Merge: true},
 		{Kind: model.DevCommit, ID: "ghi789", Repo: "acme/legacy", At: at("2026-11-18T08:00:00.000+0100")},
-		{Kind: model.DevPR, ID: "acme/api#12", Repo: "acme/api", At: at("2026-11-20T09:00:00.000+0100"), Status: "MERGED"},
-		{Kind: model.DevPR, ID: "acme/web#13", Repo: "acme/web", At: at("2026-11-21T09:00:00.000+0000"), Status: "OPEN"},
-		{Kind: model.DevPR, ID: "acme/web#14", Repo: "acme/web", At: at("2026-11-21T10:00:00.000+0000"), Status: "UNKNOWN"},
+		{Kind: model.DevPR, ID: "acme/api#12", Repo: "acme/api", At: at("2026-11-20T09:00:00.000+0100"), Status: "MERGED", Title: "Fix retries", Branch: "fix/retries"},
+		{Kind: model.DevPR, ID: "acme/web#13", Repo: "acme/web", At: at("2026-11-21T09:00:00.000+0000"), Status: "OPEN", Title: "Docs", Branch: "feature/docs"},
+		{Kind: model.DevPR, ID: "acme/web#14", Repo: "acme/web", At: at("2026-11-21T10:00:00.000+0000"), Status: "UNKNOWN", Title: "Odd"}, // no source: no branch
 	}
 	key := func(e model.DevEvent) string { return e.Kind + "/" + e.ID }
 	events := append([]model.DevEvent(nil), got.Events...)
@@ -243,7 +243,7 @@ func TestDevActivity_ChangedFingerprintFetchesDetailPerInstanceTypeAndMapsEvents
 	}
 	for i, w := range want {
 		g := events[i]
-		if g.Kind != w.Kind || g.ID != w.ID || g.Repo != w.Repo || g.Status != w.Status || g.Merge != w.Merge || !g.At.Equal(w.At) {
+		if g.Kind != w.Kind || g.ID != w.ID || g.Repo != w.Repo || g.Status != w.Status || g.Merge != w.Merge || g.Title != w.Title || g.Branch != w.Branch || !g.At.Equal(w.At) {
 			t.Errorf("event %s = %+v, want %+v", key(w), g, w)
 		}
 	}

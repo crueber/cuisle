@@ -36,6 +36,15 @@ func (s *Store) AppSettings(ctx context.Context) (map[string]string, error) {
 	return out, nil
 }
 
+// Keys added by F12 (architecture.md §6.4). Their defaults are applied by the readers, not by AppDefaults (frozen):
+// comment order "newest", cache cap 1024 MiB, cleanup offer 2048 MiB, request rate 8/s.
+const (
+	KeyTicketCommentOrder    = "ticket.comment_order"
+	KeyMediaCacheMB          = "media.cache_max_mb"
+	KeyStorageCleanupOfferMB = "storage.cleanup_offer_mb"
+	KeyJiraMaxRPS            = "jira.max_rps"
+)
+
 // validAppSetting checks one key/value pair. Field is the key for a bad value, and "key" for an unknown key.
 func validAppSetting(key, value string) error {
 	ok := false
@@ -51,6 +60,17 @@ func validAppSetting(key, value string) error {
 		ok = err == nil && strconv.Itoa(n) == value && n >= 1 && n <= 48
 	case KeyHistoryRetentionDays:
 		ok = value == "0" // reserved: 0 = keep forever is the only v1 behaviour (data-model §5.2)
+	case KeyTicketCommentOrder:
+		ok = value == "newest" || value == "oldest"
+	case KeyMediaCacheMB: // MiB; the image cache cap (ux-spec §14.11)
+		n, err := strconv.Atoi(value)
+		ok = err == nil && strconv.Itoa(n) == value && n >= 64 && n <= 1<<20
+	case KeyStorageCleanupOfferMB: // MiB; Disconnect offers to delete content above this (the UI steps 1 to 64 GB)
+		n, err := strconv.Atoi(value)
+		ok = err == nil && strconv.Itoa(n) == value && n >= 1024 && n <= 64*1024
+	case KeyJiraMaxRPS: // hidden: the sustained request rate cap (jira-sync §3.1)
+		n, err := strconv.Atoi(value)
+		ok = err == nil && strconv.Itoa(n) == value && n >= 1 && n <= 20
 	default:
 		return apperr.Validationf("key", "Unknown setting %q.", key)
 	}

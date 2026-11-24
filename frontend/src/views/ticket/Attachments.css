@@ -1,0 +1,90 @@
+/* Ticket attachments (ux-spec §14.4): 160x100 image tiles, then 240x56 file cards. Scales with --scale.
+   Section head classes (tk-*) live in TicketContent.css. Tokens only. */
+.att-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.att-tile,
+.att-card {
+  display: flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.att-tile {
+  flex-direction: column;
+  gap: var(--space-1);
+  width: calc(var(--scale) * 10rem);
+}
+
+.att-thumb {
+  display: block;
+  width: calc(var(--scale) * 10rem);
+  height: calc(var(--scale) * 6.25rem);
+  object-fit: cover;
+  border: 1px solid var(--color-rule-mid);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.att-card {
+  align-items: stretch;
+  width: calc(var(--scale) * 15rem);
+  height: calc(var(--scale) * 3.5rem);
+  border: 2px solid var(--color-rule-soft);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.att-ext {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(var(--scale) * 2.875rem);
+  background: var(--color-rail-bg);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.6875rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+}
+
+.att-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 0 var(--space-3);
+}
+
+.att-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(var(--scale) * 0.9375rem);
+  font-weight: var(--font-weight-semibold);
+}
+
+.att-tile .att-name {
+  font-size: calc(var(--scale) * 0.875rem);
+}
+
+.att-meta {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 0.75rem);
+  color: var(--color-muted);
+}
+
+.att-tile:focus-visible,
+.att-card:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}

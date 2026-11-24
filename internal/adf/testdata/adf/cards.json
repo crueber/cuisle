@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "inline "
+        },
+        {
+          "type": "inlineCard",
+          "attrs": {
+            "url": "https://example.atlassian.net/browse/MOB-1200"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "inlineCard",
+          "attrs": {
+            "url": "https://docs.example.com/recipes/units-v2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "blockCard",
+      "attrs": {
+        "url": "https://example.atlassian.net/browse/MOB-1429"
+      }
+    },
+    {
+      "type": "blockCard",
+      "attrs": {
+        "url": "https://docs.example.com/big/page"
+      }
+    }
+  ]
+}

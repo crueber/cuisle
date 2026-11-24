@@ -7,7 +7,7 @@
 import type { Api } from "./index";
 import { AppError, type ErrorCode } from "./errors";
 import { createMemoryBus, type EventBus, type EventMap, type EventName } from "./events";
-import { FIXTURE_APP, FIXTURE_CATALOG, FIXTURE_CONFIGS, FIXTURE_VIEWS } from "./mock-fixtures";
+import { FIXTURE_APP, FIXTURE_CATALOG, FIXTURE_CONFIGS, FIXTURE_TICKETS, FIXTURE_TICKETS_HANDBUILT, FIXTURE_VIEWS } from "./mock-fixtures";
 import { idleSync, LANE_LABEL, laneInfos, refreshView, viewOptions } from "./mock-views";
 import type * as T from "./types";
 
@@ -16,6 +16,10 @@ export interface MockOptions {
   latency?: number;
   /** Methods that should reject, e.g. { "config.update": { code: "db", times: 1 } }. */
   failures?: Record<string, { code: string; message?: string; field?: string; times?: number }>;
+  /** Extra settle delay per method in ms (Playwright: lets a "sending…" state stay on screen). */
+  holdMs?: Record<string, number>;
+  /** Serve the hand-built mockup MOB-1421 instead of the Go golden (the T7 component tests assert its content). */
+  handBuiltTickets?: boolean;
 }
 
 export interface MockApi extends Api {
@@ -56,11 +60,59 @@ function seededOrder<X>(xs: X[], seed: number): X[] {
   return out;
 }
 
-export function createMockApi(opts?: MockOptions): MockApi {
+// ── ticket modal (F12) ──
+/** The connected user in mock mode (freeze decision 6: never a real person). */
+const SELF: T.PersonRef = { accountId: "mock-user", name: "Mock User", initials: "MU", self: true };
+const TICKET_DAYS = 21;
+/** The transitions shown in design/mockups/ticket-edit-states-1920x1080.png (Done and Won't Do need a Jira screen). */
+const TRANSITIONS: { id: string; name: string; toStatusName: string; toLane: T.Lane; needsScreen: boolean }[] = [
+  { id: "11", name: "To Do", toStatusName: "To Do", toLane: "todo", needsScreen: false },
+  { id: "31", name: "In Review", toStatusName: "In Review", toLane: "review", needsScreen: false },
+  { id: "41", name: "QA", toStatusName: "QA", toLane: "qa", needsScreen: false },
+  { id: "51", name: "Done", toStatusName: "Done", toLane: "done", needsScreen: true },
+  { id: "61", name: "Won't Do", toStatusName: "Won't Do", toLane: "done", needsScreen: true },
+];
+/** Custom fields pinned in mock mode, in the order the mockups show; the other custom fields follow A–Z. */
+const PINNED_FIELDS = [
+  "customfield_10101", "customfield_10102", "customfield_10103", "customfield_10104", "customfield_10105",
+  "customfield_10106", "customfield_10107", "customfield_10201", "customfield_10202", "customfield_10203",
+  "customfield_10204",
+];
+const plainDoc = (text: string): T.AdfDoc => ({
+  c: text
+    .split(/\n{2,}/)
+    .filter((para) => para.trim() !== "")
+    .map((para) => ({ t: "p", c: [{ t: "text", x: para }] })),
+});
+
+/** A board row re-indexed onto the modal's 21-day track. */
+function ticketRow(row: T.TicketView, days: number): T.TicketView {
+  const shift = days - TICKET_DAYS;
+  const out = clone(row);
+  out.pulse.segs = out.pulse.segs
+    .filter((s) => s.to - shift > 0)
+    .map((s) => ({ ...s, from: Math.max(0, s.from - shift), to: s.to - shift }));
+  out.pulse.marks = out.pulse.marks.filter((m) => m.day - shift >= 0).map((m) => ({ ...m, day: m.day - shift }));
+  out.pulse.blocked = out.pulse.blocked
+    .filter((b) => b.to - shift > 0)
+    .map((b) => ({ from: Math.max(0, b.from - shift), to: b.to - shift }));
+  return out;
+}
+
+/** Browser-test hooks of the mock build (Playwright): `__CUISLE_MOCK_OPTIONS__` is read at creation, `__CUISLE_MOCK_CALLS__` is the call log. */
+interface MockWindow {
+  __CUISLE_MOCK_OPTIONS__?: MockOptions;
+  __CUISLE_MOCK_CALLS__?: { method: string; args: unknown[] }[];
+}
+
+export function createMockApi(given?: MockOptions): MockApi {
+  const hooks: MockWindow | undefined = typeof window === "undefined" ? undefined : (window as unknown as MockWindow);
+  const opts = given ?? hooks?.__CUISLE_MOCK_OPTIONS__;
   const latency = opts?.latency ?? 0;
   const failures = opts?.failures ?? {};
   const remaining = new Map<string, number>();
   const calls: { method: string; args: unknown[] }[] = [];
+  if (hooks && !given) hooks.__CUISLE_MOCK_CALLS__ = calls;
   const bus = createMemoryBus();
 
   // ── state (per instance) ──
@@ -79,6 +131,38 @@ export function createMockApi(opts?: MockOptions): MockApi {
   let nextSinkId = 1;
   let nextOutboxId = 1;
   let nextRunId = 1;
+  const tickets = new Map<number, T.TicketDetail>(clone(opts?.handBuiltTickets ? FIXTURE_TICKETS_HANDBUILT : FIXTURE_TICKETS).map((t): [number, T.TicketDetail] => [t.issueId, t]));
+  const drafts = new Map<number, T.CommentInput>();
+  let nextCommentId = 1;
+  const customRows = [...tickets.values()].flatMap((t) => t.rail.filter((g) => g.id === "custom").flatMap((g) => g.rows));
+  const fieldPrefs: T.TicketFieldPrefs = {
+    pinned: PINNED_FIELDS.flatMap((id) => customRows.filter((r) => r.fieldId === id))
+      .map((r, i) => ({ fieldId: r.fieldId, name: r.label, kind: r.kind, position: i, hidden: false })),
+    hidden: [],
+    available: customRows
+      .filter((r) => !PINNED_FIELDS.includes(r.fieldId))
+      .map((r) => ({ fieldId: r.fieldId, name: r.label, kind: r.kind, custom: true }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  };
+  /** Synced issues the fixtures reference without a board row (parents, inline cards), as minimal rows. */
+  const refRows = new Map<number, T.TicketView>();
+  const addRef = (issueId: number | undefined, key: string | undefined, summary: string, type: string, statusName: string, lane: string): void => {
+    if (!issueId || !key || refRows.has(issueId) || [...views.values()].some((v) => v.tickets.some((x) => x.id === issueId))) return;
+    refRows.set(issueId, {
+      id: issueId, sourceId: "", key, summary, url: `${connection.baseUrl}/browse/${key}`, type, assignee: "", lane, statusName,
+      daysInLane: 0, overLimit: false, blocked: false, doneAt: 0, pulse: { segs: [], marks: [], blocked: [], label: "" },
+    });
+  };
+  const collectCards = (nodes: T.AdfNode[]): void =>
+    nodes.forEach((n) => {
+      if (n.t === "card") addRef(n.a?.issueId, n.a?.key, n.a?.summary ?? "", n.a?.typeKind ?? "other", n.a?.statusName ?? "", n.a?.statusLozenge ?? "todo");
+      collectCards(n.c ?? []);
+    });
+  for (const t of tickets.values()) {
+    collectCards(t.description?.c ?? []);
+    if (t.parent) addRef(t.parent.issueId, t.parent.key, t.parent.summary, t.parent.typeKind, "", "todo");
+  }
+  let mediaCleared = false;
 
   // ── plumbing ──
   function takeFailure(method: string): { code: string; message?: string; field?: string } | undefined {
@@ -94,7 +178,8 @@ export function createMockApi(opts?: MockOptions): MockApi {
   function run<R>(method: string, args: unknown[], body: () => R): Promise<R> {
     calls.push({ method, args });
     const failure = takeFailure(method);
-    const pause: Promise<void> = latency > 0 ? new Promise((resolve) => setTimeout(resolve, latency)) : Promise.resolve();
+    const wait = latency + (opts?.holdMs?.[method] ?? 0);
+    const pause: Promise<void> = wait > 0 ? new Promise((resolve) => setTimeout(resolve, wait)) : Promise.resolve();
     return pause.then(() => {
       if (failure) {
         throw new AppError(failure.code as ErrorCode, failure.message ?? "Mock failure.", "", false, failure.field ?? "");
@@ -194,6 +279,97 @@ export function createMockApi(opts?: MockOptions): MockApi {
     return first ? (views.get(first.id) ?? null) : null;
   }
 
+  /** Every attachment across the known ticket details. */
+  const allAttachments = (): T.AttachmentView[] => [...tickets.values()].flatMap((t) => t.attachments);
+  const userRef = (accountId: string): T.PersonRef => {
+    const u = catalog.users.find((x) => x.accountId === accountId);
+    return u ? { accountId, name: u.displayName, initials: u.initials, self: false } : { accountId, name: accountId, initials: "", self: false };
+  };
+  const railRow = (fieldId: string, label: string, kind: string, edit: string, text: string, users: T.PersonRef[] = []): T.RailRow => ({
+    fieldId,
+    label,
+    kind,
+    edit,
+    text,
+    number: null,
+    items: [],
+    users,
+    rich: null,
+    raw: "",
+    mono: false,
+    sub: "",
+    progress: null,
+    url: "",
+    urlLabel: "",
+  });
+  /** The minimal generated detail for a ticket without a hand-built fixture (freeze decision 7). */
+  function generatedTicket(standupId: number, issueId: number): T.TicketDetail {
+    const v = findView(standupId);
+    const row = v.tickets.find((t) => t.id === issueId) ?? refRows.get(issueId);
+    if (!row) throw notFound("Ticket");
+    const assignee: T.PersonRef[] = row.assignee ? [userRef(row.assignee)] : [];
+    return {
+      issueId,
+      standupId,
+      asOf: app.now,
+      syncedAt: v.lastSyncedAt,
+      updatedAt: app.now,
+      row: ticketRow(row, v.pulseDays),
+      url: row.url,
+      parent: null,
+      pulseDays: TICKET_DAYS,
+      axis: clone(v.axis.slice(-TICKET_DAYS)),
+      limitDays: v.lanes.find((l) => l.lane === row.lane)?.limitDays ?? 0,
+      blockedDays: 0,
+      description: null,
+      attachments: [],
+      subtasks: [],
+      subtasksDone: 0,
+      linkGroups: [],
+      comments: [],
+      newSince: 0,
+      draft: { text: "", mentions: [] },
+      rail: [
+        {
+          id: "state",
+          label: "State",
+          rows: [
+            railRow("status", "Status", "status", "status", row.statusName),
+            railRow("assignee", "Assignee", "user", "assignee", "", assignee),
+            railRow("flagged", "Flag", "flag", "flag", row.blocked ? "Flagged" : "Not flagged"),
+          ],
+          notSet: [],
+        },
+      ],
+      dev: null,
+      can: { transition: true, assign: true, flag: true, comment: true, reason: "" },
+      warnings: [],
+    };
+  }
+  function findTicket(standupId: number, issueId: number): T.TicketDetail {
+    let t = tickets.get(issueId);
+    if (!t) {
+      t = generatedTicket(standupId, issueId);
+      tickets.set(issueId, t);
+    }
+    t.standupId = standupId;
+    return t;
+  }
+  const stateRow = (t: T.TicketDetail, fieldId: string): T.RailRow | undefined =>
+    t.rail.find((g) => g.id === "state")?.rows.find((r) => r.fieldId === fieldId);
+  /** Applies a change to the ticket's row and to the same row in every standup view behind the modal. */
+  function patchRows(issueId: number, patch: (row: T.TicketView) => void): void {
+    const t = tickets.get(issueId);
+    if (t) patch(t.row);
+    for (const v of views.values()) v.tickets.filter((x) => x.id === issueId).forEach(patch);
+  }
+  function emitUpdated(t: T.TicketDetail, changed: string[]): void {
+    const standupIds = [...views.values()].filter((v) => v.tickets.some((x) => x.id === t.issueId)).map((v) => v.standupId);
+    bus.emit("ticket:updated", { issueId: t.issueId, key: t.row.key, standupIds, cause: "write", changed });
+    bus.emit("data:changed", { standupId: t.standupId, what: "view" });
+  }
+  const capMb = (): number => Number(settings["media.cache_max_mb"] ?? "1024");
+
   const api: Api = {
     app: {
       bootstrap: () =>
@@ -225,9 +401,27 @@ export function createMockApi(opts?: MockOptions): MockApi {
           if (patch.window) ui.window = patch.window;
         }),
       openIssue: (issueKey) => run<void>("app.openIssue", [issueKey], () => undefined),
+      openUrl: (url) => run<void>("app.openUrl", [url], () => undefined),
       diagnostics: () => run<T.Diagnostics>("app.diagnostics", [], () => app.diagnostics),
       reportPerf: (marks) => run<void>("app.reportPerf", [marks], () => undefined),
       logClientError: (message, stack) => run<void>("app.logClientError", [message, stack], () => undefined),
+      mediaCache: () =>
+        run<T.MediaCacheInfo>("app.mediaCache", [], () => {
+          const cached = mediaCleared ? [] : allAttachments().filter((a) => a.image && a.cached !== "none");
+          const full = cached.filter((a) => a.cached === "full");
+          return {
+            bytes: full.reduce((n, a) => n + a.bytes, 0),
+            thumbBytes: cached.length * 24_000,
+            files: cached.length + full.length,
+            capMb: capMb(),
+          };
+        }),
+      clearMediaCache: () =>
+        run<T.MediaCacheInfo>("app.clearMediaCache", [], () => {
+          mediaCleared = true;
+          allAttachments().forEach((a) => (a.cached = "none"));
+          return { bytes: 0, thumbBytes: 0, files: 0, capMb: capMb() };
+        }),
     },
 
     standup: {
@@ -510,8 +704,8 @@ export function createMockApi(opts?: MockOptions): MockApi {
           connection = { ...connection, state: "ok", source: input.source, baseUrl: input.baseUrl.trim(), account: input.account.trim() };
           return connection;
         }),
-      disconnect: () =>
-        run<void>("connection.disconnect", [], () => {
+      disconnect: (deleteContent) =>
+        run<void>("connection.disconnect", [deleteContent], () => {
           connection = { ...connection, state: "missing" };
         }),
       searchSpaces: (query) =>
@@ -543,6 +737,45 @@ export function createMockApi(opts?: MockOptions): MockApi {
           const closes = expr.split(")").length - 1;
           const errors = opens === closes ? [] : ["Unbalanced parentheses."];
           return { ok: errors.length === 0, errors, checkedAt: app.now };
+        }),
+      ticketFields: () => run<T.TicketFieldPrefs>("connection.ticketFields", [], () => fieldPrefs),
+      pinTicketField: (fieldId) =>
+        run<T.TicketFieldPrefs>("connection.pinTicketField", [fieldId], () => {
+          const opt = fieldPrefs.available.find((f) => f.fieldId === fieldId);
+          if (!opt) throw notFound("Field");
+          fieldPrefs.available = fieldPrefs.available.filter((f) => f !== opt);
+          fieldPrefs.pinned.push({ fieldId, name: opt.name, kind: opt.kind, position: fieldPrefs.pinned.length, hidden: false });
+          return fieldPrefs;
+        }),
+      unpinTicketField: (fieldId) =>
+        run<T.TicketFieldPrefs>("connection.unpinTicketField", [fieldId], () => {
+          const pref = fieldPrefs.pinned.find((f) => f.fieldId === fieldId);
+          if (!pref) throw notFound("Field");
+          fieldPrefs.pinned = fieldPrefs.pinned.filter((f) => f !== pref).map((f, i) => ({ ...f, position: i }));
+          fieldPrefs.available = [...fieldPrefs.available, { fieldId, name: pref.name, kind: pref.kind, custom: true }].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          );
+          return fieldPrefs;
+        }),
+      moveTicketField: (fieldId, toPosition) =>
+        run<T.SaveAck>("connection.moveTicketField", [fieldId, toPosition], () => {
+          const pref = fieldPrefs.pinned.find((f) => f.fieldId === fieldId);
+          if (!pref) throw notFound("Field");
+          const rest = fieldPrefs.pinned.filter((f) => f !== pref);
+          rest.splice(Math.max(0, Math.min(toPosition, rest.length)), 0, pref);
+          fieldPrefs.pinned = rest.map((f, i) => ({ ...f, position: i }));
+          settingsRev += 1;
+          return { rev: settingsRev, savedAt: app.now, needsSync: false };
+        }),
+      setTicketFieldHidden: (fieldId, hidden) =>
+        run<T.TicketFieldPrefs>("connection.setTicketFieldHidden", [fieldId, hidden], () => {
+          const known = [...fieldPrefs.pinned, ...fieldPrefs.available, ...fieldPrefs.hidden].find((f) => f.fieldId === fieldId);
+          if (!known) throw notFound("Field");
+          const pinned = fieldPrefs.pinned.find((f) => f.fieldId === fieldId);
+          fieldPrefs.hidden = fieldPrefs.hidden.filter((f) => f.fieldId !== fieldId);
+          if (hidden) fieldPrefs.hidden.push({ fieldId, name: known.name, kind: known.kind, position: pinned?.position ?? -1, hidden: true });
+          fieldPrefs.pinned = fieldPrefs.pinned.map((f) => (f.fieldId === fieldId ? { ...f, hidden } : f));
+          return fieldPrefs;
         }),
     },
 
@@ -577,6 +810,112 @@ export function createMockApi(opts?: MockOptions): MockApi {
           findCfg(standupId);
         }),
       status: () => run<T.SyncStatus[]>("sync.status", [], () => statuses()),
+    },
+
+    ticket: {
+      get: (standupId, issueId) => run<T.TicketDetail>("ticket.get", [standupId, issueId], () => findTicket(standupId, issueId)),
+      transitions: (issueId) =>
+        run<T.TransitionList>("ticket.transitions", [issueId], () => {
+          const url = tickets.get(issueId)?.url ?? [...views.values()].flatMap((v) => v.tickets).find((x) => x.id === issueId)?.url ?? "";
+          return { items: TRANSITIONS.map((x) => ({ ...x, url })), fetchedAt: app.now, offline: false };
+        }),
+      transition: (standupId, issueId, transitionId) =>
+        run<T.TicketDetail>("ticket.transition", [standupId, issueId, transitionId], () => {
+          const t = findTicket(standupId, issueId);
+          const tr = TRANSITIONS.find((x) => x.id === transitionId);
+          if (!tr) throw new AppError("write_rejected", "That transition is not available.");
+          if (tr.needsScreen) throw new AppError("transition_needs_screen", "This transition needs more information — open in Jira");
+          patchRows(issueId, (r) => {
+            r.lane = tr.toLane;
+            r.statusName = tr.toStatusName;
+            r.daysInLane = 0;
+            r.overLimit = false;
+          });
+          const status = stateRow(t, "status");
+          if (status) status.text = tr.toStatusName;
+          emitUpdated(t, ["status"]);
+          return t;
+        }),
+      assign: (standupId, issueId, accountId) =>
+        run<T.TicketDetail>("ticket.assign", [standupId, issueId, accountId], () => {
+          const t = findTicket(standupId, issueId);
+          patchRows(issueId, (r) => (r.assignee = accountId));
+          const assignee = stateRow(t, "assignee");
+          if (assignee) assignee.users = accountId ? [userRef(accountId)] : [];
+          emitUpdated(t, ["assignee"]);
+          return t;
+        }),
+      setFlag: (standupId, issueId, flagged) =>
+        run<T.TicketDetail>("ticket.setFlag", [standupId, issueId, flagged], () => {
+          const t = findTicket(standupId, issueId);
+          patchRows(issueId, (r) => (r.blocked = flagged));
+          const flag = stateRow(t, "flagged");
+          if (flag) {
+            flag.text = flagged ? "Flagged" : "Not flagged";
+            if (!flagged) flag.sub = "";
+          }
+          emitUpdated(t, ["flag"]);
+          return t;
+        }),
+      addComment: (standupId, issueId, input) =>
+        run<T.TicketDetail>("ticket.addComment", [standupId, issueId, input], () => {
+          const t = findTicket(standupId, issueId);
+          if (!input.text.trim()) throw invalid("A comment needs some text.", "text");
+          t.comments.push({
+            id: `mock-${nextCommentId++}`,
+            author: { ...SELF },
+            createdAt: app.now,
+            updatedAt: app.now,
+            edited: false,
+            visibility: "",
+            body: plainDoc(input.text),
+          });
+          drafts.delete(issueId);
+          t.draft = { text: "", mentions: [] };
+          emitUpdated(t, ["comments"]);
+          return t;
+        }),
+      refresh: (standupId, issueId) => run<T.TicketDetail>("ticket.refresh", [standupId, issueId], () => findTicket(standupId, issueId)),
+      draft: (issueId) =>
+        run<T.CommentInput>("ticket.draft", [issueId], () => drafts.get(issueId) ?? tickets.get(issueId)?.draft ?? { text: "", mentions: [] }),
+      saveDraft: (issueId, input) =>
+        run<T.SaveAck>("ticket.saveDraft", [issueId, input], () => {
+          const next: T.CommentInput = input.text === "" ? { text: "", mentions: [] } : clone(input);
+          if (input.text === "") drafts.delete(issueId);
+          else drafts.set(issueId, next);
+          const t = tickets.get(issueId);
+          if (t) t.draft = clone(next);
+          settingsRev += 1;
+          return { rev: settingsRev, savedAt: app.now, needsSync: false };
+        }),
+      ensureMedia: (attachmentId) =>
+        run<T.AttachmentView>("ticket.ensureMedia", [attachmentId], () => {
+          const a = allAttachments().find((x) => x.id === attachmentId);
+          if (!a) throw notFound("Attachment");
+          if (a.image && a.cached !== "full") {
+            a.cached = "full";
+            mediaCleared = false;
+            const owner = [...tickets.values()].find((t) => t.attachments.includes(a));
+            bus.emit("media:ready", { attachmentId, issueId: owner?.issueId ?? 0, cached: "full" });
+          }
+          return a;
+        }),
+      openAttachment: (attachmentId) =>
+        run<void>("ticket.openAttachment", [attachmentId], () => {
+          if (!allAttachments().some((x) => x.id === attachmentId)) throw notFound("Attachment");
+        }),
+      searchMentions: (standupId, query) =>
+        run<T.UserOption[]>("ticket.searchMentions", [standupId, query], () => {
+          const cfg = findCfg(standupId);
+          return catalog.users
+            .filter((u) => matches(query, u.displayName))
+            .map((u) => ({
+              accountId: u.accountId,
+              displayName: u.displayName,
+              initials: u.initials,
+              onBoard: cfg.speakers.some((s) => s.accountId === u.accountId),
+            }));
+        }),
     },
 
     sink: {

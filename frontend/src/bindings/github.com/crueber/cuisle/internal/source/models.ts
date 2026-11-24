@@ -10,6 +10,16 @@ export interface Capabilities {
     "hasAssigneeHistory": boolean;
 
     /**
+     * Hydrate returns IssueContent + full comments; Fields/FetchMedia/GetIssue work (ADR 0015)
+     */
+    "content": boolean;
+
+    /**
+     * all false = read-only source
+     */
+    "writes": Writes;
+
+    /**
      * "JQL"
      */
     "filterLanguage": string;
@@ -18,4 +28,18 @@ export interface Capabilities {
      * e.g. ["baseUrl","account","secret"]
      */
     "authFields": string[] | null;
+}
+
+/**
+ * Writes are the light writes a source supports (ADR 0015). Each is an explicit user action, never automatic.
+ */
+export interface Writes {
+    "transition": boolean;
+    "assign": boolean;
+
+    /**
+     * Jira: false when no Flagged field was discovered
+     */
+    "flag": boolean;
+    "comment": boolean;
 }

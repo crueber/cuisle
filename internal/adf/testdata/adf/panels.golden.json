@@ -1,0 +1,89 @@
+{
+  "c": [
+    {
+      "t": "panel",
+      "a": {
+        "panel": "info"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "info panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "t": "panel",
+      "a": {
+        "panel": "note"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "note panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "t": "panel",
+      "a": {
+        "panel": "success"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "success panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "t": "panel",
+      "a": {
+        "panel": "warning"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "warning panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "t": "panel",
+      "a": {
+        "panel": "error"
+      },
+      "c": [
+        {
+          "t": "p",
+          "c": [
+            {
+              "t": "text",
+              "x": "error panel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

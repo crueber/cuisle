@@ -63,7 +63,7 @@ func TestOpen_CorruptFile_NoBackup_StartsEmptyAndKeepsTheCorruptFile(t *testing.
 	if info.RestoredFrom != "" {
 		t.Errorf("RestoredFrom = %q, want empty (no backup existed)", info.RestoredFrom)
 	}
-	if info.SchemaVersion != headVersion || !reflect.DeepEqual(info.Migrated, []int{1, 2}) {
+	if info.SchemaVersion != headVersion || !reflect.DeepEqual(info.Migrated, []int{1, 2, 3, 4}) {
 		t.Errorf("info = %+v; want an empty DB migrated to head", info)
 	}
 	corrupt := filepath.Join(dir, "cuisle.db.corrupt-"+itoa(fixedNow.UnixMilli()))

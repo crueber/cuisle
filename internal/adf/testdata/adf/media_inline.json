@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "icon "
+        },
+        {
+          "type": "mediaInline",
+          "attrs": {
+            "id": "m-204",
+            "collection": "contentId-1",
+            "type": "file"
+          }
+        },
+        {
+          "type": "text",
+          "text": " and file "
+        },
+        {
+          "type": "mediaInline",
+          "attrs": {
+            "id": "m-203",
+            "collection": "contentId-1",
+            "type": "file"
+          }
+        }
+      ]
+    }
+  ]
+}

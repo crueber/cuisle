@@ -27,14 +27,30 @@ func (s *Server) handleMyself(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleField(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, []map[string]any{
+	builtin := []map[string]any{
 		{"id": SprintFieldID, "key": SprintFieldID, "name": "Sprint", "custom": true, "orderable": true,
 			"schema": map[string]any{"type": "array", "custom": "com.pyxis.greenhopper.jira:gh-sprint"}},
 		{"id": RankFieldID, "key": RankFieldID, "name": "Rank", "custom": true, "orderable": true,
 			"schema": map[string]any{"type": "string", "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank"}},
 		{"id": FlaggedFieldID, "key": FlaggedFieldID, "name": "Flagged", "custom": true, "orderable": false,
 			"schema": map[string]any{"type": "array", "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes"}},
-	})
+	}
+	out := make([]any, 0, len(builtin)+len(overlay.FieldDefs))
+	served := map[string]bool{}
+	for _, f := range builtin {
+		served[f["id"].(string)] = true
+		out = append(out, f)
+	}
+	for _, raw := range overlay.FieldDefs {
+		var f struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(raw, &f) == nil && !served[f.ID] {
+			served[f.ID] = true
+			out = append(out, raw) // content fields of testdata/content.json, verbatim
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleProjectSearch(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +215,9 @@ func (s *Server) handleBulkFetch(w http.ResponseWriter, r *http.Request) {
 			if len(wantField) > 0 && !wantField[ch.FieldID] {
 				continue
 			}
+			if s.f12Stale(ch.ID) {
+				continue
+			}
 			all = append(all, item{is, ch})
 		}
 	}
@@ -252,13 +271,7 @@ func (s *Server) handleComments(w http.ResponseWriter, r *http.Request) {
 	start, end, limit := s.page(q, len(idx), 50)
 	vals := []map[string]any{}
 	for _, i := range idx[start:end] {
-		c := is.Comments[i]
-		vals = append(vals, map[string]any{
-			"id":      c.ID,
-			"created": jiraTime(c.At),
-			"updated": jiraTime(c.At),
-			"author":  s.authorOf(c.Author),
-		})
+		vals = append(vals, s.commentFullJSON(is, i))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"startAt": start, "maxResults": limit, "total": len(idx), "comments": vals,
@@ -341,10 +354,18 @@ type devRepo struct {
 }
 
 type devPR struct {
-	ID             string `json:"id"`
-	Status         string `json:"status"`
-	LastUpdate     string `json:"lastUpdate"`
-	RepositoryName string `json:"repositoryName"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Status         string    `json:"status"`
+	LastUpdate     string    `json:"lastUpdate"`
+	RepositoryName string    `json:"repositoryName"`
+	Source         devBranch `json:"source"`
+	Destination    devBranch `json:"destination"`
+}
+
+// devBranch is a pull request's source or destination, as the GitHub integration reports it.
+type devBranch struct {
+	Branch string `json:"branch"`
 }
 
 func (s *Server) handleDevDetail(w http.ResponseWriter, r *http.Request) {
@@ -366,7 +387,8 @@ func (s *Server) handleDevDetail(w http.ResponseWriter, r *http.Request) {
 			prs := []devPR{}
 			for _, p := range is.PRs {
 				prs = append(prs, devPR{
-					ID: strconv.Itoa(p.ID), Status: p.Status, LastUpdate: jiraTime(p.LastUpdate), RepositoryName: p.Repo,
+					ID: strconv.Itoa(p.ID), Name: p.Title, Status: p.Status, LastUpdate: jiraTime(p.LastUpdate),
+					RepositoryName: p.Repo, Source: devBranch{Branch: p.Branch}, Destination: devBranch{Branch: "main"},
 				})
 			}
 			detail = append(detail, map[string]any{"pullRequests": prs})

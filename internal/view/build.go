@@ -245,6 +245,7 @@ func buildBacklog(snap model.BoardSnapshot) []BacklogItem {
 			break
 		}
 		out = append(out, BacklogItem{
+			IssueID: m.LocalID,
 			Key:     m.Issue.Key,
 			Summary: m.Issue.Summary,
 			Type:    m.TypeKind,

@@ -231,7 +231,7 @@ func (m *materializer) boardIssue(fi FxIssue, idx int, project string, sprintID 
 		is.Commits = append(is.Commits, DSCommit{SHA: shaFor(fi.Key, i), Repo: repo, At: m.at(d, 11)})
 	}
 	for _, p := range fi.PRs {
-		is.PRs = append(is.PRs, DSPR{ID: p.ID, Repo: repo, Status: p.Status, LastUpdate: m.at(p.Day, 11)})
+		is.PRs = append(is.PRs, DSPR{ID: p.ID, Repo: repo, Status: p.Status, LastUpdate: m.at(p.Day, 11), Title: p.Title, Branch: p.Branch})
 	}
 
 	upd := is.Created
