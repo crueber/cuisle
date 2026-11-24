@@ -68,6 +68,7 @@ for (const { w, h } of SIZES) {
       await open(page, boot);
       await page.keyboard.press(",");
       await expect(page.locator(".cfg-screen")).toBeVisible();
+      await page.locator('.cfg-grid[data-balanced="true"]').waitFor();
       await expect(page).toHaveScreenshot(`configure-${w}x${h}.png`, { ...SHOT, fullPage: false });
     });
   });

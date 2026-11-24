@@ -8,8 +8,8 @@
 // SPEC-NOTE: the lane options are static, in this order, and getKey returns the MapLane value:
 //   Backlog(backlog) / To Do(todo) / In Progress(prog) / In Review(review) / QA(qa) / Done(done) / Hidden(hidden).
 //   getKey(option) of the selected value equals ColumnMapping.lane. Selecting calls setColumnLane(columnName, lane).
-// SPEC-NOTE: an "auto" tag (text exactly "auto") is shown for ColumnMapping.auto === true rows and is not shown for
-//   rows the user changed (auto === false).
+// SPEC-NOTE: there is no "auto" tag (removed 2026-11-24: it only marked which rows the user had changed, and read as
+//   noise). ColumnMapping.auto is still carried for the data, just not shown.
 // SPEC-NOTE: the unmapped warning is one text node naming the statuses (config.unmappedStatuses) and containing
 //   "map" (e.g. "2 statuses aren't mapped: Blocked, Waiting"); it is absent when the list is empty. With no board
 //   chosen (new standup) an explanatory paragraph mentioning "board" replaces the rows and no combobox is rendered.
@@ -146,16 +146,9 @@ describe("StatusMappingSection: rows", () => {
   });
 });
 
-describe("StatusMappingSection: auto tag", () => {
-  it("tags auto-matched rows only", () => {
+describe("StatusMappingSection: no auto tag", () => {
+  it("showsNoAutoTag_WhetherARowWasAutoMatchedOrChanged", () => {
     render(<StatusMappingSection config={mkConfig()} columns={3} />);
-    // mkConfig: five rows are auto, "Code Review" was changed by the user.
-    expect(screen.getAllByText("auto")).toHaveLength(5);
-  });
-
-  it("shows no auto tag when every row was changed by the user", () => {
-    const cols = mkConfig().columns.map((c) => ({ ...c, auto: false }));
-    render(<StatusMappingSection config={mkConfig({ columns: cols })} columns={3} />);
     expect(reg.labels("Combobox")).toHaveLength(6);
     expect(screen.queryAllByText("auto")).toHaveLength(0);
   });

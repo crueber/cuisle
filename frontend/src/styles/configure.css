@@ -212,11 +212,6 @@
   font-size: var(--font-size-micro);
   letter-spacing: var(--font-tracking-tag);
 }
-.cfg-tag-quiet {
-  background: transparent;
-  color: var(--color-muted);
-  border: 1px solid var(--color-rule-mid);
-}
 
 .cfg-rail-item[aria-current="true"] .cfg-tag {
   background: var(--color-selected-fg);
@@ -227,9 +222,10 @@
 .cfg-main {
   /* Padding matches layout/responsive.ts mainPadding(): x 32 at vw >= 1600 else 20; top 20 at vh >= 800 else 12. */
   --cfg-pad-x: var(--space-main-pad-x-narrow);
+  --cfg-pad-top: var(--space-main-pad-top-short);
   flex: 1;
   min-width: 0;
-  padding: var(--space-main-pad-top-short) var(--cfg-pad-x) var(--space-10);
+  padding: var(--cfg-pad-top) var(--cfg-pad-x) var(--space-10);
   overflow-y: auto;
 }
 @media (min-width: 1600px) {
@@ -239,7 +235,7 @@
 }
 @media (min-height: 800px) {
   .cfg-main {
-    padding-top: var(--space-main-pad-top-tall);
+    --cfg-pad-top: var(--space-main-pad-top-tall);
   }
 }
 .cfg-title-row {
@@ -295,7 +291,8 @@
 /* Jump bar */
 .cfg-jump {
   position: sticky;
-  top: 0;
+  /* Stick to the scroller's very top edge, not below its padding, or content scrolls through the gap above the bar. */
+  top: calc(var(--cfg-pad-top) * -1);
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
@@ -431,9 +428,6 @@
 }
 .cfg-map-control > .cbx {
   flex: 1 1 auto;
-}
-.cfg-map-control .cfg-tag {
-  align-self: center;
 }
 .cfg-map-order {
   margin-top: var(--space-4);

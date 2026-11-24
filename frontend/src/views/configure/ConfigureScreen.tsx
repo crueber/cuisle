@@ -1,6 +1,6 @@
 // ConfigureScreen: frame, rail, jump bar, section layout, save indicator, Done/Esc (ux-spec §9.1, §9.2, §9.5;
 // architecture §5.3; AGENTS.md invariants 3 and 4).
-import { useEffect } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { SavedIndicator } from "../../components/SavedIndicator";
 import { toAppError } from "../../api/errors";
 import { standups } from "../../state/app";
@@ -50,7 +50,7 @@ const ORDER: SectionId[] = [
   "sec-ticket-fields",
 ];
 
-/** Column membership per ux-spec §9.2 (column-major DOM order). */
+/** Column membership per ux-spec §9.2 (column-major DOM order) until the sections are measured and balanced. */
 const COLUMNS: Record<1 | 2 | 3, SectionId[][]> = {
   3: [
     ["sec-source", "sec-person", "sec-export"],
@@ -65,6 +65,46 @@ const COLUMNS: Record<1 | 2 | 3, SectionId[][]> = {
 };
 
 const JUMP_SECTIONS = ORDER.map((id) => ({ id, label: LABELS[id] }));
+
+/**
+ * Balances sections across columns by measured height: tallest first, each into the currently shortest column (ties to
+ * the leftmost), then each column keeps the usual ORDER top to bottom. Columns end within one section of each other.
+ * Returns null when any height is unknown (0, e.g. before layout or in jsdom), so the static COLUMNS table applies.
+ * `gap` is the vertical space between sections.
+ */
+export function balanceColumns(order: readonly SectionId[], heights: ReadonlyMap<string, number>, n: number, gap: number): SectionId[][] | null {
+  if (n <= 1) return null;
+  if (order.some((id) => !(heights.get(id) ?? 0))) return null;
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const byHeight = [...order].sort((a, b) => (heights.get(b) ?? 0) - (heights.get(a) ?? 0) || (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
+  const cols: SectionId[][] = Array.from({ length: n }, () => []);
+  const h = new Array<number>(n).fill(0);
+  for (const id of byHeight) {
+    let c = 0;
+    for (let i = 1; i < n; i++) if ((h[i] ?? 0) < (h[c] ?? 0)) c = i;
+    const col = cols[c] ?? [];
+    h[c] = (h[c] ?? 0) + (col.length ? gap : 0) + (heights.get(id) ?? 0);
+    col.push(id);
+  }
+  for (const col of cols) col.sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
+  // The column holding the first section in ORDER goes first, so Source stays top-left.
+  cols.sort((a, b) => (rank.get(a[0] as SectionId) ?? 99) - (rank.get(b[0] as SectionId) ?? 99));
+  return cols;
+}
+
+/** How uneven the columns must get (px) before a height change rebalances them. */
+const REBALANCE_PX = 160;
+
+/** Tallest column minus shortest column, for an assignment and measured section heights. */
+function spread(cols: SectionId[][], heights: ReadonlyMap<string, number>): number {
+  const hs = cols.map((c) => c.reduce((a, id, i) => a + (i ? SECTION_GAP : 0) + (heights.get(id) ?? 0), 0));
+  return Math.max(...hs) - Math.min(...hs);
+}
+
+/** Vertical space between sections (--space-6, `.cfg-anchor + .cfg-anchor`). */
+const SECTION_GAP = 24;
+
+const same = (a: SectionId[][], b: SectionId[][]) => a.length === b.length && a.every((c, i) => c.join() === (b[i] ?? []).join());
 
 /** Configure rail width (ux-spec §9.1): 280px at vw ≥ 1360, else 230px. */
 function railWidth(vw: number): number {
@@ -102,6 +142,53 @@ export function ConfigureScreen() {
   const columns = columnsFor(vw, vh);
   const current = cfg !== null && selectedId !== null && cfg.id === selectedId ? cfg : null;
   const position = selectedId === null ? -1 : list.findIndex((t) => t.id === selectedId);
+
+  // Columns balance themselves by measured section height: when the standup or the column count changes, and again
+  // whenever a section's height changes (speakers or statuses added, a form opened). A rebalance never happens while
+  // focus is inside the sections, so nothing jumps to another column mid-edit; it waits for focus to leave.
+  // Until measured, the static §9.2 table applies.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const balanceKey = current ? `${columns}:${current.id}` : "";
+  const [balanced, setBalanced] = useState<{ key: string; cols: SectionId[][] } | null>(null);
+  const layout = balanced && balanced.key === balanceKey ? balanced.cols : COLUMNS[columns];
+  const rebalance = (force: boolean) => {
+    const grid = gridRef.current;
+    if (!grid || !balanceKey) return;
+    if (!force && grid.contains(document.activeElement)) return;
+    const heights = new Map<string, number>();
+    for (const el of Array.from(grid.querySelectorAll<HTMLElement>(".cfg-anchor"))) heights.set(el.id, el.offsetHeight);
+    const cols = balanceColumns(ORDER, heights, columns, SECTION_GAP) ?? COLUMNS[columns];
+    setBalanced((prev) => {
+      if (!prev || prev.key !== balanceKey) return { key: balanceKey, cols };
+      if (same(prev.cols, cols)) return prev;
+      // A height change only moves sections when it clearly pays: the current columns are off by more than the
+      // threshold and the new ones are better by at least that much. Small changes never shuffle the screen.
+      const now = spread(prev.cols, heights);
+      return now > REBALANCE_PX && now - spread(cols, heights) >= REBALANCE_PX ? { key: balanceKey, cols } : prev;
+    });
+  };
+  const rebalanceRef = useRef(rebalance);
+  rebalanceRef.current = rebalance;
+  useLayoutEffect(() => {
+    if (balanced?.key !== balanceKey) rebalanceRef.current(true);
+  }, [balanceKey]);
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || typeof ResizeObserver === "undefined") return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const later = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => rebalanceRef.current(false), 150);
+    };
+    const ro = new ResizeObserver(later);
+    for (const el of Array.from(grid.querySelectorAll(".cfg-anchor"))) ro.observe(el);
+    grid.addEventListener("focusout", later);
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+      grid.removeEventListener("focusout", later);
+    };
+  }, [balanceKey, layout]);
 
   // Every visit and every selection loads fresh data (Done clears it); leaving flushes pending text saves.
   useEffect(() => {
@@ -171,8 +258,8 @@ export function ConfigureScreen() {
                   fragments a multi-column box inside the scrolling main into extra columns past the right edge, so
                   Configure scrolled sideways. A change of column count (crossing a width threshold) remounts the
                   sections; text fields have already autosaved by then. */}
-              <div class={`cfg-grid cfg-cols-${columns}`}>
-                {COLUMNS[columns].map((ids, c) => (
+              <div class={`cfg-grid cfg-cols-${columns}`} ref={gridRef} data-balanced={balanced?.key === balanceKey ? "true" : "false"}>
+                {layout.map((ids, c) => (
                   <div key={`${columns}-${c}`} class="cfg-col">
                     {ids.map((id) => (
                       <div key={id} id={id} class="cfg-anchor">

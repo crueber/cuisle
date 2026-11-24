@@ -65,7 +65,6 @@ export function StatusMappingSection({ config }: SectionProps) {
                   getLabel={(o) => o.label}
                   onSelect={(o) => setColumnLane(col.columnName, o.key)}
                 />
-                {col.auto ? <span class="cfg-tag cfg-tag-quiet">auto</span> : null}
               </div>
             </div>
           ))}

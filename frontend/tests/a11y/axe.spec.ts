@@ -73,11 +73,13 @@ for (const theme of THEMES) {
       // Every section is wrapped in .cfg-anchor (ConfigureScreen ORDER: 11 sections). All must be mounted.
       const anchors = page.locator(".cfg-anchor");
       await expect(anchors.first()).toBeVisible();
+      await page.locator('.cfg-grid[data-balanced="true"]').waitFor(); // columns balanced (sections remount once)
       await page.evaluate(() => {
         document.querySelectorAll<HTMLDetailsElement>("details").forEach((d) => {
           d.open = true;
         });
       });
+      await page.waitForTimeout(400); // a big height change may rebalance the columns once (ConfigureScreen); let it settle
       const count = await anchors.count();
       expect(count, "all eleven configure sections are mounted").toBe(11);
       for (let i = 0; i < count; i++) {

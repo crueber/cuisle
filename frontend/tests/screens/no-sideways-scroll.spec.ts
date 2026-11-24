@@ -56,8 +56,18 @@ for (const [w, h] of SIZES) {
       await page.keyboard.press(",");
       await page.locator(".cfg-screen").waitFor();
       await page.locator("#sec-mapping .cfg-section").waitFor(); // the sections render once the config has loaded
+      await page.locator('.cfg-grid[data-balanced="true"]').waitFor();
       await page.waitForLoadState("networkidle");
       expect(await sidewaysScrollers(page)).toEqual([]);
+      // The columns balance themselves: no column is longer than another by more than its tallest section.
+      await page.waitForTimeout(300);
+      const spread = await page.evaluate(() => {
+        const cols = Array.from(document.querySelectorAll<HTMLElement>(".cfg-col"));
+        const hs = cols.map((c) => c.getBoundingClientRect().height);
+        const tallest = Math.max(...Array.from(document.querySelectorAll<HTMLElement>(".cfg-anchor")).map((a) => a.offsetHeight));
+        return { n: cols.length, diff: Math.max(...hs) - Math.min(...hs), tallest };
+      });
+      if (spread.n > 1) expect(spread.diff).toBeLessThanOrEqual(spread.tallest + 24);
     });
 
     test("ticket modal (code block, table, long text) never scrolls sideways", async ({ page }) => {
