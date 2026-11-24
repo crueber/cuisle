@@ -198,6 +198,9 @@ Also cover:
   §13 in the same PR.
 - **Budgets** (architecture §6.1): standup switch ≤ 50 ms, person switch ≤ 32 ms with zero facade calls, Combobox
   keystroke ≤ 16 ms (CI fails above 32 ms). Use 20 runs, 4× CPU throttle, and fail on p95.
+  - **Where they gate (Chris, 2026-11-24):** locally with `task e2e`, before every merge. On GitHub's shared runners
+    the perf specs run with `PERF_CPU_THROTTLE=2` and are **report-only** (`continue-on-error`), because the same
+    commit passes and fails there run to run. Accessibility (`tests/a11y`) stays a hard gate in GitHub CI.
 - **Autosave UX:** change each control type, reload mock state, and assert the value persisted and the indicator went
   through its states.
 - **Nothing hidden:** at 1024×640, the person view's DOM contains every ticket in the fixture for that person, and the

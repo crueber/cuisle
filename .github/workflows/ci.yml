@@ -55,12 +55,19 @@ jobs:
           (cd frontend && npm ci)
           task bindings && task tokens
           cd frontend && npx tsc --noEmit && npx eslint src scripts tests && npx vitest run && npx vite build && npx size-limit
-      - name: Playwright (perf + a11y + screenshots, mock mode)
+      - name: Playwright (a11y, mock mode)
         if: runner.os == 'Linux'
         working-directory: frontend
+        run: npx playwright install --with-deps chromium && npx playwright test tests/a11y  # screens: macOS-only baselines (tests/screens/README.md)
+      - name: Playwright (perf budgets, report-only on shared runners)
+        if: runner.os == 'Linux'
+        working-directory: frontend
+        # Chris's decision (2026-11-24): shared runners vary run to run, so timing budgets are reported here but don't
+        # fail the build. They're enforced locally (`task e2e`) before every merge (testing.md §5).
+        continue-on-error: true
         env:
-          PERF_CPU_THROTTLE: "2" # shared runners are ~2x slower than the 4x-throttled reference machine (tests/perf/measure.ts)
-        run: npx playwright install --with-deps chromium && npx playwright test tests/perf tests/a11y  # screens: macOS-only baselines (tests/screens/README.md)
+          PERF_CPU_THROTTLE: "2" # runners are ~2x slower than the 4x-throttled reference machine (tests/perf/measure.ts)
+        run: npx playwright test tests/perf
       - name: Package smoke
         shell: bash
         env:

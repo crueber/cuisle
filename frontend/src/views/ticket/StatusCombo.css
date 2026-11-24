@@ -44,8 +44,7 @@
   background: var(--color-lane-done);
 }
 .sc-row[data-muted="true"] {
-  color: var(--color-muted);
-  opacity: 0.8;
+  color: var(--color-muted); /* the muted token alone meets 4.5:1; extra opacity failed axe color-contrast on Linux */
 }
 .sc-screen {
   font-family: var(--font-family-mono);
