@@ -30,6 +30,13 @@ jobs:
       - name: Linux deps
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev xvfb
+      - name: Windows deps
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # makensis isn't on the hosted image (exit 127 in windows:create:nsis:installer)
+          choco install nsis -y --no-progress
+          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Tools
         shell: bash
         run: |
@@ -56,6 +63,12 @@ jobs:
         run: npx playwright install --with-deps chromium && npx playwright test tests/perf tests/a11y  # screens: macOS-only baselines (tests/screens/README.md)
       - name: Package smoke
         shell: bash
+        env:
+          # WebKitGTK 2.50 on the GPU-less runner doesn't paint under Xvfb with its DMA-BUF/compositing renderer
+          # ("frontend did not report first-view"); force software rendering for the smoke run.
+          WEBKIT_DISABLE_DMABUF_RENDERER: "1"
+          WEBKIT_DISABLE_COMPOSITING_MODE: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           task package
           if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a ./bin/cuisle --bench-startup --fake-jira; fi
