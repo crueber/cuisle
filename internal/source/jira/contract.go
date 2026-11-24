@@ -28,23 +28,33 @@ const Kind = "jira"
 
 // Meta is persisted in connection.source_meta (JSON keys as written).
 type Meta struct {
-	SprintFieldID   string    `json:"sprintFieldId,omitempty"`
-	RankFieldID     string    `json:"rankFieldId,omitempty"`
-	FlaggedFieldID  string    `json:"flaggedFieldId,omitempty"`
+	SprintFieldID  string `json:"sprintFieldId,omitempty"`
+	RankFieldID    string `json:"rankFieldId,omitempty"`
+	FlaggedFieldID string `json:"flaggedFieldId,omitempty"`
+	// DevSummaryFieldID is the Development summary custom field (schema custom type ending ":devsummarycf"), requested
+	// in the scan so the dev fingerprint comes for free (jira-sync §2.11). "" = the site has none.
+	DevSummaryFieldID string `json:"devSummaryFieldId,omitempty"`
+	// DevFieldChecked: the field list was searched for DevSummaryFieldID at least once (so "" means absent, not unknown).
+	DevFieldChecked bool      `json:"devSummaryFieldChecked,omitempty"`
 	FieldsFetchedAt time.Time `json:"fieldsFetchedAt,omitzero"`
 	DevActivity     string    `json:"devActivity,omitempty"` // "ok"|"unavailable"|"" (probe result of this Source)
 }
 
 // Adapter implements source.Source. One Adapter is opened per sync run or per Configure request burst.
 type Adapter struct {
-	conn   model.Connection
-	c      *Client
-	log    *slog.Logger
-	now    func() time.Time
-	mu     sync.Mutex
-	meta   Meta
-	devOff bool                       // dev-status probe failed in this Adapter's lifetime
-	types  map[string]model.IssueType // issue types seen by Hydrate (guarded by mu); Reference returns them
+	conn      model.Connection
+	c         *Client
+	log       *slog.Logger
+	now       func() time.Time
+	mu        sync.Mutex
+	meta      Meta
+	devOff    bool // dev-status probe failed in this Adapter's lifetime
+	devProven bool // a dev-status request succeeded in this Adapter's lifetime (guarded by mu)
+	// devHints: per issue id, what the last Scan learned from the Development summary field (guarded by mu).
+	devHints map[string]devHint
+	// devFieldMu serialises the one-off discovery of the Development field id (parallel scans).
+	devFieldMu sync.Mutex
+	types      map[string]model.IssueType // issue types seen by Hydrate (guarded by mu); Reference returns them
 }
 
 var _ source.Source = (*Adapter)(nil)
@@ -234,6 +244,8 @@ func metaFromMap(m map[string]any) Meta {
 	s := func(k string) string { v, _ := m[k].(string); return v }
 	out.SprintFieldID, out.RankFieldID, out.FlaggedFieldID = s("sprintFieldId"), s("rankFieldId"), s("flaggedFieldId")
 	out.DevActivity = s("devActivity")
+	out.DevSummaryFieldID = s("devSummaryFieldId")
+	out.DevFieldChecked, _ = m["devSummaryFieldChecked"].(bool)
 	if v := s("fieldsFetchedAt"); v != "" {
 		out.FieldsFetchedAt, _ = time.Parse(time.RFC3339Nano, v)
 	}
@@ -251,6 +263,10 @@ func metaToMap(m Meta) map[string]any {
 	set("rankFieldId", m.RankFieldID)
 	set("flaggedFieldId", m.FlaggedFieldID)
 	set("devActivity", m.DevActivity)
+	set("devSummaryFieldId", m.DevSummaryFieldID)
+	if m.DevFieldChecked {
+		out["devSummaryFieldChecked"] = true
+	}
 	if !m.FieldsFetchedAt.IsZero() {
 		out["fieldsFetchedAt"] = m.FieldsFetchedAt.UTC().Format(time.RFC3339Nano)
 	}

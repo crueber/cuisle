@@ -27,6 +27,12 @@ const (
 	SprintFieldID  = "customfield_10020"
 	RankFieldID    = "customfield_10019"
 	FlaggedFieldID = "customfield_10021"
+	// DevSummaryFieldID is the Development summary custom field (schema custom type ending ":devsummarycf"). Its value
+	// in search results is derived from the same data as the dev-status summary endpoint (see devSummaryParts).
+	DevSummaryFieldID = "customfield_10000"
+	// StaleDevKey is the one fixture issue whose Development field is served with isStale=true (the adapter must fall
+	// back to the dev-status summary for it). Clear DSIssue.DevStale through Mutate to make every issue fresh.
+	StaleDevKey = "MOB-1421"
 )
 
 // ── Fixture file shape (all days relative to "today": 0 = today, -1 = yesterday) ──
@@ -147,6 +153,7 @@ type DSType struct {
 }
 
 type DSIssue struct {
+	DevStale   bool   // serve the Development field with "isStale":true (set at load for StaleDevKey)
 	ID         string // numeric string, e.g. "10390"
 	Key        string
 	ProjectKey string
@@ -212,14 +219,15 @@ type FailStatus struct {
 }
 
 type Options struct {
-	Now       time.Time      // zero = time.Now(); fixture days are relative to Now's local date
-	Loc       *time.Location // nil = time.Local
-	Latency   time.Duration
-	Throttle  *Throttle
-	Fail      []FailStatus
-	DevStatus string // "ok" (default) | "404" | "403" | "garbage"
-	PageSize  int    // 0 = honour maxResults; >0 caps every page (forces paging)
-	Addr      string // listen address; "" = 127.0.0.1:0 (random port). If it is taken, a random port is used.
+	Now        time.Time      // zero = time.Now(); fixture days are relative to Now's local date
+	Loc        *time.Location // nil = time.Local
+	Latency    time.Duration
+	Throttle   *Throttle
+	Fail       []FailStatus
+	DevStatus  string // "ok" (default) | "404" | "403" | "garbage"
+	NoDevField bool   // the site has no Development summary field: absent from /field and from issues
+	PageSize   int    // 0 = honour maxResults; >0 caps every page (forces paging)
+	Addr       string // listen address; "" = 127.0.0.1:0 (random port). If it is taken, a random port is used.
 	// F12 faults (jira-sync §6). Handlers: WP-T6.
 	RefreshFails   bool // GET /issue/{id} answers 500 after a successful write to that issue (the refresh_failed path)
 	StaleChangelog bool // a write applies, but changelog/bulkfetch omits its entry until the next Mutate

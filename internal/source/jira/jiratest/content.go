@@ -193,6 +193,9 @@ func (s *Server) allFields(is *DSIssue) map[string]any {
 		"subtasks":       s.subtasksJSON(ov),
 		"watches":        map[string]any{"self": "x", "watchCount": 0, "isWatching": false},
 	}
+	if !s.opts.NoDevField {
+		f[DevSummaryFieldID] = devSummaryFieldValue(is)
+	}
 	for k, raw := range ov.Fields {
 		f[k] = raw
 	}

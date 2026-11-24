@@ -105,6 +105,11 @@ func Materialize(fx *Fixture, now time.Time, loc *time.Location) *Dataset {
 		seen[b.Key] = true
 		ds.Issues = append(ds.Issues, m.backlogIssue(b, len(ds.Issues), projectOf[b.Board], firstStatus[b.Board]))
 	}
+	for _, is := range ds.Issues {
+		if is.Key == StaleDevKey {
+			is.DevStale = true
+		}
+	}
 	return ds
 }
 

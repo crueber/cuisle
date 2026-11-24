@@ -129,18 +129,17 @@ describe("opening a ticket", () => {
     expect(dialog().getAttribute("aria-modal")).toBe("true");
     expect(screen.getByText("MOB-1421")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Unit toggle between metric and US cups" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /MOB-1200/ })).toBeTruthy();
-    expect(screen.getByText("7 / 20")).toBeTruthy();
+    expect((document.querySelector(".th") as HTMLElement).textContent).not.toContain("MOB-1200"); // no parent crumb in the header
+    expect(screen.queryByText("7 / 20")).toBeNull(); // no stepper counter
     expect(screen.getByRole("button", { name: /refresh/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /open in jira/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Close" })).toBeTruthy();
-    expect(screen.getByText(/as of \d{1,2}:\d{2} · synced/)).toBeTruthy();
+    expect(screen.getByText(/^\u26A1\uFE0E\d{1,2}:\d{2}$/)).toBeTruthy();
   });
 
-  it("opensAnotherTicketWithItsOwnPosition", async () => {
+  it("opensAnotherTicket", async () => {
     await mount({ issueId: 109 });
     expect(screen.getByText("MOB-1429")).toBeTruthy();
-    expect(screen.getByText("9 / 20")).toBeTruthy();
     expect(screen.getByTestId("content").getAttribute("data-key")).toBe("MOB-1429");
   });
 
@@ -168,23 +167,16 @@ describe("opening a ticket", () => {
 });
 
 describe("header actions", () => {
-  it("stepperButtonsCallOnStepWithTheNeighbours", async () => {
+  it("hasNoStepperButtons_SteppingIsKeyboardOnly", async () => {
     const { p } = await mount();
-    fireEvent.click(screen.getByRole("button", { name: "Next ticket" }));
+    expect(screen.queryByRole("button", { name: "Next ticket" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Previous ticket" })).toBeNull();
+    fireEvent.keyDown(dialog(), { key: "j" });
     expect(p.onStep).toHaveBeenLastCalledWith(108);
-    fireEvent.click(screen.getByRole("button", { name: "Previous ticket" }));
+    fireEvent.keyDown(dialog(), { key: "k" });
     expect(p.onStep).toHaveBeenLastCalledWith(106);
     expect(p.onStep).toHaveBeenCalledTimes(2);
-  });
-
-  it("stopsTheStepperAtTheEnds", async () => {
-    const first = await mount({ issueId: 101 });
-    expect((screen.getByRole("button", { name: "Previous ticket" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Next ticket" }) as HTMLButtonElement).disabled).toBe(false);
-    first.unmount();
-    await mount({ issueId: 120 });
-    expect(screen.getByText("20 / 20")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Next ticket" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("step")).toBeTruthy(); // the footer hint keeps J/K discoverable
   });
 
   it("closeAndOpenInJiraWork", async () => {
@@ -195,32 +187,6 @@ describe("header actions", () => {
     expect(openIssue).toHaveBeenCalledWith("MOB-1421");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(p.onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("theParentCrumbOpensTheParentInTheModalWhenItIsSyncedElseTheBrowser", async () => {
-    // MOB-1200 (issueId 900) is a synced issue in the fixtures: it opens as a linked ticket (back stack).
-    const { p } = await mount();
-    fireEvent.click(screen.getByRole("button", { name: /MOB-1200/ }));
-    expect(p.onOpenLinked).toHaveBeenCalledTimes(1);
-    expect(p.onOpenLinked).toHaveBeenCalledWith(900);
-  });
-});
-
-describe("the parent crumb for a parent that is not synced", () => {
-  it("opensTheParentInTheBrowserInsteadOfTheModal", async () => {
-    mock = createMockApi({ handBuiltTickets: true });
-    const detail = clone(await mock.ticket.get(1, 107));
-    detail.parent = { issueId: 0, key: "MOB-1200", summary: "Recipe units v2", typeKind: "epic" };
-    vi.spyOn(mock.ticket, "get").mockResolvedValue(detail);
-    const openIssue = vi.spyOn(mock.app, "openIssue");
-    setApi(mock);
-    setEventBus(mock.bus);
-    const onOpenLinked = vi.fn();
-    render(<TicketModal standupId={1} issueId={107} steps={STEPS} stack={[]} vw={1920} vh={1080} onStep={vi.fn()} onOpenLinked={onOpenLinked} onBack={vi.fn()} onClose={vi.fn()} />);
-    fireEvent.click(await screen.findByRole("button", { name: /MOB-1200/ }));
-    expect(openIssue).toHaveBeenCalledTimes(1);
-    expect(openIssue).toHaveBeenCalledWith("MOB-1200");
-    expect(onOpenLinked).not.toHaveBeenCalled();
   });
 });
 
@@ -367,15 +333,13 @@ describe("end to end with the session state: stepping, links, back, close", () =
   }
   const key = () => screen.getByTestId("content").getAttribute("data-key");
 
-  it("stepsWithTheStepperAndTheKeys_SwappingTheContent", async () => {
+  it("stepsWithTheKeys_SwappingTheContent", async () => {
     await start();
     expect(key()).toBe("MOB-1421");
-    fireEvent.click(screen.getByRole("button", { name: "Next ticket" }));
+    fireEvent.keyDown(dialogByKey("MOB-1421"), { key: "j" });
     await waitFor(() => expect(key()).toBe("MOB-1428"));
-    expect(screen.getByText("8 / 20")).toBeTruthy();
     fireEvent.keyDown(dialogByKey("MOB-1428"), { key: "k" });
     await waitFor(() => expect(key()).toBe("MOB-1421"));
-    expect(screen.getByText("7 / 20")).toBeTruthy();
   });
 
   it("opensALinkedIssueWithABackStack_BackspaceReturns_EscClosesTheModal", async () => {
@@ -395,3 +359,51 @@ describe("end to end with the session state: stepping, links, back, close", () =
 function dialogByKey(key: string): HTMLElement {
   return screen.getByRole("dialog", { name: new RegExp(key) });
 }
+
+describe("the rail's parent row", () => {
+  it("opensTheParentInTheModalWhenItIsSynced", async () => {
+    // MOB-1200 (issueId 900) is a synced issue in the fixtures: it opens as a linked ticket (back stack).
+    const { p } = await mount();
+    fireEvent.click(screen.getByRole("button", { name: /MOB-1200/ }));
+    expect(p.onOpenLinked).toHaveBeenCalledTimes(1);
+    expect(p.onOpenLinked).toHaveBeenCalledWith(900);
+  });
+
+  it("opensTheParentInTheBrowserWhenItIsNotSynced", async () => {
+    mock = createMockApi({ handBuiltTickets: true });
+    const detail = clone(await mock.ticket.get(1, 107));
+    detail.parent = { issueId: 0, key: "MOB-1200", summary: "Recipe units v2", typeKind: "epic" };
+    vi.spyOn(mock.ticket, "get").mockResolvedValue(detail);
+    const openIssue = vi.spyOn(mock.app, "openIssue");
+    setApi(mock);
+    setEventBus(mock.bus);
+    const onOpenLinked = vi.fn();
+    render(<TicketModal standupId={1} issueId={107} steps={STEPS} stack={[]} vw={1920} vh={1080} onStep={vi.fn()} onOpenLinked={onOpenLinked} onBack={vi.fn()} onClose={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /MOB-1200/ }));
+    expect(openIssue).toHaveBeenCalledTimes(1);
+    expect(openIssue).toHaveBeenCalledWith("MOB-1200");
+    expect(onOpenLinked).not.toHaveBeenCalled();
+  });
+});
+
+describe("the mask", () => {
+  it("aClickOnTheMaskClosesTheModal_AClickInsideDoesNot", async () => {
+    const { p } = await mount();
+    const scrim = document.querySelector(".tm-scrim") as HTMLElement;
+    const dlg = screen.getByRole("dialog");
+    fireEvent.mouseDown(dlg);
+    fireEvent.click(dlg);
+    expect(p.onClose).not.toHaveBeenCalled();
+    fireEvent.mouseDown(scrim);
+    fireEvent.click(scrim);
+    expect(p.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("aDragThatStartsInsideAndEndsOnTheMaskDoesNotClose", async () => {
+    const { p } = await mount();
+    const scrim = document.querySelector(".tm-scrim") as HTMLElement;
+    fireEvent.mouseDown(screen.getByRole("dialog"));
+    fireEvent.click(scrim); // a text selection released over the mask
+    expect(p.onClose).not.toHaveBeenCalled();
+  });
+});

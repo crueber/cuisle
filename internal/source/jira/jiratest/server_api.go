@@ -35,6 +35,11 @@ func (s *Server) handleField(w http.ResponseWriter, r *http.Request) {
 		{"id": FlaggedFieldID, "key": FlaggedFieldID, "name": "Flagged", "custom": true, "orderable": false,
 			"schema": map[string]any{"type": "array", "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes"}},
 	}
+	if !s.opts.NoDevField {
+		builtin = append(builtin, map[string]any{"id": DevSummaryFieldID, "key": DevSummaryFieldID, "name": "Development",
+			"custom": true, "orderable": false, "searchable": true,
+			"schema": map[string]any{"type": "any", "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:devsummarycf"}})
+	}
 	out := make([]any, 0, len(builtin)+len(overlay.FieldDefs))
 	served := map[string]bool{}
 	for _, f := range builtin {
@@ -295,21 +300,10 @@ func (s *Server) devFault(w http.ResponseWriter) bool {
 	return true
 }
 
-type devCount struct {
-	Count int    `json:"count"`
-	Name  string `json:"name"`
-}
-
-func (s *Server) handleDevSummary(w http.ResponseWriter, r *http.Request) {
-	if s.devFault(w) {
-		return
-	}
-	is := s.issueByRef(r.URL.Query().Get("issueId"))
-	if is == nil {
-		writeError(w, http.StatusNotFound, "Issue does not exist or you do not have permission to see it.")
-		return
-	}
-	repo := map[string]any{"overall": map[string]any{"count": len(is.Commits)}, "byInstanceType": map[string]any{}}
+// devSummaryParts is the repository and pullrequest summary of one issue: the dev-status summary endpoint serves it and
+// the Development summary field embeds it, so the two always agree (and so do their fingerprints).
+func devSummaryParts(is *DSIssue) (repo, pr map[string]any) {
+	repo = map[string]any{"overall": map[string]any{"count": len(is.Commits)}, "byInstanceType": map[string]any{}}
 	if len(is.Commits) > 0 {
 		var last time.Time
 		for _, c := range is.Commits {
@@ -320,7 +314,7 @@ func (s *Server) handleDevSummary(w http.ResponseWriter, r *http.Request) {
 		repo["overall"] = map[string]any{"count": len(is.Commits), "lastUpdated": jiraTime(last)}
 		repo["byInstanceType"] = map[string]any{"GitHub": devCount{Count: len(is.Commits), Name: "GitHub"}}
 	}
-	pr := map[string]any{"overall": map[string]any{"count": len(is.PRs), "stateCount": 0}, "byInstanceType": map[string]any{}}
+	pr = map[string]any{"overall": map[string]any{"count": len(is.PRs), "stateCount": 0}, "byInstanceType": map[string]any{}}
 	if len(is.PRs) > 0 {
 		latest := is.PRs[0]
 		for _, p := range is.PRs[1:] {
@@ -339,6 +333,38 @@ func (s *Server) handleDevSummary(w http.ResponseWriter, r *http.Request) {
 		}
 		pr["byInstanceType"] = map[string]any{"GitHub": devCount{Count: len(is.PRs), Name: "GitHub"}}
 	}
+	return repo, pr
+}
+
+// devSummaryFieldValue is the Development field as search returns it: a string embedding JSON. An issue with no
+// development information at all is "{}".
+func devSummaryFieldValue(is *DSIssue) string {
+	if len(is.Commits) == 0 && len(is.PRs) == 0 {
+		return "{}"
+	}
+	repo, pr := devSummaryParts(is)
+	cached, _ := json.Marshal(map[string]any{
+		"cachedValue": map[string]any{"errors": []any{}, "summary": map[string]any{"pullrequest": pr, "repository": repo}},
+		"isStale":     is.DevStale,
+	})
+	return "{pullrequest={dataType=pullrequest}, repository={dataType=repository}, json=" + string(cached) + "}"
+}
+
+type devCount struct {
+	Count int    `json:"count"`
+	Name  string `json:"name"`
+}
+
+func (s *Server) handleDevSummary(w http.ResponseWriter, r *http.Request) {
+	if s.devFault(w) {
+		return
+	}
+	is := s.issueByRef(r.URL.Query().Get("issueId"))
+	if is == nil {
+		writeError(w, http.StatusNotFound, "Issue does not exist or you do not have permission to see it.")
+		return
+	}
+	repo, pr := devSummaryParts(is)
 	writeJSON(w, http.StatusOK, map[string]any{"summary": map[string]any{"repository": repo, "pullrequest": pr}})
 }
 

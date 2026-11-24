@@ -7,10 +7,18 @@ package sync
 //   - a full sync: all requests except /rest/dev-status/** ≤ 250; dev-status summaries ≤ one per active dev target;
 //     dev-status details ≤ 2 per target whose fingerprint changed (on a first sync every target is new);
 //   - an incremental sync with 3 changed issues: non-dev requests ≤ 50; dev summaries ≤ one per active dev target;
-//     no detail request at all, because no dev fingerprint changed.
+//     no detail request at all, because no dev fingerprint changed;
+//   - an incremental sync with nothing changed: ≤ 8 requests in total (jira-sync §2.11, §3.1).
 //
-// Measured v1 baseline (before the limiter): full 159 = 30 non-dev + 44 summary + 85 detail; incremental 38 = 9 non-dev
-// + 29 summary. The limiter must not add requests, and the F12 content phases (T4/T6) must stay inside these caps.
+// Since 2026-11-24 the dev fingerprint comes from the Development summary field in the scan response, so a summary
+// request is only left for a target whose field is stale or absent (the fake serves exactly one stale issue,
+// jiratest.StaleDevKey) and detail is requested directly, without a summary, for a changed fingerprint.
+//
+// Measured before that change (fake fixture board, 55 issues): full 208 = 79 non-dev + 44 summary + 85 detail;
+// incremental-3 40 = 11 non-dev + 29 summary; no change 35 = 6 non-dev + 29 summary.
+// Measured after: full 165 = 79 + 1 + 85; incremental-3 12 = 11 + 1; no change 7 = 6 + 1 (the stale target's summary;
+// 6 when no field is stale).
+// The limiter must not add requests, and the F12 content phases (T4/T6) must stay inside these caps.
 
 import (
 	"net/http"
@@ -31,6 +39,7 @@ const (
 	budgetFullNonDev        = 250
 	budgetIncrementalNonDev = 50
 	budgetChangedIssues     = 3
+	budgetNoChangeTotal     = 8
 )
 
 func TestRequestBudget_FullAndIncrementalSyncOnTheFixtureBoard(t *testing.T) {
@@ -53,6 +62,9 @@ func TestRequestBudget_FullAndIncrementalSyncOnTheFixtureBoard(t *testing.T) {
 		len(reqs), nonDev, summaries, details, len(targets))
 	if nonDev > budgetFullNonDev {
 		t.Errorf("full sync issue/content requests = %d, budget %d", nonDev, budgetFullNonDev)
+	}
+	if summaries > len(e.staleDevIDs(targets)) {
+		t.Errorf("full sync dev-status summaries = %d, want only the stale-field targets (%d)", summaries, len(e.staleDevIDs(targets)))
 	}
 	if summaries > len(targets) {
 		t.Errorf("full sync dev-status summaries = %d, want at most one per dev target (%d)", summaries, len(targets))
@@ -97,11 +109,37 @@ func TestRequestBudget_FullAndIncrementalSyncOnTheFixtureBoard(t *testing.T) {
 	if int(r.Requests) != len(reqs) {
 		t.Errorf("sync_run.requests = %d, fake logged %d", r.Requests, len(reqs))
 	}
+
+	// ---- incremental sync with nothing changed ---------------------------------------------------------------
+	targets = e.devTargets(e.sid, false)
+	e.srv.ResetRequests()
+	r = e.mustOK(e.sync(ModeIncremental))
+	if r.Mode != ModeIncremental || r.Hydrated != 0 {
+		t.Fatalf("no-change run: mode %q, hydrated %d, want incremental and 0", r.Mode, r.Hydrated)
+	}
+	reqs = e.requests()
+	stale := e.staleDevIDs(targets)
+	t.Logf("incremental sync (no change): %d requests = %d non-dev + %d summary + %d detail (%d dev targets, %d stale fields)",
+		len(reqs), len(reqs)-countPath(reqs, isDevStatus), countPath(reqs, isSummary), countPath(reqs, isDetail), len(targets), len(stale))
+	if len(reqs) > budgetNoChangeTotal {
+		t.Errorf("no-change incremental sync = %d requests, budget %d", len(reqs), budgetNoChangeTotal)
+	}
+	if got := countPath(reqs, isSummary); got != len(stale) {
+		t.Errorf("no-change incremental dev summaries = %d, want %d (only the stale-field targets)", got, len(stale))
+	}
+	if got := countPath(reqs, isDetail); got != 0 {
+		t.Errorf("no-change incremental dev details = %d, want 0", got)
+	}
+	checkDevPerTarget(t, "no-change sync", reqs, targets, false)
+	if int(r.Requests) != len(reqs) {
+		t.Errorf("sync_run.requests = %d, fake logged %d", r.Requests, len(reqs))
+	}
 }
 
 // checkDevPerTarget counts dev-status requests per issue id (the issueId query parameter) and asserts the per-target
 // budgets of jira-sync §3.1: at most 1 summary per active dev target, and at most 2 details for a target whose
 // fingerprint changed (every target on a first sync, none otherwise), and no request for an issue that is not a target.
+// A detail may come without a summary: the fingerprint of a target whose Development field is usable came with the scan.
 func checkDevPerTarget(t *testing.T, label string, reqs []jiratest.Request, targets []string, anyChanged bool) {
 	t.Helper()
 	isTarget := map[string]bool{}
@@ -142,9 +180,6 @@ func checkDevPerTarget(t *testing.T, label string, reqs []jiratest.Request, targ
 			t.Errorf("%s: %d dev details for target %s although no fingerprint changed", label, n, id)
 		} else if n > 2 {
 			t.Errorf("%s: %d dev details for target %s, want at most 2", label, n, id)
-		}
-		if summaries[id] == 0 {
-			t.Errorf("%s: dev detail for %s without a summary: details are only for a changed fingerprint", label, id)
 		}
 	}
 }

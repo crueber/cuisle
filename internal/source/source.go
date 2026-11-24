@@ -118,6 +118,10 @@ type Query struct {
 type ScanItem struct {
 	SourceID, Key string
 	UpdatedAt     time.Time
+	// DevFingerprint is an opaque digest of the issue's development activity (commits, pull requests) when the Scan
+	// response carried it for free. "" = unknown (fall back to DevActivity's own probe). The core only compares it with
+	// the fingerprint it stored from a previous DevActivity result, and skips the call when they are equal.
+	DevFingerprint string
 }
 
 type ScanResult struct {

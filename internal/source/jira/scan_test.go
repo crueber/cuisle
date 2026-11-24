@@ -157,10 +157,11 @@ func wp19Testdata(t *testing.T, name string) string {
 
 func wp19Meta() map[string]any {
 	return map[string]any{
-		"sprintFieldId":   "customfield_10020",
-		"rankFieldId":     "customfield_10019",
-		"flaggedFieldId":  "customfield_10021",
-		"fieldsFetchedAt": wp19Now.Format(time.RFC3339Nano),
+		"sprintFieldId":          "customfield_10020",
+		"rankFieldId":            "customfield_10019",
+		"flaggedFieldId":         "customfield_10021",
+		"fieldsFetchedAt":        wp19Now.Format(time.RFC3339Nano),
+		"devSummaryFieldChecked": true,
 	}
 }
 

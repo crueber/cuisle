@@ -245,8 +245,11 @@ func TestRun_IncrementalNoChange_MakesOnlyBudgetedRequestsAndHydratesNothing(t *
 			if n := countPath(reqs, isCount); n != 1 {
 				t.Errorf("approximate-count = %d, want 1", n)
 			}
-			if n := countPath(reqs, isSummary); n != len(targets) {
-				t.Errorf("dev summary requests = %d, want one per dev target (%d: %v)", n, len(targets), targets)
+			// Dev fingerprints ride along with the scan (jira-sync §2.11): only a target whose Development field is
+			// stale or absent still costs a summary request.
+			stale := e.staleDevIDs(targets)
+			if n := countPath(reqs, isSummary); n != len(stale) {
+				t.Errorf("dev summary requests = %d, want one per dev target without a usable scan fingerprint (%d: %v)", n, len(stale), stale)
 			}
 			for name, pred := range map[string]func(string) bool{
 				"/field": isField, "/status": isStatus, "changelog/bulkfetch": isBulk, "dev detail": isDetail,
@@ -257,9 +260,9 @@ func TestRun_IncrementalNoChange_MakesOnlyBudgetedRequestsAndHydratesNothing(t *
 				}
 			}
 			searches := countPath(reqs, isSearch)
-			want := 1 + 1 + 1 + searches + 1 + len(targets)
+			want := 1 + 1 + 1 + searches + 1 + len(stale)
 			if len(reqs) != want {
-				t.Errorf("total requests = %d, want %d (1 myself + config + sprints + %d scans + count + %d dev)", len(reqs), want, searches, len(targets))
+				t.Errorf("total requests = %d, want %d (1 myself + config + sprints + %d scans + count + %d stale-field summaries)", len(reqs), want, searches, len(stale))
 			}
 			if int(r.Requests) != len(reqs) {
 				t.Errorf("sync_run.requests = %d, fake logged %d", r.Requests, len(reqs))
@@ -802,8 +805,10 @@ func TestRun_DevStatus404_RunOKWithWarningAndNoDevRows(t *testing.T) {
 	if e.qIsNull(`SELECT dev_activity_checked_at FROM connection WHERE id = ?`, e.connID) {
 		t.Errorf("connection.dev_activity_checked_at not set")
 	}
-	if n := countPath(e.requests(), isSummary); n < 1 || n > 4 {
-		t.Errorf("dev summary requests = %d, want 1..4: the first call probes, the rest of the phase is skipped (4 in flight at most)", n)
+	// The scan carries fingerprints, so the first dev-status request is a detail call (or a summary for a stale field);
+	// whichever it is, it probes and the rest of the phase is skipped (4 in flight at most).
+	if n := countPath(e.requests(), isDevStatus); n < 1 || n > 4 {
+		t.Errorf("dev-status requests = %d, want 1..4: the first call probes, the rest of the phase is skipped (4 in flight at most)", n)
 	}
 	if n := e.count("standup_issue", "standup_id = ?", e.sid); n != 10 {
 		t.Errorf("members = %d, want 10: everything else is applied", n)
@@ -844,6 +849,7 @@ func TestRun_DevActivityFailsForOneIssue_StatusPartialAndRowsKept(t *testing.T) 
 	svc1 := e.qStr(`SELECT source_id FROM issue WHERE key = 'MOB-1'`)
 	svc2commits := e.count("dev_commit", "issue_id = ?", e.issueID("MOB-2"))
 	e.failDev(svc1, apperr.New(apperr.SourceHTTP, "dev status failed"))
+	e.addCommit("MOB-1") // its fingerprint changes, so the dev phase has to ask Jira (an unchanged one is skipped)
 	revBefore := e.rev(e.sid)
 	e.em.reset()
 
@@ -1123,6 +1129,7 @@ func TestAfterSync_CalledForPartialButNotForFailedOrCancelled(t *testing.T) {
 
 	// partial
 	e.failDev(e.qStr(`SELECT source_id FROM issue WHERE key = 'MOB-1'`), apperr.New(apperr.SourceHTTP, "dev status failed"))
+	e.addCommit("MOB-1")
 	idPartial := e.sync(ModeIncremental)
 	if r := e.run(idPartial); r.Status != StatusPartial {
 		t.Fatalf("status = %q, want partial", r.Status)

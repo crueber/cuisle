@@ -182,7 +182,7 @@ Also cover:
   + test) and that links never navigate the webview.
 - `contrast.ts`: sampled textColor values reach ≥ 4.5:1 on both themes' backgrounds while keeping hue.
 - **Stepping order:** `J`/`K` (and `→`/`←`) follow the person view's walk order then Done, and the board's lane order,
-  Done, backlog; stop at both ends; never change the speaker; stepper shows `n / total`.
+  Done, backlog; stop at both ends; never change the speaker; keyboard only, no header stepper.
 - **Esc unwinding:** combobox or lightbox → composer blur (draft kept) → modal; focus returns to the opening row.
 - Inline-card back stack: open synced card → `Backspace` returns; non-synced card opens the browser.
 - Optimistic write state machine: apply → success replaces, failure reverts both the modal and the row behind it and
@@ -249,5 +249,7 @@ Also cover:
 - **Request budgets** (jira-sync §3.1; jiratest request log; a CI gate):
   - Issue and content traffic (all but dev-status): a full fixture sync uses ≤ 250 requests, and an incremental sync
     with 3 changes ≤ 50.
-  - Dev-status: ≤ 1 summary per active dev target per sync, and details only for targets whose fingerprint changed
-    (≤ 2 each).
+  - Dev-status: ≤ 1 summary per active dev target per sync (only for a target whose scan fingerprint is unknown), and
+    details only for targets whose fingerprint changed (≤ 2 each, no summary before them).
+  - An incremental sync with nothing changed: ≤ 8 requests in total (6 plus the one deliberately stale Development
+    field of the fake); with no stale field, zero dev-status requests.

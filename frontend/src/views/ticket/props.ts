@@ -36,7 +36,7 @@ export interface TicketModalProps {
   stack: number[];
   vw: number; // unscaled CSS px
   vh: number;
-  onStep: (issueId: number) => void; // J/K, ←/→, stepper: replaces the open ticket, keeps the stack empty
+  onStep: (issueId: number) => void; // J/K, ←/→ (keyboard only, no header stepper): replaces the open ticket, keeps the stack empty
   onOpenLinked: (issueId: number) => void; // inline card / issue row to a synced issue: pushes onto the stack
   onBack: () => void; // Backspace / "← KEY"
   onClose: () => void; // Esc (last layer) / ✕ — focus returns to the opening row
@@ -54,15 +54,11 @@ export interface RefreshState {
 export interface TicketHeaderProps {
   detail: TicketDetail;
   geometry: ModalGeometry;
-  position: { index: number; total: number }; // stepper "7 / 20" (1-based index)
   backKey: string; // key of the previous ticket in the stack ("" = none)
   refresh: RefreshState;
-  onPrev: () => void;
-  onNext: () => void;
   onBack: () => void;
   onRefresh: () => void;
   onOpenInJira: () => void;
-  onOpenParent: () => void; // parent synced → modal, else browser
   onCopyKey: () => void;
   onClose: () => void;
 }
@@ -92,6 +88,8 @@ export interface FieldRailProps {
   onFlag: (flagged: boolean) => void;
   onRetry: (field: EditField) => void;
   onOpenUrl: (url: string) => void;
+  /** Opens the parent row's issue (in the modal when it is synced, else in Jira). Absent = the row is plain text. */
+  onOpenParent?: () => void;
 }
 
 export interface StatusComboProps {

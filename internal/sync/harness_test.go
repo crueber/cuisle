@@ -637,6 +637,58 @@ func (e *env) openCalls() []openCall {
 	return append([]openCall(nil), e.opened...)
 }
 
+// addCommit gives an issue a new commit in Jira: its dev summary (and so its dev fingerprint) changes while its
+// `updated` does not, as in real Jira.
+func (e *env) addCommit(key string) {
+	e.t.Helper()
+	found := false
+	e.srv.Mutate(func(ds *jiratest.Dataset) {
+		for _, is := range ds.Issues {
+			if is.Key == key {
+				found = true
+				repo := "mobile-app"
+				if len(is.Commits) > 0 {
+					repo = is.Commits[0].Repo
+				}
+				is.Commits = append(is.Commits, jiratest.DSCommit{
+					SHA: "added-" + key + "-" + strconv.Itoa(len(is.Commits)), Repo: repo, At: e.clock.Now().Add(time.Minute),
+				})
+			}
+		}
+	})
+	if !found {
+		e.t.Fatalf("test setup: no issue %s in the fake", key)
+	}
+}
+
+// setDevStale marks (or clears) the Development field of every issue as stale; stale fields force the summary fallback.
+func (e *env) setDevStale(stale bool) {
+	e.srv.Mutate(func(ds *jiratest.Dataset) {
+		for _, is := range ds.Issues {
+			is.DevStale = stale
+		}
+	})
+}
+
+// staleDevIDs returns the ids among ids whose Development field the fake serves as stale (they fall back to a summary).
+func (e *env) staleDevIDs(ids []string) []string {
+	stale := map[string]bool{}
+	e.srv.Mutate(func(ds *jiratest.Dataset) {
+		for _, is := range ds.Issues {
+			if is.DevStale {
+				stale[is.ID] = true
+			}
+		}
+	})
+	var out []string
+	for _, id := range ids {
+		if stale[id] {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
 func (e *env) failDev(sourceID string, err error) {
 	e.mu.Lock()
 	if err == nil {

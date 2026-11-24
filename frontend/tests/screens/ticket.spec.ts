@@ -72,3 +72,54 @@ test.describe("ticket edit states and lightbox, 1920x1080", () => {
     await expect(page).toHaveScreenshot("ticket-lightbox-1920x1080.png", SHOT);
   });
 });
+
+// Header geometry (ux-spec §14.3): the Monday labels never touch the pulse marks, the key never wraps, there is no
+// stepper, parent crumb or text "Open in Jira" label. These measure the real layout, which jsdom cannot.
+for (const { w, h } of SIZES) {
+  test.describe(`ticket header geometry ${w}x${h}`, () => {
+    test.use({ viewport: { width: w, height: h } });
+
+    for (const [key, now] of [
+      ["MOB-1421", NOW_1421],
+      ["MOB-1429", NOW_1429],
+    ] as const) {
+      test(`${key}: labels clear the marks, key on one line, no stepper or crumb`, async ({ page }) => {
+        await seed(page, now);
+        await stubMedia(page);
+        await openApp(page);
+        await openTicket(page, key);
+        const dialog = page.getByRole("dialog", { name: `Ticket ${key}` });
+        const head = dialog.locator(".th");
+        await expect(head).toBeVisible();
+
+        const m = await head.evaluate((el) => {
+          const box = (e: Element) => {
+            const r = e.getBoundingClientRect();
+            return { l: r.left, r: r.right, t: r.top, b: r.bottom };
+          };
+          const keyEl = el.querySelector(".th-key") as HTMLElement;
+          return {
+            labels: Array.from(el.querySelectorAll(".th-monday")).map(box),
+            marks: Array.from(el.querySelectorAll(".pulse-mark")).map(box),
+            keyH: keyEl.getBoundingClientRect().height,
+            keyFont: parseFloat(getComputedStyle(keyEl).fontSize),
+            text: (el.textContent ?? "").replace(/\s+/g, " "),
+          };
+        });
+        const short = h < 800;
+        if (!short) expect(m.labels.length).toBeGreaterThan(0);
+        for (const l of m.labels) {
+          for (const k of m.marks) {
+            const hit = l.l < k.r && k.l < l.r && l.t < k.b && k.t < l.b;
+            expect(hit, `label ${JSON.stringify(l)} overlaps mark ${JSON.stringify(k)}`).toBe(false);
+          }
+        }
+        expect(m.keyH).toBeLessThan(m.keyFont * 1.8); // one line
+        expect(m.text).not.toMatch(/\d+ \/ \d+/);
+        expect(m.text).not.toMatch(/in .*MOB-1200/);
+        await expect(dialog.getByRole("button", { name: "Previous ticket" })).toHaveCount(0);
+        await expect(dialog.getByRole("button", { name: "Open in Jira" })).toHaveText("");
+      });
+    }
+  });
+}

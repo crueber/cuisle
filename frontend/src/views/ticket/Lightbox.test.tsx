@@ -213,6 +213,14 @@ describe("open file and close", () => {
     expect(p.onClose).toHaveBeenCalledTimes(2);
   });
 
+  it("aClickOnTheDarkAreaAroundTheImageCloses_AClickOnTheImageDoesNot", () => {
+    const { p } = renderBox();
+    fireEvent.click(screen.getByRole("img"));
+    expect(p.onClose).not.toHaveBeenCalled();
+    fireEvent.click(document.querySelector(".lb-stage") as HTMLElement);
+    expect(p.onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("stopsListeningToKeysAfterItUnmounts", () => {
     const { p, unmount } = renderBox();
     keyDown("Escape");

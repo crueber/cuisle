@@ -393,7 +393,9 @@ This is the only layout. A side sheet and a three-column variant were explored a
 - **Step:** `J`/`K` and `→`/`←` step through the tickets in the current view's order without closing the modal.
   - Person view: walk order, then Done.
   - Whole board: lane order, then Done, then backlog.
-  - Stepping never changes speaker, and it stops at the ends. The header stepper shows `7 / 20`.
+  - Stepping never changes speaker, and it stops at the ends.
+  - Stepping is keyboard only: the header has no stepper buttons and no `7 / 20` counter (Chris, 2026-11-24). The footer
+    hint (`J K step`) keeps it discoverable.
 - **Inline cards:** an inline card or link to another synced issue opens that issue in the modal with a back stack
   ("← MOB-1421", `Backspace`). Any other link opens the browser.
 - **Esc unwinds one layer at a time:** combobox or lightbox, then composer blur (the draft is kept), then the modal.
@@ -401,8 +403,8 @@ This is the only layout. A side sheet and a three-column variant were explored a
 - **Edits update the screen behind the modal live:** the row's lane, pulse and blocked tag change at once.
 
 ### 14.2 Geometry
-A centred modal with `--color-bg`, a 3px `--color-rule` border and radius 4. There is no shadow or blur. The scrim is
-`--color-scrim` (light `rgba(22,24,29,.55)`, dark `rgba(0,0,0,.65)`).
+A centred modal with `--color-bg`, a 1px `--color-rule-mid` border (a heavy frame drew the eye; changed 2026-11-24) and radius 4. There is no shadow or blur. The scrim is
+`--color-scrim` (light `rgba(22,24,29,.55)`, dark `rgba(0,0,0,.65)`). A click on the scrim (pressed and released there) closes the modal, like Esc; a dragged text selection released over it does not.
 
 | Window | Modal | Content column | Field rail | Body text | Header |
 |---|---|---|---|---|---|
@@ -421,16 +423,25 @@ A centred modal with `--color-bg`, a 3px `--color-rule` border and radius 4. The
   the header, and the remaining fields become the first section of the content column.
 - **Scrolling:** the header is sticky, and the content column and rail scroll independently.
 
-### 14.3 Header (3px ink rule below)
-1. **Row 1, 52px (44 short).**
-   - Left: type icon 22, key mono 22 bold (click copies the key), then `in ⚡ MOB-1200 Recipe units v2` (mono 13 muted;
-     parent name dropped below 1280).
-   - Right: `as of 9:41 · synced` (mono 13 muted), a stepper `‹ 7 / 20 ›` (38px outlined buttons), **↻ Refresh**
-     (§14.12), Open in Jira, and ✕ (44px). Refresh and Open in Jira are icon-only below 1280.
+### 14.3 Header (an 8px gap, then a 1px `--color-rule-soft` rule below; the old 3px ink rule was too loud)
+1. **Row 1, 52px (44 short).** Quiet by design: nothing here may wrap, and nothing repeats the rail.
+   - Left: `← KEY` back button (only with a back stack), type icon 22, key mono 22 bold (click copies the key; never wraps,
+     `white-space: nowrap`). There is no parent crumb: the parent is a row of the field rail (§14.6), and clicking it opens the parent (in the modal when synced, else in Jira).
+   - Right: `⚡︎9:41` (U+26A1 + U+FE0E so it draws as a text glyph, then local `H:mm`, mono 13 muted) with a tooltip:
+     `Synced at 9:41 (this ticket's data is as of that sync)`. After a per-ticket refresh it reads `⚡︎9:58` with the tooltip
+     `Refreshed just this ticket at 9:58 · board synced 9:41`. Before any sync it reads `not synced yet`.
+     Failures and waits stay spelled out in the same slot (`Couldn't refresh · offline` in alert colour,
+     `waiting for Jira (rate limit) · 6s`, and `refreshing…` after 250 ms).
+   - Then **↻ Refresh** (§14.12; icon-only below 1280, tooltip `Refresh this ticket (R)`), an icon-only **Open in Jira**
+     button (a plain external-link glyph, not Atlassian's logo; accessible name `Open in Jira`, tooltip
+     `Open in Jira (O)`), and ✕ (44px).
 2. **Row 2:** summary 28/34 bold (22/28 short). It wraps to two lines and is never ellipsised.
-3. **Row 3, pulse strip, 40px (28 short).**
+3. **Row 3, pulse strip, 46px (28 short).**
    - Lane swatch and name (13 bold caps), then the 21-day track (600 / 440 / 440 / 300) with weekend shading.
-   - Monday labels in mono 11 sit above the track; there are no labels in short mode.
+   - Monday labels in mono 11 sit in their own 20px row above the track; there are no labels in short mode. The row is
+     taller than the text on purpose: a PR diamond overhangs the 26px track by about 6px, so labels and marks never
+     overlap (a Playwright test measures this at all four sizes). The person and board rows are unaffected: their rows are
+     at least 34px tall, so marks stay inside the track.
    - The days chip sits flush against the today line and is red past the limit. A `BLOCKED 3D` lozenge shows when
      flagged. On the right: `limit 5d · 21 days` (mono 12 muted).
    - Status is not repeated as a lozenge; the editable Status sits at the top of the rail.
@@ -546,7 +557,7 @@ A centred modal with `--color-bg`, a 3px `--color-rule` border and radius 4. The
   it ("Jira rejected the change: <reason>") with Retry.
 
 ### 14.7 Lightbox
-- **Background:** the scrim is `rgba(22,24,29,.92)`.
+- **Background:** the scrim is `rgba(22,24,29,.92)`. A click on it (not on the image) closes the lightbox.
 - **Top bar:** solid 64px `--color-fg`. It holds:
   - key, then filename (mono)
   - `412 KB · 1200×720 · Wren Kowalski · 18 Nov`
@@ -601,12 +612,12 @@ Jira · Esc close`. In short mode these hints live in the `?` popover.
 - There is no automatic deletion anywhere, and no prompt outside Disconnect.
 
 ### 14.12 Refresh this ticket
-- **Button:** ↻ **Refresh**, between the stepper and Open in Jira (38px outlined; icon-only below 1280; `R`). It
+- **Button:** ↻ **Refresh**, left of the icon-only Open in Jira button (38px outlined; icon-only below 1280; `R`). It
   re-fetches **only this issue**: fields, description, comments, attachments (new thumbnails), links, subtasks, and its
   changelog. Then it applies it with the one-issue apply (jira-sync §4.8), so status, assignee and flag changes are
   historised exactly as a sync would record them. Any cached transitions for the issue are dropped.
 - **While refreshing:** the icon spins and the meta text reads `refreshing…` after 250ms. The content does not reflow
-  until the result lands; then it swaps in one frame and the meta reads `refreshed 9:58 · just this ticket`.
+  until the result lands; then it swaps in one frame and the meta reads `⚡︎9:58` (tooltip `Refreshed just this ticket at 9:58 · board synced 9:41`).
 - **Live update behind the modal:** the row behind the modal, and any other standup containing the issue, update live
   (`ticket:updated`, `data:changed`).
 - **Cooldown:** 10 s per issue. The button is disabled with a mono countdown (`↻ 8s`) to protect the API (jira-sync

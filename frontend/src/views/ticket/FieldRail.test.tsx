@@ -129,6 +129,21 @@ describe("groups, labels and the Not set line", () => {
   });
 });
 
+describe("parent row", () => {
+  it("opensTheParentWhenClicked", () => {
+    const onOpenParent = vi.fn();
+    const { container } = renderRail({ onOpenParent });
+    const btn = within(row(container, "parent")).getByRole("button", { name: /MOB-1200/ });
+    fireEvent.click(btn);
+    expect(onOpenParent).toHaveBeenCalledTimes(1);
+  });
+
+  it("isPlainTextWithoutAHandler", () => {
+    const { container } = renderRail({ onOpenParent: undefined });
+    expect(within(row(container, "parent")).queryByRole("button")).toBeNull();
+  });
+});
+
 describe("value rendering by kind", () => {
   const CONTAINS: [string, string[]][] = [
     ["reporter", ["Reporter", "SM", "Silas Marchetti"]],

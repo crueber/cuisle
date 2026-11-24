@@ -20,3 +20,5 @@ hides commit/PR marks and their legend entries, records a warning, and never fai
 - Fidelity limits: commit lists may be truncated by Jira; PRs expose `lastUpdate` and status, not opened/merged times, so
   diamonds mean "PR activity that day" (risk R3).
 - Costs one request per dev target per sync (the dominant incremental cost); bounded by the 4-request concurrency limit.
+  Superseded in part on 2026-11-24: the dev fingerprint now comes from the Development summary field in the scan response
+  (jira-sync §2.11), so an unchanged target costs no request; the summary endpoint is only the fallback.

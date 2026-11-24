@@ -277,7 +277,7 @@ type PlanInput struct {
     ActiveSprints []model.Sprint; StatusLanes map[string]string /* status id → lane */; BacklogLimit int
 }
 type Query      struct { Name string /* "sprint"|"open"|"done"|"backlog" */; Role string /* "board"|"backlog" */; Limit int; Expr string /* provider query, opaque */; Count bool /* also fetch an approximate total */ }
-type ScanItem   struct { SourceID, Key string; UpdatedAt time.Time }
+type ScanItem   struct { SourceID, Key string; UpdatedAt time.Time; DevFingerprint string /* opaque; "" = unknown (jira-sync §2.11) */ }
 type ScanResult struct { Items []ScanItem; ApproxTotal int /* -1 unknown; used for the backlog count */ }
 
 type Factory func(conn model.Connection, secret string, opts Options) (Source, error)   // Options: HTTP client, logger, clock, UA, persisted meta
@@ -1085,7 +1085,7 @@ Reference hardware: 2020-class laptop (M1 / 4-core x64, SSD). Dataset "L": 5 sta
 | Memory: Go heap steady state | ≤ 40 MB | `runtime.ReadMemStats` in `--bench-startup` after loading 5 views | fail > 60 MB |
 | Memory: total RSS incl. webview, steady | ≤ 300 MB | manual per release (Activity Monitor/Task Manager) | release checklist |
 | Binary size (per arch, uncompressed) | ≤ 30 MB | `ls -l` in package job | warn |
-| Incremental sync, nothing changed, 300-issue standup | ≤ 5 s on broadband; ≤ 6 requests + 1 per dev target | integration test against `jiratest` counts requests | fail on request-count regression |
+| Incremental sync, nothing changed, 300-issue standup | ≤ 5 s on broadband; ≤ 6 requests + 1 per dev target whose Development field is unusable (jira-sync §2.11); total ≤ 8 on the fake board | integration test against `jiratest` counts requests | fail on request-count regression |
 | Full sync, 300 issues (records incl. descriptions, fields and all comments; images land afterwards in the media phase) | ≤ 60 s | manual against a real site | release checklist |
 
 Startup and interaction marks are also logged at `debug` in normal builds so regressions can be diagnosed from a user's log.

@@ -123,3 +123,27 @@ Remaining visual differences against `ticket-*.png`, for UAT:
 The data also differs from the mockups (Saffron golden vs hand-built). See also the F12 follow-ups above: dev branch and
 PR title, link assignee initials, and the hand-built `ticket_mob1421.json` still used by component tests (consider
 renaming it `*.handbuilt.json`).
+
+## GitHub builds green (v0.1.6, 2026-11-24)
+CI (Linux, macOS, Windows) and the desktop release both pass. The release has a universal .dmg, a Windows installer,
+an AppImage, a .deb and SHA256SUMS. What was fixed along the way (v0.1.2 to v0.1.6):
+- The Windows frontend build ran POSIX `node_modules/.bin` shims, so the Taskfile now calls node entry points.
+- NSIS isn't on GitHub's Windows image, so it is installed with choco, with retries (the feed returned 503 once).
+- macOS arm64 runners were capacity-starved, so the workflows use `macos-latest` with a 60 min timeout.
+- Linux packaged smoke: WebKitGTK 2.50 under Xvfb never showed the window. It now runs in its own D-Bus session with
+  `NO_AT_BRIDGE=1`, a 24-bit screen and software rendering. First view on the runner is about 1.5 s (software GL,
+  shared runner); the smoke checks start-up, not the 500 ms budget.
+- An axe contrast failure on the needs-screen Status rows is fixed.
+- Playwright perf is report-only on GitHub (Chris's decision); accessibility is a hard gate.
+- **For UAT:** check the AppImage on a real Ubuntu 22.04/24.04 desktop. The CI workaround suggests a WebKitGTK and
+  accessibility-bus sensitivity, which desktops with a session bus normally don't hit.
+- Tags v0.1.0 to v0.1.5 have incomplete or no release assets; v0.1.3, v0.1.4 and v0.1.6 have full releases.
+
+## Dev fingerprint from the scan (2026-11-24)
+The scan now reads the Development field (`:devsummarycf`) and skips dev-status calls for unchanged tickets.
+On the fake board: full sync 208 → 165 requests, incremental with 3 changes 40 → 12, no-change incremental 35 → 7.
+Reviewer: PASS. Follow-ups:
+- **UAT, real site:** check that the field and the summary endpoint give the same `lastUpdated` and `state` format (a mismatch costs one detail round per target, once). Check that the field is never `null`/`{}` for an issue that has commits or PRs: those are treated as no activity. Watch the dev-phase log line "N of M dev targets checked (K unchanged per the scan)" for how often `isStale` forces the fallback.
+- A failed `/field` discovery isn't remembered within a run, so parallel scans each retry it (`devfield.go`).
+- A full sync doesn't clear `DevFieldChecked`, so a site that adds the Development field later is only noticed after the field TTL (`contract.go`).
+- Test gaps: a failed detail call leaves `dev_fingerprint` unchanged and the next sync picks the change up; an "unavailable" state with a matching hint makes no I/O and doesn't flip to "ok".

@@ -61,15 +61,31 @@ type devDetail struct {
 	} `json:"detail"`
 }
 
-// DevActivity: dev-status summary, then detail per instance type only when the fingerprint changed (§2.11).
-// The first failure of the probe kind (401/403/404/non-JSON) sets devOff and returns source.ErrUnsupported;
-// later calls return source.ErrUnsupported without I/O.
+// DevActivity (§2.11). When the last Scan carried the issue's Development summary field, its fingerprint decides:
+// equal to prevFingerprint → no request at all; different → detail per instance type straight away (no summary).
+// Otherwise (no field, absent, unparseable, stale, or dev-status was marked unavailable) it asks the dev-status
+// summary first and reads detail only when that fingerprint changed.
+// The probe (§2.11) is the first dev-status request this Adapter actually makes, whichever kind it is: a failure of the
+// probe kind (401/403/404/non-JSON) sets devOff and returns source.ErrUnsupported; later calls return
+// source.ErrUnsupported without I/O. Field-only answers make no request, so they prove nothing either way.
 func (a *Adapter) DevActivity(ctx context.Context, sourceID, prevFingerprint string) (model.DevActivity, error) {
 	a.mu.Lock()
 	off := a.devOff
 	a.mu.Unlock()
 	if off {
 		return model.DevActivity{}, source.ErrUnsupported
+	}
+	if hint, ok := a.devHintFor(sourceID); ok {
+		out := model.DevActivity{Fingerprint: hint.fingerprint, Changed: hint.fingerprint != prevFingerprint}
+		if !out.Changed {
+			return out, nil
+		}
+		events, err := a.devDetails(ctx, sourceID, hint.repoTypes, hint.prTypes)
+		if err != nil {
+			return model.DevActivity{}, err
+		}
+		out.Events = events
+		return out, nil
 	}
 
 	var sum devSummary
@@ -82,29 +98,45 @@ func (a *Adapter) DevActivity(ctx context.Context, sourceID, prevFingerprint str
 		return model.DevActivity{}, MapError(err)
 	}
 	a.mu.Lock()
-	a.meta.DevActivity = "ok"
+	a.meta.DevActivity, a.devProven = "ok", true
 	a.mu.Unlock()
 
-	repo, pr := sum.Summary.Repository.Overall, sum.Summary.PullRequest.Overall
-	fp := DevFingerprint(repo.Count, repo.LastUpdated, pr.Count, pr.LastUpdated, pr.State)
+	fp := devFingerprintOf(sum.Summary.Repository, sum.Summary.PullRequest)
 	out := model.DevActivity{Fingerprint: fp, Changed: fp != prevFingerprint}
 	if !out.Changed {
 		return out, nil
 	}
+	events, err := a.devDetails(ctx, sourceID,
+		sortedKeys(sum.Summary.Repository.ByInstanceType), sortedKeys(sum.Summary.PullRequest.ByInstanceType))
+	if err != nil {
+		return model.DevActivity{}, err
+	}
+	out.Events = events
+	return out, nil
+}
 
+// devDetails reads detail for every instance type of both data types (repository first). Until a dev-status request
+// has succeeded in this Adapter's lifetime, a failure of the probe kind marks dev-status unavailable (after a
+// successful summary it is an ordinary error).
+func (a *Adapter) devDetails(ctx context.Context, sourceID string, repoTypes, prTypes []string) ([]model.DevEvent, error) {
+	var out []model.DevEvent
 	for _, t := range []struct {
 		dataType string
-		types    map[string]json.RawMessage
-	}{
-		{"repository", sum.Summary.Repository.ByInstanceType},
-		{"pullrequest", sum.Summary.PullRequest.ByInstanceType},
-	} {
-		for _, appType := range sortedKeys(t.types) {
+		types    []string
+	}{{"repository", repoTypes}, {"pullrequest", prTypes}} {
+		for _, appType := range t.types {
 			events, err := a.devDetail(ctx, sourceID, appType, t.dataType)
 			if err != nil {
-				return model.DevActivity{}, err
+				a.mu.Lock()
+				proven := a.devProven
+				a.mu.Unlock()
+				if !proven && devProbeFailure(err) {
+					a.disableDev(err)
+					return nil, source.ErrUnsupported
+				}
+				return nil, MapError(err)
 			}
-			out.Events = append(out.Events, events...)
+			out = append(out, events...)
 		}
 	}
 	return out, nil
@@ -115,8 +147,11 @@ func (a *Adapter) devDetail(ctx context.Context, sourceID, appType, dataType str
 	q := url.Values{"issueId": {sourceID}, "applicationType": {appType}, "dataType": {dataType}}
 	var det devDetail
 	if err := a.c.GetJSON(ctx, devDetailPath, q, &det); err != nil {
-		return nil, MapError(err)
+		return nil, err // raw: devDetails decides between the probe failure and MapError
 	}
+	a.mu.Lock()
+	a.meta.DevActivity, a.devProven = "ok", true
+	a.mu.Unlock()
 	var out []model.DevEvent
 	for _, d := range det.Detail {
 		for _, r := range d.Repositories {

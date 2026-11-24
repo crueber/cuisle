@@ -48,10 +48,15 @@ Used by `ConnectionService.Connect` and as the first request of every sync. Read
 
 ### 2.2 Field discovery — `GET /rest/api/3/field`
 Once per site per 24 h and on every full sync. Resolve and store in `connection.source_meta`
-(`sprintFieldId`, `rankFieldId`, `flaggedFieldId`; written below in their snake_case shorthand):
+(`sprintFieldId`, `rankFieldId`, `flaggedFieldId`, `devSummaryFieldId`; written below in their snake_case shorthand):
 - `sprint_field_id`: `schema.custom == "com.pyxis.greenhopper.jira:gh-sprint"`
 - `rank_field_id`: `schema.custom == "com.pyxis.greenhopper.jira:gh-lexo-rank"` (prefer the id from board config, §2.5)
 - `flagged_field_id`: custom field with `name == "Flagged"` (untranslated name; fallback `clauseNames` contains `Flagged`)
+
+- `dev_summary_field_id`: custom field whose `schema.custom` ends with `:devsummarycf` (the "Development" field). The scan
+  requests it so the dev fingerprint comes with the membership scan (§2.8, §2.11). `devSummaryFieldChecked: true` is
+  stored with it, so "no such field on this site" is remembered and not looked up again. A connection saved before this
+  field existed has no marker: its first scan reads `/field` once (the only extra request of the upgrade).
 
 Missing Flagged field → blocked detection uses status names only (warning `no_flagged_field`).
 
@@ -107,6 +112,9 @@ Read `values[].{id,name,type}` (`type` ∈ `scrum|kanban|simple`). Upsert `board
 ### 2.5 Board configuration — `GET /rest/agile/1.0/board/{B}/configuration`
 Read: `type`, `filter.id`, `subQuery.query`, `columnConfig.columns[].{name, statuses[].id}`, `ranking.rankCustomFieldId`.
 Called by `ConfigService.SetBoard` and at the start of **every** sync (columns change rarely but cheaply detectable).
+Deliberately **not cached** between syncs (decided 2026-11-24): it is one request, it is the only signal that promotes a
+run to full when the board's columns change, and it supplies `filterId` and `subQuery` to `Plan`; a day-old copy would
+make a column change invisible to a Resync.
 Effects: replace `board_column*`; merge into `standup_column_map` (new columns auto-mapped, removed columns deleted,
 `auto=0` choices preserved by column name); rebuild `standup_status_lane`.
 
@@ -147,8 +155,10 @@ progress totals come from the scan. Pages are sequential per query (token-chaine
 
 Two field sets:
 
-- **Scan** (cheap, all members): `fields: ["updated"]`, `maxResults: 1000` (server may return fewer; follow tokens).
-  Returns `issues[].{id, key, fields.updated}` in JQL order.
+- **Scan** (cheap, all members): `fields: ["updated"]`, plus the Development summary field (§2.2) for `board`-role queries
+  when the site has one, `maxResults: 1000` (server may return fewer; follow tokens). Returns
+  `issues[].{id, key, fields.updated, fields.<dev field>}` in JQL order. The dev field is a string that embeds JSON
+  (§2.11); it adds no request, only bytes. `backlog`-role scans omit it (backlog items are never dev targets).
 - **Hydrate** (changed/new issues only), `maxResults: 50`, JQL `id in (<≤50 ids>)` (follow `nextPageToken` if the server
   returns fewer): `fields: ["*all", "-comment", "-worklog"]` — everything, including all custom fields, because the ticket
   modal shows them (ADR 0015); comments come from §2.10.
@@ -225,7 +235,23 @@ Comments by `accountType == "app"` authors (automation/bots) are stored and show
 ### 2.11 Development information (internal API, best effort)
 Not a public API: no stability guarantee. All failures degrade to warnings.
 
-1. **Summary** — `GET /rest/dev-status/latest/issue/summary?issueId={id}`
+0. **Fingerprint from the scan (the normal path, since 2026-11-24).** The Development summary field (§2.2) in the scan
+   response is a string embedding JSON: `{pullrequest={...}, repository={...}, json={"cachedValue":{"errors":[],"summary":
+   {"pullrequest":{"overall":{…},"byInstanceType":{…}},"repository":{…}}},"isStale":false}}`. Its `summary` has the same
+   shape as the endpoint's response in step 1, so the **same** `dev_fingerprint` (formula below) and the same instance-type
+   keys are read from it. It is usable unless the value is not a string, has no `json=` part or one that does not parse,
+   `errors` is non-empty, `isStale` is true, or `cachedValue.summary` is missing (then the fingerprint is *unknown* and
+   step 1 runs for that issue). A field that is absent from the issue's `fields` is also unknown. `null`, `""` and `"{}"`
+   mean the issue has no development information and give the zero-activity fingerprint (`0||0||`), exactly what the
+   endpoint's all-zero summary hashes to. The adapter hands the fingerprint to the core in `ScanItem.DevFingerprint` (an
+   opaque string) and remembers the instance-type keys for step 2.
+   - **Equal to the stored `dev_fingerprint`:** the core makes **no dev-status request** for the target (it is still marked
+     checked, so `dev_checked_at` moves).
+   - **Different:** step 2 runs directly, with no summary request.
+   - **Unknown:** step 1 and then step 2, as before.
+   `lastUpdated` is expected to be formatted the same way in both places (unverified against a real site); if a site differs, the first run after
+   the upgrade costs one detail round per target and then settles, because the stored value is the field's.
+1. **Summary** (fallback: unknown scan fingerprint) — `GET /rest/dev-status/latest/issue/summary?issueId={id}`
    Read `summary.repository.overall.{count,lastUpdated}`, `summary.pullrequest.overall.{count,lastUpdated,state,stateCount}`,
    and the keys of `summary.repository.byInstanceType` / `summary.pullrequest.byInstanceType` (e.g. `GitHub`, `bitbucket`,
    `GitLab`; passed back verbatim as `applicationType`). `dev_fingerprint = sha1(repository.count|repository.lastUpdated|pullrequest.count|pullrequest.lastUpdated|pullrequest.state)`.
@@ -241,14 +267,17 @@ Not a public API: no stability guarantee. All failures degrade to warnings.
      branch in these responses, and no `dataType=branch` request is made. A title change alone does not change the
      summary fingerprint, so it is picked up the next time the PR's state or update time changes.
 
-**Dev targets** (the only issues queried each sync; issue `updated` does not change when commits arrive, so these are
-re-checked every sync): members with role `board` whose lane is `prog`, `review` or `qa`; plus members that changed
+**Dev targets** (the only issues checked each sync; issue `updated` does not change when commits arrive, so these are
+re-checked every sync, which costs nothing while the scan carries their fingerprint): members with role `board` whose lane is `prog`, `review` or `qa`; plus members that changed
 status within the last 28 days and have `dev_checked_at` older than their last status change or NULL (covers freshly Done
 and bounced-back tickets once). Backlog items are never queried.
 
 Degradation:
-- Probe = the first summary call of the run. 401/403/404, or a non-JSON body → `connection.dev_activity_state='unavailable'`,
-  skip the phase, warning `dev_activity_unavailable`; re-probe on the next full sync or after 24 h.
+- Probe = the first dev-status request the run actually makes: a summary call, or, when the scan supplied fingerprints,
+  the first detail call (a changed target). 401/403/404, or a non-JSON body → `connection.dev_activity_state='unavailable'`,
+  skip the phase, warning `dev_activity_unavailable`; re-probe on the next full sync or after 24 h. A run that makes no
+  dev-status request at all (every target unchanged per the scan) proves nothing, so it leaves the stored state alone.
+  While the state is `unavailable` the scan fingerprints are ignored, so the re-probe is a real summary request.
 - Per-issue failures (5xx, timeout) → keep existing rows, warning `dev_activity_partial`, run status `partial`.
 - UI: when unavailable, commit/PR marks and their legend entries are hidden and Configure › Pulse shows
   the one-line warning from ux-spec §9.4.
@@ -278,7 +307,8 @@ Offline → `person` `LIKE` search. Empty query → people already known for the
 | Single issue refresh | `GET /rest/api/3/issue/{id}?fields=*all,-comment,-worklog` | after each light write |
 | Transitions | `GET /rest/api/3/issue/{id}/transitions?expand=transitions.fields` | Status combobox opened |
 | Transition / assign / flag / comment | `POST …/transitions`, `PUT …/assignee`, `PUT /rest/api/3/issue/{id}`, `POST …/comment` | explicit user action |
-| Dev summary / detail | `GET /rest/dev-status/latest/issue/summary`, `.../detail` | dev targets |
+| Dev summary | `GET /rest/dev-status/latest/issue/summary` | only a dev target whose scan fingerprint is unknown (field stale, absent or unparseable) |
+| Dev detail | `GET /rest/dev-status/latest/issue/detail` | dev targets whose fingerprint changed |
 | Users | `GET /rest/api/3/user/assignable/search` | typing |
 
 ### 2.14 Attachments and media (`Source.FetchMedia`, ADR 0015)
@@ -372,7 +402,8 @@ shared by all standups and all goroutines.
 
 **Request economy** (keep syncs cheap; this is what keeps a 5-standup user far below the limits):
 - Scan-and-diff hydrates only changed issues (§4.2). Comments are fetched only for issues whose `updated` changed.
-  Attachments are downloaded once (by id) and thumbnails never re-fetched. Dev-status uses fingerprints (§2.11).
+  Attachments are downloaded once (by id) and thumbnails never re-fetched. Dev-status uses fingerprints (§2.11), taken
+  from the Development field of the scan response, so an unchanged dev target costs no request at all.
 - Field discovery (`/field`) runs once per connection per day, or on a full sync, not on every run.
 - Standups that share a board share one scan inside a run (the same board and filter are planned once).
 - **Budget check:** `sync_run.requests` and `sync_run.throttled` are recorded per run. Decided by Chris on 2026-11-23,
@@ -381,9 +412,25 @@ shared by all standups and all goroutines.
     - A full sync of the MOB fixture board (55 issues) must stay at or under **250 requests**.
     - An incremental sync with 3 changed issues must stay at or under **50**.
   - **Dev-status has its own cap:**
-    - At most 1 summary request per active dev target per sync.
-    - Detail requests only for targets whose summary fingerprint changed (§2.11), at most 2 per such target.
-  - All of these are asserted against jiratest's request log.
+    - At most 1 summary request per active dev target per sync, and since 2026-11-24 only for a target whose scan
+      fingerprint is unknown (stale or absent Development field).
+    - Detail requests only for targets whose fingerprint changed (§2.11), at most 2 per such target, with no summary
+      before them when the scan supplied the fingerprint.
+  - **No-change incremental sync: at most 8 requests in total** (Chris, 2026-11-24, "good stewards"): `myself`, board
+    configuration, sprints, ≤ 3 scans, count, plus one summary per target with an unknown fingerprint.
+  - All of these are asserted against jiratest's request log (`internal/sync/budget_test.go`).
+  - **Measured on the fake fixture board (55 issues, 44 dev targets on a first sync, 29 on later runs):**
+
+    | Run | Before | After |
+    |---|---|---|
+    | Full (first) sync | 208 = 79 non-dev + 44 summary + 85 detail | 165 = 79 + 1 + 85 |
+    | Incremental, 3 changed issues | 40 = 11 non-dev + 29 summary | 12 = 11 + 1 |
+    | Incremental, nothing changed | 35 = 6 non-dev + 29 summary | 7 = 6 + 1 (6 when no field is stale) |
+
+    The one remaining summary is the fake's deliberately stale Development field (`jiratest.StaleDevKey`), which
+    exercises the fallback.
+- **Not cached, on purpose:** `myself` (the auth check; one request that decides `auth_invalid` before anything else) and
+  the board configuration (§2.5; the column-change signal).
 
 **Visibility:**
 - The limiter emits `sync:throttled {resumeAt, reason}`. The header shows `Jira is rate-limiting · resuming in 12s`
@@ -420,7 +467,7 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress 
 0. preflight   keychain token (missing → auth_missing); GET /myself
 1. config      [parallel] board configuration · active sprints · (full: fields → field_def, statuses)
                → recompute column map + status lanes in memory; build queries (§2.8)
-2. scan        [parallel per query] search/jql with fields=["updated"]
+2. scan        [parallel per query] search/jql with fields=["updated", <development field>]   (§2.8)
                → ordered id lists per role; total = distinct ids
                diff vs cache:  toHydrate = new ids ∪ ids whose updated ≠ issue.updated_at   (full: all ids)
                                toClose   = current members of this standup not in the scan (span closed; rows kept)
@@ -428,7 +475,7 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress 
                → record fields + content (description, field values, links, subtasks, attachment metadata)
 4. changelog   bulkfetch for toHydrate (batches of 500)
 5. content     full comments with bodies for toHydrate (§2.10), concurrency 4            [progress phase "content"]
-6. dev         dev targets (§2.11): summary → changed? → details; concurrency 4
+6. dev         dev targets (§2.11): scan fingerprint == stored → nothing; changed → details; unknown → summary → changed? → details; concurrency 4
 7. apply       single write transaction (§4.6); then trim operational rows (separate tx)
 8. sinks       enqueue + deliver for sinks with send_on='after_sync' (ok/partial runs only; architecture.md §2.3)
 9. media       image downloads + thumbnails for attachments without one (§2.14), pool of 2   [progress phase "media"]
@@ -439,7 +486,8 @@ All fetched data is held in memory in a `Snapshot` struct until §4.6. Progress 
 Ordering guarantees: phase N+1 starts only when N finished, except 4–6 which run concurrently with each other once 3 is
 complete. `sync:progress.phase` ∈ `config|scan|issues|changelog|content|dev|apply|media` (`content` replaces the former
 `comments`). Request budget, incremental with no changes: 1 (`myself`) + 2 (config, sprints) + ≤ 3 scans + 1 (count)
-+ 1 per dev target — unchanged, because content is fetched only for issues in the diff. Per changed issue: +1 hydrate
++ 1 summary per dev target whose Development field is stale or absent (normally none), so about 6 (§3.1); content is
+fetched only for issues in the diff. Per changed issue: +1 hydrate
 share (1 request per 50), +1 changelog share, +⌈comments/100⌉ (min 1) comment requests, +1 per new image attachment.
 First full sync of a 300-issue board: ≈ 6 hydrate + 1 changelog + ≈ 300 comment requests + dev targets + images; at 4
 concurrent requests ≈ 30–60 s before images (budget in architecture.md §6.1 updated to ≤ 60 s).
@@ -663,6 +711,11 @@ client — pagination tokens, 429 handling, decoding — is what gets exercised.
   `AND/OR/()`, `ORDER BY Rank`), `fields` projection, `nextPageToken` paging (opaque base64 offsets), `approximate-count`;
   `changelog/bulkfetch` with `fieldIds`; issue comments; dev-status summary/detail (instance type `GitHub`);
   assignable user search; `jql/parse` (accepts anything the subset parses).
+- **Development summary field (§2.2, §2.11)**: `/field` lists "Development" (`customfield_10000`, `…:devsummarycf`) and every
+  issue carries its value in search results, built from the same data as the dev-status summary endpoint (so the
+  fingerprints agree by construction); `"{}"` for an issue with no commits or PRs. `MOB-1421` is served with
+  `isStale: true` (`jiratest.StaleDevKey`, `DSIssue.DevStale`; clear it through `Mutate`) to exercise the summary fallback,
+  and `Options.NoDevField` removes the field from the site entirely.
 - **Content and writes (ADR 0015)**: every fixture issue carries a `description` (one fixture issue, `MOB-1421`, contains
   **every ADF node of ux-spec §14.4** plus one unknown node), `comments[]` with ADF bodies (one with
   `visibility: {type:"role", value:"Developers"}`, one edited), `attachments[]` (three images served from

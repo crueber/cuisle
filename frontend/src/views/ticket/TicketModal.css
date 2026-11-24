@@ -1,4 +1,4 @@
-/* Ticket modal frame (ux-spec §14.2). Centred, --color-bg, 3px --color-rule border, radius 4, no shadow or blur; the scrim
+/* Ticket modal frame (ux-spec §14.2). Centred, --color-bg, 1px --color-rule-mid border, radius 4, no shadow or blur; the scrim
    is --color-scrim. The content column and the rail scroll independently. Tokens only (AGENTS invariant 11); sizes
    scale with --scale (Large/TV). */
 .tm-scrim {
@@ -18,7 +18,7 @@
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
-  border: 3px solid var(--color-rule);
+  border: 1px solid var(--color-rule-mid);
   border-radius: var(--radius-control);
   background: var(--color-bg);
   color: var(--color-fg);
@@ -141,7 +141,7 @@
   box-sizing: border-box;
   min-height: calc(var(--scale) * var(--size-modal-header-row));
   padding: 0 var(--space-4);
-  border-bottom: 3px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rule-soft);
 }
 .tm-bare-key {
   font-family: var(--font-family-mono);

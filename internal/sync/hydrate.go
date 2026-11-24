@@ -179,7 +179,8 @@ func (rn *runner) devPhase(ctx context.Context, f *Fetched, members []Member, la
 		mu          gosync.Mutex
 		unavailable bool
 		partial     bool
-		succeeded   int
+		succeeded   int // dev activity answered by the source (a scan-only skip proves nothing about availability)
+		skipped     int
 		done        int
 		checked     []string
 	)
@@ -196,6 +197,16 @@ func (rn *runner) devPhase(ctx context.Context, f *Fetched, members []Member, la
 				skip := unavailable
 				mu.Unlock()
 				if skip || ctx.Err() != nil {
+					continue
+				}
+				if rn.devUnchanged(id) {
+					mu.Lock()
+					skipped++
+					checked = append(checked, id)
+					done++
+					d := done
+					mu.Unlock()
+					rn.prog.report(source.PhaseDev, d, len(targets))
 					continue
 				}
 				act, err := rn.devOne(ctx, id)
@@ -245,9 +256,18 @@ func (rn *runner) devPhase(ctx context.Context, f *Fetched, members []Member, la
 			rn.warn(WarnDevPartial)
 			rn.logf(ctx, "warn", source.PhaseDev, "dev activity failed for some issues")
 		}
-		rn.logf(ctx, "info", source.PhaseDev, strconv.Itoa(len(checked))+" of "+strconv.Itoa(len(targets))+" dev targets checked")
+		rn.logf(ctx, "info", source.PhaseDev, strconv.Itoa(len(checked))+" of "+strconv.Itoa(len(targets))+
+			" dev targets checked ("+strconv.Itoa(skipped)+" unchanged per the scan)")
 	}
 	return nil
+}
+
+// devUnchanged reports whether the scan already proved a dev target unchanged: it carried a fingerprint equal to the
+// stored one, so there is nothing to ask the source (the only way to learn something new is a changed fingerprint, an
+// unknown one, or the unavailable re-probe, which needs a real call).
+func (rn *runner) devUnchanged(id string) bool {
+	fp := rn.devFP[id]
+	return fp != "" && fp == rn.stamps[id].DevFingerprint && rn.conn.DevActivityState != "unavailable"
 }
 
 // devOne queries one issue; a panic in the adapter is a per-issue failure.

@@ -1,10 +1,11 @@
-/* Ticket modal header (ux-spec §14.3), closed by a 3px ink rule. Row 1 is 52px (44 short), the summary wraps and is never
+/* Ticket modal header (ux-spec §14.3), closed by a 1px soft rule after a small gap. Row 1 is 52px (44 short), the summary wraps and is never
    ellipsised, row 3 is the pulse strip (40px, 28 short). Tokens only; sizes scale with --scale. */
 .th {
   flex: none;
   box-sizing: border-box;
   padding: 0 var(--size-modal-pad);
-  border-bottom: 3px solid var(--color-rule);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-rule-soft);
   background: var(--color-bg);
   font-family: var(--font-family-sans);
 }
@@ -26,8 +27,7 @@
 }
 
 .th-back,
-.th-key,
-.th-parent {
+.th-key {
   border: 0;
   background: transparent;
   color: inherit;
@@ -43,6 +43,8 @@
   font-family: var(--font-family-mono);
   font-size: calc(var(--scale) * 0.875rem);
   font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  flex: none;
 }
 .th .ticket-icon {
   width: calc(var(--scale) * 1.375rem);
@@ -55,27 +57,8 @@
   font-size: calc(var(--scale) * 1.375rem);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.02em;
-}
-.th-parent {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-  padding: 0;
-  font-family: var(--font-family-mono);
-  font-size: calc(var(--scale) * 0.8125rem);
-  color: var(--color-muted);
-}
-.th-parent-icon {
-  color: var(--color-type-spike);
-}
-.th-parent-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.th-parent:hover .th-parent-key {
-  text-decoration: underline;
+  white-space: nowrap; /* a crowded row never wraps the key (PD-/6734) */
+  flex: none;
 }
 
 .th-meta {
@@ -89,17 +72,6 @@
   font-weight: var(--font-weight-bold);
 }
 
-.th-stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.th-pos {
-  font-family: var(--font-family-mono);
-  font-size: calc(var(--scale) * 0.9375rem);
-  font-weight: var(--font-weight-bold);
-  white-space: nowrap;
-}
 .th-btn {
   display: inline-flex;
   align-items: center;
@@ -125,17 +97,15 @@
 .th-action {
   padding: 0 var(--space-3);
 }
+.th-jira {
+  padding: 0;
+  min-width: calc(var(--scale) * var(--size-button-height));
+}
 .th-close {
   min-width: calc(var(--scale) * 2.75rem);
   height: calc(var(--scale) * 2.75rem);
   border-color: transparent;
   background: transparent;
-}
-.th-chev-prev {
-  transform: rotate(90deg);
-}
-.th-chev-next {
-  transform: rotate(-90deg);
 }
 .th-cooldown {
   font-family: var(--font-family-mono);
@@ -215,16 +185,19 @@
   display: inline-block;
   flex: none;
 }
+/* The label row is taller than its 11px text so the marks band never touches it: a PR diamond (8px, rotated, centred
+   12px above the segment top) overhangs the 26px track by about 6px, so the row keeps 20px (labels use the top 11). */
 .th-mondays {
   position: relative;
   display: block;
-  height: calc(var(--scale) * 0.875rem);
+  height: calc(var(--scale) * 1.25rem);
 }
 .th-monday {
   position: absolute;
   top: 0;
   font-family: var(--font-family-mono);
   font-size: calc(var(--scale) * 0.6875rem);
+  line-height: 1;
   color: var(--color-muted);
 }
 .th-track-box {

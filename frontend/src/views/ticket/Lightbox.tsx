@@ -111,7 +111,12 @@ export function Lightbox({ issueKey, images, index, onIndex, onOpenFile, ensure,
           <Icon name="close" size={22} />
         </button>
       </div>
-      <div class="lb-stage">
+      <div
+        class="lb-stage"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose(); // the dark area around the image, not the image itself
+        }}
+      >
         <img
           key={cur.id}
           class="lb-img"

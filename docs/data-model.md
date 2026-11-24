@@ -57,7 +57,7 @@ CREATE TABLE connection (
   display_name          TEXT,
   auth_state            TEXT NOT NULL DEFAULT 'unknown' CHECK (auth_state IN ('unknown','ok','invalid','missing')),
   verified_at           INTEGER,
-  source_meta           TEXT NOT NULL DEFAULT '{}',            -- Jira: {"flaggedFieldId","sprintFieldId","rankFieldId","fieldsFetchedAt"}
+  source_meta           TEXT NOT NULL DEFAULT '{}',            -- Jira: {"flaggedFieldId","sprintFieldId","rankFieldId","devSummaryFieldId","devSummaryFieldChecked","devActivity","fieldsFetchedAt"}
   dev_activity_state    TEXT NOT NULL DEFAULT 'unknown' CHECK (dev_activity_state IN ('unknown','ok','unavailable')),
   dev_activity_checked_at INTEGER,
   created_at            INTEGER NOT NULL

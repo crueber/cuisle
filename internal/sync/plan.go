@@ -203,6 +203,7 @@ func (rn *runner) scanPhase(ctx context.Context, f *Fetched, lanes map[string]st
 
 	members := make([]Member, 0)
 	seen := map[string]bool{}
+	rn.devFP = map[string]string{}
 	f.BacklogTotal = -1
 	for _, role := range []string{model.RoleBoard, model.RoleBacklog} {
 		rank := 0
@@ -218,6 +219,9 @@ func (rn *runner) scanPhase(ctx context.Context, f *Fetched, lanes map[string]st
 					continue
 				}
 				seen[it.SourceID] = true
+				if it.DevFingerprint != "" && role == model.RoleBoard {
+					rn.devFP[it.SourceID] = it.DevFingerprint
+				}
 				members = append(members, Member{
 					SourceID: it.SourceID, Key: it.Key, Role: role, RankIndex: rank, UpdatedAt: it.UpdatedAt,
 				})

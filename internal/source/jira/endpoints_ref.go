@@ -179,6 +179,8 @@ func (a *Adapter) discoverFields(ctx context.Context) error {
 	a.meta.SprintFieldID = sprint
 	a.meta.RankFieldID = rank
 	a.meta.FlaggedFieldID = flagged
+	a.meta.DevSummaryFieldID = refFindDevSummary(fields)
+	a.meta.DevFieldChecked = true
 	a.meta.FieldsFetchedAt = a.now()
 	return nil
 }

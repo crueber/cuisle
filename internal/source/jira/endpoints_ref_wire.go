@@ -156,6 +156,17 @@ func refFieldID(id refID) string {
 	return "customfield_" + s
 }
 
+// refFindDevSummary picks the Development summary field id: a custom field whose schema custom type ends with
+// ":devsummarycf" ("" when the site has none).
+func refFindDevSummary(fields []refField) string {
+	for _, f := range fields {
+		if hasSuffix(f.Schema.Custom, devSummarySufx) {
+			return f.ID
+		}
+	}
+	return ""
+}
+
 // refFindFields picks the Sprint, Rank and Flagged field ids. Sprint and Rank match their Greenhopper schema first,
 // then a custom field with the plain name. Flagged matches by name first, then by clause name.
 func refFindFields(fields []refField) (sprint, rank, flagged string) {

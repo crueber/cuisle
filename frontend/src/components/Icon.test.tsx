@@ -31,6 +31,7 @@ const NAME_SET: Record<IconName, true> = {
   "chevron-down": true,
   "chevron-up": true,
   board: true,
+  external: true,
 };
 const NAMES = Object.keys(NAME_SET) as IconName[];
 

@@ -5,18 +5,16 @@
 //   - Type icon: an <svg> with class `type-<kind>` (kind = story|bug|task|spike|other), i.e. the existing TypeIcon of
 //     views/standup/TicketRow (reuse it).
 //   - Key: the element whose text is exactly the key; clicking it calls onCopyKey (it may be a button).
-//   - Parent crumb: a button whose accessible name contains the parent key; it also contains the parent summary at
-//     geometry.modalW >= 1216 (the 1280 window and wider) and omits it below ("parent name dropped below 1280"). No
-//     parent: no crumb. Click calls onOpenParent.
+//   - No parent crumb and no stepper: the parent lives in the field rail, J/K step from the keyboard (TicketModal).
 //   - Summary: a heading (any level) whose name is the summary.
-//   - Meta text: "as of 9:41 · synced" from detail.syncedAt (local time, H:mm unpadded as in the spec's examples).
-//     Phase done: "refreshed 9:58 · just this ticket" REPLACES the as-of text. Phase refreshing: the as-of text stays
-//     and "refreshing…" is added after 250 ms. Phase failed: "Couldn't refresh · <reason>" on an element with
+//   - Meta text: compact "\u26A1\uFE0E9:41" from detail.syncedAt (local time, H:mm unpadded) with a `title` tooltip
+//     "Synced at 9:41 (this ticket's data is as of that sync)". Phase done: "\u26A1\uFE0E9:58" with the tooltip
+//     "Refreshed just this ticket at 9:58 · board synced 9:41" REPLACES it. Phase refreshing: the synced text stays and
+//     "refreshing…" is added after 250 ms. Phase failed: "Couldn't refresh · <reason>" on an element with
 //     data-alert="true". Phase waiting: "waiting for Jira (rate limit) · 6s" (waitMs rounded up to whole seconds).
-//   - Stepper: text "7 / 20"; buttons named "Previous ticket" / "Next ticket", disabled at the first / last position.
 //   - Back: a button whose text contains backKey (only when backKey !== ""). Close: button named "Close".
-//   - Refresh: button named /refresh/i; open in Jira: button named /open in jira/i. Below modalW 1216 both are icon-only
-//     (the visible text is absent, the accessible name stays). Refresh is `disabled` when cooldownMs > 0 or the phase is
+//   - Refresh: button named /refresh/i, icon-only below modalW 1216 (the visible text is absent, the accessible name
+//     stays). Open in Jira: an icon-only button at every width, accessible name "Open in Jira", title "Open in Jira (O)". Refresh is `disabled` when cooldownMs > 0 or the phase is
 //     refreshing / waiting, and has aria-busy="true" while refreshing / waiting (the spinning icon). During a cooldown
 //     its text contains the whole-second countdown, e.g. "8s" for 8000 ms (rounded up), even when icon-only.
 //   - Pulse row: PulseTrack from ../standup/PulseTrack (replaced by a double here) gets detail.row.pulse, days =
@@ -24,6 +22,8 @@
 //     1000). Days chip: the element with text "<n>d" (n = max(1, row.daysInLane)) with data-alert="true" when row.overLimit
 //     or row.blocked, else "false". Blocked lozenge text "BLOCKED 3D" (blockedDays) when row.blocked. Limit text
 //     "limit 5d · 21 days" when limitDays > 0. The lane name (row.statusName) appears (CSS makes it caps).
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { act, fireEvent, render, screen, within } from "@testing-library/preact";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import mob1421 from "../../api/fixtures/ticket_mob1421.json";
@@ -58,15 +58,11 @@ function props(over: Partial<TicketHeaderProps> = {}): TicketHeaderProps {
   return {
     detail,
     geometry: G1920,
-    position: { index: 7, total: 20 },
     backKey: "",
     refresh: IDLE,
-    onPrev: vi.fn(),
-    onNext: vi.fn(),
     onBack: vi.fn(),
     onRefresh: vi.fn(),
     onOpenInJira: vi.fn(),
-    onOpenParent: vi.fn(),
     onCopyKey: vi.fn(),
     onClose: vi.fn(),
     ...over,
@@ -77,16 +73,18 @@ const renderHeader = (over: Partial<TicketHeaderProps> = {}) => {
   const view = render(<TicketHeader {...p} />);
   return { ...view, p };
 };
+const BOLT = "\u26A1\uFE0E";
 const refreshBtn = () => screen.getByRole("button", { name: /refresh/i });
 
-describe("identity: type icon, key, parent crumb, summary", () => {
-  it("rendersTheKeyTheTypeIconTheSummaryAndTheParentCrumb", () => {
+describe("identity: type icon, key, summary", () => {
+  it("rendersTheKeyTheTypeIconAndTheSummary_WithNoParentCrumb", () => {
     const { container } = renderHeader();
     expect(screen.getByText("MOB-1421")).toBeTruthy();
     expect(container.querySelector("svg.type-story")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Unit toggle between metric and US cups" })).toBeTruthy();
-    const crumb = screen.getByRole("button", { name: /MOB-1200/ });
-    expect(crumb.textContent).toContain("Recipe units v2");
+    expect(screen.queryByText(/MOB-1200/)).toBeNull();
+    expect(screen.queryByText(/Recipe units v2/)).toBeNull();
+    expect(screen.queryByText("in")).toBeNull();
   });
 
   it("usesTheTypeOfTheTicketForTheIcon", () => {
@@ -97,56 +95,28 @@ describe("identity: type icon, key, parent crumb, summary", () => {
     expect(container.querySelector("svg.type-story")).toBeNull();
   });
 
-  it("clickingTheKeyCopiesIt_AndClickingTheCrumbOpensTheParent", () => {
+  it("clickingTheKeyCopiesIt", () => {
     const { p } = renderHeader();
     fireEvent.click(screen.getByText("MOB-1421"));
     expect(p.onCopyKey).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("button", { name: /MOB-1200/ }));
-    expect(p.onOpenParent).toHaveBeenCalledTimes(1);
   });
 
-  it("dropsTheParentNameBelow1280_ButKeepsTheParentKey", () => {
-    renderHeader({ geometry: G1024 });
-    const crumb = screen.getByRole("button", { name: /MOB-1200/ });
-    expect(crumb.textContent).not.toContain("Recipe units v2");
-  });
-
-  it("keepsTheParentNameAt1280AndWider", () => {
-    renderHeader({ geometry: G1280 });
-    expect(screen.getByRole("button", { name: /MOB-1200/ }).textContent).toContain("Recipe units v2");
-  });
-
-  it("hasNoCrumb_WhenTheTicketHasNoParent", () => {
-    const detail = clone(D1421);
-    detail.parent = null;
-    renderHeader({ detail });
-    expect(screen.getByText("MOB-1421")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /MOB-1200/ })).toBeNull();
+  it("neverWrapsTheKey_AtAnyGeometry", () => {
+    // jsdom has no layout; the CSS contract is pinned here and the real layout by the Playwright header spec.
+    const css = readFileSync(resolve(__dirname, "TicketHeader.css"), "utf8");
+    const rule = (sel: string) =>
+      [...css.matchAll(new RegExp(`^\\${sel} \\{([^}]*)\\}`, "gm"))].map((m) => m[1]).join("\n");
+    expect(rule(".th-key")).toMatch(/white-space:\s*nowrap/);
+    expect(rule(".th-back")).toMatch(/white-space:\s*nowrap/);
   });
 });
 
-describe("stepper, back, close, open in Jira", () => {
-  it("showsThePositionAndStepsWithTheButtons", () => {
-    const { p } = renderHeader();
-    expect(screen.getByText("7 / 20")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Next ticket" }));
-    expect(p.onNext).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("button", { name: "Previous ticket" }));
-    expect(p.onPrev).toHaveBeenCalledTimes(1);
-  });
-
-  it("disablesPreviousOnTheFirstTicket_AndNextOnTheLast", () => {
-    const first = renderHeader({ position: { index: 1, total: 20 } });
-    expect(screen.getByText("1 / 20")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Previous ticket" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Next ticket" }) as HTMLButtonElement).disabled).toBe(false);
-    first.unmount();
-
-    const last = renderHeader({ position: { index: 20, total: 20 } });
-    expect(screen.getByText("20 / 20")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Next ticket" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Previous ticket" }) as HTMLButtonElement).disabled).toBe(false);
-    expect(last.p.onNext).not.toHaveBeenCalled();
+describe("back, close, open in Jira, no stepper", () => {
+  it("hasNoStepperButtonsAndNoPositionCounter", () => {
+    renderHeader();
+    expect(screen.queryByRole("button", { name: "Previous ticket" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Next ticket" })).toBeNull();
+    expect(screen.queryByText(/\d+ \/ \d+/)).toBeNull();
   });
 
   it("showsTheBackButtonOnlyWhenThereIsABackKey", () => {
@@ -170,15 +140,24 @@ describe("stepper, back, close, open in Jira", () => {
     expect(p.onOpenInJira).toHaveBeenCalledTimes(1);
   });
 
-  it("isIconOnlyBelow1280_WithTheNamesKept", () => {
+  it("openInJiraIsAnIconOnlyButton_WithAnAccessibleNameAndATooltip", () => {
+    for (const geometry of [G1920, G1280, G1024]) {
+      const view = renderHeader({ geometry });
+      const btn = screen.getByRole("button", { name: "Open in Jira" });
+      expect(btn.textContent).toBe("");
+      expect(btn.getAttribute("title")).toBe("Open in Jira (O)");
+      expect(btn.querySelector("svg")).not.toBeNull();
+      view.unmount();
+    }
+  });
+
+  it("refreshIsIconOnlyBelow1280_WithTheNameKept", () => {
     const wide = renderHeader({ geometry: G1280 });
     expect(refreshBtn().textContent).toContain("Refresh");
-    expect(screen.getByRole("button", { name: /open in jira/i }).textContent).toContain("Open in Jira");
     wide.unmount();
 
     renderHeader({ geometry: G1024 });
     expect(refreshBtn().textContent).not.toContain("Refresh");
-    expect(screen.getByRole("button", { name: /open in jira/i }).textContent).not.toContain("Open in Jira");
   });
 });
 
@@ -186,9 +165,11 @@ describe("meta text and the Refresh button (ux-spec §14.12)", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("idle_ShowsAsOfAndSynced_AndRefreshCallsTheHandlerOnce", () => {
+  it("idle_ShowsTheCompactSyncTimeWithATooltip_AndRefreshCallsTheHandlerOnce", () => {
     const { p } = renderHeader();
-    expect(screen.getByText("as of 9:41 · synced")).toBeTruthy();
+    const meta = screen.getByText(`${BOLT}9:41`);
+    expect(meta.getAttribute("title")).toBe("Synced at 9:41 (this ticket's data is as of that sync)");
+    expect(screen.queryByText(/as of 9:41 · synced/)).toBeNull();
     expect((refreshBtn() as HTMLButtonElement).disabled).toBe(false);
     expect(refreshBtn().getAttribute("aria-busy")).not.toBe("true");
     fireEvent.click(refreshBtn());
@@ -208,10 +189,19 @@ describe("meta text and the Refresh button (ux-spec §14.12)", () => {
     expect(p.onRefresh).not.toHaveBeenCalled();
   });
 
-  it("done_ReplacesTheMetaWithRefreshedAtJustThisTicket", () => {
+  it("done_ReplacesTheCompactTimeAndTheTooltipWithTheRefreshTime", () => {
     renderHeader({ refresh: { ...IDLE, phase: "done", at: local(9, 58) } });
-    expect(screen.getByText("refreshed 9:58 · just this ticket")).toBeTruthy();
-    expect(screen.queryByText(/as of/)).toBeNull();
+    const meta = screen.getByText(`${BOLT}9:58`);
+    expect(meta.getAttribute("title")).toBe("Refreshed just this ticket at 9:58 · board synced 9:41");
+    expect(screen.queryByText(`${BOLT}9:41`)).toBeNull();
+  });
+
+  it("notSyncedYet_ShowsPlainTextWithoutTheBolt", () => {
+    const detail = clone(D1421);
+    detail.syncedAt = 0;
+    renderHeader({ detail });
+    expect(screen.getByText("not synced yet")).toBeTruthy();
+    expect(screen.queryByText(new RegExp(BOLT))).toBeNull();
   });
 
   it("failed_ShowsCouldntRefreshWithTheReason_InAlertText", () => {
@@ -249,7 +239,7 @@ describe("meta text and the Refresh button (ux-spec §14.12)", () => {
 
   it("noCountdownWhenTheCooldownIsOver", () => {
     renderHeader({ refresh: { ...IDLE, phase: "done", at: local(9, 58), cooldownMs: 0 } });
-    expect(screen.getByText("refreshed 9:58 · just this ticket")).toBeTruthy();
+    expect(screen.getByText(`${BOLT}9:58`)).toBeTruthy();
     expect(refreshBtn().textContent).not.toMatch(/\d+s/);
     expect((refreshBtn() as HTMLButtonElement).disabled).toBe(false);
   });

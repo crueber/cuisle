@@ -171,6 +171,24 @@
 .fr-parent-icon {
   color: var(--color-type-spike);
 }
+.fr-parent-open {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fr-parent-open:hover .fr-key,
+.fr-parent-open:focus-visible .fr-key {
+  text-decoration: underline;
+}
+.fr-parent-open:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
 .fr-key {
   font-family: var(--font-family-mono);
 }

@@ -9,7 +9,7 @@
 // SPEC-NOTE: choosing a needs-screen transition ("Done") opens the ticket in Jira via api.app.openIssue(key) and makes no
 //   transition call; the issue URL of a TransitionOption is the ticket's own, so it maps to the key.
 // SPEC-NOTE: the Refresh button is wired to state/ticket's refresh state: a click calls api.ticket.refresh(standupId,
-//   issueId) once, spins (aria-busy) while pending, then shows "refreshed H:mm · just this ticket" with a disabled button
+//   issueId) once, spins (aria-busy) while pending, then shows "⚡︎H:mm" (tooltip "Refreshed just this ticket …") with a disabled button
 //   whose text carries the 10 s countdown ("10s"); a `cooldown` error shows the countdown from retryInMs; `rate_limited`
 //   shows "Jira is rate-limiting · try again in 6s" (inside the "Couldn't refresh · …" meta); `offline` shows
 //   "Couldn't refresh · offline". Whole-second values only; the countdown ticking itself is covered in ticket.refresh.test.ts.
@@ -212,7 +212,8 @@ describe("Refresh this ticket", () => {
     expect(refreshBtn().disabled).toBe(true);
     expect(refreshBtn().getAttribute("aria-busy")).toBe("true");
     d.resolve(clone((await mock.ticket.get(1, 107)) as TicketDetail));
-    expect(await screen.findByText(/refreshed \d{1,2}:\d{2} · just this ticket/)).toBeTruthy();
+    const meta = await screen.findByTitle(/^Refreshed just this ticket at \d{1,2}:\d{2}/);
+    expect(meta.textContent).toMatch(/^\u26A1\uFE0E\d{1,2}:\d{2}$/);
     expect(refreshBtn().disabled).toBe(true);
     expect(refreshBtn().textContent).toContain("10s");
     fireEvent.click(refreshBtn());

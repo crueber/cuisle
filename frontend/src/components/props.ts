@@ -4,7 +4,7 @@ import type { ComponentChildren } from "preact";
 
 export type IconName =
   | "story" | "bug" | "task" | "spike" | "other" // issue types (subtask/epic use "other")
-  | "sliders" | "resync" | "close" | "plus" | "chevron-down" | "chevron-up" | "board";
+  | "sliders" | "resync" | "close" | "plus" | "chevron-down" | "chevron-up" | "board" | "external";
 
 export interface IconProps {
   name: IconName;

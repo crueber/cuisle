@@ -39,6 +39,7 @@ type runner struct {
 	warnings []string
 	applied  ApplyResult
 	stamps   map[string]cache.IssueStamp // cached issue stamps of the scanned ids
+	devFP    map[string]string           // source id → dev fingerprint the scan carried (absent = unknown), jira-sync §2.11
 
 	fieldDefs []model.FieldDef // the field registry the content phase read (stored with the apply)
 }

@@ -29,7 +29,6 @@ import {
   ticketError,
   ticketKeyOf,
   ticketPending,
-  ticketPosition,
   ticketRefresh,
   ticketUpdated,
   ticketWrites,
@@ -215,7 +214,7 @@ export function TicketModal(props: TicketModalProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const position = ticketPosition({ standupId, issueId, steps, stack });
+  const scrimDown = useRef(false);
   const backId = stack[stack.length - 1];
   const backKey = backId === undefined ? "" : ticketKeyOf(backId) || "back";
   const key = detail?.row.key ?? ticketKeyOf(issueId);
@@ -270,6 +269,12 @@ export function TicketModal(props: TicketModalProps) {
         onFlag={(f) => void applyFlag(f)}
         onRetry={(f: EditField) => void retryWrite(f)}
         onOpenUrl={(url) => openLink(url, detail.row.key)}
+        onOpenParent={() => {
+          const p = detail.parent;
+          if (!p) return;
+          if (p.issueId > 0) onOpenLinked(p.issueId);
+          else openIssueKey(p.key);
+        }}
       />
     ) : null;
 
@@ -277,7 +282,19 @@ export function TicketModal(props: TicketModalProps) {
   const scale = (px: number) => `calc(var(--scale) * ${px}px)`;
 
   return (
-    <div class="tm-scrim">
+    <div
+      class="tm-scrim"
+      // A click on the mask itself (pressed and released there, so a text selection dragged out of the modal doesn't count)
+      // closes the modal. A focused comment box blurs on the press, which flushes its draft first.
+      onMouseDown={(e) => {
+        scrimDown.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        const down = scrimDown.current;
+        scrimDown.current = false;
+        if (down && e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         class="tm"
         role="dialog"
@@ -293,20 +310,11 @@ export function TicketModal(props: TicketModalProps) {
           <TicketHeader
             detail={detail}
             geometry={geometry}
-            position={position}
             backKey={backKey}
             refresh={ticketRefresh.value}
-            onPrev={() => step(-1)}
-            onNext={() => step(1)}
             onBack={onBack}
             onRefresh={() => void refreshTicket()}
             onOpenInJira={() => openIssueKey(detail.row.key)}
-            onOpenParent={() => {
-              const p = detail.parent;
-              if (!p) return;
-              if (p.issueId > 0) onOpenLinked(p.issueId);
-              else openIssueKey(p.key);
-            }}
             onCopyKey={copyKey}
             onClose={onClose}
           />

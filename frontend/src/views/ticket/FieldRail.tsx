@@ -68,7 +68,17 @@ function Chips({ items }: { items: string[] }) {
 }
 
 /** The plain value of a non-editable row, by kind (ux-spec §14.6 table). */
-function Value({ row, ctx, onOpenUrl }: { row: RailRow; ctx: AdfContext; onOpenUrl: (url: string) => void }) {
+function Value({
+  row,
+  ctx,
+  onOpenUrl,
+  onOpenParent,
+}: {
+  row: RailRow;
+  ctx: AdfContext;
+  onOpenUrl: (url: string) => void;
+  onOpenParent?: () => void;
+}) {
   const items = row.items ?? [];
   const users = row.users ?? [];
   switch (row.kind) {
@@ -128,14 +138,22 @@ function Value({ row, ctx, onOpenUrl }: { row: RailRow; ctx: AdfContext; onOpenU
     }
     case "paragraph":
       return row.rich ? <AdfDoc doc={row.rich} ctx={ctx} size="field" clampLines={6} /> : <span>{row.text}</span>;
-    case "parent":
-      return (
-        <span class="fr-parent">
+    case "parent": {
+      const inner = (
+        <>
           <Icon name="spike" size={16} class="fr-parent-icon" />
           <span class="fr-key">{row.text}</span>
           {row.sub ? <span class="fr-parent-name">{row.sub}</span> : null}
-        </span>
+        </>
       );
+      return onOpenParent ? (
+        <button type="button" class="fr-parent fr-parent-open" title={`Open ${row.text}`} onClick={onOpenParent}>
+          {inner}
+        </button>
+      ) : (
+        <span class="fr-parent">{inner}</span>
+      );
+    }
     case "sprint":
       return (
         <span>
@@ -184,7 +202,7 @@ function Row({ row, children, pair }: { row: RailRow; children: ComponentChildre
 
 /** `rest` (narrow windows): every group EXCEPT State, drawn inline at the head of the content column. */
 export function FieldRail(props: FieldRailProps & { rest?: boolean }) {
-  const { rest, detail, geometry, layout, writes, offline, openToken, ctx, onTransition, onAssign, onFlag, onRetry, onOpenUrl } = props;
+  const { rest, detail, geometry, layout, writes, offline, openToken, ctx, onTransition, onAssign, onFlag, onRetry, onOpenUrl, onOpenParent } = props;
   const [statusOpen, setStatusOpen] = useState(false);
   const assigneeRef = useRef<HTMLDivElement>(null);
   const lastToken = useRef(openToken?.token);
@@ -309,7 +327,7 @@ export function FieldRail(props: FieldRailProps & { rest?: boolean }) {
           stateRow(row)
         ) : (
           <Row row={row} pair={PAIRABLE.has(row.kind)} key={row.fieldId}>
-            <Value row={row} ctx={ctx} onOpenUrl={onOpenUrl} />
+            <Value row={row} ctx={ctx} onOpenUrl={onOpenUrl} onOpenParent={onOpenParent} />
           </Row>
         ),
       )}

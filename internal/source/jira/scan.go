@@ -2,6 +2,7 @@ package jira
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/crueber/cuisle/internal/source"
@@ -15,22 +16,34 @@ const (
 
 type scanPage struct {
 	Issues []struct {
-		ID     string `json:"id"`
-		Key    string `json:"key"`
-		Fields struct {
-			Updated Time `json:"updated"`
-		} `json:"fields"`
+		ID     string                     `json:"id"`
+		Key    string                     `json:"key"`
+		Fields map[string]json.RawMessage `json:"fields"`
 	} `json:"issues"`
 	NextPageToken string `json:"nextPageToken"`
 }
 
-// Scan runs POST /rest/api/3/search/jql with fields ["updated"], maxResults 1000, following nextPageToken, stopping
-// at q.Limit when set; when q.Count, also POST /rest/api/3/search/approximate-count (failure → ApproxTotal -1).
+// Scan runs POST /rest/api/3/search/jql with fields ["updated"] (plus the Development summary field for board-role
+// queries, when the site has one: the dev fingerprint rides along for free, jira-sync §2.11), maxResults 1000,
+// following nextPageToken, stopping at q.Limit when set; when q.Count, also POST
+// /rest/api/3/search/approximate-count (failure → ApproxTotal -1).
 func (a *Adapter) Scan(ctx context.Context, q source.Query) (source.ScanResult, error) {
 	res := source.ScanResult{ApproxTotal: -1}
+	fields := []string{"updated"}
+	devField := ""
+	if q.Role != "backlog" { // backlog items are never dev targets
+		id, err := a.devFieldID(ctx)
+		if err != nil {
+			return source.ScanResult{}, err
+		}
+		if id != "" {
+			devField = id
+			fields = append(fields, id)
+		}
+	}
 	var token string
 	for {
-		body := map[string]any{"jql": q.Expr, "fields": []string{"updated"}, "maxResults": scanPageSize}
+		body := map[string]any{"jql": q.Expr, "fields": fields, "maxResults": scanPageSize}
 		if token != "" {
 			body["nextPageToken"] = token
 		}
@@ -39,9 +52,23 @@ func (a *Adapter) Scan(ctx context.Context, q source.Query) (source.ScanResult, 
 			return source.ScanResult{}, MapError(err)
 		}
 		for _, is := range page.Issues {
-			res.Items = append(res.Items, source.ScanItem{
-				SourceID: is.ID, Key: is.Key, UpdatedAt: is.Fields.Updated.Time,
-			})
+			var updated Time
+			if raw, ok := is.Fields["updated"]; ok {
+				if err := updated.UnmarshalJSON(raw); err != nil {
+					return source.ScanResult{}, MapError(err)
+				}
+			}
+			item := source.ScanItem{SourceID: is.ID, Key: is.Key, UpdatedAt: updated.Time}
+			if devField != "" {
+				a.noteDevHint(is.ID, nil)
+				if raw, present := is.Fields[devField]; present {
+					if hint, ok := parseDevField(raw); ok {
+						item.DevFingerprint = hint.fingerprint
+						a.noteDevHint(is.ID, &hint)
+					}
+				}
+			}
+			res.Items = append(res.Items, item)
 		}
 		if q.Limit > 0 && len(res.Items) >= q.Limit {
 			res.Items = res.Items[:q.Limit]

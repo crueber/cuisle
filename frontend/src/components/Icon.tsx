@@ -16,6 +16,7 @@ const SHAPES: Record<IconName, readonly string[]> = {
   plus: ["M12 5v14", "M5 12h14"],
   "chevron-down": ["M6 9l6 6 6-6"],
   "chevron-up": ["M6 15l6-6 6 6"],
+  external: ["M14 4h6v6", "M20 4l-9 9", "M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"], // box with an arrow out
   board: ["M3 3h7v7H3z", "M14 3h7v7h-7z", "M3 14h7v7H3z", "M14 14h7v7h-7z"],
 };
 
