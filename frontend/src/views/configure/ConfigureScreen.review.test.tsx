@@ -1,6 +1,6 @@
 // WP-38F: ConfigureScreen review fixes: Large text columns, a fresh load on every visit, stable sections across a
 // column-count change, flush when leaving.
-import { act, cleanup, render, screen } from "@testing-library/preact";
+import { act, cleanup, render } from "@testing-library/preact";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { StandupConfig, StandupTab } from "../../api/types";
 import { settings, standups } from "../../state/app";
@@ -73,19 +73,20 @@ describe("ConfigureScreen", () => {
     expect(m.flush).toHaveBeenCalled();
   });
 
-  it("keeps each section's DOM (and what is typed in it) when the column count changes", () => {
+  it("lays sections out in explicit column containers (no CSS multi-column), one per column", () => {
+    // CSS multi-column fragmented sideways in WebKit, so each column is its own container. Crossing a width threshold
+    // remounts the sections; their values live in the config state, so nothing typed is lost (an open, unsent form
+    // such as Reconnect resets).
     render(<ConfigureScreen />);
-    const display = document.querySelector("[data-sec=Display]")!;
-    const input = screen.getByLabelText("Display draft") as HTMLInputElement;
-    input.value = "typing";
     expect(grid().className).toContain("cfg-cols-3");
+    expect(grid().querySelectorAll(":scope > .cfg-col")).toHaveLength(3);
     act(() => {
       setWindow(1300, 900);
       window.dispatchEvent(new Event("resize"));
     });
     expect(grid().className).toContain("cfg-cols-2");
-    expect(document.querySelector("[data-sec=Display]")).toBe(display);
-    expect((screen.getByLabelText("Display draft") as HTMLInputElement).value).toBe("typing");
+    expect(grid().querySelectorAll(":scope > .cfg-col")).toHaveLength(2);
+    expect(document.querySelectorAll("[data-sec=Display]")).toHaveLength(1);
   });
 
   it("renders every section exactly once, in column-major order, at each column count", () => {

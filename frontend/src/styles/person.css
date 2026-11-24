@@ -388,6 +388,8 @@
   gap: var(--space-3);
   height: calc(var(--scale) * var(--size-more-bar));
   margin-top: var(--space-2);
+  box-sizing: border-box;
+  border: 1px solid var(--color-rule-mid); /* an outline, not a filled block: it must not pull the eye (2026-11-24) */
   border-radius: var(--radius-rail-item);
   background: var(--color-more-bar-bg);
   color: var(--color-more-bar-fg);
@@ -399,7 +401,6 @@
 .more-bar-summary {
   font-family: var(--font-family-mono);
   font-size: calc(var(--scale) * var(--font-size-small));
-  opacity: 0.8;
 }
 
 /* ── legend ── */

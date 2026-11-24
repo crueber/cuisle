@@ -72,6 +72,9 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 
 ## 3. Responsive rules (summary)
 
+**Nothing scrolls sideways, ever** (AGENTS invariant 16): not the window, a screen, a panel, the ticket modal or any box
+in it. Content wraps, tightens or stacks; scrolling is vertical only.
+
 | Rule | Value |
 |---|---|
 | Rail | Full 208px when `vw ≥ 1360`, else compact 76px |
@@ -172,8 +175,9 @@ scroll  = need(density) > H
   The mockups predate steps 2 and 4: `person-1920x1080.png` shows 34px side rows, where the spec now gives 38px.
 
 ### 5.6 More bar (`layout/below.ts: belowFold`)
-- Shown only when `scroll` is true. It's 36px, `position:sticky; bottom:0`, 8px margin-top, `--color-more-bar-bg/fg`,
-  radius 3px, centred: "⌄ Scroll for more" (15px bold) plus a mono 13 summary at 80% opacity.
+- Shown only when `scroll` is true. It's 36px, `position:sticky; bottom:0`, 8px margin-top, an outline: page-coloured
+  `--color-more-bar-bg`, a 1px `--color-rule-mid` border and muted `--color-more-bar-fg` text (a filled bar pulled the
+  eye; changed 2026-11-24), radius 3px, centred: "⌄ Scroll for more" (15px bold) plus a mono 13 summary.
 - **Summary:** walk the groups top to bottom with fold = visible height − 36. For each group, count rows whose bottom
   edge is past the fold, and join as "2 To Do · 6 Done below".
 - Recompute on scroll (throttled to one animation frame).
@@ -284,6 +288,9 @@ Global keys are ignored while focus is in an `input`, `textarea` or `[role=combo
   the right: **Duplicate** and **Delete standup** (alert text) links. Then the section grid. The main area scrolls.
 
 ### 9.2 Section layout by column count
+Each column is its own container in a CSS grid (`repeat(n, minmax(0, 1fr))`), never CSS multi-column: in WebKit a
+multi-column box inside the scrolling main fragmented into extra columns past the right edge. Crossing a column-count
+threshold remounts the sections; values live in the config state, so nothing typed is lost.
 
 | Columns | Column 1 | Column 2 | Column 3 |
 |---|---|---|---|
@@ -465,14 +472,14 @@ A centred modal with `--color-bg`, a 1px `--color-rule-mid` border (a heavy fram
 | textColor | hue kept, lightness clamped to ≥ 4.5:1 for the current theme |
 | link | `--color-link`, underlined |
 | code (mark) | mono 0.84em, `--color-code-bg` fill, 1px rule-mid, radius 2 |
-| codeBlock | code-bg fill, 2px rule-mid border, mono 14/22, language tab top-right (mono 11 caps); no syntax colour in v1; scrolls horizontally |
+| codeBlock | code-bg fill, 2px rule-mid border, mono 14/22, language tab top-right (mono 11 caps); no syntax colour in v1; long lines wrap (never scrolls sideways) |
 | blockquote | 3px rule-mid left bar, muted text |
 | rule | 2px rule-soft |
 | bulletList / orderedList (nested) | 26px indent |
 | taskList | 22px read-only checkbox; done items muted (no strikethrough) |
 | decisionList | 3px `--color-type-story` left bar + "DECISION" micro caps |
 | panel info / note / success / warning / error | 4px left bar + 10% tint (14% dark) of `type-task` / `type-spike` / `type-story` / `lane-qa` / `alert-bg`; 18px icon |
-| table | 2px rule-mid outer, 1px rule-soft cells; header row/column on rail-bg, 15 bold; cells 16/22; honours colwidth, colspan, rowspan; scrolls horizontally in its own box |
+| table | 2px rule-mid outer, 1px rule-soft cells; header row/column on rail-bg, 15 bold; cells 16/22; colwidth is a hint, colspan, rowspan; fits the column width and cells wrap, even long unbroken text (never scrolls sideways) |
 | expand / nestedExpand | 38px row, chevron + title, 2px rule-soft border; collapsed as authored; `E` toggles all |
 | status (lozenge) | mono 11 bold caps, radius 2, filled: neutral→todo, blue→prog, purple→review, yellow→qa, green→done, red→alert |
 | mention | 600 weight on a rail-bg chip; the current user's mention is inverted |

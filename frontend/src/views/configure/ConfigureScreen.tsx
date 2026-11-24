@@ -167,13 +167,18 @@ export function ConfigureScreen() {
                 </div>
               </div>
               {columns < 3 ? <JumpBar sections={JUMP_SECTIONS} onJump={jump} /> : null}
-              {/* One flat list under one parent, keyed by section id: a change of column count only moves the nodes,
-                  so section state (an open Reconnect form, typed text) survives. Columns are CSS columns with a
-                  forced break before the first section of each column. */}
+              {/* Explicit column containers in a CSS grid. Not CSS multi-column: WebKit (the macOS and Linux webviews)
+                  fragments a multi-column box inside the scrolling main into extra columns past the right edge, so
+                  Configure scrolled sideways. A change of column count (crossing a width threshold) remounts the
+                  sections; text fields have already autosaved by then. */}
               <div class={`cfg-grid cfg-cols-${columns}`}>
-                {COLUMNS[columns].flatMap((ids) => ids.map((id, i) => ({ id, start: i === 0 }))).map(({ id, start }) => (
-                  <div key={id} id={id} class={start ? "cfg-anchor cfg-col-start" : "cfg-anchor"}>
-                    {renderSection(id, columns, current)}
+                {COLUMNS[columns].map((ids, c) => (
+                  <div key={`${columns}-${c}`} class="cfg-col">
+                    {ids.map((id) => (
+                      <div key={id} id={id} class="cfg-anchor">
+                        {renderSection(id, columns, current)}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

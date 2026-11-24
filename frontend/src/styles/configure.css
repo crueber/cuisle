@@ -318,32 +318,30 @@
   cursor: pointer;
 }
 
-/* Section grid */
+/* Section grid: explicit columns (not CSS multi-column, which WebKit fragments into extra columns sideways). */
 .cfg-grid {
+  display: grid;
+  align-items: start;
   column-gap: var(--space-8);
   margin-top: var(--space-5);
 }
-.cfg-cols-3 {
-  column-gap: var(--space-column-gap);
-}
 .cfg-cols-1 {
-  column-count: 1;
+  grid-template-columns: minmax(0, 1fr);
 }
 .cfg-cols-2 {
-  column-count: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .cfg-cols-3 {
-  column-count: 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--space-column-gap);
+}
+.cfg-col {
+  min-width: 0;
 }
 .cfg-anchor + .cfg-anchor {
   margin-top: var(--space-6);
 }
-.cfg-anchor.cfg-col-start {
-  break-before: column;
-  margin-top: 0;
-}
 .cfg-anchor {
-  break-inside: avoid;
   scroll-margin-top: calc(var(--scale) * 4rem);
   min-width: 0;
 }

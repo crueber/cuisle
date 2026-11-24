@@ -101,6 +101,12 @@ tasks:
     cmds:
       - '{{.FE}}/playwright test'
 
+  e2e:webkit:
+    summary: The no-sideways-scroll rule in WebKit (the macOS/Linux webview engine); needs `playwright install webkit` once
+    dir: frontend
+    cmds:
+      - '{{.FE}}/playwright test tests/screens/no-sideways-scroll.spec.ts --browser=webkit'
+
   build:
     summary: Production build for this OS
     cmds:

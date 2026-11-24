@@ -165,8 +165,8 @@
   --color-tick: #16181D;
   --color-tick-comment: #8A8D93;
   --color-hatch: #B3261E;
-  --color-more-bar-bg: #16181D;
-  --color-more-bar-fg: #F6F4EE;
+  --color-more-bar-bg: #F6F4EE;
+  --color-more-bar-fg: #5F636A;
   --color-focus-ring: #1F5FBF;
   --color-scrim: rgba(22,24,29,0.55);
   --color-scrim-lightbox: rgba(22,24,29,0.92);
@@ -232,8 +232,8 @@
   --color-tick: #ECEAE4;
   --color-tick-comment: #8B94A1;
   --color-hatch: #E5604D;
-  --color-more-bar-bg: #ECEAE4;
-  --color-more-bar-fg: #121418;
+  --color-more-bar-bg: #121418;
+  --color-more-bar-fg: #959BA4;
   --color-focus-ring: #7FB0FF;
   --color-scrim: rgba(0,0,0,0.65);
   --color-scrim-lightbox: rgba(0,0,0,0.92);

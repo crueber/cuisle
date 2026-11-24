@@ -20,6 +20,7 @@ explicitly and kept locally, so it opens instantly and builds up history. The co
 ### Standing preferences from the maintainer (don't re-litigate)
 - **Nothing is hidden to make things fit.** Tighten density, then scroll with the "Scroll for more — X below" bar. Never
   collapse tickets to counts or summaries for space.
+- **No horizontal scrolling, anywhere in the app** (invariant 16). Wrap, tighten or stack instead.
 - **Sync is explicit.** Resync button/`R`, an optional sync-on-open when stale, and leaving Configure after source
   changes. **No background polling, ever.**
 - **Autosave everything.** No Save buttons. **Every dropdown is an autocomplete** (the shared `Combobox`).
@@ -111,6 +112,10 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
 15. **Every Jira request goes through the connection's limiter** (jira-sync §3.1): token bucket, header-adaptive, a
     global pause on 429, and interactive requests ahead of bulk. Never call the HTTP client around it, and never add
     retry loops outside it.
+16. **Nothing scrolls sideways.** Not the window, a screen, a panel, the modal or a box inside it (code blocks and tables
+    wrap). Lay out with grid/flex and `minmax(0, 1fr)`/`min-width: 0`; never CSS multi-column (WebKit fragments it
+    sideways). `tests/screens/no-sideways-scroll.spec.ts` checks every screen at five sizes; run `task e2e:webkit` too
+    when touching layout, because the app's webview is WebKit and CI's Playwright is Chromium.
 
 ## 4. Everyday commands
 
@@ -129,6 +134,7 @@ task lint             # go vet, layercheck, staticcheck (if installed), tsc --no
 task bench            # Go benchmarks (compare with benchstat against bench/baseline.txt)
 task size             # vite build + size-limit
 task e2e              # Playwright perf/a11y/screenshots against vite preview --mode mock
+task e2e:webkit       # the no-sideways-scroll rule in WebKit (the app's real engine)
 task build            # production build for this OS (binary in bin/)
 task package          # bundle/installer for this OS into bin/ (macOS: local, ad-hoc signed)
 go run ./scripts/layercheck                   # architecture §2 dependency table
