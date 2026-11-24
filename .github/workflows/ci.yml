@@ -29,13 +29,20 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Linux deps
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev xvfb
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev xvfb dbus-x11
       - name: Windows deps
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           # makensis isn't on the hosted image (exit 127 in windows:create:nsis:installer)
-          choco install nsis -y --no-progress
+          # The community feed sometimes answers 503, so retry, then fail clearly if makensis still isn't there.
+          for ($i = 1; $i -le 4; $i++) {
+            choco install nsis -y --no-progress
+            if (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe") { break }
+            Write-Host "nsis install attempt $i failed; retrying in 20 s"
+            Start-Sleep -Seconds 20
+          }
+          if (-not (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe")) { throw "NSIS could not be installed" }
           "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Tools
         shell: bash
@@ -83,5 +90,9 @@ jobs:
             # AppArmor policy blocks: the window never appeared (no first-view, no asset requests). Forgejo's job runs
             # as root in a container and is unaffected.
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
-            xvfb-run -a ./bin/cuisle --bench-startup --fake-jira
+            # GTK can stall waiting for the accessibility bus when there's no D-Bus session ("AT-SPI: Error
+            # retrieving accessibility bus address" was the last line before the 15 s timeout): give the run its own
+            # session bus, turn the AT bridge off, and use a 24-bit screen. Debug logs make a failure explain itself.
+            NO_AT_BRIDGE=1 CUISLE_LOG=debug dbus-run-session -- \
+              xvfb-run -a -s "-screen 0 1920x1080x24" ./bin/cuisle --bench-startup --fake-jira
           fi

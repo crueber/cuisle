@@ -51,7 +51,14 @@ jobs:
         shell: pwsh
         run: |
           # makensis isn't on the hosted image (exit 127 in windows:create:nsis:installer)
-          choco install nsis -y --no-progress
+          # The community feed sometimes answers 503, so retry, then fail clearly if makensis still isn't there.
+          for ($i = 1; $i -le 4; $i++) {
+            choco install nsis -y --no-progress
+            if (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe") { break }
+            Write-Host "nsis install attempt $i failed; retrying in 20 s"
+            Start-Sleep -Seconds 20
+          }
+          if (-not (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe")) { throw "NSIS could not be installed" }
           "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Tools
         shell: bash
