@@ -44,12 +44,13 @@ describe("KeyLegend", () => {
 
   it("lists every key from the ux-spec §8 keyboard map", () => {
     render(<KeyLegend {...props()} />);
-    expect(keycaps()).toEqual(expect.arrayContaining(["←", "→", "B", "1–9", "R", "Shift+R", "/", ",", "?", "Esc", "Enter"]));
+    expect(keycaps()).toEqual(expect.arrayContaining(["←", "→", "B", "G", "1–9", "R", "Shift+R", "/", ",", "?", "Esc", "Enter"]));
   });
 
   it("describes what the keys do", () => {
     render(<KeyLegend {...props()} />);
     const t = dialogText();
+    expect(t).toMatch(/group by Assignee or Status/i);
     expect(t).toMatch(/speaker/i);
     expect(t).toMatch(/whole board/i);
     expect(t).toMatch(/standup/i);

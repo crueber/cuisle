@@ -10,6 +10,7 @@ const SHAPES: Record<IconName, readonly string[]> = {
   task: ["M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z", "M8 12l3 3 5-6"], // check-square
   spike: ["M13 2L4 14h7l-1 8 9-12h-7z"], // bolt
   other: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"], // circle
+  search: ["M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M20 20l-4.2-4.2"],
   sliders: ["M4 6h10", "M18 6h2", "M4 12h4", "M12 12h8", "M4 18h12", "M20 18h0", "M14 4v4", "M8 10v4", "M16 16v4"],
   resync: ["M20 11a8 8 0 0 0-14.5-4.5L3 9", "M3 4v5h5", "M4 13a8 8 0 0 0 14.5 4.5L21 15", "M21 20v-5h-5"],
   close: ["M6 6l12 12", "M18 6L6 18"],

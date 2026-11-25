@@ -137,11 +137,12 @@ func fixtureView() view.StandupView {
 		PulseDays: 7,
 		Axis:      axis7(),
 		Lanes: []view.LaneInfo{
-			{Lane: "todo", Label: "To do", LimitDays: 0, Columns: []string{"To Do"}},
-			{Lane: "prog", Label: "In progress", LimitDays: 5, Columns: []string{"In Progress"}},
-			{Lane: "review", Label: "Review", LimitDays: 2, Columns: []string{"Review"}},
-			{Lane: "qa", Label: "QA", LimitDays: 3, Columns: []string{"QA"}},
-			{Lane: "done", Label: "Done", LimitDays: 0, Columns: []string{"Done"}},
+			{Lane: "todo", Label: "To do", Kind: "working", LimitDays: 0, Columns: []string{"To Do"}},
+			{Lane: "prog", Label: "In progress", Kind: "working", LimitDays: 5, Columns: []string{"In Progress"}},
+			{Lane: "c1", Label: "Design", Kind: "working", Custom: true, Hue: 1, LimitDays: 4, Columns: []string{"Design"}},
+			{Lane: "review", Label: "Review", Kind: "working", LimitDays: 2, Columns: []string{"Review"}},
+			{Lane: "qa", Label: "QA", Kind: "working", LimitDays: 3, Columns: []string{"QA"}},
+			{Lane: "done", Label: "Done", Kind: "done", LimitDays: 0, Columns: []string{"Done"}},
 		},
 		Speakers: []view.SpeakerView{
 			{ID: "acc-iris", Name: "Iris Calloway", First: "Iris", Initials: "IC", Included: true, Active: 1, Done: 1},
@@ -233,11 +234,12 @@ func expectedDoc() export.Document {
 			PulseDays: 7,
 			Window:    export.DateRange{From: "2026-11-17", To: "2026-11-23"},
 			Lanes: []export.LaneRef{
-				{Lane: "todo", Label: "To do", LimitDays: 0},
-				{Lane: "prog", Label: "In progress", LimitDays: 5},
-				{Lane: "review", Label: "Review", LimitDays: 2},
-				{Lane: "qa", Label: "QA", LimitDays: 3},
-				{Lane: "done", Label: "Done", LimitDays: 0},
+				{Lane: "todo", Label: "To do", LimitDays: 0, Kind: "working"},
+				{Lane: "prog", Label: "In progress", LimitDays: 5, Kind: "working"},
+				{Lane: "c1", Label: "Design", LimitDays: 4, Kind: "working", Custom: true},
+				{Lane: "review", Label: "Review", LimitDays: 2, Kind: "working"},
+				{Lane: "qa", Label: "QA", LimitDays: 3, Kind: "working"},
+				{Lane: "done", Label: "Done", LimitDays: 0, Kind: "done"},
 			},
 			People: []export.Person{
 				{ID: "acc-iris", Name: "Iris Calloway", Included: true, Active: 1, Done: 1},
@@ -246,7 +248,7 @@ func expectedDoc() export.Document {
 			Tickets: []export.Ticket{
 				{
 					Key: "MOB-1401", SourceID: "10401", URL: base + "MOB-1401", Summary: "Retry webhook delivery on 5xx",
-					Type: "story", Assignee: sp("acc-iris"), Lane: "done", Status: "Done", DaysInLane: 2,
+					Type: "story", Assignee: sp("acc-iris"), Lane: "done", LaneLabel: "Done", Status: "Done", DaysInLane: 2,
 					DoneAt: sp("2026-11-22T14:00:00Z"),
 					Pulse: export.Pulse{
 						Segments: []export.DatedSeg{
@@ -263,7 +265,7 @@ func expectedDoc() export.Document {
 				},
 				{
 					Key: "MOB-1402", SourceID: "10402", URL: base + "MOB-1402", Summary: "Document the export schema",
-					Type: "task", Assignee: nil, Lane: "todo", Status: "To Do", DaysInLane: 7,
+					Type: "task", Assignee: nil, Lane: "todo", LaneLabel: "To do", Status: "To Do", DaysInLane: 7,
 					Pulse: export.Pulse{
 						Segments: []export.DatedSeg{{Lane: "todo", From: "2026-11-17", To: "2026-11-23"}},
 						Marks:    []export.DatedMark{},
@@ -272,7 +274,7 @@ func expectedDoc() export.Document {
 				},
 				{
 					Key: "MOB-1403", SourceID: "10403", URL: base + "MOB-1403", Summary: "Duplicate SMS on double reassign",
-					Type: "bug", Assignee: sp("acc-iris"), Lane: "prog", Status: "In Progress", DaysInLane: 4,
+					Type: "bug", Assignee: sp("acc-iris"), Lane: "prog", LaneLabel: "In progress", Status: "In Progress", DaysInLane: 4,
 					OverLimit: true, Blocked: true,
 					Pulse: export.Pulse{
 						Segments: []export.DatedSeg{
@@ -732,7 +734,7 @@ func TestEncode_KeyOrderFollowsStructOrder(t *testing.T) {
 			name string
 			raw  []byte
 			want []string
-		}{"ticket", snap.Tickets[0], []string{"key", "sourceId", "url", "summary", "type", "assignee", "lane", "status", "daysInLane", "overLimit", "blocked", "doneAt", "pulse"}},
+		}{"ticket", snap.Tickets[0], []string{"key", "sourceId", "url", "summary", "type", "assignee", "lane", "status", "daysInLane", "overLimit", "blocked", "doneAt", "pulse", "laneLabel"}},
 		struct {
 			name string
 			raw  []byte
@@ -792,7 +794,7 @@ func checkV1Fields(t *testing.T, label string, b []byte) {
 	}
 	requireKeys(t, label+".sprint", snap["sprint"], "id", "name", "startAt", "endAt")
 	requireKeys(t, label+".window", snap["window"], "from", "to")
-	requireKeys(t, label+".lanes[0]", firstOf(t, "lanes", snap["lanes"]), "lane", "label", "limitDays")
+	requireKeys(t, label+".lanes[0]", firstOf(t, "lanes", snap["lanes"]), "lane", "label", "limitDays", "kind", "custom")
 	requireKeys(t, label+".people[0]", firstOf(t, "people", snap["people"]), "id", "name", "included", "active", "done")
 	tk := requireKeys(t, label+".tickets[0]", firstOf(t, "tickets", snap["tickets"]),
 		"key", "sourceId", "url", "summary", "type", "assignee", "lane", "status", "daysInLane", "overLimit", "blocked", "doneAt", "pulse")

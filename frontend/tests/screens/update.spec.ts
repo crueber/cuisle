@@ -16,7 +16,8 @@ for (const [w, h] of [[1920, 1080], [1280, 720], [1024, 640]] as const) {
     await openApp(page);
     const header = page.locator("header.sf-header");
     const labels = await header.locator("button.sf-header__configure").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
-    expect(labels).toEqual(["Resync (R)", "Update to v1.3.0", "Configure"]);
+    expect(labels[0]).toMatch(/^Find a ticket or run a command/); // F14
+    expect(labels.slice(1)).toEqual(["Resync (R)", "Update to v1.3.0", "Configure"]);
     await expect(header.getByRole("button", { name: "Update to v1.3.0" })).toHaveAttribute("title", "Cuisle v1.3.0 is available");
     await expect(header).toHaveScreenshot(`header-update-${w}x${h}.png`, SHOT);
   });

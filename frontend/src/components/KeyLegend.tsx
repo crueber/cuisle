@@ -7,9 +7,12 @@ const KEYS: [string[], string][] = [
   [["↑", "↓"], "Previous / next speaker (whole board after the last)"],
   [["←", "→"], "Previous / next standup"],
   [["B"], "Whole board; press again to return to the person"],
+  [["G"], "Whole board: group by Assignee or Status"],
+  [["+", "−", "0"], "Zoom the screen in, out, or back to 100% (also ⌘/Ctrl with them)"],
   [["1–9"], "Switch standup by position"],
   [["R"], "Resync incremental, from Jira"],
   [["Shift+R"], "Resync full, from Jira"],
+  [["⌘K", "T"], "Find a ticket or run a command"],
   [["/"], "Focus the standup switcher"],
   [[","], "Open Configure"],
   [["?"], "Show this key legend"],
@@ -17,14 +20,14 @@ const KEYS: [string[], string][] = [
   [["Enter"], "On a focused ticket, open it in Jira"],
 ];
 
-const LANES: [string, string][] = [
-  ["todo", "To Do"],
-  ["prog", "In Progress"],
-  ["review", "In Review"],
-  ["qa", "QA"],
+const LANES = [
+  { lane: "todo", label: "To Do", hue: 0 },
+  { lane: "prog", label: "In Progress", hue: 0 },
+  { lane: "review", label: "In Review", hue: 0 },
+  { lane: "qa", label: "QA", hue: 0 },
 ];
 
-export function KeyLegend({ open, onClose, showCommits, showPRs, showComments, devActivity }: KeyLegendProps) {
+export function KeyLegend({ open, onClose, showCommits, showPRs, showComments, devActivity, lanes }: KeyLegendProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -60,10 +63,10 @@ export function KeyLegend({ open, onClose, showCommits, showPRs, showComments, d
       </ul>
       <div class="keylegend-title">Pulse</div>
       <ul class="keylegend-pulse">
-        {LANES.map(([lane, name]) => (
-          <li key={lane} class="keylegend-row">
-            <span class="legend-swatch" data-lane={lane} aria-hidden="true" />
-            {" "}<span class="keylegend-text">{name}</span>
+        {(lanes ? lanes.filter((l) => l.lane !== "done").reverse() : LANES).map((l) => (
+          <li key={l.lane} class="keylegend-row">
+            <span class="legend-swatch" data-lane={l.lane} data-hue={l.hue || undefined} aria-hidden="true" />
+            {" "}<span class="keylegend-text">{l.label}</span>
           </li>
         ))}
         <li class="keylegend-row">

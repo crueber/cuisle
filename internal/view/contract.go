@@ -54,11 +54,23 @@ type SprintInfo struct {
 }
 
 type LaneInfo struct {
-	Lane      string   `json:"lane"`
-	Label     string   `json:"label"` // "To Do"|"In Progress"|"In Review"|"QA"|"Done"
-	LimitDays int      `json:"limitDays"`
-	Columns   []string `json:"columns"` // board column names mapped to this lane
+	Lane         string   `json:"lane"`         // todo|prog|review|qa|done|backlog|hidden|c<N> (custom)
+	Label        string   `json:"label"`        // the configured label, e.g. "In Review", "Code Review", "Design"
+	DefaultLabel string   `json:"defaultLabel"` // the built-in label ("" for a custom lane)
+	Kind         string   `json:"kind"`         // working|done|backlog|hidden
+	Custom       bool     `json:"custom"`       // a lane the user named (renamable, deletable)
+	Hue          int      `json:"hue"`          // custom lanes: extended palette index 1..8 (data-hue); 0 otherwise
+	LimitDays    int      `json:"limitDays"`
+	Columns      []string `json:"columns"` // board column names mapped to this lane
 }
+
+// Lane kinds (LaneInfo.Kind).
+const (
+	LaneKindWorking = "working"
+	LaneKindDone    = "done"
+	LaneKindBacklog = "backlog"
+	LaneKindHidden  = "hidden"
+)
 
 type SpeakerView struct {
 	ID         string `json:"id"` // accountId or "unassigned"
@@ -162,7 +174,9 @@ type StandupConfig struct {
 	ExtraFilter        string          `json:"extraFilter"`
 	FilterCheck        *FilterCheck    `json:"filterCheck"`
 	Columns            []ColumnMapping `json:"columns"`
-	Lanes              []LaneInfo      `json:"lanes"`
+	Lanes              []LaneInfo      `json:"lanes"`           // working lanes in walk order (custom lanes included)
+	LaneOptions        []LaneInfo      `json:"laneOptions"`     // every lane a column can map to: backlog, built-in working, custom (by creation), done, hidden
+	WalkLeftToRight    []string        `json:"walkLeftToRight"` // working lanes in board column order ("Left to right"; reversed = "Right to left")
 	UnmappedStatuses   []string        `json:"unmappedStatuses"`
 	RowsMode           string          `json:"rowsMode"`
 	Speakers           []SpeakerConfig `json:"speakers"`

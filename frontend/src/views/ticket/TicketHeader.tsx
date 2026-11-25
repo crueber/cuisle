@@ -3,6 +3,7 @@
 // No stepper (J/K step from the keyboard) and no parent crumb (the parent lives in the field rail).
 // Row 2: the summary (wraps, never ellipsised). Row 3: lane name, the 21-day pulse track, days chip, limit.
 import { Icon } from "../../components/Icon";
+import { hueOf } from "../../state/lanes";
 import { textScale } from "../../state/app";
 import { PulseTrack } from "../standup/PulseTrack";
 import { TrackBackdrop } from "../standup/TrackBackdrop";
@@ -86,7 +87,7 @@ export function TicketHeader(props: TicketHeaderProps) {
 
       <div class="th-row3">
         <span class="th-lane">
-          <span class="th-swatch" data-lane={row.lane} aria-hidden="true" />
+          <span class="th-swatch" data-lane={row.lane} data-hue={hueOf(row.lane)} aria-hidden="true" />
           <span class="th-lane-name">{row.statusName}</span>
         </span>
         <span class="th-track" style={{ width: `${w * k}px` }}>

@@ -38,6 +38,12 @@ BenchmarkStandupView/L-16  	     142	   8322430 ns/op	 5021511 B/op	   82580 all
 BenchmarkStandupView/L-16  	     140	   8467290 ns/op	 5021467 B/op	   82579 allocs/op
 BenchmarkStandupView/L-16  	     142	   8230517 ns/op	 5021203 B/op	   82578 allocs/op
 BenchmarkStandupView/L-16  	     142	   8389916 ns/op	 5021455 B/op	   82580 allocs/op
+BenchmarkFindByKey/L-16    	     811	   1303501 ns/op	  363410 B/op	    9797 allocs/op
+BenchmarkFindByKey/L-16    	     871	   1707419 ns/op	  363208 B/op	    9794 allocs/op
+BenchmarkFindByKey/L-16    	     553	   1959925 ns/op	  363962 B/op	    9801 allocs/op
+BenchmarkFindByKey/L-16    	     493	   2069659 ns/op	  364110 B/op	    9805 allocs/op
+BenchmarkFindByKey/L-16    	     483	   2281684 ns/op	  364836 B/op	    9835 allocs/op
+BenchmarkFindByKey/L-16    	     906	   1319426 ns/op	  363239 B/op	    9796 allocs/op
 PASS
 ok  	github.com/crueber/cuisle/internal/app	21.337s
 goos: darwin

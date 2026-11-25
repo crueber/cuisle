@@ -1,5 +1,5 @@
 // Standup header (ux-spec §2.1): wordmark, standup tabs, the date standing alone in the middle, then the right cluster
-// (sync status, Resync, Update when a newer release is available (ADR 0016), Configure).
+// (Find, sync status, Resync, Update when a newer release is available (ADR 0016), Configure).
 // What collapses with width comes from layout/responsive headerCollapse. Sync age uses Date.now() at render only.
 import { Icon } from "../../components/Icon";
 import { tabsAvailableWidth } from "../../layout/tabs";
@@ -10,6 +10,7 @@ import { goConfigure, route } from "../../state/route";
 import { currentView, switchStandup } from "../../state/standup";
 import { cancelSync, startSync, syncStatus } from "../../state/sync";
 import { updateAvailable, updateDialogOpen, updateStatus } from "../../state/update";
+import { findKeyLabel, openPalette, paletteOpen } from "../../state/palette";
 import { Tabs } from "./Tabs";
 import { UpdateDialog } from "./UpdateDialog";
 import { WORDMARK_WIDTH, dateWidth, dayLabel, rightClusterWidth, syncLabel } from "./headerText";
@@ -24,6 +25,7 @@ export function Header(props: HeaderProps) {
   const running = status?.state === "running";
   // A running sync always shows its progress text, however narrow the window (otherwise only ↻ → × would change).
   const base = headerCollapse(vw);
+  const findKey = findKeyLabel();
   const collapse = running ? { ...base, syncLabel: true } : base;
   const update = updateStatus.value;
   const hasUpdate = updateAvailable(update);
@@ -61,6 +63,21 @@ export function Header(props: HeaderProps) {
               {label.text}
             </span>
           ) : null}
+          <button
+            type="button"
+            class="sf-header__configure sf-header__find"
+            aria-label={`Find a ticket or run a command (${findKey})`}
+        aria-expanded={paletteOpen.value !== null}
+            onClick={() => openPalette()}
+          >
+            <Icon name="search" size={20} strokeWidth={2.2} />
+            {collapse.configureLabel ? (
+              <>
+                <span>Find</span>
+                <kbd class="sf-header__kbd" aria-hidden="true" data-key={findKey} />
+              </>
+            ) : null}
+          </button>
           {running ? (
             <button
               type="button"

@@ -46,27 +46,44 @@
         {
           "lane": "todo",
           "label": "To do",
-          "limitDays": 0
+          "limitDays": 0,
+          "kind": "working",
+          "custom": false
         },
         {
           "lane": "prog",
           "label": "In progress",
-          "limitDays": 5
+          "limitDays": 5,
+          "kind": "working",
+          "custom": false
+        },
+        {
+          "lane": "c1",
+          "label": "Design",
+          "limitDays": 4,
+          "kind": "working",
+          "custom": true
         },
         {
           "lane": "review",
           "label": "Review",
-          "limitDays": 2
+          "limitDays": 2,
+          "kind": "working",
+          "custom": false
         },
         {
           "lane": "qa",
           "label": "QA",
-          "limitDays": 3
+          "limitDays": 3,
+          "kind": "working",
+          "custom": false
         },
         {
           "lane": "done",
           "label": "Done",
-          "limitDays": 0
+          "limitDays": 0,
+          "kind": "done",
+          "custom": false
         }
       ],
       "people": [
@@ -132,7 +149,8 @@
               }
             ],
             "blocked": []
-          }
+          },
+          "laneLabel": "Done"
         },
         {
           "key": "MOB-1402",
@@ -157,7 +175,8 @@
             ],
             "marks": [],
             "blocked": []
-          }
+          },
+          "laneLabel": "To do"
         },
         {
           "key": "MOB-1403",
@@ -209,7 +228,8 @@
                 "to": "2026-11-23"
               }
             ]
-          }
+          },
+          "laneLabel": "In progress"
         }
       ],
       "backlog": [

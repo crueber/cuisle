@@ -42,6 +42,9 @@ func windowOptions(saved *app.WindowState, bg application.RGBA, dev bool) applic
 	o := application.WebviewWindowOptions{
 		Title: "Cuisle", Width: defaultWidth, Height: defaultHeight, MinWidth: minWidth, MinHeight: minHeight,
 		URL: "/", BackgroundColour: bg, DevToolsEnabled: dev,
+		// The standup screen zooms itself below the header (F15); the webview's own page zoom (WebView2's Ctrl+/-/wheel/pinch)
+		// would also magnify the header. False is the default, kept explicit. See appMenu for macOS.
+		ZoomControlEnabled: false,
 	}
 	if saved == nil || saved.W < minWidth || saved.H < minHeight || saved.W > maxRestoredSize || saved.H > maxRestoredSize ||
 		saved.X < -maxRestoredSize || saved.X > maxRestoredSize || saved.Y < -maxRestoredSize || saved.Y > maxRestoredSize {

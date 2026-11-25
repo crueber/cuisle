@@ -76,9 +76,11 @@ type DateRange struct {
 }
 
 type LaneRef struct {
-	Lane      string `json:"lane"`
-	Label     string `json:"label"`
+	Lane      string `json:"lane"`  // todo|prog|review|qa|done|c<N> (a lane the user named)
+	Label     string `json:"label"` // the configured label (renamed built-in lanes and custom lanes included)
 	LimitDays int    `json:"limitDays"`
+	Kind      string `json:"kind"`   // working|done (additive in v1)
+	Custom    bool   `json:"custom"` // a lane the user named (additive in v1)
 }
 
 type Person struct {
@@ -103,6 +105,7 @@ type Ticket struct {
 	Blocked    bool    `json:"blocked"`
 	DoneAt     *string `json:"doneAt"` // RFC 3339 or null
 	Pulse      Pulse   `json:"pulse"`
+	LaneLabel  string  `json:"laneLabel"` // the lane's configured label (additive in v1)
 }
 
 type Pulse struct {

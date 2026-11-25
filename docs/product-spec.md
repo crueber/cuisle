@@ -42,8 +42,8 @@ Companion docs:
 |---|---|
 | **Standup** | A saved configuration: one Jira space (project) and board, plus speakers, walk order, pulse and board settings. A user can have many. Shown as header tabs. |
 | **Space** | Jira project (Jira's newer UI calls them spaces). |
-| **Lane** | Cuisle's normalised status bucket: `todo`, `prog` (In Progress), `review` (In Review), `qa`, `done`. Each Jira board column maps to a lane, or to `backlog` or `hidden`. |
-| **Walk order** | The order lanes are presented in the person view. Fully user-defined across the four working lanes; Done is always last. Default is right to left: QA, In Review, In Progress, To Do. |
+| **Lane** | Cuisle's normalised status bucket: `todo`, `prog` (In Progress), `review` (In Review), `qa`, `done`, plus working lanes the user names in Status mapping (ids `c1`, `c2`, …, each with its own colour). Each Jira board column maps to a lane, or to `backlog` or `hidden`. Lane names are configurable (e.g. In Review → Code Review); ids never change. |
+| **Walk order** | The order lanes are presented in the person view. Fully user-defined across the working lanes (the four built-in ones and any you named); Done is always last. Default is right to left: QA, In Review, In Progress, To Do. |
 | **Speaker** | A person in the standup's speaking order. Auto-discovered from assignees, can be excluded, reordered, or added manually. *Unassigned* is a pseudo-speaker. |
 | **Pulse** | The per-ticket timeline track: status segments over the last N days, plus commit, PR and comment marks, blocked spans, weekends and today. |
 | **Days in lane** | Calendar days since the ticket entered its current lane. Shown as a chip; red when over the lane's limit or when blocked. |
@@ -94,7 +94,8 @@ IDs are referenced from the roadmap and tests.
 - **Lanes:** one per person in speaking order. *Unassigned* is pinned first with a red dashed rule and "N need an
   owner". Each row: icon, key, title, thin pulse track (segments and blocked only), days chip. Lane header: name,
   "N active · N done", and it's clickable to open the person view.
-- One or two columns depending on width. Lanes are balanced across two columns by height.
+- One, two or three columns depending on the (zoomed) width. Unassigned, then the speakers in speaking order, are cut into
+  contiguous columns of the least height, so speaking order reads down, then across (F15).
 - **Done list:** every Done ticket in the window (*Sprint* / *14 days* / *Since yesterday*), with assignee initials.
 - **Backlog:** the top N by rank (N configurable 0–50, default 12; 0 hides the section), with "Showing the top 12 as set in
   Configure · 28 more ranked below in Jira".
@@ -210,10 +211,60 @@ IDs are referenced from the roadmap and tests.
 - **Storage:** Disconnect keeps synced content. It offers to delete it only when local content is over the storage
   cap (default 2 GB, set in Display; ux-spec §14.11). Nothing is ever deleted automatically.
 
+### F13. Whole board: group by Assignee or Status
+- A **Assignee | Status** switch in the Whole board's title row (and the `G` key) regroups the board. **Assignee** is
+  today's board. **Status** shows one section per lane in walk order (QA, In Review, In Progress, To Do, whatever the
+  standup defines), then Done, then Backlog, so you can see which status each ticket is in and who has it.
+- Each section header carries the lane swatch, name, ticket count, and (only when non-zero) how many are over limit,
+  blocked and unassigned, with the lane limit on the right. Rows gain an assignee column (initials; a dashed `··` box
+  for an unassigned ticket) and sort over-limit first, then longest in the lane, then board rank.
+- The choice is remembered **per standup** and restored on switching standups and on restart. It is UI state, not
+  Configure: there is no save indicator.
+- **AC:**
+  - Nothing is hidden: status mode uses the same density, then the "Scroll for more" bar, which names the sections
+    below the fold.
+  - `G` does nothing on a person view, while typing, or while the ticket modal is open.
+  - Ticket modal `J`/`K` follow the on-screen order (section order, then row order, then Done, then Backlog).
+  - Title-row stats are the same in both modes. No new network request, no `StandupView` change (ADR 0008).
+  - Option B (a column per status) was considered and rejected.
+
+### F14. Command palette and ticket finder
+- A **Find** button in the header (`⌘K` / `Ctrl+K`, or `T` with no field focused) opens one palette that finds a ticket by
+  its key and runs any app action. Typing `#`, `@` or `>` first narrows it to tickets, people or commands.
+- Ticket search is by key only, fuzzy over the number: exact, starts with, and one character off (a typo or a swapped
+  pair), across every synced issue of every standup, including Done ones. `↵` opens the ticket modal (F12); `⌘↵` opens Jira.
+- A fully typed key that has not been synced (`mob-1729`) offers one explicit "fetch just this ticket" request.
+- It lists the recent tickets and suggested commands when empty, and ranks commands by how well they match and how often
+  you run them.
+- **AC:**
+  - Typing in the palette never calls Jira; the only request it can make is the explicit fetch row, through the limiter's
+    interactive lane, exactly one per press.
+  - ⌘K works over Configure and over the ticket modal (Esc returns to the modal); focus returns to where it was.
+  - Nothing scrolls sideways at any size with Find in the header; it is icon-only below 1280.
+  - Commands and lane names come from the data and the registry, never a fixed lane list.
+  - Light and dark themes pass axe; the palette is a lazy chunk (the entry bundle stays inside its budget).
+
+### F15. Zoom for the person view and the whole board
+- A `− 100% +` control in the title row of the person view and the Whole board (and `+` `-` `0`, `⌘`/`Ctrl` with them, and
+  three palette commands) zooms everything below the header between 70% and 200%. It is hard to read a standup board from a
+  meeting-room screen; this makes it larger, or smaller to fit everyone in one view, without changing the OS or Text size.
+- Zoom **re-runs the layout** on the effective size instead of just magnifying: the whole board goes to 3 columns when
+  zoomed out, 2 or 1 when zoomed in, the rail goes compact, the person view walks its density ladder (side headings,
+  tighter rows) and the more bar says what is below. Nothing is hidden to fit.
+- One zoom per standup, shared by its person view and Whole board, remembered across restarts. The header does not zoom.
+- **AC:**
+  - At 1920 × 1080 the board has 3 / 2 / 2 / 1 columns at 80 / 100 / 150 / 175 % and the person view at 150% shows side
+    headings; every change shows a 1.2 s toast ("150% · 2 columns").
+  - `⌘`/`Ctrl` with `+` `=` `-` `0` zoom the screen and never page-zoom the window (the header stays its size).
+  - The lane or group at the top of the scroll area stays at the top after a zoom change.
+  - Nothing scrolls sideways at any of the nine levels; axe is clean in both themes; a zoom step paints inside the switch
+    budget; no network, no `StandupView` change.
+
 ### F9. Display and accessibility
 - **Theme:** Light / Dark / System (default System). **Text size:** Standard / Large (TV), which scales the whole UI.
 - Full keyboard operation.
-  - ←/→ speakers, `B` whole board, `1`–`9` standups, `R` resync, `?` key legend, `/` focus the standup switcher, `,` opens
+  - `⌘K`/`Ctrl+K` or `T` opens the command palette (F14),
+    ←/→ speakers, `B` whole board, `G` group the board by Assignee or Status, `+` `-` `0` zoom (F15), `1`–`9` standups, `R` resync, `?` key legend, `/` focus the standup switcher, `,` opens
     Configure, `Esc` closes popups.
   - Global keys are ignored while typing.
 - WCAG 2.2 AA contrast for text, 44px minimum hit targets for primary controls, real buttons, inputs and labels, and

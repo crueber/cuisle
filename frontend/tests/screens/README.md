@@ -5,6 +5,11 @@
 bootstrap payload (`tests/fixtures/bootstrap_mob.json`). Time is frozen to the fixture's `generatedAt` + 60 s so the
 header's "synced N min ago" is stable. Tolerance: `maxDiffPixelRatio: 0.02`, animations disabled (testing §5).
 
+`zoom.spec.ts` (F15, ux-spec §16) shoots the whole board at 80 / 100 / 150 / 175 % and the person view at 150 % on
+1920×1080 (compare with `design/mockups/zoom-*-1920x1080.png` by eye), and checks the 3 / 2 / 2 / 1 columns, the toast, the
+header and the ticket modal never zooming, ⌘/Ctrl+ keys being prevented, scroll anchoring, and nothing scrolling sideways at
+all nine levels at 1920×1080 and 1280×720 (also run it with `--browser=webkit`).
+
 Mockups are a guide, not pixel law. Differences listed below are deliberate (ux-spec §13 or this build) unless marked
 `DEFECT:`.
 

@@ -36,6 +36,18 @@ describe("global keys with the ticket modal open", () => {
     expect(route.value).toEqual({ view: "standup", standupId: 1, person: "ana" });
   });
 
+  it("G does not regroup the board behind the modal (F13)", async () => {
+    const { boardGroupOf } = await import("./state/standup");
+    route.value = { view: "standup", standupId: 1, person: null };
+    openTicket(1, 4, [2, 4, 8]);
+    expect(handleGlobalKey(key("g"))).toBe(false);
+    expect(handleGlobalKey(key("G", { shiftKey: true }))).toBe(false);
+    expect(boardGroupOf(1)).toBe("assignee");
+    closeTicket();
+    expect(handleGlobalKey(key("g"))).toBe(true);
+    expect(boardGroupOf(1)).toBe("status");
+  });
+
   it("Ctrl/Cmd+Z does not run an Undo toast behind the modal, and does once it is closed", () => {
     const undo = vi.fn();
     toasts.value = [];

@@ -14,20 +14,6 @@ import (
 	"github.com/crueber/cuisle/internal/store"
 )
 
-// knownLanes are the lane ids a board column may be mapped to.
-var knownLanes = []string{
-	model.LaneBacklog, model.LaneTodo, model.LaneProg, model.LaneReview, model.LaneQA, model.LaneDone, model.LaneHidden,
-}
-
-func isKnownLane(lane string) bool {
-	for _, l := range knownLanes {
-		if l == lane {
-			return true
-		}
-	}
-	return false
-}
-
 // containsAny reports whether s contains any of the substrings.
 func containsAny(s string, subs ...string) bool {
 	for _, sub := range subs {
@@ -36,6 +22,19 @@ func containsAny(s string, subs ...string) bool {
 		}
 	}
 	return false
+}
+
+// AutoLaneNamed maps a board column to a lane: first a lane whose label equals the column name (trimmed, ignoring
+// case; custom lanes and renamed built-in lanes), then the AutoLane rules. lanes are the standup's working lanes. Both
+// settings.MergeColumnsTx and sync's lane preview use it, so they always agree.
+func AutoLaneNamed(col model.Column, index, count int, statuses map[string]model.Status, lanes []model.LaneConfig) string {
+	name := strings.TrimSpace(col.Name)
+	for _, l := range lanes {
+		if l.Label != "" && strings.EqualFold(strings.TrimSpace(l.Label), name) {
+			return l.Lane
+		}
+	}
+	return AutoLane(col, index, count, statuses)
 }
 
 // AutoLane maps a board column to a lane by the jira-sync.md §2.5 rules (first match; case-insensitive on the name;
@@ -228,35 +227,48 @@ func ReplaceBoardColumnsTx(ctx context.Context, tx *sql.Tx, connID int64, cfg mo
 	return nil
 }
 
-// SetColumnLane sets a column's lane (auto=0) and rebuilds status lanes; needs_sync.
+// SetColumnLane sets a column's lane (auto=0) and rebuilds status lanes; needs_sync. lane is a built-in lane id or one
+// of the standup's custom lanes.
 func (s *Store) SetColumnLane(ctx context.Context, id int64, columnName, lane string) (Ack, error) {
-	if !isKnownLane(lane) {
+	if lane == "" {
 		return Ack{}, apperr.Validationf("lane", "Choose a lane for this column.")
 	}
 	if columnName == "" {
 		return Ack{}, apperr.Validationf("columnName", "Choose a column.")
 	}
 	return s.writeStandup(ctx, id, func(tx *sql.Tx) error {
-		var n int
-		if err := tx.QueryRowContext(ctx,
-			`SELECT count(*) FROM standup_column_map WHERE standup_id = ? AND column_name = ?`,
-			id, columnName).Scan(&n); err != nil {
-			return dbErr(err)
-		}
-		if n == 0 {
-			return apperr.Validationf("columnName", "That column is not on this board.")
-		}
-		if _, err := tx.ExecContext(ctx,
-			`UPDATE standup_column_map SET lane_order = CASE WHEN lane = ? THEN lane_order END, lane = ?, auto = 0
-			 WHERE standup_id = ? AND column_name = ?`,
-			lane, lane, id, columnName); err != nil {
-			return dbErr(err)
-		}
-		if err := RebuildStatusLanesTx(ctx, tx, id); err != nil {
-			return err
-		}
-		return SetNeedsSyncTx(ctx, tx, id)
+		return setColumnLaneTx(ctx, tx, id, columnName, lane)
 	})
+}
+
+// setColumnLaneTx maps one column to lane (auto=0), rebuilds status lanes and marks the standup as needing a sync.
+func setColumnLaneTx(ctx context.Context, tx *sql.Tx, id int64, columnName, lane string) error {
+	ok, err := laneExistsTx(ctx, tx, id, lane)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return apperr.Validationf("lane", "Choose a lane for this column.")
+	}
+	var n int
+	if err := tx.QueryRowContext(ctx,
+		`SELECT count(*) FROM standup_column_map WHERE standup_id = ? AND column_name = ?`,
+		id, columnName).Scan(&n); err != nil {
+		return dbErr(err)
+	}
+	if n == 0 {
+		return apperr.Validationf("columnName", "That column is not on this board.")
+	}
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE standup_column_map SET lane_order = CASE WHEN lane = ? THEN lane_order END, lane = ?, auto = 0
+		 WHERE standup_id = ? AND column_name = ?`,
+		lane, lane, id, columnName); err != nil {
+		return dbErr(err)
+	}
+	if err := RebuildStatusLanesTx(ctx, tx, id); err != nil {
+		return err
+	}
+	return SetNeedsSyncTx(ctx, tx, id)
 }
 
 // MoveColumn moves a column to toIndex (clamped) among the columns mapped to the same lane and stores the whole lane's

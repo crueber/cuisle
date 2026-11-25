@@ -57,13 +57,14 @@ export function dayLabel(iso: string): string {
   return `${weekday}, ${ordinal(day)} of ${MONTHS[month - 1] ?? ""}`;
 }
 
-/** Approximate width of the right cluster (sync status, Resync, Update when shown, Configure) for the tabs'
+/** Approximate width of the right cluster (Find, sync status, Resync, Update when shown, Configure) for the tabs'
  *  available width. The Update button ("↓ Update", or the icon alone) adds its width plus one header gap (16). */
 export function rightClusterWidth(c: HeaderCollapse, update = false): number {
   const sync = (c.configureLabel ? 112 : 44) + (c.syncLabel ? 200 : 0);
   const configure = c.configureLabel ? 150 : 44;
   const upd = update ? (c.configureLabel ? 124 : 44) + 16 : 0;
-  return sync + configure + upd + 48;
+  const find = (c.configureLabel ? 132 : 44) + 16; // Find (search icon, label, ⌘K chip) plus one header gap
+  return sync + configure + upd + find + 48;
 }
 
 /** Approximate width of the standalone centred date ("Wednesday"-length worst case: "Thurs, 23rd of Nov"). */

@@ -1,6 +1,7 @@
 // Implementation: WP-27. Props are frozen in props.ts.
 // Configure > Pulse (ux-spec §9.4 Pulse, §9.3 ordered lists). Mutations go through state/config.ts.
-import type { Pulse, StandupView, WalkLane } from "../../../api/types";
+import type { Pulse, StandupView } from "../../../api/types";
+import { hueOf } from "../../../state/lanes";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Segmented } from "../../../components/Segmented";
 import { Stepper } from "../../../components/Stepper";
@@ -30,10 +31,6 @@ const SAMPLE_PULSE: Pulse = {
   blocked: [],
 };
 
-function isWalkLane(lane: string): lane is WalkLane {
-  return lane === "todo" || lane === "prog" || lane === "review" || lane === "qa";
-}
-
 function previewPulse(view: StandupView | undefined): Pulse {
   if (!view || view.previewKey === "") return SAMPLE_PULSE;
   const ticket = view.tickets.find((t) => t.key === view.previewKey);
@@ -59,7 +56,7 @@ export function PulseSection({ config }: SectionProps) {
     return () => ro.disconnect();
   }, []);
   const devActivity = connection.value?.devActivity ?? "unknown";
-  const walk = config.lanes.flatMap((l) => (isWalkLane(l.lane) ? [{ ...l, lane: l.lane }] : []));
+  const walk = config.lanes.filter((l) => l.lane !== "done"); // every working lane, custom ones included, walk order
   const axis = view && view.axis.length === config.pulseDays ? view.axis : [];
 
   return (
@@ -128,7 +125,7 @@ export function PulseSection({ config }: SectionProps) {
           {walk.map((l) => (
             <div key={l.lane} class="pulse-limit">
               <span class="pulse-limit-head">
-                <span class="cfg-swatch" data-lane={l.lane} aria-hidden="true" />
+                <span class="cfg-swatch" data-lane={l.lane} data-hue={hueOf(l.lane)} aria-hidden="true" />
                 <span class="pulse-limit-name">{l.label}</span>
               </span>
               <Stepper

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"slices"
 
 	"github.com/crueber/cuisle/internal/apperr"
 	"github.com/crueber/cuisle/internal/store"
@@ -18,19 +19,24 @@ func (s *Store) UIState(ctx context.Context) (UIState, error) {
 		if err != nil {
 			return err
 		}
-		rows, err := tx.QueryContext(ctx, `SELECT standup_id, COALESCE(last_person, '') FROM standup_ui_state`)
+		rows, err := tx.QueryContext(ctx, `SELECT standup_id, COALESCE(last_person, ''), board_group, zoom FROM standup_ui_state`)
 		if err != nil {
 			return dbErr(err)
 		}
 		defer rows.Close()
 		st.LastPerson = map[int64]string{}
+		st.BoardGroup = map[int64]string{}
+		st.Zoom = map[int64]int{}
 		for rows.Next() {
 			var id int64
-			var who string
-			if err := rows.Scan(&id, &who); err != nil {
+			var who, group string
+			var zoom int
+			if err := rows.Scan(&id, &who, &group, &zoom); err != nil {
 				return dbErr(err)
 			}
 			st.LastPerson[id] = who
+			st.BoardGroup[id] = group
+			st.Zoom[id] = zoom
 		}
 		return dbErr(rows.Err())
 	})
@@ -85,6 +91,12 @@ func (s *Store) SetUIState(ctx context.Context, p UIStatePatch) error {
 		if p.LastView != nil && *p.LastView != "standup" && *p.LastView != "configure" {
 			return apperr.Validationf("lastView", "The last view must be the standup or Configure.")
 		}
+		if p.BoardGroup != nil && *p.BoardGroup != BoardGroupAssignee && *p.BoardGroup != BoardGroupStatus {
+			return apperr.Validationf("boardGroup", "The board grouping must be assignee or status.")
+		}
+		if p.Zoom != nil && !slices.Contains(ZoomLevels, *p.Zoom) {
+			return apperr.Validationf("zoom", "The zoom must be one of 70, 80, 90, 100, 110, 125, 150, 175 or 200 percent.")
+		}
 		if p.LastStandupID != nil && *p.LastStandupID != 0 {
 			if err := requireStandupTx(ctx, tx, *p.LastStandupID, "lastStandupId"); err != nil {
 				return err
@@ -97,6 +109,13 @@ func (s *Store) SetUIState(ctx context.Context, p UIStatePatch) error {
 		}
 		if p.LastPerson != nil && p.StandupID == nil {
 			return apperr.Validationf("standupId", "A last person needs the standup it belongs to.")
+		}
+
+		if p.BoardGroup != nil && p.StandupID == nil {
+			return apperr.Validationf("standupId", "A board grouping needs the standup it belongs to.")
+		}
+		if p.Zoom != nil && p.StandupID == nil {
+			return apperr.Validationf("standupId", "A zoom needs the standup it belongs to.")
 		}
 
 		now := store.Ms(s.Now())
@@ -125,6 +144,22 @@ func (s *Store) SetUIState(ctx context.Context, p UIStatePatch) error {
 				`INSERT INTO standup_ui_state (standup_id, last_person, updated_at) VALUES (?, ?, ?)
 				 ON CONFLICT(standup_id) DO UPDATE SET last_person = excluded.last_person, updated_at = excluded.updated_at`,
 				*p.StandupID, nullStr(*p.LastPerson), now); err != nil {
+				return dbErr(err)
+			}
+		}
+		if p.StandupID != nil && p.BoardGroup != nil {
+			if _, err := tx.ExecContext(ctx,
+				`INSERT INTO standup_ui_state (standup_id, board_group, updated_at) VALUES (?, ?, ?)
+				 ON CONFLICT(standup_id) DO UPDATE SET board_group = excluded.board_group, updated_at = excluded.updated_at`,
+				*p.StandupID, *p.BoardGroup, now); err != nil {
+				return dbErr(err)
+			}
+		}
+		if p.StandupID != nil && p.Zoom != nil {
+			if _, err := tx.ExecContext(ctx,
+				`INSERT INTO standup_ui_state (standup_id, zoom, updated_at) VALUES (?, ?, ?)
+				 ON CONFLICT(standup_id) DO UPDATE SET zoom = excluded.zoom, updated_at = excluded.updated_at`,
+				*p.StandupID, *p.Zoom, now); err != nil {
 				return dbErr(err)
 			}
 		}

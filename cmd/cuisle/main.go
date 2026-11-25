@@ -227,6 +227,7 @@ func run() int {
 		OnShutdown:     cleanupAll,
 	})
 	wailsEmitter.App = wapp
+	wapp.Menu.SetApplicationMenu(appMenu()) // the default menu minus the webview's own zoom items (F15)
 
 	var saved *app.WindowState
 	theme := settings.AppDefaults[settings.KeyTheme]

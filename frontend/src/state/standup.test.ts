@@ -67,7 +67,7 @@ function tk(key: string, assignee: string, lane: string, over: Partial<TicketVie
 }
 const LABELS: Record<string, string> = { todo: "To do", prog: "In progress", review: "Review", qa: "QA", done: "Done" };
 function lanes(order: WalkLane[] = ["qa", "review", "prog", "todo"]) {
-  return [...order, "done"].map((lane) => ({ lane, label: LABELS[lane]!, limitDays: 0, columns: [] as string[] }));
+  return [...order, "done"].map((lane) => ({ lane, label: LABELS[lane]!, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays: 0, columns: [] as string[] }));
 }
 function mkView(standupId: number, speakers: SpeakerView[], tickets: TicketView[], over: Partial<StandupView> = {}): StandupView {
   return {
@@ -416,6 +416,68 @@ describe("toggleBoard (B)", () => {
     seed({ views: [mkView(1, speakers, [])], route: { view: "configure", standupId: 1 } });
     T.S.toggleBoard();
     expect(T.R.route.value).toEqual({ view: "configure", standupId: 1 });
+  });
+});
+
+describe("board grouping per standup (F13)", () => {
+  const start = () => seed({ views: [mkView(1, [sp("a")], []), mkView(2, [sp("a")], [])], route: { view: "standup", standupId: 1, person: null } });
+
+  it("defaults_to_assignee_and_seeds_from_the_boot_payload_per_standup", () => {
+    start();
+    expect(T.S.boardGroupOf(1)).toBe("assignee");
+    T.S.seedBoardGroups({ "2": "status", "1": "assignee", "3": "bogus" });
+    expect(T.S.boardGroupOf(1)).toBe("assignee");
+    expect(T.S.boardGroupOf(2)).toBe("status");
+    expect(T.S.boardGroupOf(3)).toBe("assignee");
+    T.S.seedBoardGroups(undefined);
+    expect(T.S.boardGroupOf(2)).toBe("assignee");
+  });
+
+  it("initFromBoot_restores_each_standups_choice", () => {
+    T.A.initFromBoot({
+      settings: {}, connection: { state: "ok" }, standups: [tab(1), tab(2)], build: {}, recovered: false, sync: [], view: null,
+      ui: { lastStandupId: 1, lastView: "standup", lastPerson: {}, boardGroup: { "1": "status" }, window: null },
+    } as unknown as Parameters<typeof T.A.initFromBoot>[0]);
+    expect(T.S.boardGroupOf(1)).toBe("status");
+    expect(T.S.boardGroupOf(2)).toBe("assignee");
+  });
+
+  it("setBoardGroup_writes_through_immediately_with_no_debounce_and_only_when_it_changes", async () => {
+    start();
+    T.S.setBoardGroup(1, "status");
+    expect(T.fake.app!.setUIState).toHaveBeenCalledTimes(1);
+    expect(T.fake.app!.setUIState).toHaveBeenCalledWith({ standupId: 1, boardGroup: "status" });
+    T.S.setBoardGroup(1, "status");
+    expect(T.fake.app!.setUIState).toHaveBeenCalledTimes(1);
+    expect(callsOtherThan(T.fake, ["app.setUIState"])).toEqual([]);
+  });
+
+  it("switching_standups_restores_each_choice_without_a_facade_call", async () => {
+    start();
+    T.S.setBoardGroup(1, "status");
+    T.fake.app!.setUIState!.mockClear();
+    await T.S.switchStandup(2);
+    expect(T.S.boardGroupOf(2)).toBe("assignee");
+    await T.S.switchStandup(1);
+    expect(T.S.boardGroupOf(1)).toBe("status");
+    await vi.advanceTimersByTimeAsync(600);
+    expect(T.fake.app!.setUIState).not.toHaveBeenCalledWith(expect.objectContaining({ boardGroup: expect.anything() }));
+  });
+
+  it("a_failing_write_keeps_the_choice_on_screen_and_does_not_throw", async () => {
+    start();
+    T.fake.app!.setUIState!.mockRejectedValueOnce(new Error("db"));
+    expect(() => T.S.setBoardGroup(1, "status")).not.toThrow();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(T.S.boardGroupOf(1)).toBe("status");
+  });
+
+  it("toggleBoardGroup_acts_on_the_whole_board_only", () => {
+    seed({ views: [mkView(1, [sp("a")], [])], route: { view: "standup", standupId: 1, person: "a" } });
+    expect(T.S.toggleBoardGroup()).toBe(false);
+    T.R.route.value = { view: "standup", standupId: 1, person: null };
+    expect(T.S.toggleBoardGroup()).toBe(true);
+    expect(T.S.boardGroupOf(1)).toBe("status");
   });
 });
 

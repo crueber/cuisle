@@ -76,7 +76,7 @@ function mkConfig(over: Partial<StandupConfig> = {}): StandupConfig {
     space: { id: "10001", key: "MOB", name: "Saffron Mobile" },
     board: { id: "42", name: "MOB board", type: "scrum" },
     scope: "sprint", extraFilter: "", filterCheck: null,
-    columns: [], lanes: [], unmappedStatuses: [],
+    columns: [], lanes: [], laneOptions: [], walkLeftToRight: [], unmappedStatuses: [],
     rowsMode: "fit", speakers: [], unassignedPosition: "last", reshuffleDaily: false,
     pulseDays: 14, showCommits: true, showPRs: true, showComments: false, shadeWeekends: true,
     doneWindow: "sprint", backlogRows: 8, needsSync: false, draft: false,

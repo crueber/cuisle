@@ -81,6 +81,7 @@ type Settings struct {
 	ShadeWeekends      bool
 	DoneWindow         string
 	BacklogRows        int
+	DoneLabel          string // display label of the Done lane; "" = "Done"
 }
 
 // Speaker is one standup_speaker row.
@@ -117,8 +118,22 @@ type UIState struct {
 	LastStandupID int64            `json:"lastStandupId"` // 0 = none
 	LastView      string           `json:"lastView"`      // standup|configure
 	LastPerson    map[int64]string `json:"lastPerson"`    // standup id → accountId|"unassigned"|"" (whole board)
+	BoardGroup    map[int64]string `json:"boardGroup"`    // standup id → assignee|status; absent = assignee (F13)
+	Zoom          map[int64]int    `json:"zoom"`          // standup id → percent (ZoomLevels); absent = 100 (F15)
 	Window        *WindowState     `json:"window"`        // nil = never saved
 }
+
+// Whole-board grouping values (standup_ui_state.board_group).
+const (
+	BoardGroupAssignee = "assignee"
+	BoardGroupStatus   = "status"
+)
+
+// ZoomLevels are the allowed zoom percentages (standup_ui_state.zoom CHECK; ux-spec §16.2).
+var ZoomLevels = []int{70, 80, 90, 100, 110, 125, 150, 175, 200}
+
+// ZoomDefault is the zoom of a standup with no stored value.
+const ZoomDefault = 100
 
 type WindowState struct {
 	X         int  `json:"x"`
@@ -129,12 +144,14 @@ type WindowState struct {
 }
 
 // UIStatePatch is the bound patch type (nil = unchanged). StandupID+LastPerson set one standup's last person
-// (LastPerson "" = whole board).
+// (LastPerson "" = whole board). StandupID+BoardGroup set one standup's Whole-board grouping (assignee|status); StandupID+Zoom set its zoom (F15).
 type UIStatePatch struct {
 	LastStandupID *int64       `json:"lastStandupId,omitempty"`
 	LastView      *string      `json:"lastView,omitempty"`
 	StandupID     *int64       `json:"standupId,omitempty"`
 	LastPerson    *string      `json:"lastPerson,omitempty"`
+	BoardGroup    *string      `json:"boardGroup,omitempty"`
+	Zoom          *int         `json:"zoom,omitempty"`
 	Window        *WindowState `json:"window,omitempty"`
 }
 

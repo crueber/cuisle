@@ -78,7 +78,7 @@ vi.mock("./BoardView", async () => {
 });
 
 // ───────────────────────── fixture ─────────────────────────
-const L = (lane: string, label: string): LaneInfo => ({ lane, label, limitDays: 0, columns: [label] });
+const L = (lane: string, label: string): LaneInfo => ({ lane, label, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays: 0, columns: [label] });
 const LANES = [L("qa", "QA"), L("review", "In Review"), L("prog", "In Progress"), L("todo", "To Do"), L("done", "Done")];
 const sp = (id: string, name: string, initials: string, active: number, over: Partial<SpeakerView> = {}): SpeakerView => ({
   id, name, first: name.split(" ")[0]!, initials, unassigned: false, included: true, active, done: 0, ...over,

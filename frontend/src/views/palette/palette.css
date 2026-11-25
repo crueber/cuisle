@@ -1,0 +1,351 @@
+/* Command palette with the ticket finder (F14, ux-spec §15). A dialog min(860, vw - 48) wide, top 96px (64px when the window
+   is shorter than 800px), 3px ink border, radius 4, over the lighter --color-scrim-palette. Tokens only (AGENTS invariant
+   11); sizes scale with --scale (Large/TV). Declarations are shared by grouped selectors to keep the lazy CSS small. */
+.pal-scrim {
+  --top: 96px;
+  position: fixed;
+  inset: 0;
+  z-index: 80; /* above the ticket modal (50) and its lightbox */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--top) 24px 0;
+  box-sizing: border-box;
+  background: var(--color-scrim-palette);
+}
+@media (max-height: 799px) {
+  .pal-scrim {
+    --top: 64px;
+  }
+}
+.pal {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(calc(var(--scale) * 860px), 100%);
+  max-height: calc(100vh - var(--top) - 48px);
+  border: 3px solid var(--color-rule);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-family-sans);
+  overflow: hidden;
+}
+
+/* shared looks */
+.pal-sec__head,
+.pal-more,
+.pal-empty,
+.pal-note,
+.pal-foot,
+.pal-off,
+.pal-detail,
+.pal-cat,
+.pal-standup {
+  color: var(--color-muted);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * 12px);
+}
+.pal-key,
+.pal-field,
+.pal-mode,
+.pal-who,
+.pal-days,
+.pal-initials,
+.pal-cat,
+.pal-sec__head,
+.pal-esc,
+.pal-foot kbd,
+.pal-kbd kbd {
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-bold);
+}
+.pal-title,
+.pal-name,
+.pal-detail,
+.pal-fetch {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pal-title,
+.pal-name,
+.pal-fetch,
+.pal-field {
+  font-weight: var(--font-weight-semibold);
+}
+.pal-input__icon,
+.pal-ico,
+.pal-check,
+.pal-row .ticket-icon,
+.pal-key,
+.pal-lane,
+.pal-who,
+.pal-days,
+.pal-standup,
+.pal-cat,
+.pal-kbd,
+.pal-chev,
+.pal-initials,
+.pal-esc,
+.pal-mode,
+.pal-crumb,
+.pal-note {
+  flex: none;
+}
+
+/* input row */
+.pal-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: calc(var(--scale) * 62px);
+  padding: 0 16px;
+  box-sizing: border-box;
+  border-bottom: 3px solid var(--color-rule);
+}
+.pal-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-fg);
+  font-size: calc(var(--scale) * 22px);
+}
+.pal-field::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+.pal-mode,
+.pal-crumb {
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-size: calc(var(--scale) * 15px);
+  line-height: 1.3;
+}
+.pal-mode {
+  border: 0;
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+  cursor: pointer;
+}
+.pal-crumb {
+  border: 2px solid var(--color-rule);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.pal-esc,
+.pal-foot kbd,
+.pal-kbd kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1.5px solid var(--color-rule-mid);
+  border-radius: 3px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font-size: calc(var(--scale) * 11px);
+  line-height: 16px;
+}
+
+/* list */
+.pal-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.pal-sec__head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 10px 16px 4px;
+  font-size: calc(var(--scale) * 11px);
+  letter-spacing: var(--font-tracking-caps);
+}
+.pal-sec__hint {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+  font-size: calc(var(--scale) * 12px);
+}
+.pal-more,
+.pal-empty {
+  padding: 8px 16px 8px 52px;
+}
+.pal-empty {
+  padding: 18px 16px;
+  font-size: calc(var(--scale) * 14px);
+}
+.pal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: calc(var(--scale) * 48px);
+  padding: 0 16px 0 12px;
+  box-sizing: border-box;
+  border-left: 4px solid transparent;
+  border-bottom: 1px solid var(--color-rule-soft);
+  font-size: calc(var(--scale) * 17px);
+  cursor: pointer;
+}
+.pal-row[data-selected="true"] {
+  border-left-color: var(--color-fg);
+  background: var(--color-rule-soft);
+}
+/* The selected row's tint is darker than the page: muted text would fall under 4.5:1, so it reads as ink there. */
+.pal-row[data-selected="true"] :is(.pal-cat, .pal-detail, .pal-standup, .pal-days:not([data-alert="true"]), .pal-off) {
+  color: var(--color-fg);
+}
+.pal-row[data-disabled="true"] {
+  color: var(--color-muted);
+  cursor: default;
+}
+.pal-hl {
+  padding: 0;
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+}
+
+/* tickets */
+.pal-key {
+  min-width: calc(var(--scale) * 100px);
+  font-size: calc(var(--scale) * 17px);
+}
+.pal-title {
+  flex: 1 1 auto;
+}
+.pal-off {
+  margin-left: 8px;
+  font-size: calc(var(--scale) * 11px);
+  font-weight: var(--font-weight-regular);
+}
+.pal-row[data-done="true"] :is(.pal-key, .pal-title) {
+  color: var(--color-done-fg);
+}
+.pal-lane {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(var(--scale) * 134px);
+  overflow: hidden;
+  font-size: calc(var(--scale) * 12px);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  white-space: nowrap;
+}
+.pal-sw {
+  width: calc(var(--scale) * 12px);
+  height: calc(var(--scale) * 12px);
+  border-radius: 2px;
+}
+.pal-sw[data-lane="done"] {
+  background: var(--color-lane-done);
+}
+.pal-who,
+.pal-initials {
+  width: calc(var(--scale) * 30px);
+  text-align: center;
+  font-size: calc(var(--scale) * 12px);
+}
+.pal-who[data-unassigned="true"] {
+  border: 1px dashed var(--color-unassigned-border);
+  border-radius: 3px;
+  color: var(--color-muted);
+}
+.pal-days {
+  width: calc(var(--scale) * 44px);
+  text-align: center;
+  font-size: calc(var(--scale) * 13px);
+  color: var(--color-muted);
+}
+.pal-days[data-alert="true"] {
+  background: var(--color-alert-bg);
+  color: var(--color-alert-fg);
+  border-radius: var(--radius-control);
+}
+.pal-standup {
+  width: calc(var(--scale) * 52px);
+  text-align: right;
+}
+
+/* commands, people, the fetch row */
+.pal-name {
+  flex: 0 1 auto;
+}
+.pal-detail {
+  font-size: calc(var(--scale) * 13px);
+}
+.pal-fill {
+  flex: 1 1 0;
+}
+.pal-fetch {
+  flex: 1 1 auto;
+}
+.pal-fetch .pal-key {
+  min-width: 0;
+}
+.pal-fetch-error {
+  color: var(--color-alert-text);
+}
+.pal-cat {
+  width: calc(var(--scale) * 92px);
+  text-align: right;
+  font-size: calc(var(--scale) * 11px);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+}
+.pal-kbd {
+  width: calc(var(--scale) * 64px);
+  text-align: right;
+}
+.pal-chev {
+  width: calc(var(--scale) * 20px);
+  display: flex;
+  justify-content: center;
+}
+.pal-row--person .pal-cat {
+  width: calc(var(--scale) * 72px);
+}
+
+/* nested note and footer */
+.pal-note {
+  padding: 8px 16px;
+  border-top: 1px solid var(--color-rule-soft);
+  font-size: calc(var(--scale) * 11px);
+}
+.pal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: calc(var(--scale) * 36px);
+  padding: 0 16px;
+  box-sizing: border-box;
+  border-top: 1px solid var(--color-rule-mid);
+  white-space: nowrap;
+}
+.pal-hints,
+.pal-legend,
+.pal-hints > span {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pal-hints > span {
+  gap: 3px;
+}
+.pal-legend b {
+  color: var(--color-fg);
+}
+/* announced, not shown */
+.pal-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

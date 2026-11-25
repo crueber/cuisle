@@ -24,6 +24,7 @@ const NAME_SET: Record<IconName, true> = {
   task: true,
   spike: true,
   other: true,
+  search: true,
   sliders: true,
   resync: true,
   close: true,

@@ -14,8 +14,10 @@
 // SPEC-NOTE: every reorder/preset calls setWalkOrder(fullOrderOfFourLaneIds) once, e.g. moving QA down from
 //   [qa,review,prog,todo] gives [review,qa,prog,todo]. Presets: "Right to left" = [qa,review,prog,todo],
 //   "Left to right" = [todo,prog,review,qa] (buttons named exactly so).
-// SPEC-NOTE: the subtitle (inside the section heading block) reads "Right to left (QA first)", "Left to right (To Do
-//   first)" or "Custom order", derived from the current order.
+// SPEC-NOTE: the subtitle (inside the section heading block) reads "Right to left (QA first)", "Left to right (To do
+//   first)" or "Custom order", derived from the current order; the names are the lanes' configured labels.
+// SPEC-NOTE (custom lanes): the walk lists every working lane, custom lanes included; the presets come from Go's
+//   config.walkLeftToRight (board column order) and its reverse.
 // SPEC-NOTE: Rows is a Segmented labelled /rows/i with values "fit" | "roomy" (labels "Fit when possible" / "Always
 //   roomy") -> saveField("rowsMode", value); the hint "Tighten before scrolling" is plain text.
 
@@ -93,12 +95,13 @@ function mkConfig(over: Partial<StandupConfig> = {}): StandupConfig {
       { columnName: "Closed", statusNames: ["Done"], lane: "done", auto: true, order: 0 },
     ],
     lanes: [
-      { lane: "qa", label: "QA", limitDays: 3, columns: ["Verify"] },
-      { lane: "review", label: "Review", limitDays: 2, columns: ["Code Review", "Peer Review"] },
-      { lane: "prog", label: "In progress", limitDays: 5, columns: ["Doing"] },
-      { lane: "todo", label: "To do", limitDays: 0, columns: ["Ready"] },
-      { lane: "done", label: "Done", limitDays: 0, columns: ["Closed"] },
+      { lane: "qa", label: "QA", defaultLabel: "QA", kind: "working", custom: false, hue: 0, limitDays: 3, columns: ["Verify"] },
+      { lane: "review", label: "Review", defaultLabel: "In Review", kind: "working", custom: false, hue: 0, limitDays: 2, columns: ["Code Review", "Peer Review"] },
+      { lane: "prog", label: "In progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: ["Doing"] },
+      { lane: "todo", label: "To do", defaultLabel: "To Do", kind: "working", custom: false, hue: 0, limitDays: 0, columns: ["Ready"] },
+      { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: ["Closed"] },
     ],
+    laneOptions: [], walkLeftToRight: ["todo", "prog", "review", "qa"],
     unmappedStatuses: [],
     rowsMode: "fit",
     speakers: [
@@ -122,7 +125,7 @@ const row = (label: string): HTMLElement => {
 const upBtn = (label: string) => within(row(label)).getByRole("button", { name: /\bup\b/i }) as HTMLButtonElement;
 const downBtn = (label: string) => within(row(label)).getByRole("button", { name: /\bdown\b/i }) as HTMLButtonElement;
 
-const L = (lane: string, label: string, columns: string[]): LaneInfo => ({ lane, label, limitDays: 2, columns });
+const L = (lane: string, label: string, columns: string[]): LaneInfo => ({ lane, label, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays: 2, columns });
 const QA = L("qa", "QA", ["Verify"]);
 const REVIEW = L("review", "Review", ["Code Review", "Peer Review"]);
 const PROG = L("prog", "In progress", ["Doing"]);
@@ -227,7 +230,7 @@ describe("PersonViewSection: presets and subtitle", () => {
 
   it.each([
     ["Right to left (QA first)", [QA, REVIEW, PROG, TODO]],
-    ["Left to right (To Do first)", [TODO, PROG, REVIEW, QA]],
+    ["Left to right (To do first)", [TODO, PROG, REVIEW, QA]],
     ["Custom order", [REVIEW, QA, PROG, TODO]],
     ["Custom order", [QA, REVIEW, TODO, PROG]],
   ] as [string, LaneInfo[]][])("shows the subtitle '%s' for the matching order", (subtitle, lanes) => {
@@ -256,5 +259,34 @@ describe("PersonViewSection: rows mode", () => {
   it("shows the heading 'Person view'", () => {
     render(<PersonViewSection config={mkConfig()} columns={3} />);
     expect(screen.getByRole("heading", { name: /^Person view/i })).toBeTruthy();
+  });
+});
+
+describe("PersonViewSection: custom lanes", () => {
+  const DESIGN: LaneInfo = { lane: "c1", label: "Design", defaultLabel: "", kind: "working", custom: true, hue: 1, limitDays: 5, columns: ["Design"] };
+  const cfg = () => mkConfig({
+    lanes: [QA, REVIEW, PROG, DESIGN, TODO],
+    walkLeftToRight: ["todo", "c1", "prog", "review", "qa"],
+    laneOptions: [{ ...DONE, label: "Shipped" }],
+  });
+
+  it("lists a custom lane in the walk with its own name, reorderable", () => {
+    render(<PersonViewSection config={cfg()} columns={3} />);
+    expect(row("Design").textContent).toContain("Jira: Design");
+    act(() => { upBtn("Design").click(); });
+    expect(st.setWalkOrder).toHaveBeenCalledWith(["qa", "review", "c1", "prog", "todo"]);
+  });
+
+  it("presets follow the board order with the custom lane in place", () => {
+    render(<PersonViewSection config={cfg()} columns={3} />);
+    act(() => { screen.getByRole("button", { name: "Left to right" }).click(); });
+    expect(st.setWalkOrder).toHaveBeenLastCalledWith(["todo", "c1", "prog", "review", "qa"]);
+    act(() => { screen.getByRole("button", { name: "Right to left" }).click(); });
+    expect(st.setWalkOrder).toHaveBeenLastCalledWith(["qa", "review", "prog", "c1", "todo"]);
+  });
+
+  it("shows Done under its configured name", () => {
+    render(<PersonViewSection config={cfg()} columns={3} />);
+    expect(screen.getByText("Shipped")).toBeTruthy();
   });
 });

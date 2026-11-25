@@ -20,8 +20,64 @@ const (
 	LaneHidden  = "hidden"
 )
 
-// WorkingLanes are the four lanes a standup walks (Done is always last and not part of the walk).
+// WorkingLanes are the four built-in lanes a standup walks (Done is always last and not part of the walk). A standup
+// can add custom working lanes (IsCustomLane); use IsWorkingLane to test a lane id.
 var WorkingLanes = []string{LaneTodo, LaneProg, LaneReview, LaneQA}
+
+// Custom lanes (lanes the user names in Configure › Status mapping) have ids "c1", "c2", … per standup, never reused
+// after a delete. They are working lanes. Each has a colour index 1..LaneHues from the extended lane palette.
+const (
+	CustomLanePrefix = "c"
+	LaneHues         = 8  // size of the extended lane palette (design/tokens.json color.*.lane.x1..x8)
+	MaxCustomLanes   = 12 // per standup
+	MaxLaneLabel     = 40 // runes
+)
+
+// IsCustomLane reports whether lane is a custom lane id ("c" followed by a positive number without leading zeros).
+func IsCustomLane(lane string) bool {
+	if len(lane) < 2 || lane[0] != 'c' || lane[1] == '0' {
+		return false
+	}
+	for i := 1; i < len(lane); i++ {
+		if lane[i] < '0' || lane[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// IsWorkingLane reports whether lane is a working lane: one of the four built-in walk lanes or a custom lane.
+func IsWorkingLane(lane string) bool {
+	switch lane {
+	case LaneTodo, LaneProg, LaneReview, LaneQA:
+		return true
+	}
+	return IsCustomLane(lane)
+}
+
+// IsShownLane reports whether tickets in lane appear on the standup: working lanes and done.
+func IsShownLane(lane string) bool { return lane == LaneDone || IsWorkingLane(lane) }
+
+// DefaultLaneLabel is the built-in label of a lane id ("" for a custom lane, which always has its own label).
+func DefaultLaneLabel(lane string) string {
+	switch lane {
+	case LaneTodo:
+		return "To Do"
+	case LaneProg:
+		return "In Progress"
+	case LaneReview:
+		return "In Review"
+	case LaneQA:
+		return "QA"
+	case LaneDone:
+		return "Done"
+	case LaneBacklog:
+		return "Backlog"
+	case LaneHidden:
+		return "Hidden"
+	}
+	return ""
+}
 
 // Membership roles.
 const (
@@ -320,15 +376,17 @@ type DevActivity struct {
 // ── Effective configuration (what the view builder reads; also the config_json of standup_config_history) ──
 
 type LaneConfig struct {
-	Lane      string // todo|prog|review|qa
-	Position  int    // walk position 0..3
+	Lane      string // todo|prog|review|qa|c<N>
+	Position  int    // walk position 0..len-1
 	LimitDays int    // 0 = no limit
+	Label     string // display label; "" = the built-in default (custom lanes always have one)
+	Hue       int    // custom lanes: colour index 1..LaneHues; 0 for built-in lanes
 }
 
 type ColumnLane struct {
 	ColumnName string
 	Position   int
-	Lane       string // backlog|todo|prog|review|qa|done|hidden
+	Lane       string // backlog|todo|prog|review|qa|done|hidden|c<N>
 	Auto       bool
 	LaneOrder  int // order among the columns of the same lane (0-based, dense); tickets in a lane follow it
 }
@@ -357,7 +415,8 @@ type EffectiveConfig struct {
 	BoardType          string // "scrum"|"kanban"|"" (draft)
 	Scope              string // "sprint"|"board"
 	ExtraFilter        string
-	Lanes              []LaneConfig    // walk order (sorted by Position)
+	Lanes              []LaneConfig    // working lanes incl. custom, walk order (sorted by Position)
+	DoneLabel          string          // display label of the Done lane; "" = "Done"
 	Columns            []ColumnLane    // board column order
 	StatusLanes        []StatusLane    // status id → lane
 	Speakers           []SpeakerConfig // by Position
@@ -411,4 +470,34 @@ type BoardSnapshot struct {
 	DevActivity    string                  // "ok"|"unavailable"|"unknown"
 	LastSyncedAt   time.Time               // zero = never
 	Warnings       []string                // warnings of the last finished sync run
+}
+
+// LaneLabel returns the display label of lane in this config: the configured label, else the built-in default. A
+// custom lane id the config no longer has (deleted) is returned unchanged.
+func (c EffectiveConfig) LaneLabel(lane string) string {
+	if lane == LaneDone && c.DoneLabel != "" {
+		return c.DoneLabel
+	}
+	for _, l := range c.Lanes {
+		if l.Lane == lane && l.Label != "" {
+			return l.Label
+		}
+	}
+	if d := DefaultLaneLabel(lane); d != "" {
+		return d
+	}
+	return lane
+}
+
+// HasLane reports whether lane is a lane of this config: a built-in lane id or one of its custom lanes.
+func (c EffectiveConfig) HasLane(lane string) bool {
+	if !IsCustomLane(lane) {
+		return DefaultLaneLabel(lane) != ""
+	}
+	for _, l := range c.Lanes {
+		if l.Lane == lane {
+			return true
+		}
+	}
+	return false
 }

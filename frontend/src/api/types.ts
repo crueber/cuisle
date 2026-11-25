@@ -54,6 +54,10 @@ export type FilterCheck = Fix<V.FilterCheck>;
 
 // ── ticket modal (ADR 0015, ux-spec §14) ──
 export type TicketDetail = Fix<V.TicketDetail>;
+export type TicketHit = Fix<V.TicketHit>;
+export type TicketFind = Fix<V.TicketFind>;
+export type PersonStanding = Fix<V.PersonStanding>;
+export type PersonHit = Fix<V.PersonHit>;
 export type IssueRefView = Fix<V.IssueRefView>;
 export type IssueRow = Fix<V.IssueRow>;
 export type LinkGroup = Fix<V.LinkGroup>;
@@ -128,9 +132,13 @@ export type UpdateStatus = Omit<Fix<U.Status>, "phase" | "errorCode" | "availabl
 };
 
 // ── string unions used across the UI ──
-export type Lane = "todo" | "prog" | "review" | "qa" | "done";
-export type WalkLane = "todo" | "prog" | "review" | "qa";
-export type MapLane = "backlog" | Lane | "hidden";
+/** Lane ids: todo|prog|review|qa|done, plus custom lanes "c<N>" a standup defines (LaneInfo has label, kind, hue). */
+export type Lane = string;
+/** A working lane: todo|prog|review|qa or a custom lane. */
+export type WalkLane = string;
+/** Any lane a column can map to: backlog, the working lanes, done, hidden. */
+export type MapLane = string;
+export type LaneKind = "working" | "done" | "backlog" | "hidden";
 export type TicketType = "story" | "bug" | "task" | "spike" | "subtask" | "epic" | "other";
 export type RowsMode = "fit" | "roomy";
 export type DoneWindow = "sprint" | "14d" | "yesterday";

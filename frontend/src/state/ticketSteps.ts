@@ -6,7 +6,8 @@ import { api } from "../api/index";
 import { toAppError } from "../api/errors";
 import type { StandupView, TicketView } from "../api/types";
 import { openTicket } from "./ticket";
-import { buildBoardLanes, currentView } from "./standup";
+import { statusSections, type BoardGroup } from "../layout/board";
+import { boardGroupOf, buildBoardLanes, currentView } from "./standup";
 import { route } from "./route";
 import { showToast } from "./ui";
 
@@ -23,18 +24,22 @@ export function personSteps(view: StandupView, person: string): number[] {
   return dedupe(out);
 }
 
-/** Whole board: the lanes top to bottom (each speaker's active tickets), then every Done ticket, then the backlog. */
-export function boardSteps(view: StandupView): number[] {
+/**
+ * Whole board, in on-screen order: the lanes top to bottom (each speaker's active tickets), or, grouped by status, the
+ * sections in walk order with their rows sorted as drawn (ux-spec §6.5); then every Done ticket, then the backlog.
+ */
+export function boardSteps(view: StandupView, group: BoardGroup = "assignee"): number[] {
   const out: number[] = [];
-  for (const box of buildBoardLanes(view)) for (const t of box.tickets) out.push(t.id);
+  if (group === "status") for (const s of statusSections(view)) for (const t of s.tickets) out.push(t.id);
+  else for (const box of buildBoardLanes(view)) for (const t of box.tickets) out.push(t.id);
   for (const t of view.tickets ?? []) if (t.lane === "done") out.push(t.id);
   for (const b of view.backlog ?? []) if (b.issueId > 0) out.push(b.issueId);
   return dedupe(out);
 }
 
 /** The step list for the screen the user is on: the person view when a person is selected, else the board. */
-export function stepsFor(view: StandupView, person: string | null): number[] {
-  return person === null ? boardSteps(view) : personSteps(view, person);
+export function stepsFor(view: StandupView, person: string | null, group: BoardGroup = boardGroupOf(view.standupId)): number[] {
+  return person === null ? boardSteps(view, group) : personSteps(view, person);
 }
 
 /** Resolves a row's key to its local issue id (a ticket of the view, or a backlog item); 0 when unknown. */

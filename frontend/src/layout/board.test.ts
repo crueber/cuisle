@@ -1,21 +1,25 @@
-// WP-13: board layout (ux-spec §6.2, §6.3, testing.md §4). Pure; no DOM.
+// WP-13, F15: board layout (ux-spec §6.2, §6.3, §16.3, testing.md §4). Pure; no DOM.
 //
 // SPEC-NOTE (MOB fixture): the lane sizes come from design/reference/sample-data.json, standup "mob", counting ACTIVE
-//   (non-done) tickets per person: iris 14, silas 4, noor 4, otto 3, sam 4, jonas 3, wren 4, unassigned 4
-//   (speaking order = the people array order). At row 23 lane heights are 30 + rows × 23 + 8, so the greedy balance gives
-//   column 1 = [unassigned, silas, noor, sam, wren] (650) and column 2 = [iris, otto, jonas] (574).
+//   (non-done) tickets per person: iris 14, silas 4, noor 4, otto 3, amara 4, jonas 3, wren 4, unassigned 4
+//   (speaking order = the people array order). At row 23 lane heights are 30 + rows × 23 + 8. F15 replaced the greedy
+//   balance with F13's order-preserving cut (splitSequence): Unassigned first, then speakers in speaking order, cut
+//   into contiguous runs that minimise the tallest column, so 2 columns are [unassigned, iris, silas] (620) and
+//   [noor, otto, amara, jonas, wren] (604), and 3 columns are [unassigned, iris] (490) | [silas, noor] (260) | [otto, amara, jonas, wren] (474), the split the 80% mockup draws.
 // SPEC-NOTE: Unassigned with rows = 0 is omitted from the result (ux-spec §6.2: Unassigned "if it has tickets"; the
 //   prototype only adds it when it has rows). Speaker lanes with 0 rows are not tested.
 // SPEC-NOTE: when the input lists the unassigned lane anywhere (even last), it is hoisted to the head of column 1.
+// SPEC-NOTE: boardColumns is 1 | 2 | 3 (F15): 3 at effective mainW ≥ 1720, so zoom 80% on a 1920 window gives 3.
 // SPEC-NOTE: boardTitleWidth/doneBacklogLayout use integer inputs; the prototype rounds, the spec does not.
 import { describe, expect, it } from "vitest";
 import {
-  balanceLanes,
   boardColumns,
   boardTitleWidth,
   doneBacklogLayout,
   laneHeight,
   laneRowHeight,
+  splitLanes,
+  splitSequence,
   type LaneInput,
 } from "./board";
 
@@ -38,7 +42,10 @@ describe("boardColumns", () => {
     [1150, 2],
     [1149, 1],
     [1000, 1],
-    [2400, 2],
+    [1719, 2],
+    [1720, 3],
+    [2128, 3],
+    [2400, 3],
   ])("boardColumns(%i) is %i", (w, n) => {
     expect(boardColumns(w)).toBe(n);
   });
@@ -53,88 +60,132 @@ describe("laneHeight", () => {
   });
 });
 
-describe("balanceLanes: MOB fixture at mainW 1656, row 23", () => {
-  it("makes 2 columns with Unassigned first in column 1 and speaking order preserved within each column", () => {
-    const r = balanceLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], boardColumns(1656), 23);
+describe("splitLanes: MOB fixture, row 23", () => {
+  it("2 columns: Unassigned, Iris, Silas | Noor, Otto, Amara, Jonas, Wren (the handoff's split)", () => {
+    const r = splitLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], boardColumns(1656), 23);
     expect(r.columns).toHaveLength(2);
     expect(ids(r.columns)).toEqual([
-      ["unassigned", "silas", "noor", "amara", "wren"],
-      ["iris", "otto", "jonas"],
+      ["unassigned", "iris", "silas"],
+      ["noor", "otto", "amara", "jonas", "wren"],
     ]);
-    expect(r.heights).toEqual([650, 574]);
+    expect(r.heights).toEqual([620, 604]);
+  });
+
+  it("3 columns: speaking order reads down, then across", () => {
+    const r = splitLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], boardColumns(2128), 23);
+    expect(r.columns).toHaveLength(3);
+    // the mockup's split (zoom-board-80): another cut, [silas, noor, otto | amara, jonas, wren] = 367 | 367, is as short
+    // (490 is the tallest either way); a tie gives column 1 the most, then the last column, then the middle one the rest
+    expect(ids(r.columns)).toEqual([["unassigned", "iris"], ["silas", "noor"], ["otto", "amara", "jonas", "wren"]]);
+    expect(r.heights).toEqual([490, 260, 474]);
+  });
+
+  it("the flattened order is always Unassigned then the speakers in order, at any column count", () => {
+    const order = ["unassigned", "iris", "silas", "noor", "otto", "amara", "jonas", "wren"];
+    for (const cols of [1, 2, 3]) {
+      for (const rowH of [23, 20]) {
+        expect(ids(splitLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], cols, rowH).columns).flat()).toEqual(order);
+      }
+    }
   });
 
   it("gives the same result when Unassigned is listed first", () => {
-    const r = balanceLanes([SVC_UNASSIGNED, ...SVC_SPEAKERS], 2, 23);
+    const r = splitLanes([SVC_UNASSIGNED, ...SVC_SPEAKERS], 2, 23);
     expect(ids(r.columns)).toEqual([
-      ["unassigned", "silas", "noor", "amara", "wren"],
-      ["iris", "otto", "jonas"],
+      ["unassigned", "iris", "silas"],
+      ["noor", "otto", "amara", "jonas", "wren"],
     ]);
   });
 
-  it("re-balances at row 20 (heights 30 + rows×20 + 8)", () => {
-    // unassigned 118; iris 318 -> col2; silas 118 -> col1 (236); noor 118 -> col1 (354);
-    // otto 98 -> col2 (416); sam 118 -> col1 (472); jonas 98 -> col2 (514); wren 118 -> col1 (590)
-    const r = balanceLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], 2, 20);
+  it("re-cuts at row 20 (heights 30 + rows×20 + 8)", () => {
+    // un 118, iris 318, silas 118, noor 118, otto 98, amara 118, jonas 98, wren 118 = 1104; cut after silas = 554 | 550
+    const r = splitLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], 2, 20);
     expect(ids(r.columns)).toEqual([
-      ["unassigned", "silas", "noor", "amara", "wren"],
-      ["iris", "otto", "jonas"],
+      ["unassigned", "iris", "silas"],
+      ["noor", "otto", "amara", "jonas", "wren"],
     ]);
-    expect(r.heights).toEqual([590, 514]);
+    expect(r.heights).toEqual([554, 550]);
   });
 
   it("puts everything in one column when cols = 1 (Unassigned first, order preserved)", () => {
-    const r = balanceLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], 1, 23);
+    const r = splitLanes([...SVC_SPEAKERS, SVC_UNASSIGNED], 1, 23);
     expect(ids(r.columns)).toEqual([["unassigned", "iris", "silas", "noor", "otto", "amara", "jonas", "wren"]]);
     expect(r.heights).toEqual([130 + 360 + 130 + 130 + 107 + 130 + 107 + 130]);
   });
 });
 
-describe("balanceLanes: rules", () => {
-  it("sends a tie to the left column", () => {
-    const r = balanceLanes([speaker("a", 2), speaker("b", 2), speaker("c", 2)], 2, 23);
-    // a -> col1 (tie at 0), b -> col2 (0 < 84), c -> col1 (84 tie -> left)
-    expect(ids(r.columns)).toEqual([["a", "c"], ["b"]]);
-    expect(r.heights).toEqual([168, 84]);
-  });
-
+describe("splitLanes: rules", () => {
   it("omits Unassigned when it has no rows", () => {
-    const r = balanceLanes([speaker("a", 1), { id: "unassigned", rows: 0, unassigned: true }], 2, 23);
+    const r = splitLanes([speaker("a", 1), { id: "unassigned", rows: 0, unassigned: true }], 2, 23);
     expect(ids(r.columns).flat()).toEqual(["a"]);
   });
 
   it("hoists Unassigned to the head of column 1 even when listed last", () => {
-    const r = balanceLanes([speaker("a", 1), speaker("b", 1), { id: "unassigned", rows: 1, unassigned: true }], 2, 23);
+    const r = splitLanes([speaker("a", 1), speaker("b", 1), { id: "unassigned", rows: 1, unassigned: true }], 2, 23);
     expect(r.columns[0]?.[0]?.id).toBe("unassigned");
   });
 
   it("returns one empty column per requested column for no lanes", () => {
-    const r = balanceLanes([], 2, 23);
-    expect(r.columns).toEqual([[], []]);
-    expect(r.heights).toEqual([0, 0]);
+    for (const cols of [1, 2, 3]) {
+      const r = splitLanes([], cols, 23);
+      expect(r.columns).toEqual(Array.from({ length: cols }, () => []));
+      expect(r.heights).toEqual(Array.from({ length: cols }, () => 0));
+    }
   });
 
-  it("places Unassigned first and then greedily by height (a tall lane goes to the emptier column)", () => {
-    // unassigned 38+23=61... (30 + 1×23 + 8 = 61) col1; big (30+10×23+8 = 268) -> col2; small -> col1
-    const r = balanceLanes(
-      [speaker("big", 10), speaker("small", 1), { id: "unassigned", rows: 1, unassigned: true }],
-      2,
-      23,
-    );
-    expect(ids(r.columns)).toEqual([["unassigned", "small"], ["big"]]);
-    expect(r.heights).toEqual([61 + 61, 268]);
+  it("never reorders: a tall lane stays where speaking order puts it", () => {
+    const r = splitLanes([speaker("big", 10), speaker("small", 1), { id: "unassigned", rows: 1, unassigned: true }], 2, 23);
+    expect(ids(r.columns)).toEqual([["unassigned", "big"], ["small"]]);
+    expect(r.heights).toEqual([61 + 268, 61]);
+  });
+});
+
+describe("splitSequence", () => {
+  it("one column keeps everything", () => {
+    expect(splitSequence([3, 5, 2], 1)).toEqual({ columns: [[0, 1, 2]], heights: [10] });
+  });
+
+  it("two columns cut where the taller column is shortest; a tie takes the later cut (column 1 fills first)", () => {
+    expect(splitSequence([5, 5, 5, 5], 2).columns).toEqual([[0, 1], [2, 3]]);
+    expect(splitSequence([2, 2, 2], 2).columns).toEqual([[0, 1], [2]]);
+    expect(splitSequence([9, 1, 1], 2).columns).toEqual([[0], [1, 2]]);
+  });
+
+  it("three columns minimise the tallest run, in order", () => {
+    const r = splitSequence([4, 4, 4, 4, 4, 4], 3);
+    expect(r.columns).toEqual([[0, 1], [2, 3], [4, 5]]);
+    expect(r.heights).toEqual([8, 8, 8]);
+    expect(splitSequence([10, 1, 1, 1, 10], 3).columns).toEqual([[0], [1, 2, 3], [4]]);
+  });
+
+  it("three columns: a tie gives column 1 the most, then the last column; the middle one takes what is left", () => {
+    // 10 | 2 | 8 and 10 | 4 | 6 are both 10 tall at most: the first is taken (the mockup's rule, ux-spec §6.2)
+    expect(splitSequence([10, 2, 2, 3, 3], 3).columns).toEqual([[0], [1], [2, 3, 4]]);
+    // an equally tall cut with a taller first column wins over one with a taller later column
+    expect(splitSequence([6, 4, 2, 4, 6], 3).columns).toEqual([[0, 1], [2], [3, 4]]);
+  });
+
+  it("three columns never leave the middle one empty while the last has items", () => {
+    expect(splitSequence([7, 7], 3).columns).toEqual([[0], [1], []]);
+    expect(splitSequence([7], 3).columns).toEqual([[0], [], []]);
+    expect(splitSequence([5, 5, 5], 3).columns).toEqual([[0], [1], [2]]);
+  });
+
+  it("three columns with fewer items than columns leave the last ones empty", () => {
+    expect(splitSequence([7, 7], 3).columns).toEqual([[0], [1], []]);
+    expect(splitSequence([], 3).columns).toEqual([[], [], []]);
   });
 });
 
 describe("laneRowHeight", () => {
   const lanes = [...SVC_SPEAKERS, SVC_UNASSIGNED];
 
-  it("is 23 when the tallest column at 23 fits exactly (650)", () => {
-    expect(laneRowHeight(lanes, 2, 650)).toBe(23);
+  it("is 23 when the tallest column at 23 fits exactly (620)", () => {
+    expect(laneRowHeight(lanes, 2, 620)).toBe(23);
   });
 
-  it("is 20 when the tallest column at 23 exceeds availH by one px (649)", () => {
-    expect(laneRowHeight(lanes, 2, 649)).toBe(20);
+  it("is 20 when the tallest column at 23 exceeds availH by one px (619)", () => {
+    expect(laneRowHeight(lanes, 2, 619)).toBe(20);
   });
 
   it("is 23 for a tall window (1080: availH 908)", () => {
@@ -145,9 +196,11 @@ describe("laneRowHeight", () => {
     expect(laneRowHeight(lanes, 2, 484)).toBe(20);
   });
 
-  it("depends on the column count (1 column needs 1224 at row 23)", () => {
+  it("depends on the column count (1 column needs 1224 at row 23, 3 columns 490)", () => {
     expect(laneRowHeight(lanes, 1, 1224)).toBe(23);
     expect(laneRowHeight(lanes, 1, 1223)).toBe(20);
+    expect(laneRowHeight(lanes, 3, 490)).toBe(23);
+    expect(laneRowHeight(lanes, 3, 489)).toBe(20);
   });
 
   it("is 23 for no lanes", () => {
@@ -182,8 +235,12 @@ describe("boardTitleWidth", () => {
 });
 
 describe("doneBacklogLayout", () => {
-  // bottomW = mainW − 40; side by side at ≥ 1100; done 2 cols and backlog 3 at ≥ 1300; backlog 2 at ≥ 1000
+  // bottomW = mainW − 40; three board columns (mainW ≥ 1720): done 3, backlog 4; side by side at ≥ 1100;
+  // done 2 cols and backlog 3 at ≥ 1300; backlog 2 at ≥ 1000
   const cases: Array<[number, boolean, number, number]> = [
+    [2128, true, 3, 4],
+    [1720, true, 3, 4],
+    [1719, true, 2, 3],
     [1656, true, 2, 3],
     [1340, true, 2, 3],
     [1339, true, 1, 2],

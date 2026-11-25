@@ -34,16 +34,9 @@ func DaysInLane(entered, asOf time.Time) int {
 	return days
 }
 
-// OverLimit = lane is a working lane AND limitDays > 0 AND days > limitDays.
+// OverLimit = lane is a working lane (built-in or custom) AND limitDays > 0 AND days > limitDays.
 func OverLimit(lane string, days, limitDays int) bool {
-	working := false
-	for _, l := range model.WorkingLanes {
-		if l == lane {
-			working = true
-			break
-		}
-	}
-	return working && limitDays > 0 && days > limitDays
+	return model.IsWorkingLane(lane) && limitDays > 0 && days > limitDays
 }
 
 // DoneSince returns the lower bound of the done window for "14d" (local midnight 14 days ago) and "yesterday" (local

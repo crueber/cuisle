@@ -52,7 +52,12 @@ async function closeModal(page: Page): Promise<void> {
   await page.waitForSelector(".tm", { state: "detached" });
 }
 
-const callsSince = (page: Page) => page.evaluate(() => (window as unknown as { __CUISLE_MOCK_CALLS__: { method: string }[] }).__CUISLE_MOCK_CALLS__.map((c) => c.method));
+// F14: the palette's recents are saved as an app setting 1 s after the last ticket shown (a local write, not Jira), so
+// that one call is not counted: the budget is about what opening and stepping read.
+const callsSince = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __CUISLE_MOCK_CALLS__: { method: string }[] }).__CUISLE_MOCK_CALLS__.map((c) => c.method).filter((m) => m !== "app.setAppSetting"),
+  );
 const resetCalls = (page: Page) => page.evaluate(() => ((window as unknown as { __CUISLE_MOCK_CALLS__: unknown[] }).__CUISLE_MOCK_CALLS__.length = 0));
 
 /** Marks the person-view row of MOB-1421 (the golden: every ADF node, 4 attachments, 4 comments) so a timed click can find it. */

@@ -1,9 +1,10 @@
 // Segmented: a radiogroup (ux-spec §9.3) with roving selection.
 // Arrow keys move focus and select (APG radio group), wrapping and skipping disabled options.
+// With `toggle` it is a view switch instead (the board's Assignee | Status): a labelled group of aria-pressed buttons.
 import { useRef } from "preact/hooks";
 import type { SegmentedProps } from "./props";
 
-export function Segmented<V extends string>({ id, label, value, options, onChange }: SegmentedProps<V>) {
+export function Segmented<V extends string>({ id, label, value, options, onChange, toggle }: SegmentedProps<V>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function move(from: number, dir: 1 | -1) {
@@ -17,6 +18,27 @@ export function Segmented<V extends string>({ id, label, value, options, onChang
         return;
       }
     }
+  }
+
+  if (toggle) {
+    return (
+      <div id={id} class="seg" role="group" aria-label={label}>
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            class="seg-option"
+            aria-pressed={opt.value === value ? "true" : "false"}
+            disabled={opt.disabled}
+            onClick={() => {
+              if (!opt.disabled && opt.value !== value) onChange(opt.value);
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    );
   }
 
   return (

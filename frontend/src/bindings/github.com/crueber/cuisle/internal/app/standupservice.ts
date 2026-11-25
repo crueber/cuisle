@@ -13,6 +13,13 @@ export function List(): $CancellablePromise<view$0.StandupTab[] | null> {
     return $Call.ByID(757041796);
 }
 
+/**
+ * People is every speaker of every live standup, deduplicated by account (the palette's `@` mode). Local only.
+ */
+export function People(): $CancellablePromise<view$0.PersonHit[] | null> {
+    return $Call.ByID(3344477439);
+}
+
 export function View(standupID: number): $CancellablePromise<view$0.StandupView> {
     return $Call.ByID(4117507109, standupID);
 }

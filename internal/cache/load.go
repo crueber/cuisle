@@ -274,7 +274,7 @@ func Tabs(ctx context.Context, q *sql.DB) ([]TabRow, error) {
 		       (SELECT count(*) FROM standup_issue si
 		          JOIN issue i ON i.id = si.issue_id
 		          JOIN standup_status_lane sl ON sl.standup_id = si.standup_id AND sl.status_id = i.status_id
-		         WHERE si.standup_id = s.id AND si.role = 'board' AND sl.lane IN ('todo','prog','review','qa')) AS active_count,
+		         WHERE si.standup_id = s.id AND si.role = 'board' AND sl.lane NOT IN ('done','backlog','hidden')) AS active_count,
 		       (SELECT count(*) FROM standup_speaker sp WHERE sp.standup_id = s.id AND sp.included = 1) AS speaker_count
 		  FROM standup s LEFT JOIN standup_sync_state ss ON ss.standup_id = s.id
 		 WHERE s.deleted_at IS NULL

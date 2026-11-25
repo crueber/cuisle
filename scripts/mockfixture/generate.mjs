@@ -50,17 +50,24 @@ const axis = sample.axis.map((a, i) => {
 if (axis.length !== DAYS || axis[DAYS - 1].date !== TODAY) fail("sample axis must be 28 days ending today");
 
 // ── shared lane and board columns ──
-const columnsFor = (lane) => [LANE_STATUS[lane]];
 const boardColumns = [
   ...["todo", "prog", "review", "qa", "done"].map((lane) => ({
     columnName: LANE_STATUS[lane], statusNames: [LANE_STATUS[lane]], lane, auto: true,
   })),
   { columnName: "Backlog", statusNames: ["Backlog"], lane: "backlog", auto: true },
 ];
-const laneInfos = () => [
-  ...WALK.map((lane) => ({ lane, label: LANE_LABEL[lane], limitDays: LIMIT[lane], columns: columnsFor(lane) })),
-  { lane: "done", label: LANE_LABEL.done, limitDays: 0, columns: columnsFor("done") },
-];
+// LaneInfo as Go's view.laneInfo builds it (built-in lanes only: the sample has no custom lanes).
+const KIND = { done: "done", backlog: "backlog", hidden: "hidden" };
+const LABEL = { ...LANE_LABEL, backlog: "Backlog", hidden: "Hidden" };
+const laneInfo = (lane, limitDays) => ({
+  lane, label: LABEL[lane], defaultLabel: LABEL[lane], kind: KIND[lane] ?? "working", custom: false, hue: 0, limitDays,
+  columns: boardColumns.filter((c) => c.lane === lane).map((c) => c.columnName),
+});
+const laneInfos = () => [...WALK.map((lane) => laneInfo(lane, LIMIT[lane])), laneInfo("done", 0)];
+// StandupConfig.laneOptions: backlog, the built-in working lanes, done, hidden; walkLeftToRight: by board column.
+const laneOptions = () =>
+  ["backlog", "todo", "prog", "review", "qa", "done", "hidden"].map((l) => laneInfo(l, KIND[l] ? 0 : LIMIT[l]));
+const walkLeftToRight = () => ["todo", "prog", "review", "qa"];
 
 // ── pulse (jira-sync.md §5) ──
 function segmentsOf(hist) {
@@ -246,7 +253,9 @@ sample.standups.forEach((s, si) => {
     extraFilter: "",
     filterCheck: { ok: true, errors: [], checkedAt: NOW },
     columns: boardColumns.map((c) => ({ ...c, statusNames: [...c.statusNames] })),
-    lanes: WALK.map((lane) => ({ lane, label: LANE_LABEL[lane], limitDays: LIMIT[lane], columns: columnsFor(lane) })),
+    lanes: WALK.map((lane) => laneInfo(lane, LIMIT[lane])),
+    laneOptions: laneOptions(),
+    walkLeftToRight: walkLeftToRight(),
     unmappedStatuses: [],
     rowsMode: "fit",
     speakers: speakers.filter((x) => x.config).map((x) => x.config),
@@ -287,7 +296,7 @@ const app = {
     state: "ok", source: "jira", baseUrl: "https://example.atlassian.net", account: "mock.user", displayName: "Mock User", devActivity: "ok",
     capabilities: { hasSprints: true, hasBacklogRank: true, hasFlagging: true, hasDevActivity: true, hasExtraFilter: true, hasAssigneeHistory: false, content: true, writes: { transition: true, assign: true, flag: true, comment: true }, filterLanguage: "JQL", authFields: ["baseUrl", "account", "secret"] },
   },
-  ui: { lastStandupId: 1, lastView: "standup", lastPerson: { "1": "iris" }, window: null },
+  ui: { lastStandupId: 1, lastView: "standup", lastPerson: { "1": "iris" }, boardGroup: {}, window: null },
   sinkKinds: [
     {
       kind: "file", displayName: "File / JSON",

@@ -1,5 +1,5 @@
 // Implementation: WP-24. One ticket as a whole-row button (ux-spec §5.4). Enter and click both come from the native button.
-import { textScale } from "../../state/app";
+import { contentScale } from "../../state/app";
 import { Icon } from "../../components/Icon";
 import { PulseTrack } from "./PulseTrack";
 import type { TicketRowProps } from "./props";
@@ -11,7 +11,7 @@ export function TypeIcon({ type, done }: { type: string; done?: boolean }) {
 }
 
 export function TicketRow({ ticket, density, trackW, keyCh, days, options, onOpen }: TicketRowProps) {
-  const k = textScale.value; // Large/TV multiplies the design px emitted inline
+  const k = contentScale.value; // Large/TV multiplies the design px emitted inline
   const done = ticket.lane === "done";
   const alert = ticket.overLimit || ticket.blocked;
   const tier = density.row >= 46 ? "roomy" : density.row >= 38 ? "compact" : "tight";
@@ -26,7 +26,7 @@ export function TicketRow({ ticket, density, trackW, keyCh, days, options, onOpe
       <span class="ticket-title" title={ticket.summary}>
         {ticket.summary}
       </span>
-      <PulseTrack pulse={ticket.pulse} days={days} width={trackW} rowH={density.row} done={done} options={options} />
+      <PulseTrack pulse={ticket.pulse} days={days} width={trackW} rowH={density.row} done={done} options={options} scale={k} />
       <span class="ticket-days" data-alert={alert ? "true" : "false"}>
         {`${Math.max(1, ticket.daysInLane)}d`}
       </span>

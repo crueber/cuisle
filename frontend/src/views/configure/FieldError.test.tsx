@@ -13,7 +13,7 @@ const cfg = {
   id: 7, name: "Svc", space: { id: "1", key: "S", name: "S" }, board: { id: "2", name: "B", type: "scrum" }, scope: "sprint", extraFilter: "labels = x",
   filterCheck: null, draft: false, backlogRows: 12, pulseDays: 21, showCommits: true, showPRs: true, showComments: true, shadeWeekends: true,
   doneWindow: "sprint", columns: [], speakers: [],
-  lanes: [{ lane: "prog", label: "In progress", limitDays: 5, columns: [] }, { lane: "done", label: "Done", limitDays: 0, columns: [] }],
+  lanes: [{ lane: "prog", label: "In progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: [] }, { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: [] }],
 } as unknown as StandupConfig;
 
 const reject = (key: string, message: string) => {

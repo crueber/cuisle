@@ -5,7 +5,8 @@ import type { Bootstrap, BuildInfo, Connection, StandupTab, Theme, TextSize } fr
 import { enqueue } from "./save";
 import { initialRoute, route } from "./route";
 import { syncStatus } from "./sync";
-import { views } from "./standup";
+import { seedBoardGroups, views } from "./standup";
+import { currentZoom, seedZooms } from "./zoom";
 
 export const settings = signal<Record<string, string>>({});
 export const connection = signal<Connection | null>(null);
@@ -14,6 +15,8 @@ export const build = signal<BuildInfo | null>(null);
 export const recovered = signal(false); // DB recovered → settings-loss banner
 /** The text scale (--scale in tokens.css: Large/TV = 1.25) that layout maths must divide the window size by. */
 export const textScale = computed(() => (settings.value.text_size === "large" ? 1.25 : 1));
+/** The standup screen content scale (ux-spec §16.1): the text scale times the standup's zoom. The header keeps textScale. */
+export const contentScale = computed(() => textScale.value * (currentZoom() / 100));
 
 /** Seeds every store from the boot object (window.__CUISLE_BOOT__ or AppService.Bootstrap()). */
 export function initFromBoot(boot: Bootstrap): void {
@@ -26,6 +29,8 @@ export function initFromBoot(boot: Bootstrap): void {
   recovered.value = boot.recovered;
   views.value = boot.view ? new Map([[boot.view.standupId, boot.view]]) : new Map();
   syncStatus.value = new Map(boot.sync.map((s) => [s.standupId, s]));
+  seedBoardGroups(boot.ui?.boardGroup);
+  seedZooms(boot.ui?.zoom);
   applyAppearance(themeOf(settings.value), textSizeOf(settings.value));
   route.value = initialRoute(boot);
 }

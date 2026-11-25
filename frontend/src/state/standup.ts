@@ -7,6 +7,7 @@ import { refreshStandups, standups, tabStandups } from "./app";
 import { navigate, route, type Route } from "./route";
 import { showBanner } from "./ui";
 import { toAppError } from "../api/errors";
+import type { BoardGroup } from "../layout/board";
 
 /** Cached views by standup id (kept for all standups once loaded). */
 export const views = signal<ReadonlyMap<number, StandupView>>(new Map());
@@ -86,6 +87,35 @@ export function buildBoardLanes(view: StandupView): BoardLane[] {
     if (s.included || own.length > 0) lanes.push({ speaker: s, tickets: own });
   }
   return lanes;
+}
+
+/** Whole-board grouping per standup id (F13; absent = assignee). Seeded from boot.ui.boardGroup, written through on every change. */
+export const boardGroups = signal<ReadonlyMap<number, BoardGroup>>(new Map());
+
+export const boardGroupOf = (standupId: number): BoardGroup => boardGroups.value.get(standupId) ?? "assignee";
+
+/** Seeds the per-standup choices from the boot payload (unknown values read as assignee). */
+export function seedBoardGroups(raw: Record<string, string | undefined> | null | undefined): void {
+  const m = new Map<number, BoardGroup>();
+  for (const [id, v] of Object.entries(raw ?? {})) if (v === "status") m.set(Number(id), "status");
+  boardGroups.value = m;
+}
+
+/** Sets one standup's grouping and persists it at once (UI state, not Configure: no save indicator, no debounce). */
+export function setBoardGroup(standupId: number, group: BoardGroup): void {
+  if (boardGroupOf(standupId) === group) return;
+  boardGroups.value = new Map(boardGroups.value).set(standupId, group);
+  api()
+    .app.setUIState({ standupId, boardGroup: group })
+    .catch(() => undefined);
+}
+
+/** G: toggles the grouping on the whole board of the current standup. On a person view it does nothing (returns false). */
+export function toggleBoardGroup(): boolean {
+  const r = route.value;
+  if (r.view !== "standup" || r.person !== null) return false;
+  setBoardGroup(r.standupId, boardGroupOf(r.standupId) === "status" ? "assignee" : "status");
+  return true;
 }
 
 export const boardLanes: ReadonlySignal<BoardLane[]> = /* @__PURE__ */ computed(() => {

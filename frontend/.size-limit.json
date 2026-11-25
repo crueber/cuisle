@@ -1,5 +1,7 @@
 [
-  { "name": "JS (all, gzip)", "path": "dist/assets/*.js", "limit": "70 KB", "gzip": true },
-  { "name": "CSS (all, gzip)", "path": "dist/assets/*.css", "limit": "18 KB", "gzip": true },
+  { "name": "JS (entry, gzip)", "path": "dist/assets/index-*.js", "limit": "80 KB", "gzip": true },
+  { "name": "JS (lazy chunks, gzip)", "path": "dist/assets/lazy-*.js", "limit": "20 KB", "gzip": true },
+  { "name": "CSS (entry, gzip)", "path": "dist/assets/index-*.css", "limit": "18 KB", "gzip": true },
+  { "name": "CSS (lazy chunks, gzip)", "path": "dist/assets/lazy-*.css", "limit": "3 KB", "gzip": true },
   { "name": "Fonts (woff2)", "path": "dist/assets/*.woff2", "limit": "160 KB", "gzip": false, "brotli": false }
 ]

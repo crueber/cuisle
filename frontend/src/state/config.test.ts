@@ -79,6 +79,7 @@ function cfg(id = 3, over: Partial<StandupConfig> = {}): StandupConfig {
       { columnName: "Done", statusNames: ["Done"], lane: "done", auto: true },
     ],
     lanes: ["qa", "review", "prog", "todo", "done"].map((lane) => ({ lane, label: lane, limitDays: 5, columns: [] })),
+    laneOptions: [], walkLeftToRight: [],
     unmappedStatuses: [], rowsMode: "fit", speakers: [speaker("a", 0), speaker("b", 1), speaker("c", 2)],
     unassignedPosition: "last", reshuffleDaily: false, pulseDays: 21, showCommits: true, showPRs: true, showComments: true,
     shadeWeekends: true, doneWindow: "sprint", backlogRows: 12, needsSync: false, draft: false, ...over,

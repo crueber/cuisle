@@ -18,6 +18,8 @@ func BuildConfig(cfg model.EffectiveConfig, in ConfigInput) StandupConfig {
 		ExtraFilter:        cfg.ExtraFilter,
 		Columns:            []ColumnMapping{},
 		Lanes:              laneInfos(cfg, false),
+		LaneOptions:        laneOptions(cfg),
+		WalkLeftToRight:    walkLeftToRight(cfg),
 		UnmappedStatuses:   append([]string{}, in.UnmappedStatuses...),
 		RowsMode:           cfg.RowsMode,
 		Speakers:           []SpeakerConfig{},

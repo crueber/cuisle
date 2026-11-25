@@ -5,7 +5,7 @@
 // SPEC-NOTE: boardBelow's BelowItem.count is undefined by the contract, so tests assert labels and summary only.
 // SPEC-NOTE: summary text is items joined with " · " followed by " below" (person: "<n> <label>", board: "<label>").
 import { describe, expect, it } from "vitest";
-import { atEnd, belowFold, boardBelow, type BoardSection } from "./below";
+import { atEnd, belowFold, boardBelow, statusBelow, type BoardSection } from "./below";
 import { DENSITY_STEPS, type DensitySpec, type DensityStep, type GroupCount } from "./density";
 
 function stepSpec(step: DensityStep): DensitySpec {
@@ -168,6 +168,35 @@ describe("boardBelow (whole board)", () => {
     );
     expect(r.items.map((i) => i.label)).toEqual(["B", "A"]);
     expect(r.summary).toBe("B · A below");
+  });
+});
+
+describe("statusBelow (ux-spec §6.5)", () => {
+  // Fold at 684 (the 1280x720 mockup): In Progress has rows ending 640, 660, 680, 700 ... 10 rows past the fold.
+  const prog = { label: "In Progress", rows: [640, 660, 680, 700, 720, 740, 760, 780, 800, 820, 840, 860, 880, 900] };
+
+  it("lists a lane by name with the number of its rows below the fold, then the lists by full label", () => {
+    const r = statusBelow([{ label: "QA", rows: [100, 120] }, prog, { label: "Done (15)", rows: [], top: 428 }, { label: "Backlog (12)", rows: [], top: 735 }], 684);
+    expect(r.summary).toBe("In Progress (11) · Backlog (12) below");
+    expect(r.items.map((i) => i.count)).toEqual([11, 1]);
+  });
+
+  it("treats a row ending exactly on the fold as visible", () => {
+    expect(statusBelow([{ label: "To Do", rows: [684, 685] }], 684).summary).toBe("To Do (1) below");
+  });
+
+  it("includes a lane whose header is itself below the fold", () => {
+    expect(statusBelow([{ label: "To Do", rows: [800, 823, 846] }], 684).summary).toBe("To Do (3) below");
+  });
+
+  it("is empty when everything is above the fold", () => {
+    const r = statusBelow([{ label: "QA", rows: [100] }, { label: "Done (3)", rows: [], top: 200 }], 684);
+    expect(r).toEqual({ items: [], summary: "" });
+  });
+
+  it("moves the fold with the scroll position", () => {
+    expect(statusBelow([{ label: "QA", rows: [700, 900] }], 684, 250).summary).toBe("");
+    expect(statusBelow([{ label: "QA", rows: [700, 940] }], 684, 250).summary).toBe("QA (1) below");
   });
 });
 

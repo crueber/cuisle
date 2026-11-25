@@ -238,7 +238,7 @@ Backend and UI. M8 (release) is independent. Design hand-off: `docs/features/tic
 - **Drafts:** a draft survives a restart.
 - **Privacy:** exports and logs contain no comment bodies (scan tests).
 - **Throttling:** the request-budget gate passes; the transport-bypass test proves every request goes through the limiter.
-- **Quality gates:** axe is clean (modal, combobox, lightbox), and every budget is green (JS ≤ 70 KB gz).
+- **Quality gates:** axe is clean (modal, combobox, lightbox), and every budget is green (JS entry ≤ 80 KB gz, lazy ≤ 20 KB since 2026-11-25).
 
 ---
 

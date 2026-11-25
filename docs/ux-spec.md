@@ -15,6 +15,7 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 |---|---|
 | Standup: person view | `person-1920x1080.png`, `person-1440x900.png`, `person-1280x720.png`, `person-1024x640.png`, `person-unassigned-1920x1080.png` |
 | Standup: whole board | `board-1920x1080.png`, `board-1440x900.png`, `board-1280x720.png`, `board-1024x640.png`, `board-case-team-1920x1080.png` |
+| Standup: whole board, group by (F13, §6.5) | `board-status-1920x1080.png`, `board-status-1280x720.png`, `board-assignee-toggle-1920x1080.png` |
 | Configure | `configure-1920x1080.png`, `configure-1440x900.png`, `configure-1280x720.png`, `configure-1024x640.png` |
 | Configure: new standup | `configure-new-standup-1920x1080.png` |
 | Connect (first run) | not mocked; see §9.7 |
@@ -36,8 +37,12 @@ content column (window minus rail minus horizontal padding). Tokens are named as
 ### 2.1 Header
 - **Wordmark:** "CUISLE", 20px bold caps, tracking `--font-tracking-wordmark`. Then a 2×24 rule, then the tabs (§4).
 - **Date:** stands alone, centred in the free space between the tabs and the right cluster (flexible spacers on both sides).
-- **Right cluster, in order:** the sync status, then Resync, then **Update** (only when a newer release is available),
-  then Configure.
+- **Right cluster, in order:** the sync status, then **Find** (§15), then Resync, then **Update** (only when a newer
+  release is available), then Configure.
+- **Find** (F14): the same outlined 44px button with a search icon, "Find" and a `⌘K` chip (`Ctrl K` on Windows and
+  Linux); icon-only below 1280; ink-filled while the palette is open. aria-label "Find a ticket or run a command (⌘K)"
+  (`(Ctrl+K)` off macOS). `rightClusterWidth` adds 132px (44 icon-only) plus the 16px gap, so the tabs give way and
+  nothing overlaps or scrolls sideways.
 - **Sync status:** "synced 2 min ago", mono 14px muted, followed by the **Resync** button (↻ and "Resync", the
   same bordered 44px button as Configure; icon-only below 1280; aria-label "Resync (R)"). Ages read "2 min", "3h", "2 days".
   - While syncing it changes to "Syncing · issues 120/300" with a Cancel button (× and "Cancel", same style).
@@ -79,7 +84,8 @@ content column (window minus rail minus horizontal padding). Tokens are named as
     name), active count (mono 14, right). No initials here (maintainer, 2026-11-23); the compact rail keeps them.
   - 8px gap, then **Unassigned** with a 2px dashed `--color-unassigned-border` and its count. It's hidden when
     `unassigned_position = skip`, and sits first in the list when `first`.
-  - Footer hint (mono 12 muted): "↑ ↓ speaker · ← → standup · B board ⇄ person · 1–N jump".
+  - Footer hint (mono 12 muted): "↑ ↓ speaker · ← → standup · B board ⇄ person · G group by · + − zoom · 1–N jump ·
+    ⌘K find".
 - **Compact rail (`vw < 1360`), 76px:** a whole-board icon button, then per speaker the initials (mono 15 bold) with the
   count beneath (mono 11). The full name goes in `title` and `aria-label`. Unassigned shows as "Unas." + count, dashed.
 - The rail scrolls vertically if it overflows. It never hides people.
@@ -99,15 +105,19 @@ in it. Content wraps, tightens or stacks; scrolling is vertical only.
 | Rail | Full 208px when `vw ≥ 1360`, else compact 76px |
 | Tabs | Full, then key-only, then switcher menu, by measured fit (§4) |
 | Legend | Full when `mainW ≥ 1560`, short (4 lane swatches + blocked + over-limit) when ≥ 1300, else a "? Key" button that opens a popover |
-| Person track width | 600px when `mainW ≥ 1500`, 440px when ≥ 1150, else 300px |
+| Person track width | 600px when `mainW ≥ 1500`, 440px when ≥ 1150, else 300px; never wider than the row leaves (`mainW − 360`, at least 100), so a high zoom on a small window shrinks it instead of scrolling sideways (§16.3) |
 | Axis labels | Every day number; Mondays bold `--color-fg`; weekends `--color-muted` (the weekend backdrop marks them; `--color-rule-mid` fails text contrast, §10). If a day is narrower than 18px, label Mondays only. |
-| Board columns | 2 when `mainW ≥ 1150`, else 1 |
-| Board Done/Backlog | Side by side when `mainW − 40 ≥ 1100`; Done in 2 columns and Backlog in 3 when that width ≥ 1300 (Backlog 2 at ≥ 1000), else 1 |
+| Board columns | 3 when `mainW ≥ 1720`, 2 when ≥ 1150, else 1 (F15) |
+| Board Done/Backlog | With 3 board columns, Done in 3 grid columns and Backlog in 4. Otherwise side by side when `mainW − 40 ≥ 1100`; Done in 2 columns and Backlog in 3 when that width ≥ 1300 (Backlog 2 at ≥ 1000), else 1 |
 | Title sizes | h1 36px (person) / 30px (board) when `vh ≥ 800`, else 28 / 24. Title row 56px / 48px, or 46 / 40. |
 | Configure | 3 columns when `mainW ≥ 1500`, 2 when ≥ 960, else 1 (§9.2) |
 
-Breakpoints are also in `design/tokens.json` under `breakpoint`. They are evaluated in CSS px, so OS and app zoom and
-**Large (TV)** text size (`--scale: 1.25`) move the app into smaller layouts automatically.
+Breakpoints are also in `design/tokens.json` under `breakpoint`. They are evaluated in CSS px, so OS zoom, **Large (TV)**
+text size (`--text-scale: 1.25`) and the screen's own **zoom** (§16) move the app into smaller or larger layouts
+automatically: everything below the header is laid out on the window divided by text size × zoom.
+The zoom control now sits beside the legend in the title row (person view and Whole board), so the **short** legend's
+threshold also rises by 150px (on top of the lane-name allowance). The `full` threshold stays 1560: the default view keeps
+its full legend beside the control.
 
 ## 4. Standup tabs (`layout/tabs.ts: tabMode`)
 
@@ -138,7 +148,10 @@ Breakpoints are also in `design/tokens.json` under `breakpoint`. They are evalua
   `--color-rule-mid` bottom rule and day labels centred per day. Then a 48px spacer above the days chip column.
 
 ### 5.3 Groups
-Groups appear in **walk order** (only lanes that have tickets), then **Done** last when it has tickets.
+Groups appear in **walk order** (only lanes that have tickets), then **Done** last when it has tickets. Group names are
+the lanes' configured labels, and lanes you named (§9.4 Status mapping) are groups like any other. The header legend
+lists the same lanes; when their names need more room than the built-in four, it falls back to short and then to the
+**? Key** button sooner (`legendExtra`), and a long name in the side-heading gutter wraps there.
 
 - **Stacked headings** (roomy, compact): a heading row of `--size-head-*` height with the lane name (14px bold caps),
   the count (mono 13 muted), and a 3px bottom rule (`--color-rule`; Done uses `--color-rule-mid` and `--color-done-fg`).
@@ -214,15 +227,24 @@ scroll  = need(density) > H
 ### 6.1 Title row (pinned)
 - "Whole board" h1. Then mono 14 muted, one line with ellipsis: "Sprint 42 · ends today · 40 active ·
   **4 unassigned** (alert-text) · 15 done · 40 backlog". Kanban shows "Kanban · continuous flow".
-- Legend on the right.
+- On the right: the **Assignee | Status** switch and its `G` hint (§6.5), then the **zoom control** (§16.2), then the
+  legend.
 
-### 6.2 Lane columns (`layout/board.ts: balanceLanes`)
-- **Columns:** `cols = mainW ≥ 1150 ? 2 : 1`, with a 40px gap.
-- **Column assignment:** *Unassigned* (if it has tickets) goes to column 1 first. Then walk speakers in **speaking
-  order** (excluded speakers with tickets go after included ones), putting each lane into the column with the smaller
-  height so far. Lane height = `30 + rows × laneRowH + 8`. Within a column, order is preserved.
-  The prototype sorted by size; this is a deliberate change.
-- **Lane row height:** 23px, or 20px if the tallest column exceeds the available height at 23px.
+### 6.2 Lane columns (`layout/board.ts: boardColumns, splitLanes, splitSequence`)
+- **Columns:** `cols = mainW ≥ 1720 ? 3 : mainW ≥ 1150 ? 2 : 1`, with a 40px gap. `mainW` is the **effective** width
+  (§16.3), so zoom moves the board between 1, 2 and 3 columns.
+- **Column assignment (F15; replaces the greedy balance):** the sequence is *Unassigned* (if it has tickets) first, then
+  the speakers in **speaking order** (excluded speakers with tickets go after included ones). It is cut into `cols`
+  contiguous runs that minimise the tallest column (`splitSequence`, the same cut as Group by Status, §6.5). Ties: column
+  1 fills first (the later first cut wins); with three columns the last column then takes as much as fits and the middle
+  one what is left (the earlier second cut wins), and a middle column is never left empty while the last one is not.
+  Lane height = `30 + rows × laneRowH + 8`. Speaking order therefore always reads down, then across, at any column
+  count. The prototype sorted by size, and the first build balanced greedily; both are deliberate changes.
+  - MOB sample at 23px rows: 2 columns are Unassigned, Iris, Silas | Noor, Otto, Amara, Jonas, Wren (620 | 604);
+    3 columns are Unassigned, Iris | Silas, Noor | Otto, Amara, Jonas, Wren (490 | 260 | 474), the split in
+    `zoom-board-80` (Silas, Noor, Otto | Amara, Jonas, Wren, 367 | 367, is as short but loses the tie).
+- **Lane row height:** 23px, or 20px if the tallest column exceeds the available height at 23px (the effective height,
+  so zooming in goes to 20px rows before the more bar appears).
 - **Per-column axis row (30px):** "last 21 days" in a left block as wide as icon + key + title, then a positioned
   label at each Monday ("Mon 16", or "16" if days are narrower than 16px) with a 2px left tick, then "today" at the right.
 - **Lane header (30px button):** name (17px bold), "4 active · 2 done" (mono 12 muted), and a 2px `--color-rule-soft`
@@ -235,7 +257,8 @@ scroll  = need(density) > H
 ### 6.3 Done and Backlog
 - **Done:** a section heading "DONE" plus "15 this sprint" (or "14 days" / "since Friday"), with a 3px
   `--color-rule-mid` rule. Then *every* Done ticket in the window, 26px rows: icon (done colour), key, title, assignee
-  initials (mono 12, right). Laid out in grid columns, filling top-to-bottom.
+  initials (mono 12, right). Laid out in grid columns, filling top-to-bottom (3 grid columns with three board columns,
+  else 2 or 1, §3).
 - **Backlog:** "BACKLOG" plus "top 12 by rank", with a 3px `--color-rule`. Rows are icon, key (muted) and title. If
   more exist: "Showing the top 12 as set in Configure · 28 more ranked below in Jira" (13px muted). Hidden entirely
   when backlog rows = 0.
@@ -244,13 +267,58 @@ scroll  = need(density) > H
 Same component as §5.6. Summary: lanes whose header is below the fold (first names), then "Done (15)" and "Backlog (12)"
 if those sections start below the fold.
 
+### 6.5 Group by Assignee / Status (F13; `layout/board.ts: statusSections, sortStatusRows, splitSequence, statusLayout`)
+- **Switch:** the shared `Segmented` in its `toggle` mode (`Assignee | Status`: a `group` named "Group the board by" of
+  two `aria-pressed` buttons, so the arrow keys stay the screen's keys; 30px, 2px ink border, selected = ink fill) in
+  the Whole board title row, right-aligned and before the legend, followed by a `G` kbd hint. Under 1360 (no legend) it
+  sits before the `? Key` button. The stats line keeps its ellipsis rule; the legend gaps tighten to 11px and its
+  swatches widen to 18px, and the board's legend is always the short one (the lane tracks draw no marks, so the commit /
+  PR / comment keys never belong here), so at 1920 the full stats line fits.
+- **Key:** `G` toggles the grouping on the Whole board. On a person view it does nothing. It is ignored while typing and
+  while the ticket modal is open. It is in the key legend (`?`) and the rail footer hints ("G group by").
+- **Persistence:** per standup in `standup_ui_state.board_group` (`'assignee' | 'status'`, default `'assignee'`).
+  Switching standups restores each standup's choice. Toggling is written at once (UI state, not Configure; no save
+  indicator).
+- **Assignee mode:** exactly §6.2–6.4.
+- **Status mode:**
+  - **Sections:** one per lane in **walk order** (`StandupView.Lanes`, the same order as the person view; the lane id is
+    the header swatch's `data-lane`, so custom lanes need nothing here). Then Done, then Backlog, both as §6.3. A lane
+    with no active ticket gets no section.
+  - **Section header (30px, its 2px ink rule included):** a 14px lane swatch; the lane name (15px bold, caps, 0.12em
+    tracking); mono 13 muted `7 tickets` (just `7` below 1360); then, only if non-zero and in alert-text 600,
+    `· 2 over limit` (`· 2 over` below 1360), `· 1 blocked`, `· 1 unassigned`; right-aligned mono 12 muted
+    `limit 3d · longest first` (below 1360 only `limit 3d`; omitted when the lane limit is 0). The strong ink rule marks
+    a status group; person lanes (§6.2) use a soft rule after the name. The first row starts 3px under the rule and a
+    section leaves 4px below its last row.
+  - **Rows:** the §6.2 lane row plus an **assignee column**, 30px, between the title and the track (the track gives up
+    those 30px and one gap; `titleW` is unchanged). It shows the speaker's initials (mono 12 bold) with the full name in
+    `title`; an unassigned row shows a 30×18 box with a 1.5px dashed alert border and `··` in alert-text. `BLOCKED` sits
+    after the title (the title truncates first).
+  - **Row order in a section:** over-limit first, then `daysInLane` descending, then board rank (stuck work first).
+  - **Columns:** `boardColumns(mainW)` (2 at ≥1150). The sections, then Done, then Backlog form one sequence, cut once
+    into column 1 | column 2 by the cut that minimises the taller column (ties: the later cut, so column 1 fills first).
+    Done and Backlog render as two-column grids inside a column (one grid column when the column is under 480px).
+    Each column has its own axis row. In one-column mode everything stacks. At the mockup data this is
+    QA, In Review, In Progress | To Do, Done, Backlog.
+  - **Row height:** the §6.2 rule, 23 → 20, decided on the taller column at 23 including Done and Backlog (section height
+    = 30 + 3 + rows × rowH + 4; Done/Backlog = 36 + 6 + grid rows × 26 + 8).
+  - **More bar:** sections in on-screen order. A lane section is listed by name with the number of its rows below the
+    fold (`In Progress (10)`), which includes a lane whose header is itself below. Done and Backlog follow §6.4: listed
+    by their full label (`Backlog (12)`) when their heading is below the fold.
+  - **Ticket modal stepping:** `J`/`K` follow the on-screen order: section order, then row order, then Done, then Backlog.
+  - **Title-row stats are unchanged** (the same counts in both modes).
+
 ## 7. Pulse track (`layout/track.ts`; inputs from Go `Pulse`)
 
 - **Units:** everything is positioned in **day units** within an N-day window. Day `i ∈ [0, N)`, where `N − 1` is today.
   CSS: `left: calc(var(--x) / var(--days) * 100%)`, `width: calc(var(--w) / var(--days) * 100% − 2px)`.
 - **Backdrop** (drawn once per list, behind the rows): weekend days filled with `--color-weekend` when shading is on, plus
   the today line (3px person view, 2px board, `--color-today`) at the right edge.
-- **Segments:** one per contiguous lane span, colour `--color-lane-<lane>`, radius 2px, 2px gap between segments.
+- **Segments:** one per contiguous lane span, colour `--color-lane-<lane>`, radius 2px, 2px gap between segments. A
+  lane the user named (§9.4 Status mapping) is coloured from the extended lane palette `--color-lane-x1…x8`: Go gives
+  each such lane a palette index (`LaneInfo.hue`), elements carrying `data-lane` also carry `data-hue`, and one shared
+  CSS rule paints segments, legend and Configure swatches, status-section swatches and the ticket modal's chips (status
+  lozenges use `--color-lane-x-ink` text). A segment in a lane the config no longer has is drawn as To Do.
   Vertical position by row height:
 
   | Row | Segment height | Top |
@@ -281,9 +349,16 @@ if those sections start below the fold.
 | `↑` / `↓` | Previous / next speaker (whole board after the last, first speaker after the whole board) | The arrows no longer scroll lists; use the wheel, trackpad or Page Up/Down |
 | `←` / `→` | Previous / next standup tab (wraps; keeps the person if they speak there; no-op with one standup) | |
 | `B` | Toggle: on a person → the whole board; on the board reached by that `B` (no navigation since) → back to that person | On a board reached any other way it stays on the board |
+| `G` | On the whole board: group by Assignee / Status (§6.5). Does nothing on a person view | Remembered per standup; ignored while typing and behind the ticket modal |
+| `+` / `=` | Zoom in one step (§16.2) | Standup screen only; ignored while typing and behind the ticket modal or palette |
+| `−` / `_` | Zoom out one step | Same |
+| `0` | Reset zoom to 100% | Same; `1`–`9` stay the standup digits |
+| `⌘` / `Ctrl` + `+` `=` `−` `0` | The same, and always swallowed (`preventDefault`) so the webview never page-zooms | Handled before the modifier early-return, like `⌘K` |
 | `1`–`9` | Switch standup by position | |
 | `R` / `Shift+R` | Resync incremental / full | |
-| `/` | Focus the standup switcher (opens the menu in menu mode, else the first tab) | |
+| `⌘K` / `Ctrl+K` | Open the command palette with the ticket finder (§15). Works everywhere: standup, Configure, in a field, and over the ticket modal (Esc then returns to the modal). Pressing it again closes it | |
+| `T` | Same as `⌘K`, when no field has focus (standup and Configure; not inside the ticket modal) | The palette owns every key while it is open |
+| `/` | Focus the standup switcher (opens the menu in menu mode, else the first tab) | Still the switcher; the palette's prefixes are `>`, `#`, `@` |
 | `,` | Open Configure | |
 | `?` | Key legend popover (keys + pulse legend) | |
 | `Esc` | Close popover or menu. In Configure with no popup open, the same as Done. | |
@@ -336,10 +411,10 @@ Status mapping · Export · Display · Connection) sits under the title. Section
 | Section | Controls |
 |---|---|
 | **Source** | Name (TextField, autosaves after 400ms). *Start from* (new only: Defaults / Copy ‹standup›, a Combobox listing standups; copies the Person view, Pulse, Whole board and speaker-behaviour settings, walk order and limits, but not the source, speakers or column mapping, which depend on the board). Space (Combobox, async `SearchSpaces`). Board (Combobox, async `SearchBoards(spaceKey)`, disabled until a space is chosen; placeholder "Pick a space first"). Scope (Segmented: Active sprint / Whole board; Active sprint is disabled on Kanban with a hint). Extra filter (TextField, mono, JQL for Jira, validated with `ConnectionService.ValidateFilter` on blur and shown inline on error). |
-| **Status mapping** | One row per board column in board order: column name → lane Combobox (Backlog / To Do / In Progress / In Review / QA / Done / Hidden) with a lane swatch. There is no "auto" tag (removed 2026-11-24 as noise). If statuses aren't mapped, show a warning line. When two or more columns map to the same working or Done lane, an **Order within sections** block follows: one numbered list per shared lane with ↑/↓ (like the walk order); tickets in that lane are grouped in this order, rank order within a column. It defaults to board order. New standup: an explanatory paragraph until a board is chosen. |
-| **Person view** | Walk order: an ordered list of the 4 lanes (swatch, name, "Jira: ‹columns›" mono 12 muted), presets **Right to left** and **Left to right**, then a locked Done row ("always last, so it's first below the fold"). The subtitle shows "Right to left (QA first)", "Left to right (To Do first)" or "Custom order". Rows: Segmented, *Fit when possible* / *Always roomy*, with the hint "Tighten before scrolling". |
+| **Status mapping** | One row per board column in board order: column name → lane Combobox (Backlog / To Do / In Progress / In Review / QA / ‹lanes you named› / Done / Hidden, from `StandupConfig.laneOptions`) with a lane swatch. **Lanes you name:** type a name no lane has and the Combobox's last option is **Create lane “‹name›”** (the shared Combobox's create affordance); it adds a *working* lane (like To Do … QA: active, a days-in-lane limit, in the walk order and on the whole board) and maps that column to it. Names are 1–40 characters, unique ignoring case; up to 12 per standup; Backlog, Done and Hidden keep their meaning and can't be created. Each custom lane gets a stable id (`c1`, `c2`, …, never reused) and the lowest colour of the extended lane palette (`lane-x1…x8`) that no other custom lane of the standup uses (rotating only when all eight are taken). A **Lanes** list follows the columns: one name field per working lane and Done (autosave, 400ms; blank restores a built-in name such as "In Review"; ids never change), headed by the lane's current name, with a hint naming the columns mapped to it, and **Delete** on lanes you named. Deleting a lane with columns first asks "Move its columns to" (Combobox), then **Delete lane**; synced history is untouched. A board change keeps custom lanes; new columns auto-match lane names first (case-insensitive), then the usual rules. There is no "auto" tag (removed 2026-11-24 as noise). If statuses aren't mapped, show a warning line. When two or more columns map to the same working or Done lane, an **Order within sections** block follows: one numbered list per shared lane with ↑/↓ (like the walk order); tickets in that lane are grouped in this order, rank order within a column. It defaults to board order. New standup: an explanatory paragraph until a board is chosen. |
+| **Person view** | Walk order: an ordered list of the working lanes (the four built-in ones plus any you named) (swatch, name, "Jira: ‹columns›" mono 12 muted), presets **Right to left** and **Left to right** (board column order from Go, `StandupConfig.walkLeftToRight`, and its reverse), then a locked Done row ("always last, so it's first below the fold") under Done's configured name. The subtitle shows "Right to left (QA first)", "Left to right (To Do first)" (the lanes' configured names) or "Custom order". Rows: Segmented, *Fit when possible* / *Always roomy*, with the hint "Tighten before scrolling". |
 | **Speakers** | Toolbar: Shuffle, A–Z, Most active, then the *Reshuffle daily* switch. An ordered list with include checkboxes (excluded rows muted, number "—") and a **Remove** button on every row (Undo toast). A removed person is not re-added by sync; adding them again restores them. Choosing a different board starts a fresh list from the next sync. Then *Unassigned as a speaker* (First / Last / Skip) in a dashed box. Then "Add someone from this space…" (Combobox, async `SearchUsers`, clears on select). Footnote: "Listed: anyone with tickets on this board in the last 30 days." After a sort action, a transient note on the right ("Shuffled just now"). New standup: an empty state until a board is chosen. |
-| **Pulse** | Days shown (Segmented 7 / 14 / 21 / 28). A live **preview track** of a sample ticket from this board (axis + track, updates instantly). Marks: Commits / PRs / Comments switches. Status limits: 4 steppers in walk order with swatches, 0–99 (0 = none). Weekends: Shade / Plain. If dev-status is unavailable, a one-line warning: "Commit and PR marks unavailable — Jira's development info isn't reachable for this site." |
+| **Pulse** | Days shown (Segmented 7 / 14 / 21 / 28). A live **preview track** of a sample ticket from this board (axis + track, updates instantly). Marks: Commits / PRs / Comments switches. Status limits: one stepper per working lane (custom lanes included) in walk order with swatches, 0–99 (0 = none). Weekends: Shade / Plain. If dev-status is unavailable, a one-line warning: "Commit and PR marks unavailable — Jira's development info isn't reachable for this site." |
 | **Whole board** | Done window: Sprint / 14 days / Since yesterday (Sprint is disabled on Kanban). Backlog rows: Stepper 0–50, with the hint "top of the ranked backlog · 0 turns it off". |
 | **Display** *(app-wide)* | Theme: Light / Dark / System. Text size: Standard / Large (TV). Sync on open: When stale / Always / Never, plus "Stale after" Stepper in hours (1–48, default 6), shown only when *When stale* is selected. **Updates** (only in builds with an update channel, ADR 0016): the *Check for updates daily* Switch (default on; description "Once a day Cuisle asks GitHub/Forgejo whether there's a newer release. Nothing about you or your Jira data is sent."), then "Cuisle v1.2.0 · last checked 3h ago" (or "not checked yet") with a **Check now** button ("Checking…" while it runs), then one result line: "You're up to date.", "Cuisle v1.3.0 is available: use Update in the standup header.", or the failure in alert text. |
 | **Export** *(per standup)* | One row per destination scoped to this standup or to all standups: name, kind ("File (JSON)"), destination detail (folder path, mono 13, middle-ellipsis), *Send on* Segmented (Manual / After each sync), **Send now**, and a status line ("Delivered 2 min ago · cuisle-MOB-2026-11-23.json", or "Failed · Retry" in alert text). **+ Add destination** opens a Combobox of sink kinds (v1: File (JSON)), then the kind's fields, rendered from its `ConfigSchema` (folder uses the OS folder picker). Everything autosaves. Delete uses Undo. |
@@ -369,7 +444,9 @@ scrolls and the jump bar helps navigation.
 
 ## 10. Accessibility and legibility
 - **Contrast:** text ≥ 4.5:1 (≥ 3:1 for text 24px+); lane swatches and chips ≥ 3:1 against the background; light and
-  dark both verified in CI (axe in Playwright).
+  dark both verified in CI (axe in Playwright). The extended lane palette for lanes the user names (`lane-x1…x8`) is
+  held to the same 3:1 on bg, weekend, surface and rail-bg, and `lane-x-ink` text on each of them to 4.5:1
+  (`tests/a11y/contrast.spec.ts`).
 - **Colour is never the only signal:** lanes are named in headings and gutters, blocked has a tag and a hatch,
   over-limit uses a filled chip, and PR is a different shape from commit.
 - **Minimum type:** 13px mono and 15px sans for content (12px allowed for micro labels and tags).
@@ -381,8 +458,9 @@ scrolls and the jump bar helps navigation.
   `prefers-reduced-motion`.
 
 ## 11. Large (TV) text size
-`--scale: 1.25` multiplies every font, row height and spacing token. Breakpoints are compared after scaling, so a 1920
-window at Large behaves like a 1536 window at Standard.
+`--text-scale: 1.25` multiplies every font, row height and spacing token (`--scale` is the product the CSS multiplies
+by: the text scale in the header, text scale × zoom below it, §16.1). Breakpoints are compared after scaling, so a 1920
+window at Large behaves like a 1536 window at Standard, and Large at 150% zoom like a 1024 window.
 
 ## 12. Copy guidelines
 - Plain words and sentence case. Numbers as numerals; "1 active" is singular. Days are "6d" in chips and "6 days" in
@@ -399,13 +477,18 @@ window at Large behaves like a 1536 window at Standard.
 | Configure: "Cancel" + "Save & back to standup", plus `~/.config/standup/config.toml` | Save indicator + **Done**. Everything autosaves; settings live in SQLite. |
 | Display: "Refresh 1 min / 2 min / 5 min / Manual" | "Sync on open: When stale / Always / Never" + "Stale after N h". No polling. |
 | No Resync control | ↻ Resync button in the header (§2.1) |
-| Board lanes ordered by ticket count | Speaking order, balanced across columns (§6.2) |
+| Board lanes ordered by ticket count | Speaking order, cut into contiguous columns (§6.2) |
 | Person view at 1920 uses 34px side-heading rows | 38px rows with side headings (`compact-side`, §5.5) |
 | Mockup dropdowns look like plain selects | Every dropdown is an autocomplete Combobox |
 | No Connection section | Configure → Connection (app-wide), plus the first-run Connect screen |
 | No Export section | Configure → Export (per standup), §9.4 |
 | Footer hint "press D or K to open them" (old round) | Removed; lists are always drawn |
 | Ticket modal background shows the old "STANDUP" mockup | Real app behind the scrim (§14) |
+| `board-status-*` / `board-assignee-toggle-*`: Saffron sample data, tab "Saffron Mobile"; the legend lists only five lane/blocked/limit keys; the BLOCKED badge also shows on assignee-mode rows | Real data and tab name; the board's legend is always the short one (no commit / PR / comment keys: lane tracks draw no marks); BLOCKED shows after the title in **status mode only** (assignee mode stays as §6.2) |
+| `zoom-board-100` shows the "? Key" button at 1920 | The board's legend is `short` there (§3): at 1648 it fits beside the switch and the control; it becomes "? Key" below `mainW` 1450 |
+| `zoom-*` icons and the "? Key" button keep one size | The rail's compact whole-board icon (22px) and the "? Key" button's height are fixed px, as at Large text; everything sized with `--scale` zooms |
+| `zoom-person-150` shows Done as chips from an old renderer | The ladder, then the more bar (§5.5–5.6) |
+| `zoom-*`: the toast reads "150% · side headings" over the axis | Same, in a `role=status` region under the control (§16.2) |
 
 ## 14. Ticket modal ("Docket")
 
@@ -660,3 +743,153 @@ Jira · Esc close`. In short mode these hints live in the `?` popover.
 When the limiter is paused by a 429, or slowed by a near-limit signal (jira-sync §3.1), the header sync status shows
 `Jira is rate-limiting · resuming in 12s`. This is a quiet mono label with the ↻ button still available, never a banner.
 Diagnostics show requests in the last hour, the current rate, and throttle events.
+
+## 15. Command palette with the ticket finder (F14)
+
+Designed 2026-11-25 (canvas Rounds 9 and 10). Mockups: `design/mockups/palette-{empty,ticket,commands,people,nested}-1920x1080.png`
+(Saffron data over an older backdrop: where they differ from the app, this spec wins). The header search field and a
+"jump to key" overlay were considered and not chosen. Implementation: `frontend/src/commands/*` (registry, scorer,
+builtin commands), `frontend/src/views/palette/*` (dialog, rows, pure `model.ts`), `frontend/src/state/palette.ts` (the
+small eager half). The dialog and the commands are a **lazy chunk** fetched on first open.
+
+### 15.1 Opening and closing
+- **Header button:** Find (§2.1). **Shortcuts:** `⌘K` / `Ctrl+K` everywhere (§8), `T` when no field has focus outside
+  the ticket modal. Typing `#`, `@` or `>` as the first character switches mode. `/` stays the standup switcher.
+- **Layout:** a dialog `min(860, vw - 48)` wide (× `--scale`), top 96px (64px when `vh < 800`), 3px ink border, radius
+  4. The scrim is `--color-scrim-palette` (35% ink; 45% black in dark) so the app stays readable behind it. Results scroll
+  inside the dialog, max height `vh - top - 48`. It sits above the ticket modal.
+- **Esc unwinds:** a nested level first, then the mode chip, then it closes. Focus returns to the opener. Every action
+  closes the palette except entering a nested command or a list (`Go to person…`). It keeps no state between opens
+  except the recents and the command usage (§15.7).
+
+### 15.2 Input and modes
+- **Input:** 62px, search icon, mono 22 semibold, placeholder "Find a ticket or run a command". An `Esc` chip at the
+  right. The **mode chip** (`>`, `#`, `@`; mono 15 bold on ink) sits before the text; `⌫` on an empty input removes it.
+- **No prefix** searches everything. A query with a digit lists tickets, then commands, then people; otherwise commands,
+  then people (tickets need a number). Empty sections are omitted.
+- **Empty query:** RECENT TICKETS (the last 3 opened from any path), then suggested COMMANDS: the five most run
+  (`palette.command_usage`), topped up with Resync, Group board by…, Go to person…, Switch standup…, Open Configure.
+- `>` lists every command. `#` takes a ticket key (empty: up to 8 recents; no digit: "Type a ticket number, like 1429 or
+  mob-1429."). `@` lists people (§15.5).
+
+### 15.3 Ticket matching (the key only in v1; titles are not searched)
+- **Normalise** the query: lower-case, drop spaces and `-`, split into letters and digits (`mob1429` → `mob` + `1429`).
+  The letters must be a prefix of the project key (`m` → MOB); no letters = any project.
+- **Candidates:** every synced issue of the connection across all standups, including Done and issues no longer on a
+  board (muted "not on board"). Matching is local Go (`TicketService.FindByKey`), p95 under 5 ms at 5,000 issues.
+- **Tiers**, each ordered current standup first, then active before done, then key ascending:
+  1. **exact** (digits equal the number);
+  2. **starts with** (digits are a prefix; first 10, then "↓ N more · keep typing");
+  3. **one character off** (same length, one digit substituted or two adjacent digits swapped; 2+ digits; at most 5).
+- **Highlight:** ink background, paper text, on the matched characters; the differing digit of a near match stays plain.
+- **Row (48px):** type icon, key (mono 17 bold), title (17 semibold, ellipsis), lane swatch + lane name (12 bold caps,
+  from the standup's lane data, so custom lanes work), assignee initials or the dashed `··` box, days chip (red over the
+  limit; none for Done), the standup key (mono 12 muted).
+- **Actions:** `↵` opens the ticket modal in the standup the issue belongs to (the current one if it is a member, else
+  the first by tab order; an issue on no board opens in the current standup) with that standup's view order for `J`/`K`;
+  from Configure it leaves Configure first. `⌘↵` / `Ctrl↵` opens it in Jira.
+- **Not synced:** a fully specified key (`mob-1729`) with no exact hit shows, first and selected, "**MOB-1729** isn't
+  synced in Cuisle · ↵ fetches just this ticket from Jira (one request), then opens it". `↵` calls
+  `TicketService.FetchByKey` (the palette's **only network call**, explicit, one request, the limiter's interactive
+  lane), stores the issue without any standup membership, and opens it in the current standup's lane mapping. Errors
+  appear in that row and the palette stays open: "Couldn't reach Jira · offline", "No issue MOB-1729 in Jira", "You
+  don't have access" (also rate-limited and auth cases).
+- **Ticket commands** appear under COMMANDS when the modal is open or a ticket matched the query: "Refresh MOB-1429
+  from Jira" (opens it, then the modal's Refresh with its 10 s cooldown), "Open MOB-1429 in Jira", "Copy MOB-1429".
+
+### 15.4 Commands
+- **Registry** (`commands/registry.ts`): every action is registered once with `id`, `title`, `category` (Navigate, Sync,
+  View, Display, Ticket, Configure, App), `keywords`, `shortcut`, `detail`, `available` (true or the reason it is
+  disabled), `run` or `children` (nested) and, as extensions, `visible` (hide entirely), `mode` (opens a list), `checked`
+  and `placeholder`. Registry order is the final tie-break.
+- **Initial set:** Resync `R`, Full resync `⇧R`, Cancel sync (only while running); Group board by status/assignee `G`
+  (the title names the other mode, the detail "now: assignee"; from a person view it also goes to the whole board);
+  Whole board `B`, Go to person… (`@`), Unassigned, Switch standup… `1–9`, Open Configure `,`, Keyboard shortcuts `?`;
+  Theme › (System / Light / Dark), Text size › (Standard / Large (TV)); New standup, Duplicate this standup; Copy
+  diagnostics, Check for updates, Install update (disabled "none waiting"), Reconnect Jira (only when auth is invalid);
+  the ticket commands above. Lane names are never hard-coded.
+- **Matching:** a fuzzy subsequence over the title and keywords, fzf-style (`commands/score.ts`): a bonus for a match
+  that starts a word and for contiguous runs, a penalty for gaps; ties go to recent use, then registry order. `sta` ranks
+  "Group board by status" first. Matched title characters are inked; an alias match inks nothing.
+- **Row (48px):** 20px icon, title, optional detail (mono 13 muted), ✓ on the current choice, category (mono 11 bold caps,
+  92px right-aligned), shortcut kbd, `›` for a nested command. A disabled row is muted with its reason as the detail.
+- **Nested:** a breadcrumb chip (`Theme ›`) replaces the mode chip, the placeholder says "Choose a theme", the children
+  filter as you type, `⌫` on an empty input goes back, and a note line explains it. Choices apply and save at once (the
+  same settings as Configure → Display) and close the palette.
+
+### 15.5 People (`@`)
+Every speaker of every standup, deduplicated by account (`StandupService.People`), fuzzy-matched on the name, then an
+ALSO section with Unassigned ("N need an owner"). Row: initials (mono 13 bold), name, "N active", PERSON, the standup key
+(the current standup if they speak there, else their first). `↵` goes to that standup and selects the person.
+
+### 15.6 Keyboard inside the palette
+`↑` `↓` move (wrapping), `Home` `End`, `PageUp` `PageDown` by 8; `↵` runs or opens; `⌘↵` / `Ctrl↵` opens a ticket in
+Jira; `→` enters a nested command when the caret is at the end; `⌫` on an empty input removes the chip or goes back a
+level; `Esc` unwinds (§15.1); `Tab` does nothing (focus stays in the input). The palette stops every key from reaching
+anything behind it. The footer (36px) reads `↑↓ choose · ↵ run / open · ⌘↵ open in Jira` and, at the right, `> commands
+# tickets @ people`.
+- **Accessibility:** the input is an ARIA combobox (`aria-expanded`, `aria-controls`, `aria-activedescendant`) over a
+  listbox of grouped options (`aria-selected`, `aria-disabled`); a polite live region says "N results". axe is clean in
+  both themes. The selected row reads its muted text as ink so contrast stays at 4.5:1.
+
+### 15.7 Recents and persistence
+`palette.recent_tickets`: the last 8 issue ids opened from any path (palette, rows, inline cards, stepping), most recent
+first; the empty state shows 3, resolved locally by `TicketService.ByIDs`. `palette.command_usage`: command id → run
+count. Both are app settings (architecture §6.4).
+
+## 16. Zoom (F15)
+
+Zoom makes the standup screen readable from further away without leaving it: everything below the header scales, and the
+responsive rules **re-run on the effective size**, so a zoomed screen reflows (columns, density, rail) instead of just
+getting bigger. Designed with Chris (2026-11-25); mockups `design/mockups/zoom-*-1920x1080.png`.
+
+### 16.1 What zooms
+- **Zoomed:** everything in the standup screen **below the header**, in the **person view** and the **Whole board**: the
+  speaker rail, the title row and its controls, the axis, lanes and rows, Done, Backlog, the more bar and the banners.
+  (`PulseTrack` takes the content scale as a prop from those two views; the ticket modal's header track and Configure's
+  preview use the text scale alone.)
+- **Not zoomed:** the header (wordmark, tabs, Find, Resync, Configure). Also Configure, the ticket modal, the command
+  palette, the lightbox and toasts: they keep the Text size scale only.
+- **Effective scale:** content scale = **Text size × zoom** (Large 1.25 × 150% = 1.875).
+
+### 16.2 Levels, control and keys
+- **Steps:** 70, 80, 90, 100, 110, 125, 150, 175, 200 %. Default 100.
+- **Persistence:** **one zoom per standup**, shared by its person view and Whole board (`standup_ui_state.zoom`,
+  data-model §2.1). Switching standups restores that standup's zoom. A change is saved at once (UI state: no debounce, no
+  save indicator).
+- **Control:** `− 100% +` (30px tall, 2px ink border, radius 3) at the right of the title row: on the Whole board after the
+  Assignee | Status switch, in the person view before the legend. − and + step the level and are disabled at 70% / 200%.
+  The middle button shows the level (mono 14 bold) and resets to 100% on click; it is **ink-filled whenever zoom ≠ 100%**.
+  `role="group"` `aria-label="Zoom"`; the buttons are "Zoom out (−)", "Reset zoom to 100% (0)" and "Zoom in (+)". When
+  zoomed, the middle button's name starts with its visible text ("150%. Reset zoom to 100% (0)", WCAG 2.5.3).
+- **Keys:** §8. They work on the standup screen and are ignored while typing and while the ticket modal or palette is open.
+  **⌘/Ctrl with `+` `=` `−` `0` are always swallowed**: the webview's own page zoom would also magnify the header (and, on
+  macOS, the default View menu's Zoom items run before the page sees the key, so the application menu drops them:
+  `cmd/cuisle/menu.go`; the window option `ZoomControlEnabled` is off).
+- **Feedback:** a toast below the control (ink fill, mono 15 bold, `role="status"`, 1.2 s) reads `150% · 2 columns` /
+  `175% · 1 column` on the board and `150% · side headings` on a person: the density the ladder chose ("side headings"
+  for any side-heading step, else "roomy rows" / "compact rows"). It shows on a change, not when the view is switched.
+- **Discoverability:** the rail footer ("+ − zoom"), the `?` key legend, §8, and the palette commands Zoom in `+`, Zoom out
+  `−`, Reset zoom `0` (category View, detail "now 150%"; disabled at an end of the range or at 100%).
+
+### 16.3 Layout: zoom re-runs the responsive rules
+- **CSS, not `transform`.** The header keeps `--scale: var(--text-scale)`. `.sf-body` (rail + main) sets
+  `--scale: calc(var(--text-scale) * var(--zoom))` and `--zoom: <level / 100>`; its sizes use `--scale`. The rail's own px
+  sizes, the main area's padding and the board's 40px column gap follow `--zoom`, so they stay the design sizes the maths
+  assumes.
+- **Maths:** `contentViewport(w, h, textScale, contentScale)` gives the effective `vw` and `vh`. The header's 64px comes off
+  first and goes back at design size, so the height constants that count the header stay right. Every layout function
+  receives these: `railMode`, `mainWidth`, `mainPadding`, `titleSizes`, `trackWidth` / `personTrackWidth`, `legendMode`,
+  `boardLegendMode`, `chooseDensity`, `belowFold`, `laneRowHeight`, `boardColumns`, `doneBacklogLayout`, `statusLayout`.
+- **At 1920 × 1080:** 80% sees a 2400 window (3 board columns, everything incl. Done and Backlog fits); 100% sees 1920
+  (2 columns); 150% sees 1280 (compact rail, 2 columns, 20px rows, the more bar lists Done and Backlog); 175% sees ~1097
+  (1 column). The person view at 150% walks the ladder to *tight rows, side headings* and the more bar takes the rest.
+- **Narrow effective widths** (high zoom on a small window) shrink the person track (§3) instead of scrolling sideways.
+- **Nothing is hidden to fit** (AGENTS invariant 1): past the ladder, the more bar takes over as at 100%.
+- **Keeping your place:** when the zoom changes, the topmost fully visible lane (board) or group (person) is put back at
+  the top of the scroll area after the reflow. At the top of the screen it stays there (the board's title row scrolls
+  with the lanes and must stay in view).
+- **Speed:** a zoom step is one render of the visible screen: p95 about 24 ms (board, 2 ↔ 3 columns) and 15 ms (person,
+  *compact* ↔ *tight* rows) at 4× CPU throttle, inside the 50 ms budget (`tests/perf/zoom.spec.ts`, which asserts the two
+  levels really lay out differently).
+

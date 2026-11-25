@@ -261,6 +261,12 @@ func (d *Deps) bootstrap(ctx context.Context) (Bootstrap, error) {
 	if b.UI.LastPerson == nil {
 		b.UI.LastPerson = map[int64]string{}
 	}
+	if b.UI.BoardGroup == nil {
+		b.UI.BoardGroup = map[int64]string{}
+	}
+	if b.UI.Zoom == nil {
+		b.UI.Zoom = map[int64]int{}
+	}
 	if b.Sync, err = d.syncStatuses(ctx); err != nil {
 		return Bootstrap{}, err
 	}

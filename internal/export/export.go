@@ -64,14 +64,18 @@ func buildSnapshot(v view.StandupView, meta Meta) Snapshot {
 	if n := len(axis); n > 0 {
 		s.Window = DateRange{From: axis[0].Date, To: axis[n-1].Date}
 	}
+	labels := make(map[string]string, len(v.Lanes))
 	for _, l := range v.Lanes {
-		s.Lanes = append(s.Lanes, LaneRef{Lane: l.Lane, Label: l.Label, LimitDays: l.LimitDays})
+		s.Lanes = append(s.Lanes, LaneRef{Lane: l.Lane, Label: l.Label, LimitDays: l.LimitDays, Kind: l.Kind, Custom: l.Custom})
+		labels[l.Lane] = l.Label
 	}
 	for _, sp := range v.Speakers {
 		s.People = append(s.People, Person{ID: sp.ID, Name: sp.Name, Included: sp.Included, Active: sp.Active, Done: sp.Done})
 	}
 	for _, t := range v.Tickets {
-		s.Tickets = append(s.Tickets, buildTicket(t, axis))
+		tk := buildTicket(t, axis)
+		tk.LaneLabel = labels[t.Lane]
+		s.Tickets = append(s.Tickets, tk)
 	}
 	for _, b := range v.Backlog {
 		s.Backlog = append(s.Backlog, Backlog{Key: b.Key, Summary: b.Summary, Type: b.Type, URL: b.URL})

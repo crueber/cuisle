@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strconv"
 
 	"github.com/crueber/cuisle/internal/apperr"
@@ -45,7 +46,59 @@ const (
 	KeyJiraMaxRPS            = "jira.max_rps"
 	// KeyUpdateCheckDaily is "Check for updates daily" (ADR 0016): "on" (the reader's default) or "off".
 	KeyUpdateCheckDaily = "update.check_daily"
+	// F14 (the command palette, ux-spec §15.7): the last opened tickets (a JSON array of local issue ids, most recent
+	// first) and how often each command ran (a JSON object command id → count). "" = none.
+	KeyPaletteRecentTickets = "palette.recent_tickets"
+	KeyPaletteCommandUsage  = "palette.command_usage"
 )
+
+// Caps of the palette settings. The UI keeps 8 recents; the validator is more tolerant so a newer or older build never
+// has its write rejected over a count.
+const (
+	paletteRecentMax = 50
+	paletteUsageMax  = 400
+	paletteMaxBytes  = 16 << 10
+)
+
+// validPaletteRecent: "" or a JSON array of at most 50 positive integers.
+func validPaletteRecent(v string) bool {
+	if v == "" {
+		return true
+	}
+	if len(v) > paletteMaxBytes {
+		return false
+	}
+	var ids []int64
+	if err := json.Unmarshal([]byte(v), &ids); err != nil || ids == nil || len(ids) > paletteRecentMax {
+		return false
+	}
+	for _, id := range ids {
+		if id <= 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// validPaletteUsage: "" or a JSON object of at most 400 entries, command id (1 to 80 characters) → non-negative integer.
+func validPaletteUsage(v string) bool {
+	if v == "" {
+		return true
+	}
+	if len(v) > paletteMaxBytes {
+		return false
+	}
+	var m map[string]int64
+	if err := json.Unmarshal([]byte(v), &m); err != nil || m == nil || len(m) > paletteUsageMax {
+		return false
+	}
+	for id, n := range m {
+		if id == "" || len(id) > 80 || n < 0 {
+			return false
+		}
+	}
+	return true
+}
 
 // UpdateCheckDaily reads KeyUpdateCheckDaily: on unless it is stored as "off".
 func (s *Store) UpdateCheckDaily(ctx context.Context) bool {
@@ -84,6 +137,10 @@ func validAppSetting(key, value string) error {
 		ok = err == nil && strconv.Itoa(n) == value && n >= 1 && n <= 20
 	case KeyUpdateCheckDaily:
 		ok = value == "on" || value == "off"
+	case KeyPaletteRecentTickets:
+		ok = validPaletteRecent(value)
+	case KeyPaletteCommandUsage:
+		ok = validPaletteUsage(value)
 	default:
 		return apperr.Validationf("key", "Unknown setting %q.", key)
 	}

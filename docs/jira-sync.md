@@ -116,7 +116,11 @@ Deliberately **not cached** between syncs (decided 2026-11-24): it is one reques
 run to full when the board's columns change, and it supplies `filterId` and `subQuery` to `Plan`; a day-old copy would
 make a column change invisible to a Resync.
 Effects: replace `board_column*`; merge into `standup_column_map` (new columns auto-mapped, removed columns deleted,
-`auto=0` choices preserved by column name); rebuild `standup_status_lane`.
+`auto=0` choices preserved by column name while their lane still exists); rebuild `standup_status_lane`. Auto-mapping
+first matches a column whose name equals a lane's label (custom lanes and renamed built-in lanes; trimmed,
+case-insensitive), then the rules below (`settings.AutoLaneNamed`, shared with sync's lane preview). Custom lanes are
+working lanes past To Do: `Plan` puts their statuses in the working set and the "in progress" set (W and P), and dev
+detail is re-checked for them like In Progress.
 
 Board type normalisation: `scrum` → scrum; `kanban` → kanban; `simple` → scrum if §2.7 returns 200, kanban if it returns
 400/404 ("board does not support sprints").
@@ -567,6 +571,10 @@ with last-writer-wins on identical source data.
   hydrates the issue (its `updated` differs) and merges the real changelog entries.
 - Concurrency with a running sync: both go through the single writer; whichever applies second **skips issue rows whose
   incoming `updated` is older than the stored `updated_at`** (change/comment rows are still merged — they are append-only).
+- A second caller (F14): `TicketService.FetchByKey` (the command palette's "not synced" row) sends one `Source.GetIssue`
+  by **key** on the interactive lane and applies it with the same `sync.ApplyIssue`. The issue is stored with no
+  membership (no span, no `standup_issue` row, `removed_at` untouched), so a later sync does not touch it and the
+  finder lists it as "not on board". Emits `ticket:updated {cause:"write"}`.
 - Writes are refused locally, before any request, when `connection.auth_state != 'ok'` (`auth_missing`/`auth_invalid`) or
   the capability is absent (`unsupported`).
 

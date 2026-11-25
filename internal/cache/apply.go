@@ -54,6 +54,18 @@ type configDoc struct {
 	Speakers           []configSpeaker    `json:"speakers"`
 	UnassignedPosition string             `json:"unassignedPosition"`
 	ActiveSprintIDs    []string           `json:"activeSprintIds"`
+	// Lanes defines the lanes that differ from the built-in ones (custom lanes, renamed built-in lanes, a renamed
+	// Done), so a lane deleted or renamed later still resolves in history. Omitted when there are none, so a standup
+	// without custom lanes keeps its fingerprint (and gets no new history row) after the upgrade.
+	Lanes []configLane `json:"lanes,omitempty"`
+}
+
+// configLane is one lane definition in config_json (data-model.md §2.6).
+type configLane struct {
+	Lane  string `json:"lane"`
+	Label string `json:"label"`
+	Kind  string `json:"kind"`          // working|done
+	Hue   int    `json:"hue,omitempty"` // custom lanes: palette index 1..8
 }
 
 // ConfigJSON returns the canonical config_json of data-model.md §2.6 for cfg and its sha256 hex fingerprint.
@@ -62,9 +74,16 @@ func ConfigJSON(cfg model.EffectiveConfig) ([]byte, string) {
 	sort.SliceStable(lanes, func(i, j int) bool { return lanes[i].Position < lanes[j].Position })
 	walk := make([]string, 0, len(lanes))
 	limits := make(map[string]int, len(lanes))
+	var defs []configLane
 	for _, l := range lanes {
 		walk = append(walk, l.Lane)
 		limits[l.Lane] = l.LimitDays
+		if l.Label != "" || l.Hue != 0 {
+			defs = append(defs, configLane{Lane: l.Lane, Label: cfg.LaneLabel(l.Lane), Kind: "working", Hue: l.Hue})
+		}
+	}
+	if cfg.DoneLabel != "" {
+		defs = append(defs, configLane{Lane: model.LaneDone, Label: cfg.DoneLabel, Kind: "done"})
 	}
 
 	sl := make([]configStatusLane, 0, len(cfg.StatusLanes))
@@ -85,6 +104,7 @@ func ConfigJSON(cfg model.EffectiveConfig) ([]byte, string) {
 		Show:     configShow{Commits: cfg.ShowCommits, PRs: cfg.ShowPRs, Comments: cfg.ShowComments},
 		RowsMode: cfg.RowsMode, WalkOrder: walk, Limits: limits, StatusLanes: sl, Speakers: sp,
 		UnassignedPosition: cfg.UnassignedPosition, ActiveSprintIDs: append([]string{}, cfg.ActiveSprintIDs...),
+		Lanes: defs,
 	}
 	// A struct of strings, ints, bools and slices of those cannot fail to marshal.
 	b, err := json.Marshal(doc)

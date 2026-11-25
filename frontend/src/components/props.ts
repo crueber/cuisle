@@ -4,7 +4,7 @@ import type { ComponentChildren } from "preact";
 
 export type IconName =
   | "story" | "bug" | "task" | "spike" | "other" // issue types (subtask/epic use "other")
-  | "sliders" | "resync" | "close" | "plus" | "chevron-down" | "chevron-up" | "board" | "external" | "download";
+  | "search" | "sliders" | "resync" | "close" | "plus" | "chevron-down" | "chevron-up" | "board" | "external" | "download";
 
 export interface IconProps {
   name: IconName;
@@ -36,6 +36,9 @@ export interface ComboboxProps<T> {
   clearOnSelect?: boolean; // add-person
   invalid?: boolean;
   describedBy?: string;
+  /** Offers a last option "Create …" for typed text that matches no option (case-insensitive); called with it trimmed. */
+  onCreate?: (text: string) => void;
+  createLabel?: (text: string) => string; // default: Create “text”
 }
 
 export interface SegmentedOption<V extends string> {
@@ -50,6 +53,11 @@ export interface SegmentedProps<V extends string> {
   value: V;
   options: SegmentedOption<V>[];
   onChange: (v: V) => void;
+  /**
+   * A view switch rather than a form choice: a labelled `group` of buttons with `aria-pressed`, each in the tab order, and no
+   * arrow-key selection (so the arrow keys stay the screen's keys). Default false: the radiogroup.
+   */
+  toggle?: boolean;
 }
 
 export interface SwitchProps {
@@ -122,4 +130,5 @@ export interface KeyLegendProps {
   showPRs: boolean;
   showComments: boolean;
   devActivity: string; // ok|unavailable|unknown
+  lanes?: { lane: string; label: string; hue: number }[]; // the standup's lanes (walk order, then done); built-ins if absent
 }

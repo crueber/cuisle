@@ -2,25 +2,16 @@
 // compute pulse data (ADR 0008): ticket segments, marks and labels stay as the fixtures have them.
 import type * as T from "./types";
 
-export const LANE_LABEL: Record<T.Lane, string> = { todo: "To Do", prog: "In Progress", review: "In Review", qa: "QA", done: "Done" };
-const DONE_LABEL: Record<string, string> = { sprint: "this sprint", "14d": "last 14 days", yesterday: "since yesterday" };
-
-/** Walk lanes from the config, then the Done lane, with the Jira columns mapped to each (ux-spec §5). */
+/** Walk lanes from the config, then the Done lane (its configured label), with the Jira columns mapped to each. */
 export function laneInfos(cfg: T.StandupConfig): T.LaneInfo[] {
-  const walk = cfg.lanes.map((l) => ({
-    lane: l.lane,
-    label: l.label,
-    limitDays: l.limitDays,
-    columns: cfg.columns.filter((c) => c.lane === l.lane).map((c) => c.columnName),
-  }));
-  const done: T.LaneInfo = {
-    lane: "done",
-    label: LANE_LABEL.done,
-    limitDays: 0,
-    columns: cfg.columns.filter((c) => c.lane === "done").map((c) => c.columnName),
+  const cols = (lane: string) => cfg.columns.filter((c) => c.lane === lane).map((c) => c.columnName);
+  const done: T.LaneInfo = cfg.laneOptions?.find((o) => o.lane === "done") ?? {
+    lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: [],
   };
-  return [...walk, done];
+  return [...cfg.lanes.map((l) => ({ ...l, columns: cols(l.lane) })), { ...done, columns: cols("done") }];
 }
+
+const DONE_LABEL: Record<string, string> = { sprint: "this sprint", "14d": "last 14 days", yesterday: "since yesterday" };
 
 export function viewOptions(cfg: T.StandupConfig): T.ViewOptions {
   return {
@@ -95,4 +86,22 @@ export function refreshView(view: T.StandupView, cfg: T.StandupConfig): void {
   view.options = { ...viewOptions(cfg), devActivity: view.options.devActivity };
   view.lanes = laneInfos(cfg);
   view.speakers = speakersFor(view, cfg);
+  remapWorkingTickets(view, cfg);
+}
+
+/**
+ * Like view.Build, a ticket shows in the lane its status's column maps to now. The mock only moves tickets between
+ * working lanes (built-in or custom) and relabels their current segment; done/backlog/hidden moves need a real sync.
+ */
+function remapWorkingTickets(view: T.StandupView, cfg: T.StandupConfig): void {
+  const working = new Set(cfg.lanes.map((l) => l.lane));
+  const laneOf = new Map<string, string>();
+  for (const c of cfg.columns) for (const s of c.statusNames) laneOf.set(s, c.lane);
+  for (const t of view.tickets) {
+    const next = laneOf.get(t.statusName);
+    if (!next || next === t.lane || !working.has(next) || !working.has(t.lane)) continue;
+    const last = t.pulse.segs.at(-1);
+    if (last && last.lane === t.lane) last.lane = next;
+    t.lane = next;
+  }
 }

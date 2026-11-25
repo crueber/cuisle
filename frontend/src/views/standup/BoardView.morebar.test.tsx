@@ -30,8 +30,8 @@ const AXIS: AxisDay[] = Array.from({ length: 21 }, (_, i) => {
   return { date: d.toISOString().slice(0, 10), label: String(d.getUTCDate()), weekend: dow === 0 || dow === 6, monday: dow === 1 };
 });
 const LANES: LaneInfo[] = [
-  { lane: "todo", label: "To Do", limitDays: 0, columns: ["To Do"] },
-  { lane: "done", label: "Done", limitDays: 0, columns: ["Done"] },
+  { lane: "todo", label: "To Do", defaultLabel: "To Do", kind: "working", custom: false, hue: 0, limitDays: 0, columns: ["To Do"] },
+  { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: ["Done"] },
 ];
 
 let counter = 0;

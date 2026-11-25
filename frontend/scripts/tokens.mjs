@@ -79,13 +79,13 @@ export function buildTokens(json) {
   const css = [
     `/* ${HEADER} */`,
     ":root {",
-    decls([...root, ["--scale", "1"]]),
+    decls([...root, ["--text-scale", "1"], ["--zoom", "1"], ["--scale", "var(--text-scale)"]]),
     "}",
     ':root[data-theme="dark"] {',
     decls(dark),
     "}",
     ':root[data-text="large"] {',
-    `  --scale: ${LARGE_SCALE};`,
+    `  --text-scale: ${LARGE_SCALE};`,
     "}",
     "",
   ].join("\n");

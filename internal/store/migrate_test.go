@@ -686,7 +686,7 @@ func TestMigrate_0004_DevBranchTitle_KeepsRowsAndResetsFingerprints(t *testing.T
 	mustExec(t, raw, "UPDATE issue SET dev_fingerprint = 'fp-dev', dev_checked_at = 3500 WHERE id = 1")
 	before := rowCounts(t, raw)
 
-	applied, _, err := migrate(t, raw, head, dir, store.Options{})
+	applied, _, err := migrate(t, raw, head[:4], dir, store.Options{})
 	if err != nil || !reflect.DeepEqual(applied, []int{4}) {
 		t.Fatalf("Migrate = %v, %v; want [4], nil", applied, err)
 	}
@@ -710,6 +710,139 @@ func TestMigrate_0004_DevBranchTitle_KeepsRowsAndResetsFingerprints(t *testing.T
 	if n := scalarInt(t, raw, "SELECT dev_checked_at FROM issue WHERE id = 1"); n != 3500 {
 		t.Errorf("dev_checked_at = %d, want 3500 (untouched)", n)
 	}
+	assertIntegrity(t, raw)
+}
+
+// 0006 rebuilds standup_lane, standup_column_map and standup_status_lane to widen their lane CHECKs (custom lanes).
+// Every row and value is kept (lane_order included), the foreign key from status lanes to the column map still
+// cascades, custom lane ids are accepted only in their c<N> form, and the new settings columns start at their defaults.
+func TestMigrate_0006_CustomLanes_KeepsConfigRowsAndWidensLaneChecks(t *testing.T) {
+	defer recoverStub(t)
+	head := embeddedList(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, head[:4], dir)
+	seedFile(t, raw, filepath.Join("testdata", "v4.sql"))
+	before := rowCounts(t, raw)
+	const lanesQ = "SELECT group_concat(lane || ':' || walk_position || ':' || limit_days, ',') FROM (SELECT * FROM standup_lane ORDER BY standup_id, walk_position)"
+	const colsQ = "SELECT group_concat(column_name || ':' || position || ':' || lane || ':' || auto || ':' || COALESCE(lane_order, -1), ',') FROM standup_column_map"
+	const statusQ = "SELECT group_concat(status_id || ':' || status_name || ':' || column_name || ':' || lane, ',') FROM standup_status_lane"
+	wantLanes, wantCols, wantStatus := scalarStr(t, raw, lanesQ), scalarStr(t, raw, colsQ), scalarStr(t, raw, statusQ)
+
+	applied, _, err := migrate(t, raw, head[:6], dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{5, 6}) {
+		t.Fatalf("Migrate = %v, %v; want [5 6], nil (0005 is the board-grouping migration)", applied, err)
+	}
+	if got := rowCounts(t, raw); !reflect.DeepEqual(got, before) {
+		t.Errorf("row counts changed by 0005–0006:\n got %v\nwant %v", got, before)
+	}
+	for q, want := range map[string]string{lanesQ: wantLanes, colsQ: wantCols, statusQ: wantStatus} {
+		if got := scalarStr(t, raw, q); got != want {
+			t.Errorf("%s\n got %q\nwant %q", q, got, want)
+		}
+	}
+	if n := scalarInt(t, raw, "SELECT count(*) FROM standup_lane WHERE label IS NOT NULL OR hue IS NOT NULL"); n != 0 {
+		t.Errorf("%d lanes have a label or hue after 0006, want 0 (defaults)", n)
+	}
+	if got := scalarStr(t, raw, "SELECT lane_seq || ':' || COALESCE(done_label, '-') FROM standup_settings WHERE standup_id = 1"); got != "0:-" {
+		t.Errorf("settings lane_seq:done_label = %q, want 0:-", got)
+	}
+	assertIntegrity(t, raw)
+
+	// Custom lanes fit; malformed ids, a custom lane without a label or hue, and a label on nothing else are refused.
+	mustExec(t, raw, "INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c12', 4, 0, 'Design', 3)")
+	mustExec(t, raw, "INSERT INTO standup_column_map (standup_id, column_name, position, lane) VALUES (1, 'Design', 5, 'c12')")
+	for _, bad := range []string{
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c0', 5, 0, 'X', 1)",
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c1a', 5, 0, 'X', 1)",
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'done', 5, 0, 'X', NULL)",
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c3', 5, 0, NULL, 1)",
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c4', 5, 0, 'X', NULL)",
+		"INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (1, 'c5', 5, 0, 'X', 9)",
+		"UPDATE standup_lane SET hue = 1 WHERE standup_id = 1 AND lane = 'qa'",
+		"INSERT INTO standup_column_map (standup_id, column_name, position, lane) VALUES (1, 'Bad', 6, 'custom')",
+	} {
+		if _, err := raw.ExecContext(ctx, bad); err == nil {
+			t.Errorf("accepted: %s", bad)
+		}
+	}
+	// The status-lane foreign key to the rebuilt column map still cascades on update.
+	mustExec(t, raw, "PRAGMA foreign_keys=ON")
+	mustExec(t, raw, "UPDATE standup_column_map SET column_name = 'Doing' WHERE standup_id = 1 AND column_name = 'In Progress'")
+	if got := scalarStr(t, raw, "SELECT column_name FROM standup_status_lane WHERE status_id = '10'"); got != "Doing" {
+		t.Errorf("status lane column after rename = %q, want Doing (ON UPDATE CASCADE)", got)
+	}
+}
+
+// 0005 adds the per-standup Whole-board grouping to standup_ui_state: existing rows default to 'assignee' (today's
+// board), nothing is dropped, and the CHECK rejects any other value.
+func TestMigrate_0005_BoardGroup_ExistingRowsDefaultToAssignee(t *testing.T) {
+	defer recoverStub(t)
+	head := embeddedList(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, head[:4], dir)
+	seedFile(t, raw, filepath.Join("testdata", "v4.sql"))
+	before := rowCounts(t, raw)
+	if before["standup_ui_state"] == 0 {
+		t.Fatal("fixture drift: v4.sql must seed a standup_ui_state row")
+	}
+
+	applied, _, err := migrate(t, raw, head[:5], dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{5}) {
+		t.Fatalf("Migrate = %v, %v; want [5], nil", applied, err)
+	}
+	if got := rowCounts(t, raw); !reflect.DeepEqual(got, before) {
+		t.Errorf("row counts changed by 0005:\n got %v\nwant %v", got, before)
+	}
+	if !hasColumn(t, raw, "standup_ui_state", "board_group") {
+		t.Fatal("standup_ui_state.board_group missing")
+	}
+	if n := scalarInt(t, raw, "SELECT count(*) FROM standup_ui_state WHERE board_group = 'assignee'"); int(n) != before["standup_ui_state"] {
+		t.Errorf("%d rows default to assignee, want all %d", n, before["standup_ui_state"])
+	}
+	if got := scalarStr(t, raw, "SELECT last_person FROM standup_ui_state WHERE standup_id = 1"); got != "acc-ada" {
+		t.Errorf("last_person = %q, want acc-ada (kept)", got)
+	}
+	if _, err := raw.Exec("UPDATE standup_ui_state SET board_group = 'columns' WHERE standup_id = 1"); err == nil {
+		t.Error("board_group accepted 'columns', want the CHECK to reject it")
+	}
+	mustExec(t, raw, "UPDATE standup_ui_state SET board_group = 'status' WHERE standup_id = 1")
+	assertIntegrity(t, raw)
+}
+
+// 0007 adds the per-standup zoom to standup_ui_state: existing rows default to 100 (today's screen), nothing is dropped,
+// and the CHECK rejects a percentage that is not one of the nine steps.
+func TestMigrate_0007_Zoom_ExistingRowsDefaultTo100(t *testing.T) {
+	defer recoverStub(t)
+	head := embeddedList(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, head[:4], dir)
+	seedFile(t, raw, filepath.Join("testdata", "v4.sql"))
+	mustMigrate(t, raw, head[:6], dir)
+	before := rowCounts(t, raw)
+	if before["standup_ui_state"] == 0 {
+		t.Fatal("fixture drift: v4.sql must seed a standup_ui_state row")
+	}
+
+	applied, _, err := migrate(t, raw, head[:7], dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{7}) {
+		t.Fatalf("Migrate = %v, %v; want [7], nil", applied, err)
+	}
+	if got := rowCounts(t, raw); !reflect.DeepEqual(got, before) {
+		t.Errorf("row counts changed by 0007:\n got %v\nwant %v", got, before)
+	}
+	if !hasColumn(t, raw, "standup_ui_state", "zoom") {
+		t.Fatal("standup_ui_state.zoom missing")
+	}
+	if n := scalarInt(t, raw, "SELECT count(*) FROM standup_ui_state WHERE zoom = 100"); int(n) != before["standup_ui_state"] {
+		t.Errorf("%d rows default to 100, want all %d", n, before["standup_ui_state"])
+	}
+	if got := scalarStr(t, raw, "SELECT last_person FROM standup_ui_state WHERE standup_id = 1"); got != "acc-ada" {
+		t.Errorf("last_person = %q, want acc-ada (kept)", got)
+	}
+	if _, err := raw.Exec("UPDATE standup_ui_state SET zoom = 105 WHERE standup_id = 1"); err == nil {
+		t.Error("zoom accepted 105, want the CHECK to reject it")
+	}
+	mustExec(t, raw, "UPDATE standup_ui_state SET zoom = 150 WHERE standup_id = 1")
 	assertIntegrity(t, raw)
 }
 

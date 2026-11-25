@@ -45,7 +45,7 @@ const AXIS: AxisDay[] = Array.from({ length: 21 }, (_, i) => {
   return { date: d.toISOString().slice(0, 10), label: String(d.getUTCDate()), weekend: dow === 0 || dow === 6, monday: dow === 1 };
 });
 
-const L = (lane: string, label: string, limitDays: number): LaneInfo => ({ lane, label, limitDays, columns: [label] });
+const L = (lane: string, label: string, limitDays: number): LaneInfo => ({ lane, label, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays, columns: [label] });
 const LANE_QA = L("qa", "QA", 3);
 const LANE_REVIEW = L("review", "In Review", 2);
 const LANE_PROG = L("prog", "In Progress", 5);
@@ -417,7 +417,7 @@ describe("PersonView more bar scroll behaviour", () => {
 });
 
 describe("PersonView legend by width", () => {
-  it("mainW 1656: full legend", () => {
+  it("mainW 1656: full legend (the default view keeps it beside the zoom control, F15)", () => {
     scrollFor(1080, 900, false);
     render(<PersonView {...props({ mainW: 1656 })} />);
     expect(screen.getByRole("heading", { level: 1 })).toBeTruthy(); // anchor
@@ -425,9 +425,16 @@ describe("PersonView legend by width", () => {
     expect(screen.queryAllByText(/commit/i).length).toBeGreaterThan(0);
   });
 
-  it("mainW 1400: short legend (lanes, blocked, over limit; no commit/PR/comment)", () => {
+  it("mainW 1400: a Key button, not the short legend: the zoom control beside it needs 150px (F15)", () => {
     scrollFor(1080, 900, false);
     render(<PersonView {...props({ mainW: 1400 })} />);
+    expect(screen.getByRole("button", { name: /key/i })).toBeTruthy();
+    expect(screen.queryAllByText(/over limit/i)).toHaveLength(0);
+  });
+
+  it("mainW 1500: short legend (lanes, blocked, over limit; no commit/PR/comment)", () => {
+    scrollFor(1080, 900, false);
+    render(<PersonView {...props({ mainW: 1500 })} />);
     expect(screen.queryAllByText(/over limit/i).length).toBeGreaterThan(0);
     expect(screen.queryAllByText(/commit/i)).toHaveLength(0);
   });

@@ -10,7 +10,7 @@ import { buildBoardLanes, views } from "./standup";
 import { closeTicket, ticketSession } from "./ticket";
 import { boardSteps, issueIdOfKey, openTicketFromRow, personSteps, stepsFor } from "./ticketSteps";
 
-const LANES = ["qa", "review", "prog", "todo", "done"].map((lane) => ({ lane, label: lane, limitDays: 0, columns: [] }));
+const LANES = ["qa", "review", "prog", "todo", "done"].map((lane) => ({ lane, label: lane, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays: 0, columns: [] }));
 
 const ticket = (id: number, lane: string, assignee: string): TicketView =>
   ({ id, key: `MOB-${id}`, summary: `t${id}`, url: "", type: "story", assignee, lane, statusName: lane, daysInLane: 1, overLimit: false, blocked: false, doneAt: 0 }) as unknown as TicketView;
@@ -69,6 +69,50 @@ describe("boardSteps", () => {
   it("stepsFor picks the person list or the board list", () => {
     expect(stepsFor(VIEW, "bo")).toEqual([3, 7]);
     expect(stepsFor(VIEW, null)).toEqual(boardSteps(VIEW));
+  });
+});
+
+describe("boardSteps grouped by status (ux-spec §6.5)", () => {
+  // Walk order here is qa, review, prog, todo. Rows in a section are sorted: over-limit first, then days in lane
+  // descending, then board rank; then every Done ticket, then the backlog.
+  const sorted = {
+    ...VIEW,
+    tickets: [
+      ticket(1, "todo", "ana"),
+      { ...ticket(2, "qa", "ana"), daysInLane: 2 },
+      { ...ticket(3, "prog", "bo"), daysInLane: 3 },
+      { ...ticket(4, "prog", "ana"), daysInLane: 9 },
+      ticket(5, "done", "ana"),
+      ticket(6, "todo", ""),
+      ticket(7, "done", "bo"),
+      { ...ticket(8, "review", "ana"), daysInLane: 1 },
+      { ...ticket(9, "prog", "ana"), daysInLane: 1, overLimit: true },
+      { ...ticket(10, "qa", "bo"), daysInLane: 6 },
+    ],
+  } as unknown as StandupView;
+
+  it("lists the sections in walk order with the rows as drawn, then Done, then the backlog", () => {
+    // qa: 10 (6d) then 2 (2d); review: 8; prog: 9 (over limit) then 4 (9d) then 3 (3d); todo: 1, 6 (rank); done 5, 7
+    expect(boardSteps(sorted, "status")).toEqual([10, 2, 8, 9, 4, 3, 1, 6, 5, 7, 90, 91]);
+  });
+
+  it("is a different order from the assignee grouping", () => {
+    expect(boardSteps(sorted, "status")).not.toEqual(boardSteps(sorted, "assignee"));
+  });
+
+  it("stepsFor reads the standup's saved grouping; a person view is never grouped by status", async () => {
+    const { setBoardGroup } = await import("./standup");
+    setApi({ app: { openIssue, setUIState: vi.fn(async () => undefined) } } as unknown as Api);
+    setBoardGroup(1, "status");
+    try {
+      expect(stepsFor(sorted, null)).toEqual(boardSteps(sorted, "status"));
+      expect(stepsFor(sorted, "ana")).toEqual(personSteps(sorted, "ana"));
+      views.value = new Map([[1, sorted]]);
+      openTicketFromRow("MOB-4");
+      expect(ticketSession.value?.steps).toEqual(boardSteps(sorted, "status"));
+    } finally {
+      setBoardGroup(1, "assignee");
+    }
   });
 });
 

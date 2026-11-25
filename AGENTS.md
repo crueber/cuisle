@@ -109,7 +109,7 @@ scripts/               layercheck/, agent/check-ownership, publish-to-github.sh,
    pulse data.
 9. **Pure-Go SQLite.** `CGO_ENABLED=0 go test -tags purego ./internal/...` must pass (the `purego` tag is how Wails v3.1 compiles without cgo; it only matters for `internal/app`).
 10. **Frontend runtime deps are fixed** (`preact`, `@preact/signals`, `@wailsio/runtime`). Adding one needs an ADR and
-    the 70 KB gz JS budget (ADR 0014, as amended for F12).
+    the JS budget: entry ≤ 80 KB gz, lazy chunks ≤ 20 KB gz (ADR 0014, as amended 2026-11-25).
 11. **Tokens only.** No raw hex in components. Lane colours via `data-lane`. Sizes scale with `--scale` (Large/TV).
 12. **Exports, logs and crash output carry no comment bodies, emails or secrets** (`cuisle.export.v1`, additive-only
     within v1). Comment bodies *are* stored locally (ADR 0015).
@@ -235,16 +235,42 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
 - **Escalate** a WP to Sonnet after two failed Haiku attempts.
 
 ## 10. Open items and decisions log
+- **Decided 2026-11-25 (F15):** **zoom** for the standup screen (ux-spec §16, docs/features/zoom/). Steps 70-200 %, one level
+  per standup in `standup_ui_state.zoom` (migration `0007_zoom`; 0006 was custom lanes), shared by the person view and the
+  Whole board, `+` `-` `0` and `⌘`/`Ctrl` with them. Zoom is a CSS scale on everything below the header
+  (`--scale = --text-scale × --zoom`; the header keeps the text scale), and **every layout function runs on the effective
+  size** (`contentViewport`), so a zoomed screen reflows: the board has 1, 2 or 3 columns (3 at effective `mainW ≥ 1720`)
+  and the person density ladder re-runs. The board's assignee split is now F13's order-preserving `splitSequence`
+  (Unassigned, then speaking order, cut into contiguous runs) instead of the greedy balance. The webview's own page zoom is
+  off: `ZoomControlEnabled` false and the default application menu's Zoom items removed (`cmd/cuisle/menu.go`), because on
+  macOS they run before the page sees `⌘+`. No new dependency; no `StandupView` change.
+- **Decided 2026-11-25 (F14):** a command palette with a ticket finder (`⌘K` / `Ctrl+K`, `T`, the Find button; ux-spec §15,
+  docs/features/command-palette/).
+  - Tickets are found by key only, locally (`TicketService.FindByKey`, zero network); the one network call is the explicit
+    "isn't synced" fetch row (`TicketService.FetchByKey`, one request, the limiter's interactive lane).
+  - The palette dialog and the commands are a lazy chunk. `size-limit` now gates the **entry** JS and CSS (80 KB and 18 KB,
+    Chris's 2026-11-25 numbers) apart from the lazy chunks (JS 20 KB, CSS 3 KB together), so lazy code does not eat the
+    entry's headroom. The literal all-JS total with the palette is 80.2 KB.
+  - App settings `palette.recent_tickets` and `palette.command_usage`. No new runtime dependency (own fuzzy scorer).
 - **Verify Wails v3 names in the M0 spike** (architecture R1): `MarshalError`, asset middleware, context injection and
   the bindings flags.
 - **Dev-status is an internal Jira API** (R2): degrade gracefully and warn.
 - **Post-v1:** History view UI, more sinks (webhook, CSV/Markdown, Linear, GitHub Projects, Asana, Notion, Azure
   Boards), more sources, archive/restore UI, speaker timer, working-days option, OAuth.
+- **Decided 2026-11-25:** Whole board **group by Assignee or Status** (F13, ux-spec §6.5), option A "status sections".
+  A title-row Segmented plus the `G` key; the choice is per standup in `standup_ui_state.board_group` (migration 0005),
+  written at once as UI state. Grouping and sorting are layout (`layout/board.ts`), with no `StandupView` change.
+  Sections come from `StandupView.Lanes` in walk order, so custom lanes need nothing here. Option B (columns) rejected.
 - **Decided 2026-11-24:** auto-update (ADR 0016). The channel is where the copy was built (GitHub or Forgejo
   releases), checked at most once per local calendar day (start if ≥ 24 h, day rollover) with a "Check for updates daily" setting
   (default on) and Check now in Configure → Display. The Update button sits between Resync and Configure. Installs are
   verified against `SHA256SUMS.txt` (+ ed25519 when the key is compiled in) and replace the app in place per OS
   (.dmg swap, silent NSIS, AppImage rename; .deb opens the release page). No telemetry.
+- **Decided 2026-11-25:** Status mapping lets the user name their own lanes (custom *working* lanes, ids `c<N>` never
+  reused, colours from the extended lane palette `lane-x1…x8`; up to 12, names ≤ 40 characters) and rename any working
+  lane or Done (ids never change). Backlog, Done and Hidden can't be created. Migration `0006_custom_lanes`.
+- **Decided 2026-11-25:** the JS budget is split: the entry (startup) chunk ≤ 80 KB gz and lazy chunks ≤ 20 KB gz;
+  CSS entry ≤ 18 KB, lazy ≤ 3 KB (ADR 0014 amendment). Large, rarely opened UI goes in a lazy chunk.
 - **Decided 2026-11-23 (later):** ticket modal (F12) with full content synced up front and light writes (ADR 0015);
   layout A "Docket" (ux-spec §14).
 - **Decided 2026-11-23:**

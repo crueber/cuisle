@@ -4,9 +4,15 @@
 //   (the prototype subtracted 2 more). 1920 -> 1920 − 208 − 64 = 1648; 1440 -> 1440 − 208 − 40 = 1192.
 // SPEC-NOTE: every threshold is inclusive (≥), tested at t and t − 1.
 import { describe, expect, it } from "vitest";
+import { boardColumns } from "./board";
 import {
+  personTrackWidth,
+  contentViewport,
+  HEADER_H,
   configureColumns,
   headerCollapse,
+  legendExtra,
+  boardLegendMode,
   legendMode,
   mainPadding,
   mainWidth,
@@ -43,6 +49,43 @@ describe("legendMode", () => {
     [900, "button"],
   ])("legendMode(%i) is %s", (w, mode) => {
     expect(legendMode(w)).toBe(mode);
+  });
+
+  // F15: the zoom control beside the legend raises only the short threshold; the full legend keeps its own.
+  it("controlRoom raises the short threshold only", () => {
+    expect(legendMode(1560, 0, 150)).toBe("full");
+    expect(legendMode(1559, 0, 150)).toBe("short");
+    expect(legendMode(1450, 0, 150)).toBe("short");
+    expect(legendMode(1449, 0, 150)).toBe("button");
+    expect(boardLegendMode(1648, 0, 150)).toBe("short");
+    expect(boardLegendMode(1449, 0, 150)).toBe("button");
+  });
+
+  // Lanes the user names make the legend wider: each threshold rises by legendExtra (none for the built-in lanes).
+  const L = (lane: string, label: string) => ({ lane, label });
+  const BUILTIN = [L("qa", "QA"), L("review", "In Review"), L("prog", "In Progress"), L("todo", "To Do"), L("done", "Done")];
+  it("legendExtra is 0 for the four built-in lanes (Done is not in the legend)", () => {
+    expect(legendExtra(BUILTIN)).toBe(0);
+  });
+  it("legendExtra grows with custom lanes and longer names, and moves the thresholds", () => {
+    const extra = legendExtra([...BUILTIN, L("c1", "Peer Review")]);
+    expect(extra).toBe(11 * 8 + 45);
+    expect(legendMode(1560, extra)).toBe("short");
+    expect(legendMode(1560 + extra, extra)).toBe("full");
+    const many = Array.from({ length: 12 }, (_, i) => L(`c${i + 1}`, "x".repeat(40)));
+    expect(legendMode(1648, legendExtra([...BUILTIN, ...many]))).toBe("button");
+  });
+});
+
+describe("boardLegendMode (F13)", () => {
+  it.each([
+    [1800, "short"],
+    [1560, "short"],
+    [1300, "short"],
+    [1299, "button"],
+    [900, "button"],
+  ])("boardLegendMode(%i) is %s: the board never lists the mark keys", (w, mode) => {
+    expect(boardLegendMode(w)).toBe(mode);
   });
 });
 
@@ -135,5 +178,58 @@ describe("unscale", () => {
     expect(unscale(1920, 1.25)).toBe(1536);
     expect(unscale(1000, 1)).toBe(1000);
     expect(unscale(125, 1.25)).toBe(100);
+  });
+});
+
+// F15 (ux-spec §16.3): the content below the header lays out on the window divided by text size x zoom; the header
+// keeps the text scale, so its 64px comes off first and goes back at design size.
+describe("contentViewport", () => {
+  it("is the plain unscaled window at zoom 100 (content scale = text scale)", () => {
+    expect(contentViewport(1920, 1080, 1, 1)).toEqual({ vw: 1920, vh: 1080 });
+    expect(contentViewport(1920, 1080, 1.25, 1.25)).toEqual({ vw: 1536, vh: 864 });
+  });
+
+  it("divides the width by the content scale: 80% sees 2400, 150% sees 1280, 175% sees ~1097", () => {
+    expect(contentViewport(1920, 1080, 1, 0.8).vw).toBe(2400);
+    expect(contentViewport(1920, 1080, 1, 1.5).vw).toBe(1280);
+    expect(contentViewport(1920, 1080, 1, 1.75).vw).toBeCloseTo(1097.14, 1);
+  });
+
+  it("keeps the header out of the zoom: the height is the content's plus the 64px header at design size", () => {
+    expect(HEADER_H).toBe(64);
+    expect(contentViewport(1920, 1080, 1, 1.5).vh).toBeCloseTo((1080 - 64) / 1.5 + 64, 6);
+    expect(contentViewport(1920, 1080, 1, 0.8).vh).toBeCloseTo((1080 - 64) / 0.8 + 64, 6);
+  });
+
+  it("multiplies with Large text: 1.25 x 150% = 1.875", () => {
+    expect(contentViewport(1920, 1080, 1.25, 1.875).vw).toBeCloseTo(1024, 6);
+  });
+});
+
+describe("personTrackWidth", () => {
+  it("is trackWidth wherever the row has room for it (every width that fits today)", () => {
+    for (const w of [1656, 1500, 1200, 1150, 908, 900, 700]) expect(personTrackWidth(w)).toBe(trackWidth(w));
+  });
+
+  it("shrinks below 300 once a high zoom leaves a narrow effective width (the row never scrolls sideways)", () => {
+    expect(personTrackWidth(615)).toBe(255);
+    expect(personTrackWidth(524)).toBe(164);
+    expect(personTrackWidth(300)).toBe(100); // never below 100
+  });
+});
+
+describe("rules at the effective sizes of a 1920 x 1080 window (the F15 golden sizes)", () => {
+  // zoom 80 / 100 / 150 / 175 -> effective width, rail mode, main width and board columns
+  it.each([
+    [0.8, 2400, "full", 2128, 3],
+    [1, 1920, "full", 1648, 2],
+    [1.5, 1280, "compact", 1164, 2],
+    [1.75, 1097, "compact", 981, 1],
+  ])("zoom x%f: vw %i, rail %s, mainW %i, %i board columns", (z, vw, rail, mainW, cols) => {
+    const v = contentViewport(1920, 1080, 1, z).vw;
+    expect(Math.round(v)).toBe(vw);
+    expect(railMode(v)).toBe(rail);
+    expect(Math.round(mainWidth(v))).toBe(mainW);
+    expect(boardColumns(mainWidth(v))).toBe(cols);
   });
 });

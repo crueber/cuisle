@@ -35,6 +35,8 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     clearOnSelect,
     invalid,
     describedBy,
+    onCreate,
+    createLabel = (t: string) => `Create “${t}”`,
   } = props;
 
   const isMenu = variant === "menu";
@@ -44,7 +46,14 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   const optId = (i: number) => `${id}-opt-${i}`;
 
   const [text, setText] = useState(isMenu ? "" : committed);
-  const [typed, setTyped] = useState(false);
+  const [typed, setTypedState] = useState(false);
+  // Mirrors `typed` synchronously: the committed-label sync below may run (deferred) after a keystroke in the same
+  // frame, and must not overwrite text the user just typed with a stale render's `typed === false`.
+  const typedRef = useRef(false);
+  const setTyped = (v: boolean) => {
+    typedRef.current = v;
+    setTypedState(v);
+  };
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [remote, setRemote] = useState<T[]>([]);
@@ -67,15 +76,20 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   const belowMin = q.length < minChars;
   const isOpen = open && !belowMin;
   const items: T[] = isAsync ? remote : filterOptions(options ?? [], getLabel, q);
-  const act = active >= 0 && active < items.length ? active : -1;
+  // The create option (onCreate) follows the matches when the typed text names no option exactly.
+  const createText = onCreate && typed ? text.trim() : "";
+  const lower = createText.toLowerCase();
+  const canCreate = createText !== "" && ![...(options ?? []), ...items].some((o) => getLabel(o).toLowerCase() === lower);
+  const count = items.length + (canCreate ? 1 : 0);
+  const act = active >= 0 && active < count ? active : -1;
   // The listbox element exists whenever the list is open (aria-controls must resolve), even with no options.
   const listShown = isOpen;
   const showPopup = isMenu ? open : isOpen;
-  const showEmpty = items.length === 0 && (!isAsync || status === "ok");
+  const showEmpty = count === 0 && (!isAsync || status === "ok");
 
   // Keep the committed label in sync while the user is not typing (field variant).
   useEffect(() => {
-    if (!isMenu && !clearOnSelect && !typed) setText(committed);
+    if (!isMenu && !clearOnSelect && !typedRef.current) setText(committed);
   }, [committed]);
 
   // Scroll the active option into view, keyboard-driven only.
@@ -165,7 +179,7 @@ export function Combobox<T>(props: ComboboxProps<T>) {
       setOpen(true);
       scheduleLoad(q);
     }
-    setActive(items.length === 0 ? -1 : last ? items.length - 1 : 0);
+    setActive(count === 0 ? -1 : last ? count - 1 : 0);
   }
 
   function closeList() {
@@ -186,6 +200,15 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     setActive(-1);
     setText(isMenu || clearOnSelect ? "" : getLabel(o));
     if (isMenu) btnRef.current?.focus();
+  }
+
+  function create() {
+    stopLoads();
+    onCreate?.(createText);
+    setOpen(false);
+    setTyped(false);
+    setActive(-1);
+    setText(isMenu || clearOnSelect ? "" : committed);
   }
 
   function clearValue() {
@@ -213,7 +236,7 @@ export function Combobox<T>(props: ComboboxProps<T>) {
       case "ArrowDown":
         e.preventDefault();
         if (!isOpen) openList(false);
-        else setActive(Math.min(act + 1, items.length - 1));
+        else setActive(Math.min(act + 1, count - 1));
         return;
       case "ArrowUp":
         e.preventDefault();
@@ -223,19 +246,22 @@ export function Combobox<T>(props: ComboboxProps<T>) {
       case "Home":
         if (isOpen) {
           e.preventDefault();
-          setActive(items.length === 0 ? -1 : 0);
+          setActive(count === 0 ? -1 : 0);
         }
         return;
       case "End":
         if (isOpen) {
           e.preventDefault();
-          setActive(items.length === 0 ? -1 : items.length - 1);
+          setActive(count - 1);
         }
         return;
       case "Enter":
         if (isOpen && it !== undefined) {
           e.preventDefault();
           commit(it);
+        } else if (isOpen && canCreate && act === items.length) {
+          e.preventDefault();
+          create();
         }
         return;
       case "Escape":
@@ -333,6 +359,19 @@ export function Combobox<T>(props: ComboboxProps<T>) {
               </li>
             );
           })}
+          {canCreate ? (
+            <li
+              id={optId(items.length)}
+              role="option"
+              aria-selected="false"
+              data-active={act === items.length ? "true" : "false"}
+              class="cbx-option cbx-create"
+              onClick={create}
+              onMouseEnter={() => setActive(items.length)}
+            >
+              {createLabel(createText)}
+            </li>
+          ) : null}
         </ul>
       ) : null}
       {isOpen && status === "error" ? (

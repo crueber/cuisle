@@ -67,6 +67,36 @@ for (const theme of THEMES) {
       await scanAndExpect(page, `whole board (${theme})`);
     });
 
+    test("whole board grouped by status", async ({ page }) => {
+      await waitForStandupScreen(page);
+      await page.keyboard.press("b");
+      await page.keyboard.press("g");
+      await expect(page.locator(".board-sec").first()).toBeVisible();
+      await setTheme(page, theme);
+      await scanAndExpect(page, `whole board by status (${theme})`);
+    });
+
+    // F15: zoomed screens (ux-spec §16) with the toast showing, the control ink-filled and the layout reflowed.
+    for (const z of ["+++", "---"]) {
+      const label = z === "+++" ? "zoomed in (150%)" : "zoomed out (80%)";
+      test(`person view, ${label}`, async ({ page }) => {
+        await waitForStandupScreen(page);
+        for (const k of z) await page.keyboard.press(k === "+" ? "=" : "-");
+        await expect(page.locator(".zoom-toast")).toBeVisible();
+        await setTheme(page, theme);
+        await scanAndExpect(page, `person view ${label} (${theme})`);
+      });
+
+      test(`whole board, ${label}`, async ({ page }) => {
+        await waitForStandupScreen(page);
+        await page.keyboard.press("b");
+        for (const k of z) await page.keyboard.press(k === "+" ? "=" : "-");
+        await expect(page.locator(".zoom-toast")).toBeVisible();
+        await setTheme(page, theme);
+        await scanAndExpect(page, `whole board ${label} (${theme})`);
+      });
+    }
+
     test("configure, all sections expanded", async ({ page }) => {
       await waitForStandupScreen(page);
       await page.keyboard.press(",");

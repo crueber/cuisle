@@ -25,8 +25,24 @@ export function Create(): $CancellablePromise<view$0.StandupConfig> {
     return $Call.ByID(948275199);
 }
 
+/**
+ * CreateLane adds a working lane named label (Configure › Status mapping, "Create lane …") and, when columnName is set,
+ * maps that column to it, in one transaction. The id and colour are chosen here, so the reply is the whole config.
+ * A retried call with the same name reuses the lane.
+ */
+export function CreateLane(standupID: number, label: string, columnName: string): $CancellablePromise<view$0.StandupConfig> {
+    return $Call.ByID(1549226309, standupID, label, columnName);
+}
+
 export function Delete(standupID: number): $CancellablePromise<$models.SaveAck> {
     return $Call.ByID(3650222948, standupID);
+}
+
+/**
+ * DeleteLane removes a custom lane, moving its columns to moveTo. Synced history is untouched.
+ */
+export function DeleteLane(standupID: number, lane: string, moveTo: string): $CancellablePromise<view$0.StandupConfig> {
+    return $Call.ByID(2841981502, standupID, lane, moveTo);
 }
 
 export function DiscardDraft(standupID: number): $CancellablePromise<void> {
@@ -58,6 +74,14 @@ export function MoveSpeaker(standupID: number, accountID: string, toPosition: nu
 
 export function RemoveSpeaker(standupID: number, accountID: string): $CancellablePromise<$models.SaveAck> {
     return $Call.ByID(1812870200, standupID, accountID);
+}
+
+/**
+ * RenameLane sets a lane's display label: a custom lane, a built-in working lane or Done ("" restores the built-in
+ * label). No sync is needed.
+ */
+export function RenameLane(standupID: number, lane: string, label: string): $CancellablePromise<$models.SaveAck> {
+    return $Call.ByID(3710069975, standupID, lane, label);
 }
 
 export function Restore(standupID: number): $CancellablePromise<$models.SaveAck> {

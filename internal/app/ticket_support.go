@@ -421,8 +421,7 @@ func (d *Deps) laneResolver(ctx context.Context, connID, issueID int64) func(sta
 		return nil
 	})
 	return func(statusID string) string {
-		switch l := mapped[statusID]; l {
-		case model.LaneTodo, model.LaneProg, model.LaneReview, model.LaneQA, model.LaneDone:
+		if l := mapped[statusID]; model.IsShownLane(l) {
 			return l
 		}
 		var cat string

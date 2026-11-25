@@ -132,6 +132,9 @@ func TestOverLimit(t *testing.T) {
 		{"done is never over", "done", 99, 1, false},
 		{"backlog is not a working lane", "backlog", 99, 1, false},
 		{"hidden is not a working lane", "hidden", 99, 1, false},
+		{"a custom lane is a working lane", "c3", 6, 5, true},
+		{"a custom lane at its limit is not over", "c12", 5, 5, false},
+		{"a malformed custom id is not a lane", "c0", 99, 1, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

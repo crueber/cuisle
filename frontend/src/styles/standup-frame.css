@@ -136,6 +136,26 @@ a:focus-visible {
   box-sizing: border-box;
 }
 
+/* Find (F14): the same outlined button; ink-filled while the palette is open, with the shortcut as a small chip. */
+.sf-header__find[aria-expanded="true"] {
+  background: var(--color-selected-bg);
+  color: var(--color-selected-fg);
+}
+
+.sf-header__kbd::after {
+  content: attr(data-key); /* generated, so the button's visible text is just "Find" (its aria-label starts with it) */
+}
+
+.sf-header__kbd {
+  padding: 0 5px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-chip);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-bold);
+  line-height: 16px;
+}
+
 /* Tabs */
 .sf-tabs {
   display: flex;
@@ -234,7 +254,10 @@ a:focus-visible {
 }
 
 /* Body: rail and main */
+/* Everything below the header zooms (ux-spec §16): --scale becomes text size × zoom here, while the header keeps the
+   text scale alone. The rail's px sizes and the main area's padding follow --zoom (the text scale never moved them). */
 .sf-body {
+  --scale: calc(var(--text-scale) * var(--zoom));
   flex: 1;
   display: flex;
   min-height: 0;
@@ -253,8 +276,8 @@ a:focus-visible {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 14px 10px;
+  gap: calc(var(--zoom) * 3px);
+  padding: calc(var(--zoom) * 14px) calc(var(--zoom) * 10px);
   box-sizing: border-box;
   overflow-y: auto;
   background: var(--color-rail-bg);
@@ -263,20 +286,20 @@ a:focus-visible {
 }
 
 .sf-rail--full {
-  width: var(--size-rail-full);
+  width: calc(var(--zoom) * var(--size-rail-full));
 }
 
 .sf-rail--compact {
-  width: var(--size-rail-compact);
-  padding: 14px 6px;
+  width: calc(var(--zoom) * var(--size-rail-compact));
+  padding: calc(var(--zoom) * 14px) calc(var(--zoom) * 6px);
 }
 
 .sf-rail__item {
   min-height: calc(var(--scale) * var(--size-touch-min));
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 12px;
+  gap: calc(var(--zoom) * 12px);
+  padding: 0 calc(var(--zoom) * 12px);
   border: 0;
   border-radius: var(--radius-rail-item);
   background: transparent;
@@ -302,12 +325,12 @@ a:focus-visible {
 }
 
 .sf-rail__item--unassigned .sf-rail__first {
-  font-size: 17px;
+  font-size: calc(var(--zoom) * 17px);
   font-weight: var(--font-weight-bold);
 }
 
 .sf-rail__whole {
-  font-size: 17px;
+  font-size: calc(var(--zoom) * 17px);
   font-weight: var(--font-weight-bold);
 }
 
@@ -317,9 +340,9 @@ a:focus-visible {
 }
 
 .sf-rail__initials {
-  width: 26px;
+  width: calc(var(--zoom) * 26px);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-meta);
+  font-size: calc(var(--zoom) * var(--font-size-meta));
   font-weight: var(--font-weight-bold);
 }
 
@@ -329,20 +352,20 @@ a:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-rail-name);
+  font-size: calc(var(--zoom) * var(--font-size-rail-name));
   font-weight: var(--font-weight-semibold);
 }
 
 .sf-rail__count {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-meta);
+  font-size: calc(var(--zoom) * var(--font-size-meta));
   font-weight: var(--font-weight-semibold);
   color: var(--color-muted);
 }
 
 .sf-rail__caps {
-  padding: 14px 12px 6px;
-  font-size: var(--font-size-gutter-head);
+  padding: calc(var(--zoom) * 14px) calc(var(--zoom) * 12px) calc(var(--zoom) * 6px);
+  font-size: calc(var(--zoom) * var(--font-size-gutter-head));
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--font-tracking-caps);
@@ -351,11 +374,11 @@ a:focus-visible {
 
 .sf-rail__hint {
   margin-top: auto;
-  padding: 8px 12px;
+  padding: calc(var(--zoom) * 8px) calc(var(--zoom) * 12px);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-micro);
+  font-size: calc(var(--zoom) * var(--font-size-micro));
   font-weight: var(--font-weight-regular);
-  line-height: 19px;
+  line-height: calc(var(--zoom) * 19px);
   color: var(--color-muted);
 }
 
@@ -368,16 +391,16 @@ a:focus-visible {
   flex-direction: column;
   justify-content: center;
   gap: 0;
-  padding: 4px 0;
+  padding: calc(var(--zoom) * 4px) 0;
 }
 
 .sf-rail--compact .sf-rail__initials {
   width: auto;
-  font-size: 15px;
+  font-size: calc(var(--zoom) * 15px);
 }
 
 .sf-rail--compact .sf-rail__count {
-  font-size: 11px;
+  font-size: calc(var(--zoom) * 11px);
 }
 
 .sf-rail--compact .sf-rail__item--unassigned {
@@ -386,7 +409,7 @@ a:focus-visible {
 
 .sf-rail--compact .sf-rail__item--unassigned .sf-rail__initials {
   font-family: var(--font-family-sans);
-  font-size: var(--font-size-micro);
+  font-size: calc(var(--zoom) * var(--font-size-micro));
 }
 
 /* Before a standup's first sync the board is empty: say why, and what is happening. */

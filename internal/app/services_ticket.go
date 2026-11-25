@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,6 +28,61 @@ type TicketService struct{ d *Deps }
 func (s *TicketService) Get(ctx context.Context, standupID int64, issueID int64) (out view.TicketDetail, err error) {
 	defer s.d.guard("Get", &err)
 	return s.d.ticketDetail(ctx, standupID, issueID, false)
+}
+
+// fetchKeyRE is the shape of a ticket key the palette may fetch.
+var fetchKeyRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*-[1-9][0-9]*$`)
+
+// FetchByKey is the palette's "not synced" fetch (ux-spec §15.3): a NETWORK call on an explicit trigger, and the
+// palette's only one. One GetIssue by key through the interactive lane (never a retry), then the one-issue apply
+// (jira-sync §4.8): the issue is stored with no standup membership, so a later sync leaves it alone and the finder
+// lists it as "not on board". The answer is the modal payload in standupID's lane mapping. Errors: validation (the key's
+// shape, before any request), offline, not_found, forbidden, rate_limited, auth_invalid, auth_missing.
+func (s *TicketService) FetchByKey(ctx context.Context, standupID int64, key string) (out view.TicketDetail, err error) {
+	defer s.d.guard("FetchByKey", &err)
+	d := s.d
+	key = strings.ToUpper(strings.TrimSpace(key))
+	if !fetchKeyRE.MatchString(key) {
+		return view.TicketDetail{}, apperr.Validationf("key", "That is not a ticket key.")
+	}
+	if _, err := d.loadLive(ctx, standupID); err != nil {
+		return view.TicketDetail{}, err
+	}
+	row, ok, err := d.connRow(ctx)
+	if err != nil {
+		return view.TicketDetail{}, err
+	}
+	if !ok {
+		return view.TicketDetail{}, apperr.New(apperr.AuthMissing, "Connect to Jira to fetch tickets.")
+	}
+	if err := authError(row.AuthState); err != nil {
+		return view.TicketDetail{}, err
+	}
+	src, err := d.openSource(row, false)
+	if err != nil {
+		return view.TicketDetail{}, err
+	}
+	detail, err := src.GetIssue(source.WithInteractive(ctx), key)
+	if err != nil {
+		if ctx.Err() != nil {
+			return view.TicketDetail{}, ctx.Err()
+		}
+		d.noteNet(err)
+		d.noteSourceError(ctx, row, err)
+		return view.TicketDetail{}, apperr.From(err)
+	}
+	d.noteNet(nil)
+	// The fetch is done: finish the local side even if the caller went away.
+	pctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 60*time.Second)
+	defer cancel()
+	applied, err := d.Sync.ApplyIssue(pctx, row.ID, detail)
+	if err != nil {
+		return view.TicketDetail{}, err
+	}
+	ref := issueRef{ID: applied.IssueID, ConnectionID: row.ID, SourceID: detail.SourceID, Key: detail.Key, StatusID: detail.StatusID}
+	d.emitIssueUpdated(applied, ref, syncpkg.CauseWrite)
+	d.fetchThumbsAsync(src, row, ref)
+	return d.ticketDetail(ctx, standupID, applied.IssueID, false)
 }
 
 // Transitions is a NETWORK call (Status combobox opened); cached per issue; offline → cached list with Offline=true.

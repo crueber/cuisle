@@ -234,6 +234,61 @@ describe("handleGlobalKey: speakers and board", () => {
   });
 });
 
+describe("handleGlobalKey: G groups the whole board (F13)", () => {
+  const group = () => T.St.boardGroupOf(1);
+
+  it.each(["g", "G"])("%s_toggles_assignee_and_status_on_the_whole_board_and_persists_at_once", async (key) => {
+    expect(group()).toBe("assignee");
+    expect(press(key, { shift: key === "G" })).toBe(true);
+    expect(group()).toBe("status");
+    expect(T.fake.app!.setUIState).toHaveBeenCalledWith({ standupId: 1, boardGroup: "status" }); // no debounce
+    expect(press(key, { shift: key === "G" })).toBe(true);
+    expect(group()).toBe("assignee");
+    expect(T.fake.app!.setUIState).toHaveBeenLastCalledWith({ standupId: 1, boardGroup: "assignee" });
+  });
+
+  it("does_nothing_on_a_person_view", () => {
+    T.R.route.value = { view: "standup", standupId: 1, person: "b" };
+    expect(press("g")).toBe(false);
+    expect(group()).toBe("assignee");
+    expect(T.fake.app!.setUIState).not.toHaveBeenCalled();
+  });
+
+  it("does_nothing_in_configure", () => {
+    T.R.route.value = { view: "configure", standupId: 1 };
+    expect(press("g")).toBe(false);
+    expect(group()).toBe("assignee");
+  });
+
+  it("is_ignored_with_a_modifier", () => {
+    expect(press("g", { ctrl: true })).toBe(false);
+    expect(press("g", { meta: true })).toBe(false);
+    expect(group()).toBe("assignee");
+  });
+
+  it("each_standup_keeps_its_own_grouping", () => {
+    press("g");
+    T.R.route.value = { view: "standup", standupId: 2, person: null };
+    expect(group()).toBe("status"); // standup 1 unchanged
+    expect(T.St.boardGroupOf(2)).toBe("assignee");
+    press("g");
+    expect(T.St.boardGroupOf(2)).toBe("status");
+    T.R.route.value = { view: "standup", standupId: 1, person: null };
+    press("g");
+    expect(T.St.boardGroupOf(1)).toBe("assignee");
+    expect(T.St.boardGroupOf(2)).toBe("status");
+  });
+
+  it("arrow_keys_and_G_still_work_with_the_board_switch_focused (a toggle group, not a radiogroup)", () => {
+    const btn = el(`<div role="group"><button aria-pressed="true" id="r"></button></div>`).querySelector("#r")!;
+    expect(press("ArrowDown", { target: btn })).toBe(true);
+    expect(routeNow()).toEqual({ view: "standup", standupId: 1, person: "a" });
+    T.R.route.value = { view: "standup", standupId: 1, person: null };
+    expect(press("g", { target: btn })).toBe(true);
+    expect(T.St.boardGroupOf(1)).toBe("status");
+  });
+});
+
 describe("handleGlobalKey: standup switching", () => {
   it.each([
     ["2", 2],
@@ -342,6 +397,8 @@ describe("handleGlobalKey: ignored cases", () => {
     ["ArrowDown", false],
     ["b", false],
     ["B", true],
+    ["g", false],
+    ["G", true],
     ["1", false],
     ["2", false],
     ["r", false],

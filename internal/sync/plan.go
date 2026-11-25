@@ -147,7 +147,7 @@ func newLanes(cfg model.EffectiveConfig, board model.BoardConfig, statuses []mod
 	}
 	manual := map[string]string{}
 	for _, c := range cfg.Columns {
-		if !c.Auto {
+		if !c.Auto && cfg.HasLane(c.Lane) {
 			manual[c.ColumnName] = c.Lane
 		}
 	}
@@ -158,7 +158,7 @@ func newLanes(cfg model.EffectiveConfig, board model.BoardConfig, statuses []mod
 	for i, c := range cols {
 		lane, ok := manual[c.Name]
 		if !ok {
-			lane = settings.AutoLane(c, i, len(cols), byID)
+			lane = settings.AutoLaneNamed(c, i, len(cols), byID, cfg.Lanes)
 		}
 		for _, id := range c.StatusIDs {
 			out[id] = lane

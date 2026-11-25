@@ -1,9 +1,12 @@
 // The standup screen frame (ux-spec §2): header, speaker rail, and the main area holding the person or board view.
-// Layout maths comes from layout/responsive on the window size divided by the text scale (useViewport); re-read on resize (no timers).
+// Layout maths comes from layout/responsive on the window size divided by the text scale, and below the header by
+// text scale × zoom (useViewport); re-read on resize (no timers).
 import "../../styles/standup-frame.css";
 import { mainPadding, mainWidth, railMode } from "../../layout/responsive";
 import type { SpeakerView } from "../../api/types";
+import { useLayoutEffect } from "preact/hooks";
 import { route } from "../../state/route";
+import { restoreAnchor, zoomOf } from "../../state/zoom";
 import { currentView, personGroups, selectPerson } from "../../state/standup";
 import { syncStatus } from "../../state/sync";
 import { BoardView } from "./BoardView";
@@ -25,8 +28,12 @@ const UNASSIGNED: SpeakerView = {
 };
 
 export function StandupScreen() {
-  const { vw, vh } = useViewport();
+  // vw drives the header (text scale only); cvw/cvh drive everything below it (text scale × zoom, ux-spec §16.3).
+  const { vw, cvw, cvh } = useViewport();
   const r = route.value;
+  const zoom = r.view === "standup" ? zoomOf(r.standupId) : 100;
+  // After a zoom reflow, the lane or group that was at the top is put back at the top (captured by setZoom).
+  useLayoutEffect(restoreAnchor, [zoom]);
   const view = currentView.value;
   const wanted = r.view === "standup" ? r.person : null;
   const person: SpeakerView | null =
@@ -35,20 +42,21 @@ export function StandupScreen() {
       : null;
   const status = r.view === "standup" ? syncStatus.value.get(r.standupId) : undefined;
   const firstSync = view !== undefined && view !== null && view.lastSyncedAt <= 0;
-  const mainW = mainWidth(vw);
-  const pad = mainPadding(vw, vh);
+  const mainW = mainWidth(cvw);
+  const pad = mainPadding(cvw, cvh);
+  const z = zoom / 100;
 
   return (
     <div class="sf-screen">
       <Header vw={vw} />
-      <div class="sf-body">
+      <div class="sf-body" style={{ "--zoom": z }}>
         <Rail
-          mode={railMode(vw)}
+          mode={railMode(cvw)}
           speakers={view?.speakers ?? []}
           selected={person ? person.id : null}
           onSelect={(p) => selectPerson(p)}
         />
-        <main class="sf-main" style={{ paddingLeft: pad.x, paddingRight: pad.x, paddingTop: pad.top, paddingBottom: pad.bottom }}>
+        <main class="sf-main" style={{ paddingLeft: pad.x * z, paddingRight: pad.x * z, paddingTop: pad.top * z, paddingBottom: pad.bottom * z }}>
           {firstSync ? (
             <p class="sf-notice" role="status">
               {status?.state === "running"
@@ -57,9 +65,9 @@ export function StandupScreen() {
             </p>
           ) : null}
           {view && person ? (
-            <PersonView view={view} person={person} groups={personGroups.value} mainW={mainW} vh={vh} />
+            <PersonView view={view} person={person} groups={personGroups.value} mainW={mainW} vh={cvh} />
           ) : view ? (
-            <BoardView view={view} mainW={mainW} vh={vh} onSelectPerson={(p) => selectPerson(p)} />
+            <BoardView view={view} mainW={mainW} vh={cvh} vw={cvw} onSelectPerson={(p) => selectPerson(p)} />
           ) : null}
         </main>
       </div>

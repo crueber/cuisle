@@ -15,10 +15,7 @@ func Build(snap model.BoardSnapshot, asOf time.Time) StandupView {
 	today := asOf.Format("2006-01-02")
 	win := pulse.NewWindow(asOf, cfg.PulseDays)
 
-	statusLanes := make(map[string]string, len(cfg.StatusLanes))
-	for _, r := range cfg.StatusLanes {
-		statusLanes[r.StatusID] = r.Lane
-	}
+	statusLanes := drawableLanes(cfg)
 	blockedStatuses := map[string]bool{}
 	for id, st := range snap.Statuses {
 		if st.BlockedHint {
@@ -162,11 +159,11 @@ func buildTickets(snap model.BoardSnapshot, asOf time.Time, win pulse.Window, st
 		commits, prs, comments := pulse.Totals(marks)
 		prevLabel, prevDays := "", 0
 		if n := len(segs); n >= 2 {
-			prevLabel = LaneLabel(segs[n-2].Lane)
+			prevLabel = cfg.LaneLabel(segs[n-2].Lane)
 			prevDays = segs[n-2].To - segs[n-2].From
 		}
 		label := pulse.Label(pulse.LabelInput{
-			LaneLabel:     LaneLabel(lane),
+			LaneLabel:     cfg.LaneLabel(lane),
 			DaysInLane:    days,
 			PrevLaneLabel: prevLabel,
 			PrevDays:      prevDays,
@@ -255,19 +252,9 @@ func buildBacklog(snap model.BoardSnapshot) []BacklogItem {
 	return out
 }
 
-func isWorkingLane(lane string) bool {
-	for _, l := range model.WorkingLanes {
-		if l == lane {
-			return true
-		}
-	}
-	return false
-}
-
-// isShownLane is true for the working lanes and done; hidden, backlog and unknown lanes are not shown.
-func isShownLane(lane string) bool {
-	return lane == model.LaneDone || isWorkingLane(lane)
-}
+// isShownLane is true for the working lanes (custom lanes included) and done; hidden, backlog and unknown lanes are
+// not shown.
+func isShownLane(lane string) bool { return model.IsShownLane(lane) }
 
 func millisOrZero(t time.Time) int64 {
 	if t.IsZero() {

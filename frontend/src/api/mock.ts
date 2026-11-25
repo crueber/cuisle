@@ -8,7 +8,9 @@ import type { Api } from "./index";
 import { AppError, type ErrorCode } from "./errors";
 import { createMemoryBus, type EventBus, type EventMap, type EventName } from "./events";
 import { FIXTURE_APP, FIXTURE_CATALOG, FIXTURE_CONFIGS, FIXTURE_TICKETS, FIXTURE_TICKETS_HANDBUILT, FIXTURE_VIEWS } from "./mock-fixtures";
-import { idleSync, LANE_LABEL, laneInfos, refreshView, viewOptions } from "./mock-views";
+import { idleSync, laneInfos, refreshView, viewOptions } from "./mock-views";
+import { findHits, toHit, type Cand } from "./mock-find";
+import * as lanesMock from "./mock-lanes";
 import type * as T from "./types";
 
 export interface MockOptions {
@@ -34,7 +36,6 @@ export interface MockApi extends Api {
   readonly bus: EventBus & { emit<E extends EventName>(name: E, payload: EventMap[E]): void };
 }
 
-const WALK: T.WalkLane[] = ["todo", "prog", "review", "qa"];
 const AXIS = FIXTURE_VIEWS[0]?.axis ?? [];
 
 const clone = <X>(x: X): X => (x === undefined ? x : (JSON.parse(JSON.stringify(x)) as X));
@@ -215,6 +216,7 @@ export function createMockApi(given?: MockOptions): MockApi {
   const reposition = (): void => configs.forEach((c, i) => (c.position = i));
   /** A config mutation: bump rev and refresh the view's config-driven fields. */
   function changed(cfg: T.StandupConfig): void {
+    lanesMock.syncLanes(cfg);
     cfg.rev += 1;
     const v = views.get(cfg.id);
     if (v) refreshView(v, cfg);
@@ -228,9 +230,18 @@ export function createMockApi(given?: MockOptions): MockApi {
         .sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9))
         .forEach((c, i) => (c.order = i));
     }
-    cfg.lanes = cfg.lanes.map((l) => ({ ...l, columns: cfg.columns.filter((c) => c.lane === l.lane).map((c) => c.columnName) }));
+    lanesMock.syncLanes(cfg);
   };
   configs.forEach(syncLaneColumns); // fixtures carry no within-lane order
+  /** Custom-lane id counters per standup (ids are never reused after a delete). */
+  const laneSeq = new Map(configs.map((c): [number, number] => [c.id, lanesMock.maxSeq(c)]));
+  /** A server-shaped lane reply: the standup's config after the change, with its view refreshed. */
+  const laneReply = (cfg: T.StandupConfig, needsSync: boolean): T.StandupConfig => {
+    if (needsSync) cfg.needsSync = true;
+    syncLaneColumns(cfg);
+    changed(cfg);
+    return cfg;
+  };
 
   function emptyView(cfg: T.StandupConfig): T.StandupView {
     return {
@@ -369,6 +380,65 @@ export function createMockApi(given?: MockOptions): MockApi {
     t.standupId = standupId;
     return t;
   }
+  // ── the palette (F14) ──
+  const initialsOf = (account: string): string =>
+    [...views.values()].flatMap((v) => v.speakers).find((s) => s.id === account)?.initials ?? userRef(account).initials;
+  const liveTabs = (): number[] => tabs().filter((t) => t.configured && views.has(t.id)).map((t) => t.id);
+  /** Every synced issue the mock knows: board tickets of every live standup, then issues on no board (refs, fetched). */
+  function finderCands(): Cand[] {
+    const order = liveTabs();
+    const board = new Map<number, { key: string; per: Map<number, T.TicketView> }>();
+    for (const sid of order) {
+      for (const t of views.get(sid)?.tickets ?? []) {
+        const e = board.get(t.id) ?? { key: t.key, per: new Map<number, T.TicketView>() };
+        e.per.set(sid, t);
+        board.set(t.id, e);
+      }
+    }
+    const out: Cand[] = [];
+    for (const [id, e] of board) {
+      const ids = order.filter((s) => e.per.has(s));
+      out.push({ id, key: e.key, standupIds: ids, rowIn: (sid) => e.per.get(sid) ?? e.per.get(ids[0] ?? 0) ?? ([...e.per.values()][0] as T.TicketView) });
+    }
+    for (const [id, r] of refRows) if (!board.has(id)) out.push({ id, key: r.key, standupIds: [], rowIn: () => r });
+    return out;
+  }
+  function people(): T.PersonHit[] {
+    const out = new Map<string, T.PersonHit>();
+    for (const sid of liveTabs()) {
+      for (const s of views.get(sid)?.speakers ?? []) {
+        if (s.unassigned || !s.included) continue;
+        const p = out.get(s.id) ?? { accountId: s.id, displayName: s.name, initials: s.initials, standups: [] };
+        p.standups.push({ standupId: sid, active: s.active });
+        out.set(s.id, p);
+      }
+    }
+    return [...out.values()];
+  }
+  let nextFetchedId = 9001;
+  /** Magic keys for the palette's "not synced" fetch (frontend tests drive every inline error with them): a key whose
+   *  number ends in 404 is "No issue in Jira", 403 is forbidden, 500 is offline; any other key of an existing project
+   *  below 2000 is fetched and stored on no board (it then shows as "not on board"); anything else is not found. */
+  function fetchByKey(standupId: number, raw: string): T.TicketDetail {
+    const key = raw.trim().toUpperCase();
+    if (!/^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/.test(key)) throw invalid("That is not a ticket key.", "key");
+    findView(standupId);
+    const have = finderCands().find((c) => c.key === key);
+    if (have) return findTicket(standupId, have.id);
+    if (key.endsWith("404")) throw new AppError("not_found", `No issue ${key} in Jira.`);
+    if (key.endsWith("403")) throw new AppError("forbidden", "You don't have access to that issue.");
+    if (key.endsWith("500")) throw new AppError("offline", "Couldn't reach Jira.");
+    const project = key.slice(0, key.lastIndexOf("-"));
+    const known = finderCands().some((c) => c.key.startsWith(`${project}-`));
+    if (!known || Number(key.slice(key.lastIndexOf("-") + 1)) >= 2000) throw new AppError("not_found", `No issue ${key} in Jira.`);
+    const id = nextFetchedId++;
+    refRows.set(id, {
+      id, sourceId: String(id), key, summary: `${key} fetched from Jira`, url: `${connection.baseUrl}/browse/${key}`, type: "task",
+      assignee: "", lane: "todo", statusName: lanesMock.BUILTIN_LABEL.todo!, daysInLane: 1, overLimit: false, blocked: false, doneAt: 0,
+      pulse: { segs: [], marks: [], blocked: [], label: "" },
+    });
+    return findTicket(standupId, id);
+  }
   const stateRow = (t: T.TicketDetail, fieldId: string): T.RailRow | undefined =>
     t.rail.find((g) => g.id === "state")?.rows.find((r) => r.fieldId === fieldId);
   /** Applies a change to the ticket's row and to the same row in every standup view behind the modal. */
@@ -412,6 +482,16 @@ export function createMockApi(given?: MockOptions): MockApi {
             lp[String(patch.standupId)] = patch.lastPerson;
             ui.lastPerson = lp as T.UIState["lastPerson"];
           }
+          if (patch.standupId != null && patch.boardGroup != null) {
+            if (patch.boardGroup !== "assignee" && patch.boardGroup !== "status") throw invalid("The board grouping must be assignee or status.", "boardGroup");
+            const bg: Record<string, string | undefined> = { ...(ui.boardGroup ?? {}) };
+            bg[String(patch.standupId)] = patch.boardGroup;
+            ui.boardGroup = bg as T.UIState["boardGroup"];
+          }
+          if (patch.standupId != null && patch.zoom != null) {
+            if (![70, 80, 90, 100, 110, 125, 150, 175, 200].includes(patch.zoom)) throw invalid("The zoom must be one of 70, 80, 90, 100, 110, 125, 150, 175 or 200 percent.", "zoom");
+            ui.zoom = { ...(ui.zoom ?? {}), [String(patch.standupId)]: patch.zoom } as T.UIState["zoom"];
+          }
           if (patch.window) ui.window = patch.window;
         }),
       openIssue: (issueKey) => run<void>("app.openIssue", [issueKey], () => undefined),
@@ -441,6 +521,7 @@ export function createMockApi(given?: MockOptions): MockApi {
     standup: {
       list: () => run<T.StandupTab[]>("standup.list", [], () => tabs()),
       view: (standupId) => run<T.StandupView>("standup.view", [standupId], () => findView(standupId)),
+      people: () => run<T.PersonHit[]>("standup.people", [], () => people()),
     },
 
     config: {
@@ -458,7 +539,9 @@ export function createMockApi(given?: MockOptions): MockApi {
             extraFilter: "",
             filterCheck: null,
             columns: [],
-            lanes: WALK.map((lane) => ({ lane, label: LANE_LABEL[lane], limitDays: 0, columns: [] })),
+            lanes: lanesMock.defaultLanes(),
+            laneOptions: [],
+            walkLeftToRight: [],
             unmappedStatuses: [],
             rowsMode: "fit",
             speakers: [],
@@ -623,8 +706,8 @@ export function createMockApi(given?: MockOptions): MockApi {
       setWalkOrder: (id, lanes) =>
         run<T.SaveAck>("config.setWalkOrder", [id, lanes], () => {
           const cfg = findCfg(id);
-          if (lanes.length !== WALK.length || !WALK.every((l) => lanes.includes(l))) {
-            throw invalid("The walk order must list the four working lanes once each.", "lanes");
+          if (lanes.length !== cfg.lanes.length || new Set(lanes).size !== lanes.length || !cfg.lanes.every((l) => lanes.includes(l.lane))) {
+            throw invalid("Put every working lane in order, each once.", "lanes");
           }
           const byLane = new Map(cfg.lanes.map((l): [string, T.LaneInfo] => [l.lane, l]));
           cfg.lanes = lanes.flatMap((l) => {
@@ -643,6 +726,28 @@ export function createMockApi(given?: MockOptions): MockApi {
           row.limitDays = days;
           changed(cfg);
           return ack(cfg);
+        }),
+      createLane: (id, label, columnName) =>
+        run<T.StandupConfig>("config.createLane", [id, label, columnName], () => {
+          const cfg = findCfg(id);
+          const col = columnName === "" ? undefined : cfg.columns.find((c) => c.columnName === columnName);
+          if (columnName !== "" && !col) throw notFound("Column");
+          const made = lanesMock.createLane(cfg, laneSeq.get(id) ?? 0, label);
+          laneSeq.set(id, made.seq);
+          if (col) Object.assign(col, { lane: made.lane, auto: false, order: 1e9 });
+          return laneReply(cfg, col !== undefined);
+        }),
+      renameLane: (id, lane, label) =>
+        run<T.SaveAck>("config.renameLane", [id, lane, label], () => {
+          const cfg = findCfg(id);
+          lanesMock.renameLane(cfg, lane, label);
+          changed(cfg);
+          return ack(cfg);
+        }),
+      deleteLane: (id, lane, moveTo) =>
+        run<T.StandupConfig>("config.deleteLane", [id, lane, moveTo], () => {
+          const cfg = findCfg(id);
+          return laneReply(cfg, lanesMock.deleteLane(cfg, lane, moveTo));
         }),
       setSpeakerIncluded: (id, accountId, included) =>
         run<T.SaveAck>("config.setSpeakerIncluded", [id, accountId, included], () => {
@@ -828,6 +933,17 @@ export function createMockApi(given?: MockOptions): MockApi {
 
     ticket: {
       get: (standupId, issueId) => run<T.TicketDetail>("ticket.get", [standupId, issueId], () => findTicket(standupId, issueId)),
+      find: (query, cur, limit) =>
+        run<T.TicketFind>("ticket.find", [query, cur, limit], () => findHits(finderCands(), query, cur, limit, initialsOf)),
+      byIds: (ids, cur) =>
+        run<T.TicketHit[]>("ticket.byIds", [ids, cur], () => {
+          const all = new Map(finderCands().map((c) => [c.id, c]));
+          return ids.flatMap((id) => {
+            const c = all.get(id);
+            return c ? [toHit(c, cur, initialsOf)] : [];
+          });
+        }),
+      fetchByKey: (standupId, key) => run<T.TicketDetail>("ticket.fetchByKey", [standupId, key], () => fetchByKey(standupId, key)),
       transitions: (issueId) =>
         run<T.TransitionList>("ticket.transitions", [issueId], () => {
           const url = tickets.get(issueId)?.url ?? [...views.values()].flatMap((v) => v.tickets).find((x) => x.id === issueId)?.url ?? "";

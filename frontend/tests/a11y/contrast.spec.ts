@@ -34,7 +34,9 @@ function ratio(a: string, b: string): number {
 const TEXT = 4.5;
 const UI = 3;
 const BACKDROPS = ["bg", "surface", "rail-bg", "field-bg"];
-const LANES = ["todo", "prog", "review", "qa", "done", "backlog"];
+// The built-in lanes, then the extended palette for lanes the user names (data-hue 1..8; ux-spec §9.4).
+const HUES = ["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8"];
+const LANES = ["todo", "prog", "review", "qa", "done", "backlog", ...HUES];
 const PAIRS: ReadonlyArray<readonly [string, string, number]> = [
   ...BACKDROPS.flatMap((b) => [["fg", b, TEXT], ["muted", b, TEXT]] as const),
   ["done-fg", "bg", TEXT],
@@ -58,7 +60,9 @@ const PAIRS: ReadonlyArray<readonly [string, string, number]> = [
   ["focus-ring", "bg", UI],
   ["focus-ring", "surface", UI],
   ["focus-ring", "rail-bg", UI],
-  ...LANES.flatMap((l) => ["bg", "weekend", "surface"].map((b) => [`lane-${l}`, b, UI] as const)),
+  ...LANES.flatMap((l) => ["bg", "weekend", "surface", "rail-bg"].map((b) => [`lane-${l}`, b, UI] as const)),
+  // Status lozenges of a custom lane: x-ink text on the lane colour (ticket modal issue rows).
+  ...HUES.map((h) => ["lane-x-ink", `lane-${h}`, TEXT] as const),
 ];
 
 for (const theme of ["light", "dark"] as const) {

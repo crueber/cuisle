@@ -9,8 +9,11 @@ compare against a baseline recorded on the CI runner.
 | `BenchmarkBootstrap/L` (open DB + migrate check + Bootstrap, dataset L) | `internal/app` | <= 60 ms/op |
 | `BenchmarkStandupView/L` (load + build, dataset L) | `internal/app` | <= 15 ms/op |
 | `BenchmarkStandupView` (pure `view.Build`, 400 tickets, 3 years of history on a third) | `internal/view` | <= 15 ms/op, <= 2 MB/op |
+| `FindByKey` (ticket finder, F14: `TestFindByKey_P95UnderFiveMsAt5kIssues` asserts p95 < 5 ms; `BenchmarkFindByKey/L` is the mean over a 12-query mix) | `internal/app` | p95 < 5 ms at 5 000 issues (about 3 ms here) |
 | `BenchmarkConfigUpdate` (one Configure save, file DB) | `internal/settings` | <= 10 ms/op |
 | `BenchmarkOpenExisting` (reopen a migrated file DB) | `internal/store` | floor of Bootstrap |
+
+The finder benchmark tops dataset L up to 5 000 issues (closed, on no board).
 
 Dataset "L" is seeded by `internal/app/bench_test.go`: 5 standups, 400 board tickets plus a 60-row backlog slice in the
 visible one, a 28-day pulse, and about 3 000 closed issues of history (3 years) on the visible standup.

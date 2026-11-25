@@ -220,12 +220,35 @@ export interface IssueRow {
 }
 
 export interface LaneInfo {
+    /**
+     * todo|prog|review|qa|done|backlog|hidden|c<N> (custom)
+     */
     "lane": string;
 
     /**
-     * "To Do"|"In Progress"|"In Review"|"QA"|"Done"
+     * the configured label, e.g. "In Review", "Code Review", "Design"
      */
     "label": string;
+
+    /**
+     * the built-in label ("" for a custom lane)
+     */
+    "defaultLabel": string;
+
+    /**
+     * working|done|backlog|hidden
+     */
+    "kind": string;
+
+    /**
+     * a lane the user named (renamable, deletable)
+     */
+    "custom": boolean;
+
+    /**
+     * custom lanes: extended palette index 1..8 (data-hue); 0 otherwise
+     */
+    "hue": number;
     "limitDays": number;
 
     /**
@@ -259,6 +282,20 @@ export interface Mention {
 }
 
 /**
+ * PersonHit is one `@` candidate (StandupService.People).
+ */
+export interface PersonHit {
+    "accountId": string;
+    "displayName": string;
+    "initials": string;
+
+    /**
+     * tab order
+     */
+    "standups": PersonStanding[] | null;
+}
+
+/**
  * PersonRef is a person as the modal shows them.
  */
 export interface PersonRef {
@@ -270,6 +307,18 @@ export interface PersonRef {
      * the connected user
      */
     "self": boolean;
+}
+
+/**
+ * PersonStanding is one standup a person speaks in.
+ */
+export interface PersonStanding {
+    "standupId": number;
+
+    /**
+     * active tickets (not done) they hold in that standup
+     */
+    "active": number;
 }
 
 export interface Pulse {
@@ -398,7 +447,21 @@ export interface StandupConfig {
     "extraFilter": string;
     "filterCheck": FilterCheck | null;
     "columns": ColumnMapping[] | null;
+
+    /**
+     * working lanes in walk order (custom lanes included)
+     */
     "lanes": LaneInfo[] | null;
+
+    /**
+     * every lane a column can map to: backlog, built-in working, custom (by creation), done, hidden
+     */
+    "laneOptions": LaneInfo[] | null;
+
+    /**
+     * working lanes in board column order ("Left to right"; reversed = "Right to left")
+     */
+    "walkLeftToRight": string[] | null;
     "unmappedStatuses": string[] | null;
     "rowsMode": string;
     "speakers": SpeakerConfig[] | null;
@@ -652,6 +715,75 @@ export interface TicketFieldPrefs {
      * custom fields that can be pinned (not pinned), A–Z
      */
     "available": FieldOption[] | null;
+}
+
+/**
+ * TicketFind is the answer of TicketService.FindByKey.
+ */
+export interface TicketFind {
+    /**
+     * exact (all), prefix (first 10), close (first 5); each tier in the §15.3 order
+     */
+    "hits": TicketHit[] | null;
+
+    /**
+     * starts-with matches beyond the 10 shown
+     */
+    "prefixMore": number;
+}
+
+/**
+ * TicketHit is one finder result. Lane, DaysInLane, OverLimit and Done are computed in the lane mapping of StandupID.
+ */
+export interface TicketHit {
+    "issueId": number;
+    "key": string;
+    "summary": string;
+
+    /**
+     * story|bug|task|spike|subtask|epic|other
+     */
+    "type": string;
+
+    /**
+     * lane id in StandupID's mapping; "" when the status is unmapped there
+     */
+    "lane": string;
+    "statusName": string;
+
+    /**
+     * accountId, "" = unassigned
+     */
+    "assignee": string;
+    "assigneeInitials": string;
+    "daysInLane": number;
+    "overLimit": boolean;
+    "done": boolean;
+
+    /**
+     * not a member of any standup now ("not on board")
+     */
+    "removed": boolean;
+
+    /**
+     * the standup to open it in: the current one when a member, else the first member by tab order, else the current one
+     */
+    "standupId": number;
+
+    /**
+     * every live standup that has it as a current member, in tab order
+     */
+    "standupIds": number[] | null;
+
+    /**
+     * exact|prefix|close
+     */
+    "tier": string;
+
+    /**
+     * character indexes of Key to ink (exact/prefix: the matched digits; close: the equal digits)
+     */
+    "match": number[] | null;
 }
 
 export interface TicketView {

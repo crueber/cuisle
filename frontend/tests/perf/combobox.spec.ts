@@ -37,7 +37,8 @@ test("combobox keystroke to filtered list p95 <= 32 ms (target 16) at 4x CPU", a
   for (const value of KEYSTROKES) {
     samples.push(await timeInput(page, INPUT, value));
     // The filtered list must be the prefix/substring match for the query (Combobox.filter.ts rule), not any list.
-    const shown = await page.locator('[role="option"]').allTextContents();
+    // The last option offers to create a lane with the typed name (ux-spec §9.4); it is not a filter match.
+    const shown = (await page.locator('[role="option"]').allTextContents()).filter((s) => !s.startsWith("Create lane"));
     const want = allLabels.filter((l) => l.toLowerCase().includes(value.toLowerCase()));
     expect(shown.map((s) => s.trim()).sort(), `options for query "${value}"`).toEqual(
       want.map((s) => s.trim()).sort(),

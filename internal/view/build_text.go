@@ -62,22 +62,10 @@ func upperFirstRune(w string) string {
 
 // LaneLabel returns the display label for a lane id: todo "To Do", prog "In Progress", review "In Review", qa "QA",
 // done "Done", backlog "Backlog", hidden "Hidden"; unknown ids are returned unchanged.
+// A standup's configured labels (renamed and custom lanes) come from model.EffectiveConfig.LaneLabel.
 func LaneLabel(lane string) string {
-	switch lane {
-	case model.LaneTodo:
-		return "To Do"
-	case model.LaneProg:
-		return "In Progress"
-	case model.LaneReview:
-		return "In Review"
-	case model.LaneQA:
-		return "QA"
-	case model.LaneDone:
-		return "Done"
-	case model.LaneBacklog:
-		return "Backlog"
-	case model.LaneHidden:
-		return "Hidden"
+	if d := model.DefaultLaneLabel(lane); d != "" {
+		return d
 	}
 	return lane
 }

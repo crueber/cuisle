@@ -52,6 +52,29 @@ for (const [w, h] of SIZES) {
       expect(await sidewaysScrollers(page)).toEqual([]);
     });
 
+    test("whole board grouped by status never scrolls sideways", async ({ page }) => {
+      await page.keyboard.press("b");
+      await page.locator(".board-row-key").first().waitFor();
+      await page.keyboard.press("g");
+      await page.locator(".board-sec").first().waitFor();
+      expect(await sidewaysScrollers(page)).toEqual([]);
+      // nothing in the board pokes out of the main area to the right (a clipped overflow would not show as a scroller)
+      const over = await page.evaluate(() => {
+        const main = document.querySelector<HTMLElement>(".sf-main")!.getBoundingClientRect();
+        return Array.from(document.querySelectorAll<HTMLElement>(".board-sec-head, .board-row, .board-controls"))
+          .filter((e) => e.getBoundingClientRect().right > main.right + 1 || e.getBoundingClientRect().left < main.left - 1)
+          .map((e) => e.className);
+      });
+      expect(over).toEqual([]);
+      // no section header clips its own text (the wording gives way instead)
+      const clipped = await page.evaluate(() =>
+        Array.from(document.querySelectorAll<HTMLElement>(".board-sec-head"))
+          .filter((h) => h.scrollWidth > h.clientWidth + 1)
+          .map((h) => `${h.dataset.secHead} sw=${h.scrollWidth} cw=${h.clientWidth}`),
+      );
+      expect(clipped).toEqual([]);
+    });
+
     test("configure never scrolls sideways", async ({ page }) => {
       await page.keyboard.press(",");
       await page.locator(".cfg-screen").waitFor();

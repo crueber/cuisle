@@ -28,7 +28,7 @@
 
 import { act, render, screen } from "@testing-library/preact";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Connection, Pulse, StandupConfig, StandupView, TicketView } from "../../../api/types";
+import type { Connection, LaneInfo, Pulse, StandupConfig, StandupView, TicketView } from "../../../api/types";
 import { connection } from "../../../state/app";
 import { views } from "../../../state/standup";
 import { PulseSection } from "./Pulse";
@@ -130,12 +130,13 @@ function mkConfig(over: Partial<StandupConfig> = {}): StandupConfig {
       { columnName: "Closed", statusNames: ["Done"], lane: "done", auto: true, order: 0 },
     ],
     lanes: [
-      { lane: "qa", label: "QA", limitDays: 3, columns: ["Verify"] },
-      { lane: "review", label: "Review", limitDays: 2, columns: ["Code Review"] },
-      { lane: "prog", label: "In progress", limitDays: 5, columns: ["Doing"] },
-      { lane: "todo", label: "To do", limitDays: 0, columns: ["Ready"] },
-      { lane: "done", label: "Done", limitDays: 0, columns: ["Closed"] },
+      { lane: "qa", label: "QA", defaultLabel: "QA", kind: "working", custom: false, hue: 0, limitDays: 3, columns: ["Verify"] },
+      { lane: "review", label: "Review", defaultLabel: "In Review", kind: "working", custom: false, hue: 0, limitDays: 2, columns: ["Code Review"] },
+      { lane: "prog", label: "In progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: ["Doing"] },
+      { lane: "todo", label: "To do", defaultLabel: "To Do", kind: "working", custom: false, hue: 0, limitDays: 0, columns: ["Ready"] },
+      { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: ["Closed"] },
     ],
+    laneOptions: [], walkLeftToRight: [],
     unmappedStatuses: [],
     rowsMode: "fit",
     speakers: [
@@ -267,6 +268,18 @@ describe("PulseSection: status limits", () => {
     expect(st.setLaneLimit).toHaveBeenCalledTimes(1);
     expect(st.setLaneLimit).toHaveBeenCalledWith(lane, n);
     expect(st.saveField).not.toHaveBeenCalled();
+  });
+
+  it("has a limit for a lane the user named, in its walk position", () => {
+    const base = mkConfig().lanes;
+    const design: LaneInfo = { lane: "c1", label: "Design", defaultLabel: "", kind: "working", custom: true, hue: 1, limitDays: 4, columns: ["Design"] };
+    render(<PulseSection config={mkConfig({ lanes: [base[0]!, design, ...base.slice(1)] })} columns={3} />);
+    expect(reg.labels("Stepper")).toHaveLength(5);
+    expect(reg.labels("Stepper")[1]?.toLowerCase()).toContain("design");
+    const s = reg.find("Stepper", /design/i);
+    expect(s.value).toBe(4);
+    act(() => s.onChange(9));
+    expect(st.setLaneLimit).toHaveBeenCalledWith("c1", 9);
   });
 
   it("follows a different walk order", () => {

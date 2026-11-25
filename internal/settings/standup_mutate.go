@@ -30,8 +30,8 @@ func notFound(res sql.Result) (bool, error) {
 	return n == 0, nil
 }
 
-// Duplicate copies standup (name "<name> (copy)", position right after the original), settings, lanes, column map,
-// status lanes and speakers; needs_sync=1.
+// Duplicate copies standup (name "<name> (copy)", position right after the original), settings, lanes (custom lanes
+// with their ids, labels and colours, and the id counter), column map, status lanes and speakers; needs_sync=1.
 func (s *Store) Duplicate(ctx context.Context, id int64) (int64, error) {
 	var newID int64
 	err := s.DB.WriteTx(ctx, func(tx *sql.Tx) error {
@@ -60,12 +60,13 @@ func (s *Store) Duplicate(ctx context.Context, id int64) (int64, error) {
 		}
 		copies := []string{
 			`INSERT INTO standup_settings (standup_id, rows_mode, unassigned_position, reshuffle_daily, shuffle_seed,
-			        shuffle_date, pulse_days, show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows)
+			        shuffle_date, pulse_days, show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows,
+			        lane_seq, done_label)
 			 SELECT ?, rows_mode, unassigned_position, reshuffle_daily, shuffle_seed, shuffle_date, pulse_days,
-			        show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows
+			        show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows, lane_seq, done_label
 			 FROM standup_settings WHERE standup_id = ?`,
-			`INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days)
-			 SELECT ?, lane, walk_position, limit_days FROM standup_lane WHERE standup_id = ?`,
+			`INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue)
+			 SELECT ?, lane, walk_position, limit_days, label, hue FROM standup_lane WHERE standup_id = ?`,
 			`INSERT INTO standup_column_map (standup_id, column_name, position, lane, auto, lane_order)
 			 SELECT ?, column_name, position, lane, auto, lane_order FROM standup_column_map WHERE standup_id = ?`,
 			`INSERT INTO standup_speaker_removed (standup_id, account_id, removed_at)
@@ -109,7 +110,10 @@ func (s *Store) Duplicate(ctx context.Context, id int64) (int64, error) {
 	return newID, nil
 }
 
-// CopySettingsFrom copies settings, lanes and limits from another standup (not source, mapping or speakers).
+// CopySettingsFrom copies settings, lanes and limits from another standup (not source, mapping or speakers). Custom
+// lanes belong to the mapping, so the target keeps its own (in their walk slots, with their limits and labels); the
+// built-in lanes take the source's order among the built-in slots, limits and labels. A copied label that would clash
+// with one of the target's custom lanes is not copied.
 func (s *Store) CopySettingsFrom(ctx context.Context, id, fromID int64) (Ack, error) {
 	var ack Ack
 	err := s.DB.WriteTx(ctx, func(tx *sql.Tx) error {
@@ -124,10 +128,15 @@ func (s *Store) CopySettingsFrom(ctx context.Context, id, fromID int64) (Ack, er
 		if err != nil {
 			return err
 		}
-		lanes, err := readLanesTx(ctx, tx, fromID)
+		fromLanes, err := readLanesTx(ctx, tx, fromID)
 		if err != nil {
 			return err
 		}
+		curLanes, err := readLanesTx(ctx, tx, id)
+		if err != nil {
+			return err
+		}
+		lanes := mergeBuiltinLanes(curLanes, fromLanes)
 		cur, err := readSettingsTx(ctx, tx, id)
 		if err != nil {
 			return err
@@ -136,6 +145,14 @@ func (s *Store) CopySettingsFrom(ctx context.Context, id, fromID int64) (Ack, er
 		next.ShuffleSeed, next.ShuffleDate = cur.ShuffleSeed, cur.ShuffleDate // per-standup state, not copied
 		if target.BoardType == "kanban" && next.DoneWindow == "sprint" {
 			next.DoneWindow = "14d" // sprint is invalid on a kanban board
+		}
+		for i, l := range lanes {
+			if l.Label != "" && !model.IsCustomLane(l.Lane) && labelClash(lanes, next.DoneLabel, l.Lane, l.Label) != "" {
+				lanes[i].Label = ""
+			}
+		}
+		if next.DoneLabel != "" && labelClash(lanes, "", model.LaneDone, next.DoneLabel) != "" {
+			next.DoneLabel = ""
 		}
 		rev, err := BumpRevTx(ctx, tx, id, s.Now())
 		if err != nil {

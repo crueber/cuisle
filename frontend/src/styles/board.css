@@ -65,7 +65,7 @@
 .board-cols {
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  column-gap: var(--space-column-gap);
+  column-gap: calc(var(--zoom) * var(--space-column-gap)); /* 40 design px at any zoom, as the column maths assumes */
   min-width: 0;
 }
 
@@ -106,7 +106,7 @@
 .board-axis-label {
   flex: 0 0 auto;
   box-sizing: border-box;
-  width: calc(var(--scale) * 14px + var(--key-w) + var(--title-w) + var(--space-2) * 3);
+  width: calc(var(--scale) * 14px + var(--key-w) + var(--title-w) + var(--space-2) * 3 + var(--assignee-w, 0px));
   padding-bottom: 6px;
   font-size: calc(var(--scale) * var(--font-size-small));
 }
@@ -284,7 +284,7 @@
 .board-bottom {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-  column-gap: var(--space-column-gap);
+  column-gap: calc(var(--zoom) * var(--space-column-gap));
   align-items: start;
   margin-top: var(--space-1);
 }
@@ -391,4 +391,182 @@
   font-size: calc(var(--scale) * var(--font-size-small));
   font-weight: var(--font-weight-semibold);
   color: var(--color-muted);
+}
+
+/* ── Title-row controls: Assignee | Status switch, its G hint, then the legend (ux-spec §6.5) ── */
+
+.board-controls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  align-self: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.board-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The shared Segmented, sized for the title row: 30px, a 2px ink border, selected = ink fill. */
+.board-group .seg {
+  box-sizing: border-box;
+  height: calc(var(--scale) * 30px);
+  min-height: 0;
+  border: var(--size-rule-row) solid var(--color-rule);
+}
+
+.board-group .seg-option {
+  min-height: 0;
+  height: 100%;
+  padding: 0 calc(var(--scale) * 14px);
+  font-size: calc(var(--scale) * var(--font-size-meta));
+  font-weight: var(--font-weight-bold);
+}
+
+.board-group .seg-option + .seg-option {
+  border-left: 0;
+}
+
+.board-group-kbd {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: calc(var(--scale) * 20px);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-rule-mid);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-chip);
+  background: var(--color-field-bg);
+  color: var(--color-muted);
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  line-height: calc(var(--scale) * 16px);
+  text-align: center;
+}
+
+/* Legend beside the switch: items 11px apart, swatches 18px wide, so the full stats line fits at 1920. */
+.board-controls .legend {
+  gap: 11px;
+  flex-wrap: nowrap;
+}
+
+.board-controls .legend-swatch,
+.board-controls .legend-blocked {
+  width: 18px;
+}
+
+/* ── Group by Status (ux-spec §6.5) ── */
+
+/* Header: 30px including its 2px ink rule; the name sits on the rule's baseline. 3px to the first row, 4px after the last. */
+.board-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: calc(var(--scale) * var(--size-lane-head));
+  margin-bottom: 3px;
+  padding-bottom: 2px;
+  border-bottom: var(--size-rule-row) solid var(--color-rule);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  white-space: nowrap;
+  overflow: hidden; /* a header never pokes into the next column; the wording gives way first (fitStatusHead) */
+}
+
+.board-sec::after {
+  height: 4px;
+}
+
+.board-sec-head .board-sec-swatch {
+  flex: none;
+  width: calc(var(--scale) * 14px);
+  height: calc(var(--scale) * 14px);
+}
+
+.board-sec-name {
+  flex: none;
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: calc(var(--scale) * var(--font-size-lane-title));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--font-tracking-caps);
+  text-transform: uppercase;
+}
+
+.board-sec-count,
+.board-sec-alert {
+  flex: none;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-small));
+}
+
+.board-sec-count {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-muted);
+}
+
+.board-sec-alert {
+  font-weight: 600;
+}
+
+.board-sec-limit {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  color: var(--color-muted);
+}
+
+/* Done and Backlog inside a status column: above the weekend shading, with the 8px gap the sections leave. */
+.board-sec-list {
+  position: relative;
+  z-index: 1;
+  padding-bottom: var(--space-2);
+  background: var(--color-bg);
+}
+
+.board-sec-list .board-list-head {
+  height: calc(var(--scale) * 30px);
+  padding-bottom: 3px;
+}
+
+/* Status rows: icon | key | title (+ BLOCKED) | assignee 30px | track | days chip. */
+.board-row--status {
+  grid-template-columns: calc(var(--scale) * 14px) var(--key-w) var(--title-w) calc(var(--scale) * 30px) minmax(0, 1fr) calc(var(--scale) * var(--size-days-chip-lane));
+}
+
+.board-row-title--status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.board-row-title-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.board-assignee {
+  justify-self: center;
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--scale) * var(--font-size-micro));
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.board-assignee--none {
+  box-sizing: border-box;
+  width: calc(var(--scale) * 30px);
+  height: calc(var(--scale) * 18px);
+  border: 1.5px dashed var(--color-unassigned-border);
+  border-radius: var(--radius-chip);
+  color: var(--color-alert-text);
+  line-height: calc(var(--scale) * 15px);
 }

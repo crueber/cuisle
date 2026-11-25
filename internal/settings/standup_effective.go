@@ -34,7 +34,7 @@ func EffectiveTx(ctx context.Context, tx *sql.Tx, id int64) (model.EffectiveConf
 		ShuffleSeed: se.ShuffleSeed, ShuffleDate: se.ShuffleDate, PulseDays: se.PulseDays,
 		ShowCommits: se.ShowCommits, ShowPRs: se.ShowPRs, ShowComments: se.ShowComments,
 		ShadeWeekends: se.ShadeWeekends, RowsMode: se.RowsMode, DoneWindow: se.DoneWindow,
-		BacklogRows: se.BacklogRows,
+		BacklogRows: se.BacklogRows, DoneLabel: se.DoneLabel,
 	}
 
 	if out.Columns, err = effectiveColumns(ctx, tx, id); err != nil {

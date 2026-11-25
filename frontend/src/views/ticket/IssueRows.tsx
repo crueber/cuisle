@@ -1,6 +1,7 @@
 // Subtasks and Linked-issues sections of the ticket content column (ux-spec §14.4 "Subtasks and links";
 // props.ts IssueRowsProps). A row is one button; the parent decides modal (synced) or browser (not synced).
 import type { IssueRow } from "../../api/types";
+import { hueOf } from "../../state/lanes";
 import { Icon } from "../../components/Icon";
 import type { IconName } from "../../components/props";
 import type { IssueRowsProps } from "./props";
@@ -17,7 +18,7 @@ function Row({ row, onOpen }: { row: IssueRow; onOpen: (row: IssueRow) => void }
         </span>
         <span class="ir-key">{row.key}</span>
         <span class="ir-summary">{row.summary}</span>
-        <span class="ir-status" data-lane={row.statusLozenge}>
+        <span class="ir-status" data-lane={row.statusLozenge} data-hue={hueOf(row.statusLozenge)}>
           {row.statusName}
         </span>
         {row.assigneeInitials ? <span class="ir-assignee">{row.assigneeInitials}</span> : null}

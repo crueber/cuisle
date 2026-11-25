@@ -29,6 +29,13 @@ func nullStr(s string) any {
 	return s
 }
 
+func nullHue(h int) any {
+	if h == 0 {
+		return nil
+	}
+	return h
+}
+
 func nullBool(b *bool) any {
 	if b == nil {
 		return nil
@@ -42,15 +49,15 @@ func readSettingsTx(ctx context.Context, tx *sql.Tx, id int64) (Settings, error)
 		se                                               Settings
 		reshuffle, commits, prs, comments, shadeWeekends int64
 		seed                                             int64
-		shuffleDate                                      sql.NullString
+		shuffleDate, doneLabel                           sql.NullString
 		pulse, backlog                                   int64
 	)
 	err := tx.QueryRowContext(ctx,
 		`SELECT rows_mode, unassigned_position, reshuffle_daily, shuffle_seed, shuffle_date, pulse_days,
-		        show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows
+		        show_commits, show_prs, show_comments, shade_weekends, done_window, backlog_rows, done_label
 		 FROM standup_settings WHERE standup_id = ?`, id).Scan(
 		&se.RowsMode, &se.UnassignedPosition, &reshuffle, &seed, &shuffleDate, &pulse,
-		&commits, &prs, &comments, &shadeWeekends, &se.DoneWindow, &backlog)
+		&commits, &prs, &comments, &shadeWeekends, &se.DoneWindow, &backlog, &doneLabel)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Settings{}, apperr.New(apperr.NotFound, "That standup no longer exists.")
 	}
@@ -66,6 +73,7 @@ func readSettingsTx(ctx context.Context, tx *sql.Tx, id int64) (Settings, error)
 	se.ShowComments = comments == 1
 	se.ShadeWeekends = shadeWeekends == 1
 	se.BacklogRows = int(backlog)
+	se.DoneLabel = doneLabel.String
 	return se, nil
 }
 
@@ -74,18 +82,19 @@ func writeSettingsTx(ctx context.Context, tx *sql.Tx, id int64, se Settings) err
 	_, err := tx.ExecContext(ctx,
 		`UPDATE standup_settings SET rows_mode = ?, unassigned_position = ?, reshuffle_daily = ?, shuffle_seed = ?,
 		        shuffle_date = ?, pulse_days = ?, show_commits = ?, show_prs = ?, show_comments = ?, shade_weekends = ?,
-		        done_window = ?, backlog_rows = ?
+		        done_window = ?, backlog_rows = ?, done_label = ?
 		 WHERE standup_id = ?`,
 		se.RowsMode, se.UnassignedPosition, bi(se.ReshuffleDaily), se.ShuffleSeed, nullStr(se.ShuffleDate),
 		se.PulseDays, bi(se.ShowCommits), bi(se.ShowPRs), bi(se.ShowComments), bi(se.ShadeWeekends),
-		se.DoneWindow, se.BacklogRows, id)
+		se.DoneWindow, se.BacklogRows, nullStr(se.DoneLabel), id)
 	return dbErr(err)
 }
 
-// readLanesTx returns the walk lanes of a standup by walk position.
+// readLanesTx returns the working lanes of a standup (built-in and custom) by walk position.
 func readLanesTx(ctx context.Context, tx *sql.Tx, id int64) ([]model.LaneConfig, error) {
 	rows, err := tx.QueryContext(ctx,
-		`SELECT lane, walk_position, limit_days FROM standup_lane WHERE standup_id = ? ORDER BY walk_position`, id)
+		`SELECT lane, walk_position, limit_days, COALESCE(label, ''), COALESCE(hue, 0) FROM standup_lane
+		 WHERE standup_id = ? ORDER BY walk_position, lane`, id)
 	if err != nil {
 		return nil, dbErr(err)
 	}
@@ -93,7 +102,7 @@ func readLanesTx(ctx context.Context, tx *sql.Tx, id int64) ([]model.LaneConfig,
 	var out []model.LaneConfig
 	for rows.Next() {
 		var l model.LaneConfig
-		if err := rows.Scan(&l.Lane, &l.Position, &l.LimitDays); err != nil {
+		if err := rows.Scan(&l.Lane, &l.Position, &l.LimitDays, &l.Label, &l.Hue); err != nil {
 			return nil, dbErr(err)
 		}
 		out = append(out, l)
@@ -101,15 +110,15 @@ func readLanesTx(ctx context.Context, tx *sql.Tx, id int64) ([]model.LaneConfig,
 	return out, dbErr(rows.Err())
 }
 
-// writeLanesTx replaces the standup's walk lanes.
+// writeLanesTx replaces the standup's working lanes (positions, limits, labels and hues as given).
 func writeLanesTx(ctx context.Context, tx *sql.Tx, id int64, lanes []model.LaneConfig) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM standup_lane WHERE standup_id = ?`, id); err != nil {
 		return dbErr(err)
 	}
 	for _, l := range lanes {
 		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days) VALUES (?, ?, ?, ?)`,
-			id, l.Lane, l.Position, l.LimitDays); err != nil {
+			`INSERT INTO standup_lane (standup_id, lane, walk_position, limit_days, label, hue) VALUES (?, ?, ?, ?, ?, ?)`,
+			id, l.Lane, l.Position, l.LimitDays, nullStr(l.Label), nullHue(l.Hue)); err != nil {
 			return dbErr(err)
 		}
 	}

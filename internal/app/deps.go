@@ -47,6 +47,10 @@ type Deps struct {
 	refreshAt map[int64]time.Time
 	offlineAt atomic.Int64 // unix ms of the last offline verdict, 0 = online (see noteNet and Deps.isOffline)
 	bg        gosync.WaitGroup
+
+	// The finder's lane lookups (F14): a standup's effective config by rev, so a hit row costs no config read.
+	findCfgMu gosync.Mutex
+	findCfg   map[int64]findCfgEntry
 	bgCtx     context.Context
 	bgCancel  context.CancelFunc
 }

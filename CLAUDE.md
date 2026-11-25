@@ -34,6 +34,7 @@ Legend: [x] done · [~] implemented, automated checks green, and only a human or
 - [~] M7 Polish, themes, a11y, perf [T §6 manual script in UAT; Windows build after a GitHub publish]
 - [ ] M8 Self-signed release (Chris publishes)
 - [~] M9 Ticket modal (F12, ADR 0015) [UAT: visual sign-off vs ticket-*.png; real-site writes]
+- [~] F15 Zoom for the person view and whole board (ux-spec §16, migration 0007) [UAT: visual sign-off vs zoom-*.png; ⌘+ in the real macOS webview]
 
 Status (2026-11-23): every WP (01–38) merged. Go suite, 1293 Vitest and 139 Playwright tests (perf, axe both
 themes, contrast, 14 screenshots) green; all budgets green (JS 44.8 KB gz; packaged cold start 363–398 ms with 5 standups on

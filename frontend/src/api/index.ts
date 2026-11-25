@@ -33,6 +33,8 @@ export interface Api {
   standup: {
     list(): Promise<T.StandupTab[]>;
     view(standupId: number): Promise<T.StandupView>;
+    /** Every speaker of every live standup (the palette's `@` mode). Local only. */
+    people(): Promise<T.PersonHit[]>;
   };
   config: {
     get(standupId: number): Promise<T.StandupConfig>;
@@ -50,6 +52,9 @@ export interface Api {
     moveColumn(standupId: number, columnName: string, toIndex: number): Promise<T.SaveAck>;
     setWalkOrder(standupId: number, lanes: T.WalkLane[]): Promise<T.SaveAck>;
     setLaneLimit(standupId: number, lane: T.WalkLane, days: number): Promise<T.SaveAck>;
+    createLane(standupId: number, label: string, columnName: string): Promise<T.StandupConfig>;
+    renameLane(standupId: number, lane: string, label: string): Promise<T.SaveAck>;
+    deleteLane(standupId: number, lane: string, moveTo: string): Promise<T.StandupConfig>;
     setSpeakerIncluded(standupId: number, accountId: string, included: boolean): Promise<T.SaveAck>;
     moveSpeaker(standupId: number, accountId: string, toPosition: number): Promise<T.SaveAck>;
     sortSpeakers(standupId: number, mode: T.SpeakerSort): Promise<T.SpeakerConfig[]>;
@@ -80,6 +85,13 @@ export interface Api {
    *  openAttachment are explicit network triggers. */
   ticket: {
     get(standupId: number, issueId: number): Promise<T.TicketDetail>;
+    /** The palette's ticket finder (ux-spec §15.3). LOCAL ONLY. currentStandupId orders and homes the hits (0 = none). */
+    find(query: string, currentStandupId: number, limit: number): Promise<T.TicketFind>;
+    /** The palette's "not synced" fetch: the ONE network call of the palette (one request, interactive lane). */
+    fetchByKey(standupId: number, key: string): Promise<T.TicketDetail>;
+    /** One hit per known issue id, in the order given (unknown ids skipped), tier "" and match []. LOCAL ONLY. The palette's
+     *  recent tickets (app setting palette.recent_tickets holds issue ids). */
+    byIds(issueIds: number[], currentStandupId: number): Promise<T.TicketHit[]>;
     transitions(issueId: number): Promise<T.TransitionList>;
     transition(standupId: number, issueId: number, transitionId: string): Promise<T.TicketDetail>;
     assign(standupId: number, issueId: number, accountId: string): Promise<T.TicketDetail>;
@@ -135,6 +147,7 @@ export const wailsApi: Api = {
   standup: {
     list: () => as(arr(StandupSvc.List())),
     view: (id) => as(StandupSvc.View(id)),
+    people: () => as(arr(StandupSvc.People())),
   },
   config: {
     get: (id) => as(ConfigSvc.Get(id)),
@@ -152,6 +165,9 @@ export const wailsApi: Api = {
     moveColumn: (id, c, i) => as(ConfigSvc.MoveColumn(id, c, i)),
     setWalkOrder: (id, l) => as(ConfigSvc.SetWalkOrder(id, l)),
     setLaneLimit: (id, l, d) => as(ConfigSvc.SetLaneLimit(id, l, d)),
+    createLane: (id, l, c) => as(ConfigSvc.CreateLane(id, l, c)),
+    renameLane: (id, l, n) => as(ConfigSvc.RenameLane(id, l, n)),
+    deleteLane: (id, l, m) => as(ConfigSvc.DeleteLane(id, l, m)),
     setSpeakerIncluded: (id, a, inc) => as(ConfigSvc.SetSpeakerIncluded(id, a, inc)),
     moveSpeaker: (id, a, to) => as(ConfigSvc.MoveSpeaker(id, a, to)),
     sortSpeakers: (id, m) => as(arr(ConfigSvc.SortSpeakers(id, m))),
@@ -179,6 +195,9 @@ export const wailsApi: Api = {
   },
   ticket: {
     get: (st, id) => as(TicketSvc.Get(st, id)),
+    find: (q, st, limit) => as(TicketSvc.FindByKey(q, st, limit)),
+    fetchByKey: (st, key) => as(TicketSvc.FetchByKey(st, key)),
+    byIds: (ids, st) => as(arr(TicketSvc.ByIDs(ids, st))),
     transitions: (id) => as(TicketSvc.Transitions(id)),
     transition: (st, id, t) => as(TicketSvc.Transition(st, id, t)),
     assign: (st, id, a) => as(TicketSvc.Assign(st, id, a)),

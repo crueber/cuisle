@@ -47,6 +47,34 @@ export function boardBelow(sections: BoardSection[], foldY: number, scrollTop = 
   return { items, summary: summarize(items.map((i) => i.label)) };
 }
 
+export interface StatusBelowSection {
+  label: string; // lane name ("In Progress"), or "Done (15)" / "Backlog (12)" for the lists
+  /** Lane sections: the bottom edge of each ticket row in content px. Lists: leave empty and set `top`. */
+  rows: number[];
+  /** Lists (Done, Backlog): the heading's bottom edge in content px; the section is listed once it is below the fold. */
+  top?: number;
+}
+
+/**
+ * Status mode (ux-spec §6.5): every section in on-screen order. A lane section is listed with the number of its rows
+ * whose bottom edge is past the fold ("In Progress (10)"), which includes a lane whose header is itself below the fold.
+ * Done and Backlog follow the board's existing rule: listed, by their full label, when their heading is below the fold.
+ * Joined "In Progress (10) · Backlog (12) below".
+ */
+export function statusBelow(sections: StatusBelowSection[], foldY: number, scrollTop = 0): BelowResult {
+  const limit = foldY + scrollTop;
+  const items: BelowItem[] = [];
+  for (const s of sections) {
+    if (s.top !== undefined) {
+      if (s.top > limit) items.push({ label: s.label, count: 1 });
+      continue;
+    }
+    const n = s.rows.filter((bottom) => bottom > limit).length;
+    if (n > 0) items.push({ label: `${s.label} (${n})`, count: n });
+  }
+  return { items, summary: summarize(items.map((i) => i.label)) };
+}
+
 /** End of list: scrollTop + clientHeight ≥ scrollHeight − 6. */
 export function atEnd(scrollTop: number, clientHeight: number, scrollHeight: number): boolean {
   return scrollTop + clientHeight >= scrollHeight - 6;

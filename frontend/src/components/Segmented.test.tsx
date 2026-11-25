@@ -38,6 +38,40 @@ function Harness(p: { init?: V; options?: SegmentedOption<V>[]; onChange?: (v: V
 const radio = (name: string) => screen.getByRole("radio", { name });
 const isDisabled = (el: HTMLElement) => (el as HTMLButtonElement).disabled === true || el.getAttribute("aria-disabled") === "true";
 
+describe("Segmented toggle (a view switch: aria-pressed buttons, F13)", () => {
+  it("renders a labelled group of buttons with aria-pressed on the current value, all in the tab order", () => {
+    render(<Segmented<V> toggle id="seg" label="Group by" value="b" options={OPTS} onChange={() => {}} />);
+    expect(screen.getByRole("group", { name: "Group by" })).toBeTruthy();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    const btns = screen.getAllByRole("button");
+    expect(btns.map((b) => [b.textContent, b.getAttribute("aria-pressed")])).toEqual([["Alpha", "false"], ["Beta", "true"], ["Gamma", "false"]]);
+    expect(btns.every((b) => b.getAttribute("tabindex") === null)).toBe(true);
+  });
+
+  it("calls onChange on click, but not for the pressed one or a disabled one", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Segmented<V> toggle id="seg" label="Group by" value="a" options={[...OPTS.slice(0, 2), { value: "c", label: "Gamma", disabled: true }]} onChange={onChange} />);
+    await user.click(screen.getByRole("button", { name: "Alpha" }));
+    await user.click(screen.getByRole("button", { name: "Gamma" }));
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Beta" }));
+    expect(onChange).toHaveBeenCalledWith("b");
+  });
+
+  it("does not take the arrow keys (they stay the screen's keys) and has no axe violations", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render(<Segmented<V> toggle id="seg" label="Group by" value="a" options={OPTS} onChange={onChange} />);
+    screen.getByRole("button", { name: "Alpha" }).focus();
+    await user.keyboard("{ArrowRight}{ArrowDown}");
+    expect(onChange).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Alpha" }));
+    const res = await axe.run(container);
+    expect(res.violations).toEqual([]);
+  });
+});
+
 describe("Segmented", () => {
   it("renders a radiogroup named by label with one radio per option", () => {
     render(<Segmented<V> id="seg" label="Greek" value="b" options={OPTS} onChange={() => {}} />);

@@ -13,7 +13,7 @@ const AXIS = (n: number): AxisDay[] =>
     const d = new Date(Date.UTC(2026, 10, 3 + i));
     return { date: d.toISOString().slice(0, 10), label: String(d.getUTCDate()), weekend: d.getUTCDay() % 6 === 0, monday: d.getUTCDay() === 1 };
   });
-const PROG: LaneInfo = { lane: "prog", label: "In Progress", limitDays: 5, columns: ["In Progress"] };
+const PROG: LaneInfo = { lane: "prog", label: "In Progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: ["In Progress"] };
 const sp = (id: string, name: string): SpeakerView => ({ id, name, first: name, initials: name.slice(0, 2), unassigned: false, included: true, active: 1, done: 0 });
 const P1 = sp("p1", "Iris");
 const P2 = sp("p2", "Silas");

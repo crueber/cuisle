@@ -40,6 +40,16 @@ export interface UIState {
     "lastPerson": { [_ in `${number}`]?: string } | null;
 
     /**
+     * standup id → assignee|status; absent = assignee (F13)
+     */
+    "boardGroup": { [_ in `${number}`]?: string } | null;
+
+    /**
+     * standup id → percent (ZoomLevels); absent = 100 (F15)
+     */
+    "zoom": { [_ in `${number}`]?: number } | null;
+
+    /**
      * nil = never saved
      */
     "window": WindowState | null;
@@ -47,13 +57,15 @@ export interface UIState {
 
 /**
  * UIStatePatch is the bound patch type (nil = unchanged). StandupID+LastPerson set one standup's last person
- * (LastPerson "" = whole board).
+ * (LastPerson "" = whole board). StandupID+BoardGroup set one standup's Whole-board grouping (assignee|status); StandupID+Zoom set its zoom (F15).
  */
 export interface UIStatePatch {
     "lastStandupId"?: number | null;
     "lastView"?: string | null;
     "standupId"?: number | null;
     "lastPerson"?: string | null;
+    "boardGroup"?: string | null;
+    "zoom"?: number | null;
     "window"?: WindowState | null;
 }
 

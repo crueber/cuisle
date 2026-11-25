@@ -43,7 +43,8 @@
 .seg-option + .seg-option {
   border-left: 1px solid var(--color-rule);
 }
-.seg-option[aria-checked="true"] {
+.seg-option[aria-checked="true"],
+.seg-option[aria-pressed="true"] {
   background: var(--color-selected-bg);
   color: var(--color-selected-fg);
   font-weight: 600;
@@ -406,6 +407,30 @@ textarea.tf-control {
 }
 .legend-swatch[data-lane="qa"] {
   background: var(--color-lane-qa);
+}
+/* Lanes the user names (ux-spec §9.4): data-hue 1..8 picks the extended lane palette. One resolver, one paint rule for
+   every lane-coloured element; built-in lanes have no data-hue and keep their data-lane rules. The done-history rule
+   (.pulse-track.is-done …) is more specific, so finished tickets stay recessive. */
+[data-hue="1"] { --lane-hue: var(--color-lane-x1); }
+[data-hue="2"] { --lane-hue: var(--color-lane-x2); }
+[data-hue="3"] { --lane-hue: var(--color-lane-x3); }
+[data-hue="4"] { --lane-hue: var(--color-lane-x4); }
+[data-hue="5"] { --lane-hue: var(--color-lane-x5); }
+[data-hue="6"] { --lane-hue: var(--color-lane-x6); }
+[data-hue="7"] { --lane-hue: var(--color-lane-x7); }
+[data-hue="8"] { --lane-hue: var(--color-lane-x8); }
+.pulse-seg[data-hue],
+.legend-swatch[data-hue],
+.cfg-swatch[data-hue],
+.personview-swatch[data-hue],
+.sc-sw[data-hue],
+.sc-now[data-hue],
+.th-swatch[data-hue],
+.ir-status[data-hue] {
+  background: var(--lane-hue);
+}
+.ir-status[data-hue] {
+  color: var(--color-lane-x-ink);
 }
 .legend-swatch-blocked {
   background: repeating-linear-gradient(135deg, var(--color-hatch) 0 4px, transparent 4px 8px);

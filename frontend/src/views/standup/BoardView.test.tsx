@@ -23,9 +23,9 @@
 //   (ux-spec §6.1 gives the scrum line and "Kanban shows 'Kanban · continuous flow'"; product-spec F4 says the kanban line
 //   keeps the counts.)
 // SPEC-NOTE: lane order is hand-computed from ux-spec §6.2: Unassigned (if it has tickets) is pinned first in column 1
-//   whatever its position in view.speakers; then speakers in view order (included ones, then excluded-with-tickets), each
-//   into the column with the smaller height so far, ties to the left; height = 30 + rows x 23 + 8. The fixture gives
-//   column 1: Unassigned, Silas, Otto, Jonas, Zed; column 2: Iris, Noor, Sam, Wren (derivation in the fixture comment).
+//   whatever its position in view.speakers; then speakers in view order (included ones, then excluded-with-tickets), cut
+//   (F15, order-preserving splitSequence) into contiguous runs that minimise the tallest column; height = 30 + rows x 23 + 8.
+//   The fixture gives column 1: Unassigned, Iris, Silas, Noor (520); column 2: Otto, Sam, Jonas, Wren, Zed (558).
 // SPEC-NOTE: columns = 2 at mainW >= 1150, else 1 (mainW 1656 → 2, 1000 → 1). Lane row height is 23, or 20 when the
 //   tallest column at 23 would exceed the available height (observed as the `rowH` the lane tracks receive: vh 1080 → 23,
 //   vh 480 → 20).
@@ -35,7 +35,7 @@
 //   view.speakers, cols = 2 when mainW - 40 >= 1300, else 1; BacklogList gets view.backlog,
 //   view.backlogTotal, rows = view.backlog.length (0 hides it) and cols 3 / 2 / 1. mainW 1656 → done 2, backlog 3;
 //   mainW 1180 → done 1, backlog 2; mainW 800 → done 1, backlog 1 (values chosen where the §6.3 thresholds are unambiguous).
-// SPEC-NOTE: Legend gets mode full at mainW >= 1560, short at >= 1300, else button; a TrackBackdrop (todayLine=2,
+// SPEC-NOTE: Legend gets mode short at mainW >= 1300, else button (never full on the board since F13: the lane tracks draw no marks); a TrackBackdrop (todayLine=2,
 //   shadeWeekends from the view options, the view's axis) is drawn behind the lanes.
 // SPEC-NOTE: the more bar for the board is not asserted here (its summary depends on measured section positions).
 import { fireEvent, render, screen, within } from "@testing-library/preact";
@@ -91,7 +91,7 @@ const AXIS: AxisDay[] = Array.from({ length: 21 }, (_, i) => {
   const dow = d.getUTCDay();
   return { date: d.toISOString().slice(0, 10), label: String(d.getUTCDate()), weekend: dow === 0 || dow === 6, monday: dow === 1 };
 });
-const L = (lane: string, label: string): LaneInfo => ({ lane, label, limitDays: 0, columns: [label] });
+const L = (lane: string, label: string): LaneInfo => ({ lane, label, defaultLabel: "", kind: lane === "done" ? "done" : "working", custom: false, hue: 0, limitDays: 0, columns: [label] });
 const LANES = [L("qa", "QA"), L("review", "In Review"), L("prog", "In Progress"), L("todo", "To Do"), L("done", "Done")];
 
 let counter = 0;
@@ -110,9 +110,8 @@ const sp = (id: string, name: string, active: number, done: number, over: Partia
 // Speakers in speaking order, then an excluded speaker who has tickets, then Unassigned LAST in the array on purpose.
 //   rows:  Iris 4, Silas 4, Noor 4, Otto 3, Sam 4, Jonas 3, Wren 4, Zed 2 (excluded), Unassigned 4
 //   height = 38 + 23 x rows (30 + 8 + rows x 23):  4 rows → 130, 3 → 107, 2 → 84
-//   Unassigned → col1 (130). Iris: col1 130 vs col2 0 → col2 (130). Silas: tie → col1 (260). Noor: col2 (260).
-//   Otto: tie → col1 (367). Sam: col2 260 < 367 → col2 (390). Jonas: col1 367 < 390 → col1 (474).
-//   Wren: col2 390 < 474 → col2 (520). Zed: col1 474 < 520 → col1 (558).
+//   Sequence: Unassigned 130, Iris 130, Silas 130, Noor 130, Otto 107, Sam 130, Jonas 107, Wren 130, Zed 84 (total 1078).
+//   The cut after Noor gives 520 | 558, the smallest tallest column (F15 replaced the greedy balance).
 const PRIYA = sp("p1", "Iris Calloway", 4, 2);
 const MARCUS = sp("p2", "Silas Marchetti", 4, 2);
 const JONAH = sp("p3", "Noor Abadi", 4, 1);
@@ -220,12 +219,12 @@ describe("BoardView title line", () => {
     expect(norm(screen.getByText("4 unassigned").parentElement!.textContent)).toBe("Kanban · continuous flow · 40 active · 4 unassigned · 15 done · 40 backlog");
   });
 
-  it("hands the Legend the walk lanes and a width-based mode (full / short / button)", () => {
+  it("hands the Legend the walk lanes and a width-based mode (short / button; never full: board tracks draw no marks)", () => {
     const full = renderBoard({ mainW: 1656 });
-    expect(screen.getByTestId("legend").getAttribute("data-mode")).toBe("full");
+    expect(screen.getByTestId("legend").getAttribute("data-mode")).toBe("short"); // F13: the short legend leaves the stats line room beside the switch
     expect(screen.getByTestId("legend").getAttribute("data-lanes")).toContain("qa,review,prog,todo");
     full.unmount();
-    const short = renderBoard({ mainW: 1400 });
+    const short = renderBoard({ mainW: 1500 }); // the legend gives way 150px earlier: the zoom control sits beside the switch (F15)
     expect(screen.getByTestId("legend").getAttribute("data-mode")).toBe("short");
     short.unmount();
     renderBoard({ mainW: 1000 });
@@ -242,10 +241,10 @@ describe("BoardView lane columns and balancing", () => {
     expect(columnsEls(narrow.container).map((c) => c.getAttribute("data-column"))).toEqual(["1"]);
   });
 
-  it("pins Unassigned first in column 1 and balances lanes by height in speaking order (ties left)", () => {
+  it("pins Unassigned first in column 1 and cuts the lanes in speaking order into runs of the least height (F15)", () => {
     const { container } = renderBoard({ mainW: 1656 });
-    expect(lanesIn(colAt(container, 0))).toEqual(["Unassigned", "Silas Marchetti", "Otto Diaz", "Jonas Lund", "Zed Zhang"]);
-    expect(lanesIn(colAt(container, 1))).toEqual(["Iris Calloway", "Noor Abadi", "Amara Osei", "Wren Kowalski"]);
+    expect(lanesIn(colAt(container, 0))).toEqual(["Unassigned", "Iris Calloway", "Silas Marchetti", "Noor Abadi"]);
+    expect(lanesIn(colAt(container, 1))).toEqual(["Otto Diaz", "Amara Osei", "Jonas Lund", "Wren Kowalski", "Zed Zhang"]);
   });
 
   it("puts every lane in the single column in order when there is one column", () => {

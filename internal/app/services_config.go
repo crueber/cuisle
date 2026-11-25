@@ -166,6 +166,37 @@ func (s *ConfigService) SetBoard(ctx context.Context, standupID int64, boardID s
 	return d.standupConfig(ctx, standupID)
 }
 
+// CreateLane adds a working lane named label (Configure › Status mapping, "Create lane …") and, when columnName is set,
+// maps that column to it, in one transaction. The id and colour are chosen here, so the reply is the whole config.
+// A retried call with the same name reuses the lane.
+func (s *ConfigService) CreateLane(ctx context.Context, standupID int64, label string, columnName string) (out view.StandupConfig, err error) {
+	defer s.d.guard("CreateLane", &err)
+	if _, _, err := s.d.Settings.CreateLane(ctx, standupID, label, columnName); err != nil {
+		return view.StandupConfig{}, err
+	}
+	return s.d.standupConfig(ctx, standupID)
+}
+
+// RenameLane sets a lane's display label: a custom lane, a built-in working lane or Done ("" restores the built-in
+// label). No sync is needed.
+func (s *ConfigService) RenameLane(ctx context.Context, standupID int64, lane string, label string) (ack SaveAck, err error) {
+	defer s.d.guard("RenameLane", &err)
+	a, err := s.d.Settings.RenameLane(ctx, standupID, lane, label)
+	if err != nil {
+		return SaveAck{}, err
+	}
+	return saveAck(a), nil
+}
+
+// DeleteLane removes a custom lane, moving its columns to moveTo. Synced history is untouched.
+func (s *ConfigService) DeleteLane(ctx context.Context, standupID int64, lane string, moveTo string) (out view.StandupConfig, err error) {
+	defer s.d.guard("DeleteLane", &err)
+	if _, err := s.d.Settings.DeleteLane(ctx, standupID, lane, moveTo); err != nil {
+		return view.StandupConfig{}, err
+	}
+	return s.d.standupConfig(ctx, standupID)
+}
+
 func (s *ConfigService) SetColumnLane(ctx context.Context, standupID int64, columnName string, lane string) (ack SaveAck, err error) {
 	defer s.d.guard("SetColumnLane", &err)
 	cfg, err := s.d.Settings.Effective(ctx, standupID)

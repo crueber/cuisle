@@ -108,6 +108,7 @@ describe("Rail (full)", () => {
     expect(screen.getByText(/speaking order/i)).toBeTruthy();
     expect(screen.getByText(/↑ ↓ speaker/)).toBeTruthy();
     expect(screen.getByText(/← → standup/)).toBeTruthy();
+    expect(screen.getByText("G group by")).toBeTruthy(); // F13: the board's Assignee | Status key
   });
 
   it("marks Whole board pressed when nothing is selected", () => {

@@ -1,4 +1,5 @@
 // Implementation: WP-24. Colour key for the track (ux-spec §3 legend rule). Modes: full, short, button ("? Key").
+import { hueOf } from "../../state/lanes";
 import { keyLegendOpen } from "../../state/ui";
 import type { LegendProps } from "./props";
 
@@ -24,7 +25,7 @@ export function Legend({ mode, options, lanes }: LegendProps) {
     <div class="legend">
       {walk.map((l) => (
         <span key={l.lane} class="legend-item">
-          <span class="legend-swatch" data-lane={l.lane} aria-hidden="true" />
+          <span class="legend-swatch" data-lane={l.lane} data-hue={hueOf(l.lane)} aria-hidden="true" />
           <span>{l.label}</span>
         </span>
       ))}

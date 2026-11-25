@@ -99,25 +99,6 @@ func speakerViews(cfg model.EffectiveConfig, slots []pulse.SpeakerSlot, activeBy
 	return out
 }
 
-// laneInfos returns the walk lanes in walk order, then done when withDone is set.
-func laneInfos(cfg model.EffectiveConfig, withDone bool) []LaneInfo {
-	walk := append([]model.LaneConfig(nil), cfg.Lanes...)
-	sort.SliceStable(walk, func(i, j int) bool { return walk[i].Position < walk[j].Position })
-	out := make([]LaneInfo, 0, len(walk)+1)
-	for _, l := range walk {
-		out = append(out, LaneInfo{
-			Lane: l.Lane, Label: LaneLabel(l.Lane), LimitDays: l.LimitDays, Columns: columnNamesFor(cfg.Columns, l.Lane),
-		})
-	}
-	if withDone {
-		out = append(out, LaneInfo{
-			Lane: model.LaneDone, Label: LaneLabel(model.LaneDone), LimitDays: 0,
-			Columns: columnNamesFor(cfg.Columns, model.LaneDone),
-		})
-	}
-	return out
-}
-
 // columnNamesFor lists the board column names mapped to lane, in board column order; never nil.
 func columnNamesFor(cols []model.ColumnLane, lane string) []string {
 	sorted := sortedColumns(cols)

@@ -54,6 +54,7 @@ export interface PulseTrackProps {
   rowH: number; // row height (or lane-row mode)
   lane?: boolean; // board lane rows: thin track, no marks
   done?: boolean; // done row: muted history, no marks
+  scale?: number; // px multiplier for what is emitted inline: the standup screen's content scale; default = the text scale
   options: Pick<ViewOptions, "showCommits" | "showPRs" | "showComments" | "devActivity">;
 }
 
@@ -80,6 +81,8 @@ export interface BoardViewProps {
   view: StandupView;
   mainW: number;
   vh: number;
+  /** Design-px window width: below 1360 the compact rail applies and status headers shorten (ux-spec §6.5). Optional. */
+  vw?: number;
   onSelectPerson: (person: string) => void;
 }
 

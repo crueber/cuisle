@@ -125,14 +125,22 @@ CREATE TABLE standup_settings (
 -- Kanban default applied in code when a kanban board is chosen: scope='board', done_window='14d'
 -- (done_window='sprint' is rejected with `validation` while board_type='kanban').
 
--- Walk order + per-lane limit in one table: exactly 4 rows per standup (todo, prog, review, qa). Done is always last.
+-- Walk order + per-lane limit + label: the 4 built-in working lanes (todo, prog, review, qa) plus any custom lanes the
+-- user named (ids c1, c2, … from standup_settings.lane_seq, never reused). Done is always last. (Shape as of 0006.)
 CREATE TABLE standup_lane (
   standup_id    INTEGER NOT NULL REFERENCES standup(id) ON DELETE CASCADE,
-  lane          TEXT    NOT NULL CHECK (lane IN ('todo','prog','review','qa')),
-  walk_position INTEGER NOT NULL CHECK (walk_position BETWEEN 0 AND 3),
+  lane          TEXT    NOT NULL CHECK (lane IN ('todo','prog','review','qa') OR (lane GLOB 'c[1-9]*' AND lane NOT GLOB 'c*[^0-9]*')),
+  walk_position INTEGER NOT NULL CHECK (walk_position >= 0),
   limit_days    INTEGER NOT NULL CHECK (limit_days BETWEEN 0 AND 99),   -- 0 = no limit
+  label         TEXT    CHECK (label IS NULL OR length(label) BETWEEN 1 AND 40),  -- NULL = built-in label
+  hue           INTEGER CHECK (hue IS NULL OR hue BETWEEN 1 AND 8),     -- custom lanes: extended palette index
+  CHECK ((lane GLOB 'c*') = (hue IS NOT NULL)),
+  CHECK (lane NOT GLOB 'c*' OR label IS NOT NULL),
   PRIMARY KEY (standup_id, lane)
 ) STRICT, WITHOUT ROWID;
+-- standup_settings (0006): lane_seq INTEGER NOT NULL DEFAULT 0 (the last custom-lane number handed out) and
+-- done_label TEXT (NULL = "Done"). Custom lanes are created at the end of the walk with limit 5 and the lowest hue
+-- (1..8) no live custom lane uses; only when all eight are taken, (lane_seq − 1) mod 8 + 1. Labels are unique per standup ignoring case (checked in settings).
 -- defaults on create: qa(0, limit 3), review(1, 2), prog(2, 5), todo(3, 10)   ["right to left"]
 
 -- Status mapping: Jira board column → lane. Keyed by column name (board config exposes no stable column id).
@@ -140,7 +148,7 @@ CREATE TABLE standup_column_map (
   standup_id  INTEGER NOT NULL REFERENCES standup(id) ON DELETE CASCADE,
   column_name TEXT    NOT NULL,
   position    INTEGER NOT NULL,                                -- column order on the Jira board (display order)
-  lane        TEXT    NOT NULL CHECK (lane IN ('backlog','todo','prog','review','qa','done','hidden')),
+  lane        TEXT    NOT NULL CHECK (lane IN ('backlog','todo','prog','review','qa','done','hidden') OR (lane GLOB 'c[1-9]*' AND lane NOT GLOB 'c*[^0-9]*')),
   auto        INTEGER NOT NULL DEFAULT 1 CHECK (auto IN (0,1)),-- 1 = auto-matched, 0 = user-chosen (survives column refresh)
   PRIMARY KEY (standup_id, column_name)
 ) STRICT, WITHOUT ROWID;
@@ -151,7 +159,7 @@ CREATE TABLE standup_status_lane (
   status_id  TEXT    NOT NULL,
   status_name TEXT   NOT NULL,
   column_name TEXT   NOT NULL,
-  lane       TEXT    NOT NULL CHECK (lane IN ('backlog','todo','prog','review','qa','done','hidden')),
+  lane       TEXT    NOT NULL CHECK (lane IN ('backlog','todo','prog','review','qa','done','hidden') OR (lane GLOB 'c[1-9]*' AND lane NOT GLOB 'c*[^0-9]*')),
   PRIMARY KEY (standup_id, status_id),
   FOREIGN KEY (standup_id, column_name) REFERENCES standup_column_map(standup_id, column_name) ON DELETE CASCADE ON UPDATE CASCADE
 ) STRICT, WITHOUT ROWID;
@@ -185,9 +193,25 @@ INSERT INTO ui_state (id, updated_at) VALUES (1, 0);
 CREATE TABLE standup_ui_state (
   standup_id  INTEGER PRIMARY KEY REFERENCES standup(id) ON DELETE CASCADE,
   last_person TEXT,                                            -- accountId | 'unassigned' | NULL (= whole board)
-  updated_at  INTEGER NOT NULL
+  updated_at  INTEGER NOT NULL,
+  board_group TEXT NOT NULL DEFAULT 'assignee' CHECK (board_group IN ('assignee','status')),  -- migration 0005 (F13)
+  zoom        INTEGER NOT NULL DEFAULT 100 CHECK (zoom IN (70,80,90,100,110,125,150,175,200))     -- migration 0007 (F15)
 ) STRICT;
 ```
+
+`board_group` is the Whole board's grouping for that standup, Assignee or Status (F13, ux-spec §6.5). It is UI state,
+not Configure: it is written the moment it changes (`UIStatePatch.StandupID` + `BoardGroup`), has no save indicator, does
+not bump the standup `rev`, and is never part of the config history. Migration `0005_board_group.sql` adds it with the
+default `'assignee'`, so every existing row, and every standup with no row, reads as today's board. A grouping patch for
+a standup with no row inserts one (`last_person` NULL = whole board); a last-person patch never touches `board_group`.
+
+`zoom` is the zoom of the standup screen's content, in percent (F15, ux-spec §16): one level per standup, shared by its
+person view and Whole board. Like `board_group` it is UI state: written the moment it changes (`UIStatePatch.StandupID` +
+`Zoom`, validated against the nine steps), no save indicator, no `rev` bump, never in the config history. Migration
+`0007_zoom.sql` adds it with the default `100`, so every existing row, and every standup with no row, reads as today's
+screen (`UIState.Zoom` has no entry = 100). A zoom patch for a standup with no row inserts one; the other patches never
+touch `zoom`.
+The row cascades away with its standup.
 
 Speaker rules (implemented in `settings` + `sync` apply step):
 - After each sync, every assignee of a non-backlog ticket in the standup that has no row is appended
@@ -577,8 +601,10 @@ Maintenance (same transaction as the membership rewrite, `T` = the run's `starte
 - `issue.removed_at = T` when an issue's last open span closes; `NULL` again when one opens.
 - `config_json` = `{scope, extraFilter, doneWindow, backlogRows, pulseDays, shadeWeekends, show:{commits,prs,comments},
   rowsMode, walkOrder:[…], limits:{lane:days}, statusLanes:[{statusId,statusName,columnName,lane}],
-  speakers:[{accountId,name,position,included}], unassignedPosition, activeSprintIds:[…]}` — everything the view builder
-  reads from config, so a past board uses the mapping, limits and speaking order of its day.
+  speakers:[{accountId,name,position,included}], unassignedPosition, activeSprintIds:[…], lanes?:[{lane,label,kind,hue?}]}`
+  — everything the view builder reads from config, so a past board uses the mapping, limits and speaking order of its
+  day. `lanes` (0006) defines custom lanes and renamed built-in lanes/Done so a lane deleted or renamed later still
+  resolves; it is omitted when nothing is customised, so an untouched standup keeps its fingerprint.
 
 **Fidelity of "as of T"** (what `internal/history` can reconstruct):
 
@@ -727,6 +753,14 @@ CREATE TABLE IF NOT EXISTS schema_migration (
     so the next sync re-reads each dev target's detail once (the requests it already makes) and fills the new columns;
     record rows are untouched. A later observation of the same `(pr_key, status, at)` fills NULLs and a changed title,
     and never blanks a known value.
+  - `0005_board_group` (F13): `standup_ui_state.board_group` ('assignee'|'status'), see §2.1.
+  - `0007_zoom` (F15): `standup_ui_state.zoom` (the nine steps, default 100), see §2.1.
+  - `0006_custom_lanes` (2026-11-25, `-- cuisle:fk-off`): rebuilds `standup_lane`, `standup_column_map` and
+    `standup_status_lane` only to widen their lane CHECKs to custom ids `c<N>` (every row copied unchanged, `lane_order`
+    kept, the status-lane foreign key still cascades), adds `standup_lane.label`/`.hue`, and
+    `standup_settings.lane_seq`/`.done_label`. No record table is touched. Deleting a custom lane moves its columns
+    (`DeleteLane`); synced history is never touched. `Duplicate` copies custom lanes, labels and the counter;
+    `CopySettingsFrom` copies the built-in lanes' order, limits and labels and keeps the target's custom lanes.
 - Tests (`internal/store/migrate_test.go`):
   - fresh DB → all migrations → schema dump equals `testdata/schema.golden.sql` (updated deliberately with `-update`);
   - for every historical version `N`: load `testdata/v<N>.sql` (a populated dump taken when N was current) → migrate to

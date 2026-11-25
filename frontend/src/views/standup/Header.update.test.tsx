@@ -94,7 +94,8 @@ describe("Header: Update button", () => {
     setup(AVAILABLE);
     render(<Header vw={1920} />);
     const names = buttonsInOrder().map((b) => b.getAttribute("aria-label"));
-    expect(names).toEqual(["Resync (R)", "Update to v1.3.0", "Configure"]);
+    expect(names.slice(1)).toEqual(["Resync (R)", "Update to v1.3.0", "Configure"]); // Find comes first (F14)
+    expect(names[0]).toMatch(/^Find a ticket or run a command/);
     const btn = screen.getByRole("button", { name: "Update to v1.3.0" });
     expect(btn.classList.contains("sf-header__configure")).toBe(true);
     expect(btn.getAttribute("title")).toBe("Cuisle v1.3.0 is available");

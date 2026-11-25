@@ -37,6 +37,12 @@ func (a *Adapter) Plan(ctx context.Context, in source.PlanInput) ([]source.Query
 		case model.LaneProg, model.LaneReview, model.LaneQA:
 			working = append(working, id)
 			progress = append(progress, id)
+		default:
+			// Custom lanes the user named are working lanes past To Do, like In Progress.
+			if model.IsCustomLane(in.StatusLanes[id]) {
+				working = append(working, id)
+				progress = append(progress, id)
+			}
 		case model.LaneDone:
 			done = append(done, id)
 		case model.LaneBacklog:
@@ -45,7 +51,7 @@ func (a *Adapter) Plan(ctx context.Context, in source.PlanInput) ([]source.Query
 	}
 	if len(working) == 0 {
 		return nil, apperr.New(apperr.Validation,
-			"Map at least one column to a working lane (To Do, In Progress, Review or QA) before standups can load.")
+			"Map at least one column to a working lane (To Do, In Progress, Review, QA or one you added) before standups can load.")
 	}
 	working = sortedIDList(working)
 	progress = sortedIDList(progress)

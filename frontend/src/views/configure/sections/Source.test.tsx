@@ -110,12 +110,13 @@ function mkConfig(over: Partial<StandupConfig> = {}): StandupConfig {
       { columnName: "Closed", statusNames: ["Done"], lane: "done", auto: true, order: 0 },
     ],
     lanes: [
-      { lane: "qa", label: "QA", limitDays: 3, columns: ["Verify"] },
-      { lane: "review", label: "Review", limitDays: 2, columns: ["Code Review"] },
-      { lane: "prog", label: "In progress", limitDays: 5, columns: ["Doing"] },
-      { lane: "todo", label: "To do", limitDays: 0, columns: ["Ready"] },
-      { lane: "done", label: "Done", limitDays: 0, columns: ["Closed"] },
+      { lane: "qa", label: "QA", defaultLabel: "QA", kind: "working", custom: false, hue: 0, limitDays: 3, columns: ["Verify"] },
+      { lane: "review", label: "Review", defaultLabel: "In Review", kind: "working", custom: false, hue: 0, limitDays: 2, columns: ["Code Review"] },
+      { lane: "prog", label: "In progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: ["Doing"] },
+      { lane: "todo", label: "To do", defaultLabel: "To Do", kind: "working", custom: false, hue: 0, limitDays: 0, columns: ["Ready"] },
+      { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: ["Closed"] },
     ],
+    laneOptions: [], walkLeftToRight: [],
     unmappedStatuses: [],
     rowsMode: "fit",
     speakers: [

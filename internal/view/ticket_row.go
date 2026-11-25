@@ -45,8 +45,8 @@ func newTicketBuilder(snap model.BoardSnapshot, t cache.Ticket, asOf time.Time, 
 			b.blocked[id] = true
 		}
 	}
+	b.statusLanes = drawableLanes(cfg)
 	for _, r := range cfg.StatusLanes {
-		b.statusLanes[r.StatusID] = r.Lane
 		if r.StatusName != "" {
 			b.statusNames[r.StatusID] = r.StatusName
 		}
@@ -109,11 +109,11 @@ func (b *ticketBuilder) row() (TicketView, int) {
 	commits, prs, comments := pulse.Totals(marks)
 	prevLabel, prevDays := "", 0
 	if n := len(segs); n >= 2 {
-		prevLabel = LaneLabel(segs[n-2].Lane)
+		prevLabel = b.snap.Config.LaneLabel(segs[n-2].Lane)
 		prevDays = segs[n-2].To - segs[n-2].From
 	}
 	label := pulse.Label(pulse.LabelInput{
-		LaneLabel: LaneLabel(lane), DaysInLane: days, PrevLaneLabel: prevLabel, PrevDays: prevDays,
+		LaneLabel: b.snap.Config.LaneLabel(lane), DaysInLane: days, PrevLaneLabel: prevLabel, PrevDays: prevDays,
 		Commits: commits, PRs: prs, Comments: comments, Days: b.win.Days, BlockedDays: pulse.BlockedDays(spans),
 		Done: lane == model.LaneDone,
 	})

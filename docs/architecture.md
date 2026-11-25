@@ -442,6 +442,7 @@ func (s *AppService) LogClientError(ctx context.Context, message string, stack s
 // ── StandupService (read side for the Standup screen) ───────────────────────
 func (s *StandupService) List(ctx context.Context) ([]StandupTab, error)
 func (s *StandupService) View(ctx context.Context, standupID int64) (StandupView, error)   // = view.Build(cache.LoadCurrent(id), now)
+func (s *StandupService) People(ctx context.Context) ([]PersonHit, error)                   // F14 `@` mode: every included speaker of every live standup, deduplicated by account; {AccountID, DisplayName, Initials, Standups []{StandupID, Active}} in tab order; local only
 
 // ── ConfigService (every Configure mutation; all autosave) ──────────────────
 func (s *ConfigService) Get(ctx context.Context, standupID int64) (StandupConfig, error)
@@ -457,8 +458,11 @@ func (s *ConfigService) SetSpace(ctx context.Context, standupID int64, spaceID s
 func (s *ConfigService) SetBoard(ctx context.Context, standupID int64, boardID string) (StandupConfig, error)    // fetches columns, auto-maps
 func (s *ConfigService) SetColumnLane(ctx context.Context, standupID int64, columnName string, lane string) (SaveAck, error)
 func (s *ConfigService) MoveColumn(ctx context.Context, standupID int64, columnName string, toIndex int) (SaveAck, error) // order within its lane
-func (s *ConfigService) SetWalkOrder(ctx context.Context, standupID int64, lanes []string) (SaveAck, error)     // permutation of todo,prog,review,qa
-func (s *ConfigService) SetLaneLimit(ctx context.Context, standupID int64, lane string, days int) (SaveAck, error) // 0 = no limit
+func (s *ConfigService) SetWalkOrder(ctx context.Context, standupID int64, lanes []string) (SaveAck, error)     // permutation of the working lanes (custom ones included)
+func (s *ConfigService) SetLaneLimit(ctx context.Context, standupID int64, lane string, days int) (SaveAck, error) // any working lane; 0 = no limit
+func (s *ConfigService) CreateLane(ctx context.Context, standupID int64, label, columnName string) (StandupConfig, error) // new custom working lane (id c<N>, next hue) + maps columnName; same name again reuses it
+func (s *ConfigService) RenameLane(ctx context.Context, standupID int64, lane, label string) (SaveAck, error)  // custom, built-in working or done; "" restores a built-in label
+func (s *ConfigService) DeleteLane(ctx context.Context, standupID int64, lane, moveTo string) (StandupConfig, error) // custom lanes only; its columns move to moveTo
 func (s *ConfigService) SetSpeakerIncluded(ctx context.Context, standupID int64, accountID string, included bool) (SaveAck, error)
 func (s *ConfigService) MoveSpeaker(ctx context.Context, standupID int64, accountID string, toPosition int) (SaveAck, error)
 func (s *ConfigService) SortSpeakers(ctx context.Context, standupID int64, mode string) ([]SpeakerConfig, error) // "shuffle"|"az"|"active"
@@ -481,6 +485,9 @@ func (s *SyncService) Status(ctx context.Context) ([]SyncStatus, error)
 
 // ── TicketService (ticket modal; ADR 0015, ux-spec §14) ─────────────────────
 func (s *TicketService) Get(ctx context.Context, standupID int64, issueID int64) (TicketDetail, error)   // local only, zero network; = view.BuildTicket(...)
+func (s *TicketService) FindByKey(ctx context.Context, query string, currentStandupID int64, limit int) (TicketFind, error) // F14 palette: LOCAL ONLY, zero network (a test asserts it). Keys only (ux-spec §15.3): internal/keyfind normalises + tiers exact | prefix | close, internal/cache narrows with SQL. {Hits []TicketHit, PrefixMore int}; exact all, starts-with first 10, close first 5, capped by limit (<=0 → 20); in-tier order: current standup, active before done, key. p95 < 5 ms at 5 000 issues (bench/)
+func (s *TicketService) ByIDs(ctx context.Context, issueIDs []int64, currentStandupID int64) ([]TicketHit, error)   // F14 recents: one TicketHit per known id in the order given (unknown skipped), Tier "" and Match []; LOCAL ONLY
+func (s *TicketService) FetchByKey(ctx context.Context, standupID int64, key string) (TicketDetail, error)        // F14 "not synced": NETWORK, the palette's only one. Key shape ^[A-Z][A-Z0-9_]*-[1-9][0-9]*$ checked first (validation, zero requests); one GetIssue(key) on the interactive lane, never retried; sync.ApplyIssue (stored with NO standup membership; a later sync leaves it alone; the finder lists it Removed); modal payload in standupID's lane mapping. Errors offline | not_found | forbidden | rate_limited | auth_invalid | auth_missing
 func (s *TicketService) Transitions(ctx context.Context, issueID int64) (TransitionList, error)          // NETWORK (Status combobox opened); cached per issue; offline → cached list with Offline=true
 func (s *TicketService) Transition(ctx context.Context, standupID, issueID int64, transitionID string) (TicketDetail, error) // write → refresh → apply
 func (s *TicketService) Assign(ctx context.Context, standupID, issueID int64, accountID string) (TicketDetail, error)        // "" = unassign
@@ -568,6 +575,15 @@ type RailGroup     struct { ID, Label string; Rows []RailRow; NotSet []string /*
 type RailRow       struct { FieldID, Label, Kind string; Edit string /* ""|"status"|"assignee"|"flag" */
                             Text string; Number *float64; Items []string; Users []PersonRef; Rich *adf.Doc; Raw string
                             Mono bool; Sub string /* e.g. "ends 1 Dec" */; Progress *float64 /* time tracking 0..1 */; URL, URLLabel string }
+// F14 (internal/view/find.go): the palette's finder.
+type TicketHit struct { IssueID int64; Key, Summary, Type, Lane, StatusName, Assignee, AssigneeInitials string; DaysInLane int; OverLimit, Done bool
+                        Removed bool /* on no live standup now */; StandupID int64 /* where to open it: the current standup if a member, else the first member by tab order, else the current one */
+                        StandupIDs []int64 /* live member standups, tab order */; Tier string /* exact|prefix|close ("" from ByIDs) */; Match []int /* ink: indexes into Key */ }
+type TicketFind struct { Hits []TicketHit; PrefixMore int /* starts-with matches beyond the 10 shown */ }
+type PersonStanding struct { StandupID int64; Active int }
+type PersonHit struct { AccountID, DisplayName, Initials string; Standups []PersonStanding }
+// Lane, DaysInLane and OverLimit are computed in StandupID's lane mapping exactly as the board row; a status that standup
+// does not map falls back to its provider category (new → todo, indeterminate → prog, done → done), as the modal does.
 type TransitionList struct { Items []TransitionOption; FetchedAt int64; Offline bool }
 type TransitionOption struct { ID, Name, ToStatusName, ToLane string; NeedsScreen bool; URL string /* issue URL for "↗ Jira" */ }
 ```
@@ -611,7 +627,7 @@ type Bootstrap struct {
     Settings   map[string]string `json:"settings"`      // app_setting rows (keys in §6.4)
     Connection Connection        `json:"connection"`
     Standups   []StandupTab      `json:"standups"`      // tab order
-    UI         UIState           `json:"ui"`            // lastStandupId, lastView, lastPerson per standup
+    UI         UIState           `json:"ui"`            // lastStandupId, lastView, lastPerson and boardGroup per standup
     View       *StandupView      `json:"view"`          // view for ui.lastStandupId, nil when there are no standups
     Sync       []SyncStatus      `json:"sync"`
 }
@@ -628,7 +644,7 @@ type StandupView struct {
     Sprint     *SprintInfo   // {ID, Name, StartAt, EndAt, DaysLeft, EndsLabel "ends today"|"ends tomorrow"|"ends in 3 days"|"ended 2 days ago"}; nil for kanban / no active sprint
     PulseDays  int           // 7|14|21|28
     Axis       []AxisDay     // len == PulseDays: {Date "YYYY-MM-DD", Label "23", Weekend, Monday bool}
-    Lanes      []LaneInfo    // walk order, then done: {Lane, Label, LimitDays, Columns []string /* Jira column names mapped to it */}
+    Lanes      []LaneInfo    // walk order, then done: {Lane, Label, DefaultLabel, Kind working|done|backlog|hidden, Custom, Hue 1..8 (custom lanes; data-hue), LimitDays, Columns []string /* Jira column names mapped to it */}
     Speakers   []SpeakerView // effective speaking order: included speakers (Unassigned placed per setting), then people
                              // with tickets who are excluded (Included=false: board lanes only, not in rail or ←/→ walk)
     Tickets    []TicketView  // every active ticket + every Done ticket inside the done window, board-rank order
@@ -664,7 +680,9 @@ type StandupConfig struct {   // everything the Configure form shows for one sta
     ID int64; Rev int64; Position int; Name string
     Space *SpaceOption; Board *BoardOption; Scope, ExtraFilter string; FilterCheck *FilterCheck
     Columns  []ColumnMapping  // {ColumnName string, StatusNames []string, Lane string, Auto bool}
-    Lanes    []LaneInfo       // walk order + limits + mapped Jira column names
+    Lanes    []LaneInfo       // working lanes (custom included) in walk order + limits + mapped Jira column names
+    LaneOptions []LaneInfo    // every lane a column can map to: backlog, built-in working, custom (by creation), done, hidden
+    WalkLeftToRight []string  // working lanes by first board column ("Left to right" preset; reversed = "Right to left")
     UnmappedStatuses []string // names of statuses in the board filter's columns mapped to no lane (warning line)
     RowsMode string
     Speakers []SpeakerConfig  // {AccountID, Name, Initials string, Position int, Included, Manual bool, Active int, Note string}
@@ -681,7 +699,12 @@ type StandupPatch struct {    // nil pointer = leave unchanged; one call may set
     PulseDays *int; ShowCommits, ShowPRs, ShowComments, ShadeWeekends *bool
     DoneWindow *string; BacklogRows *int
 }
-type UIStatePatch struct { LastStandupID *int64; LastView *string; StandupID *int64; LastPerson *string; Window *WindowState }
+type UIState struct { LastStandupID int64; LastView string; LastPerson map[int64]string
+    BoardGroup map[int64]string /* standup id -> "assignee"|"status"; absent = assignee (F13) */
+    Zoom map[int64]int /* standup id -> percent, one of 70 80 90 100 110 125 150 175 200; absent = 100 (F15) */; Window *WindowState }
+type UIStatePatch struct { LastStandupID *int64; LastView *string; StandupID *int64; LastPerson *string
+    BoardGroup *string /* with StandupID; validated assignee|status; written at once, not debounced */
+    Zoom *int /* with StandupID; validated against the nine steps; written at once, not debounced (F15) */; Window *WindowState }
 type SpaceOption struct { ID, Key, Name string }
 type BoardOption struct { ID string; Name, Type string }
 type UserOption  struct { AccountID, DisplayName, Initials string; OnBoard bool }
@@ -765,7 +788,7 @@ comment bodies, no e-mail addresses.
     "syncedAt": "2026-11-23T15:02:10Z",
     "sprint": { "id": "42", "name": "Sprint 42", "startAt": "…", "endAt": "…" },          // null for kanban
     "pulseDays": 21, "window": { "from": "2026-11-03", "to": "2026-11-23" },
-    "lanes": [{ "lane": "qa", "label": "QA", "limitDays": 3 }],                            // walk order, then done
+    "lanes": [{ "lane": "qa", "label": "QA", "limitDays": 3, "kind": "working", "custom": false }], // walk order, then done; custom lanes are "c<N>" with custom: true (kind/custom additive, 0006)
     "people": [{ "id": "5b10…", "name": "Iris Calloway", "included": true, "active": 14, "done": 6 }],  // speaking order; id "unassigned" for the pseudo-speaker
     "tickets": [{
       "key": "MOB-1429", "sourceId": "10429", "url": "https://acme.atlassian.net/browse/MOB-1429",
@@ -776,7 +799,8 @@ comment bodies, no e-mail addresses.
         "segments": [{ "lane": "todo", "from": "2026-11-10", "to": "2026-11-17" }, { "lane": "prog", "from": "2026-11-18", "to": "2026-11-23" }],
         "marks":    [{ "date": "2026-11-12", "commits": 2, "prs": 0, "comments": 1 }],
         "blocked":  [{ "from": "2026-11-21", "to": "2026-11-23" }]
-      }
+      },
+      "laneLabel": "In Progress"             // the lane's configured label (additive, 0006)
     }],
     "backlog": [{ "key": "MOB-1525", "summary": "…", "type": "story", "url": "…" }],
     "counts": { "active": 40, "unassigned": 4, "done": 15, "backlog": 12, "backlogTotal": 40 }
@@ -850,7 +874,13 @@ frontend/
   view immediately and calls `StandupService.View` only if the cached `rev` is older than the tab's (`StandupTab`) rev
   or a `data:changed` arrived.
 - Views are replaced wholesale (immutable payloads from Go); rows are keyed by ticket key.
-- UI state persistence: `route` changes call `AppService.SetUIState` debounced 500 ms (fire-and-forget).
+- UI state persistence: `route` changes call `AppService.SetUIState` debounced 500 ms (fire-and-forget). The Whole
+  board's Assignee | Status choice (`state/standup.ts: boardGroups`, seeded from `boot.ui.boardGroup`) is written through
+  at once, per standup, with `{ standupId, boardGroup }` (F13). The zoom (`state/zoom.ts: zooms`, seeded from `boot.ui.zoom`)
+  works the same way with `{ standupId, zoom }` (F15); `contentScale = textScale × zoom` (`state/app.ts`) feeds the standup
+  screen's layout and inline px, and `useViewport` returns the effective `cvw`/`cvh` for everything below the header.
+  The webview's own page zoom is switched off in the shell (`ZoomControlEnabled` false, and `cmd/cuisle/menu.go` drops the
+  default menu's Zoom items, which on macOS run before the page sees ⌘+).
 
 ### 4.4 Bindings and types
 
@@ -952,14 +982,14 @@ Behaviour (WAI-ARIA 1.2 combobox, list autocomplete, manual selection):
   CSS converts (`left: calc(var(--x) / var(--days) * 100%)`). Weekend shading, day axis and the today line are drawn
   **once per list** in a `TrackBackdrop` layer behind the rows, not per row.
 - Layout decisions are pure functions in `layout/` fed by measured sizes: `chooseDensity(groups, availH)` (five-step
-  ladder: row height 46 → 38 → 34 combined with stacked or side-gutter headings, ux-spec §5.5), `belowFold(groups, density, foldY)`, `balanceLanes(lanes, cols, rowH)`, `tabMode(tabs, availW)`. They are
+  ladder: row height 46 → 38 → 34 combined with stacked or side-gutter headings, ux-spec §5.5), `belowFold(groups, density, foldY)`, `splitLanes(lanes, cols, rowH)` (F15: the order-preserving cut, `splitSequence`, replaced the greedy `balanceLanes`), `contentViewport(w, h, textScale, contentScale)` (the effective size of the content below the header: window ÷ text size × zoom, ux-spec §16.3), `tabMode(tabs, availW)`. They are
   ports of the *rules* in `design/reference/prototype-logic.js`, documented in `docs/ux-spec.md`.
 
 ### 4.9 Ticket modal and rich text (ADR 0015, ux-spec §14)
 
 - **Code-split (recommended, not required).** `views/ticket/*` and `components/adf/*` may form one lazy chunk
   (`import('./views/ticket')`), prefetched with `requestIdleCallback` after first paint so cold start stays flat and the
-  chunk is in memory before anyone clicks. The JS budget is one all-JS number (≤ 70 KB gz, ADR 0014 as raised for F12). No new runtime dependency:
+  chunk is in memory before anyone clicks. The JS budget is one all-JS number (≤ 80 KB gz, ADR 0014 as raised for F12 and on 2026-11-25). No new runtime dependency:
   no Markdown/ADF library, no sanitiser (nothing is ever parsed from HTML), no image viewer.
 - **Open** = `TicketService.Get(standupId, issueId)` (local, ≤ 25 ms) → render. The step list (`J`/`K`) is computed in TS
   from the current view's row order (person view: walk order then Done; board: lane order, Done, backlog) and neighbours
@@ -1003,7 +1033,7 @@ Behaviour (WAI-ARIA 1.2 combobox, list autocomplete, manual selection):
 | Status → lane mapping; per-ticket lane | Pixel geometry from day indexes and container width |
 | Pulse segments (incl. pre-window state), sparse per-day marks in local time, blocked spans | Density ladder (needs measured height) |
 | `DaysInLane`, `OverLimit`, `Blocked` | Below-the-fold summary text, "End of list" flip |
-| Done-window filtering, backlog top-N, counts | Board lane balancing into 1–2 columns |
+| Done-window filtering, backlog top-N, counts | Board lane splitting into 1–3 columns, zoom (effective size) |
 | Ticket detail: ADF → typed node tree, media/card/mention resolution, field kinds, rail grouping and "Not set" folding, comment visibility labels, "new since standup" bound | ADF node → component mapping, `textColor` contrast clamp (per theme), comment order toggle, optimistic write state, step list |
 | Effective speaking order (manual / reshuffle-daily seed / Unassigned position) | Tab collapse mode (full → keys → menu), legend mode |
 | Axis days (weekend/Monday flags), sprint "ends today" facts | Filtering tickets by selected speaker, grouping by `view.lanes` |
@@ -1092,11 +1122,11 @@ Reference hardware: 2020-class laptop (M1 / 4-core x64, SSD). Dataset "L": 5 sta
 | Person switch (←/→) | ≤ 32 ms (two frames), no IPC | Playwright as above; also asserts zero facade calls | fail > 32 ms |
 | Configure field save: control → ack | ≤ 30 ms | `BenchmarkConfigUpdate` (real file DB) + e2e mark | fail if bench > 10 ms/op |
 | Combobox keystroke → filtered list (static, 500 options) | ≤ 16 ms | Playwright | fail > 32 ms |
-| JS bundle (all JS, gzip) | ≤ 70 KB (ADR 0014, raised by Chris on 2026-11-23 for F12 from 50 KB) | `size-limit` on `frontend/dist/assets/*.js` | fail |
+| JS bundle (entry chunk, gzip) | ≤ 80 KB (ADR 0014: 50 → 70 KB for F12 on 2026-11-23, → 80 KB on 2026-11-25). F14 gates the **entry** (`index-*.js`) apart from lazy chunks (`lazy-*.js`, ≤ 20 KB together; today only the command palette), which load on first use so cold start stays flat. The literal all-JS total would be 80.2 KB with the palette | `size-limit` on `frontend/dist/assets/index-*.js` and `lazy-*.js` | fail |
 | Ticket modal open: click/Enter → modal painted (fixture ticket with every ADF node, 7 comments, 5 attachments) | ≤ 100 ms, **zero network** | Playwright (mock mode, 4× CPU throttle, chunk prefetched); Go side `BenchmarkTicketDetail` | fail > 100 ms; bench fail > 25 ms/op; integration test asserts an empty fake-Jira request log |
 | Ticket step (`J`/`K`) → painted | ≤ 50 ms | Playwright | fail |
 | Light write: action → optimistic UI | ≤ 32 ms (the network round trip is not budgeted) | Playwright | fail |
-| CSS (gzip) | ≤ 18 KB (ADR 0014 amendment, F12: 15.7 KB with the ticket modal mounted) | `size-limit` | fail |
+| CSS (entry, gzip) | ≤ 18 KB (ADR 0014 amendment, F12: 15.7 KB with the ticket modal mounted); lazy CSS (`lazy-*.css`, the palette) ≤ 3 KB | `size-limit` | fail |
 | Fonts | ≤ 160 KB WOFF2 total | file-size check | fail |
 | Memory: Go heap steady state | ≤ 40 MB | `runtime.ReadMemStats` in `--bench-startup` after loading 5 views | fail > 60 MB |
 | Memory: total RSS incl. webview, steady | ≤ 300 MB | manual per release (Activity Monitor/Task Manager) | release checklist |
@@ -1164,6 +1194,8 @@ instructions; the only bypass is `CUISLE_JIRA_TOKEN` (process env, never persist
 | `media.cache_max_mb` | integer 64–1048576 (cap for full-size images; thumbnails are not counted) | `1024` |
 | `storage.cleanup_offer_mb` | integer 1024–65536 (Disconnect offers to delete synced content only above this, ux-spec §14.11) | `2048` |
 | `jira.max_rps` | hidden; integer 1–20 (the limiter's sustained rate, jira-sync §3.1) | `8` |
+| `palette.recent_tickets` | JSON array of local issue ids, most recent first (the palette keeps 8 and shows 3; the validator accepts at most 50 positive integers, 16 KB) or empty (ux-spec §15.7) | unset |
+| `palette.command_usage` | JSON object command id → run count (at most 400 entries, ids up to 80 characters, counts >= 0) or empty; ranks suggested commands and breaks ties (ux-spec §15.7) | unset |
 | `update.check_daily` | `on` \| `off` ("Check for updates daily", ADR 0016; Check now works either way) | `on` |
 | `history_retention_days` | reserved; `0` = keep forever (only behaviour in v1, no UI) | `0` |
 

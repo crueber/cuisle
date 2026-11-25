@@ -44,14 +44,18 @@ func MergeColumnsTx(ctx context.Context, tx *sql.Tx, id int64, cols []model.Colu
 	if err != nil {
 		return false, err
 	}
+	lanes, err := readLanesTx(ctx, tx, id)
+	if err != nil {
+		return false, err
+	}
 	changed := false
 	desired := make(map[string]bool, len(cols))
 	for i, col := range cols {
 		desired[col.Name] = true
-		lane := AutoLane(col, i, len(cols), statuses)
+		lane := AutoLaneNamed(col, i, len(cols), statuses, lanes)
 		auto := 1
 		old, ok := existing[col.Name]
-		if ok && old.auto == 0 {
+		if ok && old.auto == 0 && laneExists(lanes, old.lane) {
 			lane, auto = old.lane, 0
 		}
 		if !ok || old.position != i || old.lane != lane || old.auto != auto {

@@ -2,6 +2,7 @@
 // hides people and does no repositioning (the view already places Unassigned first, last or skipped).
 import { Icon } from "../../components/Icon";
 import { tabStandups } from "../../state/app";
+import { findKeyLabel } from "../../state/palette";
 import type { RailProps } from "./props";
 
 export function Rail(props: RailProps) {
@@ -61,7 +62,7 @@ export function Rail(props: RailProps) {
       })}
       {full ? (
         <div class="sf-rail__hint">
-          <span>↑ ↓ speaker</span> <span>← → standup</span> <span>B board ⇄ person</span> <span>{`1–${standupCount} jump`}</span>
+          <span>↑ ↓ speaker</span> <span>← → standup</span> <span>B board ⇄ person</span> <span>G group by</span> <span>+ − zoom</span> <span>{`1–${standupCount} jump`}</span> <span>{findKeyLabel()} find</span>
         </div>
       ) : null}
     </nav>

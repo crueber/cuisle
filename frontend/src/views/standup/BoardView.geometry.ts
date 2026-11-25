@@ -5,6 +5,8 @@
 /** Icon (14px) + the three gaps between icon, key and title, and title and track (8px each). */
 export const ROW_ICON_PX = 14;
 export const ROW_GAP_PX = 8;
+/** Status mode's assignee column (ux-spec §6.5): 30px between the title and the track. */
+export const ROW_ASSIGNEE_PX = 30;
 /** Days chip column (36px) plus the gap before it. */
 export const ROW_CHIP_PX = 36;
 /** Upper bound for one mono character at the board's axis and key sizes. */
@@ -16,17 +18,18 @@ export const TODAY_LABEL_PX = 5 * CHAR_PX + ROW_GAP_PX;
  * Width of the flexible track in one lane row: whatever remains of the column after icon, key, title, chip and the
  * four gaps. Never negative.
  */
-export function laneTrackWidth(colW: number, keyPx: number, titleW: number): number {
-  const fixed = ROW_ICON_PX + keyPx + titleW + ROW_CHIP_PX + 4 * ROW_GAP_PX;
+export function laneTrackWidth(colW: number, keyPx: number, titleW: number, assigneePx = 0): number {
+  const fixed = ROW_ICON_PX + keyPx + titleW + ROW_CHIP_PX + 4 * ROW_GAP_PX + (assigneePx > 0 ? assigneePx + ROW_GAP_PX : 0);
   return Math.max(0, Math.floor(colW - fixed));
 }
 
 /**
- * The lane track in real px at text scale k. The design track leaves four 8px gaps; the gaps do not scale (they are
- * spacing tokens), while the column and every other part of the row do, so only the rest is multiplied.
+ * The lane track in real px at text scale k. The design track leaves four 8px gaps (five with status mode's assignee
+ * column); the gaps do not scale (they are spacing tokens), while the column and every other part of the row do, so
+ * only the rest is multiplied.
  */
-export function realTrackWidth(designTrack: number, k: number): number {
-  return Math.max(0, Math.floor(k * (designTrack + 4 * ROW_GAP_PX) - 4 * ROW_GAP_PX));
+export function realTrackWidth(designTrack: number, k: number, gaps = 4): number {
+  return Math.max(0, Math.floor(k * (designTrack + gaps * ROW_GAP_PX) - gaps * ROW_GAP_PX));
 }
 
 export interface AxisMonday {

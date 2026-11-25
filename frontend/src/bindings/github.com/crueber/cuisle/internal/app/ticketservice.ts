@@ -33,6 +33,14 @@ export function Assign(standupID: number, issueID: number, accountID: string): $
 }
 
 /**
+ * ByIDs returns one hit per known issue id, in the order given (unknown ids are skipped), for the palette's recent
+ * tickets. Tier is empty and Match is empty. LOCAL ONLY.
+ */
+export function ByIDs(issueIDs: number[] | null, currentStandupID: number): $CancellablePromise<view$0.TicketHit[] | null> {
+    return $Call.ByID(169913422, issueIDs, currentStandupID);
+}
+
+/**
  * Draft returns the stored comment draft (empty text when none).
  */
 export function Draft(issueID: number): $CancellablePromise<view$0.CommentInput> {
@@ -44,6 +52,26 @@ export function Draft(issueID: number): $CancellablePromise<view$0.CommentInput>
  */
 export function EnsureMedia(attachmentID: number): $CancellablePromise<view$0.AttachmentView> {
     return $Call.ByID(3912751385, attachmentID);
+}
+
+/**
+ * FetchByKey is the palette's "not synced" fetch (ux-spec §15.3): a NETWORK call on an explicit trigger, and the
+ * palette's only one. One GetIssue by key through the interactive lane (never a retry), then the one-issue apply
+ * (jira-sync §4.8): the issue is stored with no standup membership, so a later sync leaves it alone and the finder
+ * lists it as "not on board". The answer is the modal payload in standupID's lane mapping. Errors: validation (the key's
+ * shape, before any request), offline, not_found, forbidden, rate_limited, auth_invalid, auth_missing.
+ */
+export function FetchByKey(standupID: number, key: string): $CancellablePromise<view$0.TicketDetail> {
+    return $Call.ByID(1288416821, standupID, key);
+}
+
+/**
+ * FindByKey is the palette's ticket finder (ux-spec §15.3): LOCAL ONLY, zero network. Keys only; titles are not
+ * searched. currentStandupID (0 = none) puts that standup's tickets first within a tier and is the lane mapping of a
+ * ticket that is on no board. limit caps the total hits (<= 0 means 20).
+ */
+export function FindByKey(query: string, currentStandupID: number, limit: number): $CancellablePromise<view$0.TicketFind> {
+    return $Call.ByID(3840420010, query, currentStandupID, limit);
 }
 
 /**

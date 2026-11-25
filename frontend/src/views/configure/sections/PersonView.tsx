@@ -1,6 +1,7 @@
 // Implementation: WP-27. Props are frozen in props.ts.
 // Configure > Person view (ux-spec §9.4 Person view, §9.3 ordered lists). Mutations go through state/config.ts.
 import type { RowsMode, WalkLane } from "../../../api/types";
+import { hueOf } from "../../../state/lanes";
 import { Icon } from "../../../components/Icon";
 import type { SegmentedOption } from "../../../components/props";
 import { Segmented } from "../../../components/Segmented";
@@ -8,31 +9,29 @@ import { saveField, setWalkOrder } from "../../../state/config";
 import type { SectionProps } from "../props";
 import "./PersonView.css";
 
-const RIGHT_TO_LEFT: WalkLane[] = ["qa", "review", "prog", "todo"];
-const LEFT_TO_RIGHT: WalkLane[] = ["todo", "prog", "review", "qa"];
-
 const ROWS_OPTIONS: SegmentedOption<RowsMode>[] = [
   { value: "fit", label: "Fit when possible" },
   { value: "roomy", label: "Always roomy" },
 ];
 
-function isWalkLane(lane: string): lane is WalkLane {
-  return lane === "todo" || lane === "prog" || lane === "review" || lane === "qa";
-}
-
 function sameOrder(a: WalkLane[], b: WalkLane[]): boolean {
   return a.length === b.length && a.every((l, i) => l === b[i]);
 }
 
-function subtitleFor(order: WalkLane[]): string {
-  if (sameOrder(order, RIGHT_TO_LEFT)) return "Right to left (QA first)";
-  if (sameOrder(order, LEFT_TO_RIGHT)) return "Left to right (To Do first)";
+function subtitleFor(order: WalkLane[], ltr: WalkLane[], rtl: WalkLane[], first: string, last: string): string {
+  if (sameOrder(order, rtl)) return `Right to left (${last} first)`;
+  if (sameOrder(order, ltr)) return `Left to right (${first} first)`;
   return "Custom order";
 }
 
 export function PersonViewSection({ config }: SectionProps) {
-  const walk = config.lanes.filter((l) => isWalkLane(l.lane));
-  const order: WalkLane[] = walk.flatMap((l) => (isWalkLane(l.lane) ? [l.lane] : []));
+  // Every working lane, custom lanes included, in walk order. The presets follow the board's column order (from Go).
+  const walk = config.lanes.filter((l) => l.lane !== "done");
+  const order: WalkLane[] = walk.map((l) => l.lane);
+  const ltr = config.walkLeftToRight.length === order.length ? config.walkLeftToRight : order;
+  const rtl = [...ltr].reverse();
+  const labelOf = (lane: string | undefined) => walk.find((l) => l.lane === lane)?.label ?? "";
+  const done = config.laneOptions.find((o) => o.lane === "done");
 
   const move = (index: number, delta: number) => {
     const to = index + delta;
@@ -50,16 +49,16 @@ export function PersonViewSection({ config }: SectionProps) {
     <section class="cfg-section personview" aria-labelledby="cfg-h-person">
       <header class="cfg-section-head">
         <h2 id="cfg-h-person" class="cfg-section-title">Person view</h2>
-        <span class="cfg-section-sub">{subtitleFor(order)}</span>
+        <span class="cfg-section-sub">{subtitleFor(order, ltr, rtl, labelOf(ltr[0]), labelOf(rtl[0]))}</span>
       </header>
 
       <div class="cfg-field personview-walk-head">
         <span class="cfg-field-label">Walk order</span>
         <div class="cfg-field-control personview-presets">
-          <button type="button" class="cfg-btn" onClick={() => setWalkOrder(RIGHT_TO_LEFT)}>
+          <button type="button" class="cfg-btn" onClick={() => setWalkOrder(rtl)}>
             Right to left
           </button>
-          <button type="button" class="cfg-btn" onClick={() => setWalkOrder(LEFT_TO_RIGHT)}>
+          <button type="button" class="cfg-btn" onClick={() => setWalkOrder(ltr)}>
             Left to right
           </button>
         </div>
@@ -102,7 +101,7 @@ export function PersonViewSection({ config }: SectionProps) {
                 <Icon name="chevron-down" size={14} />
               </button>
             </span>
-            <span class="personview-swatch" data-lane={l.lane} aria-hidden="true" />
+            <span class="personview-swatch" data-lane={l.lane} data-hue={hueOf(l.lane)} aria-hidden="true" />
             <span class="personview-name">{l.label}</span>
             {l.columns.length > 0 ? <span class="personview-jira">{`Jira: ${l.columns.join(", ")}`}</span> : null}
           </li>
@@ -111,7 +110,7 @@ export function PersonViewSection({ config }: SectionProps) {
 
       <div class="personview-done">
         <span class="personview-swatch" data-lane="done" aria-hidden="true" />
-        <span class="personview-name">Done</span>
+        <span class="personview-name">{done?.label ?? "Done"}</span>
         <p class="personview-locked">Always last, so it's first below the fold.</p>
       </div>
 

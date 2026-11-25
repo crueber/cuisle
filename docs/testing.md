@@ -199,7 +199,12 @@ Port the rules, then assert these exact outcomes (from [ux-spec.md](ux-spec.md) 
 | `tabMode` | 5 standups, header 1920 wide | `full` |
 | `tabMode` | 5 standups, 1440 | `key` |
 | `tabMode` | 5 standups, 1024 | `key` (switch to `menu` only when the keys don't fit; test with 9 standups at 1024) |
-| `balanceLanes` | MOB fixture, `mainW` 1656, lane row 23 | 2 columns; Unassigned first in column 1; speaking order preserved within each column |
+| `splitLanes` | MOB fixture, `mainW` 1656, lane row 23 | 2 columns: Unassigned, Iris, Silas \| Noor, Otto, Amara, Jonas, Wren (620 \| 604); speaking order reads down, then across |
+| `splitLanes` | same, `mainW` 2128, lane row 23 | 3 columns: Unassigned, Iris \| Silas, Noor \| Otto, Amara, Jonas, Wren (490 \| 260 \| 474), the `zoom-board-80` split; a tie gives column 1 the most, then the last column |
+| `boardColumns` | `mainW` 1719 / 1720 | 2 / 3 |
+| `doneBacklogLayout` | `mainW` 1720 | Done 3 grid columns, Backlog 4 |
+| `contentViewport` | 1920 × 1080, text 1, zoom 80 / 100 / 150 / 175 % | vw 2400 / 1920 / 1280 / ~1097; 3 / 2 / 2 / 1 board columns, rail full / full / compact / compact |
+| `chooseDensity` via the person view | 1920 × 1080 at 150% | `tight-side` (side headings, tight rows), scroll |
 | Track geometry | ticket with history `[todo 5, prog 6, review 3]`, N = 21 | segments start at day 7 with widths 5, 6, 3 days, the last ending at day 21 |
 
 Also cover:

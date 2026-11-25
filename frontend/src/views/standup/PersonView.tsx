@@ -2,17 +2,21 @@
 // Owns the scroll position: the density and "below the fold" summary come from the layout functions (WP-13).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { atEnd as isAtEnd, belowFold } from "../../layout/below";
-import { chooseDensity, type GroupCount } from "../../layout/density";
-import { legendMode, mainPadding, titleSizes, trackWidth } from "../../layout/responsive";
+import { chooseDensity, type DensitySpec, type GroupCount } from "../../layout/density";
+import { legendExtra, legendMode, mainPadding, personTrackWidth, titleSizes } from "../../layout/responsive";
 import { axisLabelMode } from "../../layout/track";
-import { textScale } from "../../state/app";
+import { contentScale } from "../../state/app";
 import { openTicketFromRow } from "../../state/ticketSteps";
 import "../../styles/person.css";
 import { Legend } from "./Legend";
 import { MoreBar } from "./MoreBar";
 import type { PersonViewProps } from "./props";
 import { TicketRow } from "./TicketRow";
+import { ZoomControl, ZOOM_CONTROL_PX } from "./ZoomControl";
 import { TrackBackdrop } from "./TrackBackdrop";
+
+/** The toast's name for a density step (ux-spec §16.2): "side headings" when the headings moved to the side, else the row size. */
+const densityName = (d: DensitySpec) => (d.side ? "side headings" : d.step === "roomy" ? "roomy rows" : "compact rows");
 
 /** The more bar sits over the bottom 36px of the visible list (ux-spec §5.6). */
 const MORE_BAR_H = 36;
@@ -22,8 +26,8 @@ const FIXED_CHROME = 64 + 30 + 10;
 export function PersonView({ view, person, groups: allGroups, mainW, vh }: PersonViewProps) {
   // Only lanes that have tickets are shown (ux-spec §5.3).
   const groups = allGroups.filter((g) => g.tickets.length > 0);
-  // vh and mainW are design px (the window divided by the text scale); `k` multiplies inline px back (ux-spec §11).
-  const k = textScale.value;
+  // vh and mainW are design px (the window divided by the content scale: text size × zoom); `k` multiplies inline px back (ux-spec §11).
+  const k = contentScale.value;
   const tall = vh >= 800;
   // Scroll area height H (ux-spec §5.5 mockup formula): vh - 64 - padTop - titleH - 30 - 10.
   // mainPadding's top depends on vh only.
@@ -31,7 +35,7 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
   const counts: GroupCount[] = groups.map((g) => ({ label: g.lane.label, count: g.tickets.length }));
   const { density, scroll } = chooseDensity(counts, H, view.options.rowsMode === "roomy" ? "roomy" : "fit");
   const keyCh = view.tickets.reduce((m, t) => Math.max(m, t.key.length), 0);
-  const trackW = trackWidth(mainW) * k;
+  const trackW = personTrackWidth(mainW) * k;
   const days = view.pulseDays;
   const labelAll = axisLabelMode(trackW / k, days) === "all";
 
@@ -90,7 +94,10 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
           <p class="person-counts">{`${person.active} active · ${person.done} done`}</p>
           {density.step !== "roomy" ? <span class="person-density-tag">{density.label}</span> : null}
         </div>
-        <Legend mode={legendMode(mainW)} options={view.options} lanes={view.lanes} />
+        <div class="person-title-end">
+          <ZoomControl note={densityName(density)} />
+          <Legend mode={legendMode(mainW, legendExtra(view.lanes), ZOOM_CONTROL_PX)} options={view.options} lanes={view.lanes} />
+        </div>
       </div>
 
       <div class="person-axis">
@@ -124,6 +131,7 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
                 role="group"
                 aria-label={g.lane.label}
                 data-heading={side ? "side" : "stacked"}
+                data-anchor={`group:${g.lane.lane}`}
                 class={`person-group${side ? " is-side" : ""}${isDone ? " is-done" : ""}`}
               >
                 <div class="person-group-head" style={`height:${(side ? density.row : density.headCost) * k}px`}>

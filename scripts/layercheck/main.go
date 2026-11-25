@@ -21,6 +21,7 @@ const wails = "github.com/wailsapp/wails/v3"
 var allowed = map[string][]string{
 	"internal/model":                {},
 	"internal/pulse":                {"internal/model"},
+	"internal/keyfind":              {}, // F14 ticket finder matching (pure)
 	"internal/apperr":               {},
 	"internal/buildinfo":            {},
 	"internal/paths":                {"internal/apperr"},

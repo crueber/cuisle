@@ -9,6 +9,7 @@
 //   - after a pick that must not change the field (needs-screen, offline) the Combobox is remounted with a `key` so it
 //     shows the current status again.
 import { useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
+import { hueOf } from "../../state/lanes";
 import type { TransitionList, TransitionOption } from "../../api/types";
 import { Combobox } from "../../components/Combobox";
 import { filterOptions } from "../../components/Combobox.filter";
@@ -144,7 +145,7 @@ export function StatusCombo(props: StatusComboProps) {
 
   return (
     <div class="sc" ref={wrapRef} data-lane-now={lane}>
-      <span class="sc-now" data-lane={lane} aria-hidden="true" />
+      <span class="sc-now" data-lane={lane} data-hue={hueOf(lane)} aria-hidden="true" />
       <Combobox<TransitionOption>
         key={remount}
         id={id}
@@ -159,7 +160,7 @@ export function StatusCombo(props: StatusComboProps) {
           <span class="sc-row" data-divider={firstScreen(o) ? "true" : undefined} data-muted={o.needsScreen ? "true" : undefined}>
             {(offline || listOffline) && firstRow(o) ? <span class="sc-offline">Offline · open in Jira</span> : null}
             <span class="sc-opt">
-              <span class="sc-sw" data-lane={o.toLane} aria-hidden="true" />
+              <span class="sc-sw" data-lane={o.toLane} data-hue={hueOf(o.toLane)} aria-hidden="true" />
               <span class="sc-name">{`→ ${o.name}`}</span>
               {o.needsScreen ? (
                 <span class="sc-screen" data-needs-screen="true">

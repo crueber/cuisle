@@ -155,10 +155,10 @@ describe("buildTokens: CSS flattening (synthetic input)", () => {
     for (const k of dark.keys()) expect(k.startsWith("--color-")).toBe(true);
   });
 
-  it('emits --scale: 1.25 under :root[data-text="large"]', () => {
+  it('emits --text-scale: 1.25 under :root[data-text="large"]', () => {
     const large = css().get(LARGE);
     expect(large).toBeDefined();
-    expect(large.get("--scale")).toBe("1.25");
+    expect(large.get("--text-scale")).toBe("1.25");
   });
 
   it("skips $-prefixed keys at any depth", () => {
@@ -249,7 +249,14 @@ describe("buildTokens: real design/tokens.json", () => {
     const { blocks, root, dark } = built();
     expect(root).toBeDefined();
     expect(dark).toBeDefined();
-    expect(blocks.get(LARGE)?.get("--scale")).toBe("1.25");
+    expect(blocks.get(LARGE)?.get("--text-scale")).toBe("1.25");
+  });
+
+  it("splits the scale (F15): --text-scale and --zoom are the inputs, --scale their product for the header", () => {
+    const { root } = built();
+    expect(root.get("--text-scale")).toBe("1");
+    expect(root.get("--zoom")).toBe("1");
+    expect(root.get("--scale")).toBe("var(--text-scale)");
   });
 
   it("flattens known non-colour tokens verbatim", () => {
@@ -296,10 +303,10 @@ describe("buildTokens: real design/tokens.json", () => {
     expect(dark.size).toBe(expectedDark.length);
     for (const [name, value] of expectedDark) expect(dark.get(name)).toBe(value);
     for (const [name, value] of expectedRoot) {
-      if (name === "--scale") continue;
+      if (name === "--scale" || name === "--text-scale" || name === "--zoom") continue;
       expect(root.get(name), name).toBe(value);
     }
-    const rootNames = [...root.keys()].filter((k) => k !== "--scale");
+    const rootNames = [...root.keys()].filter((k) => !["--scale", "--text-scale", "--zoom"].includes(k));
     expect(rootNames.length).toBe(expectedRoot.length);
   });
 

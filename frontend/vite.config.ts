@@ -15,6 +15,16 @@ export default defineConfig(({ mode }) => ({
     cssTarget: "safari15",
     assetsInlineLimit: 0,
     sourcemap: false,
+    modulePreload: false,
+    // Stable names so size-limit can budget the entry bundle apart from lazy chunks (the palette; architecture §6.1).
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/index-[hash].js",
+        chunkFileNames: "assets/lazy-[name]-[hash].js",
+        // The entry's CSS stays index-*.css; a lazy chunk's CSS becomes lazy-*.css.
+        assetFileNames: (a) => (a.names.some((n) => n.endsWith(".css") && n !== "index.css") ? "assets/lazy-[name]-[hash][extname]" : "assets/[name]-[hash][extname]"),
+      },
+    },
     // terser packs ~0.5 KB gz tighter than the default minifier (architecture §6.1 JS budget).
     minify: "terser",
     terserOptions: {

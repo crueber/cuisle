@@ -22,11 +22,11 @@ import { Legend } from "./Legend";
 import type { LegendProps } from "./props";
 
 const LANES: LaneInfo[] = [
-  { lane: "qa", label: "QA", limitDays: 3, columns: ["QA"] },
-  { lane: "review", label: "In Review", limitDays: 2, columns: ["Review"] },
-  { lane: "prog", label: "In Progress", limitDays: 5, columns: ["In Progress"] },
-  { lane: "todo", label: "To Do", limitDays: 10, columns: ["To Do"] },
-  { lane: "done", label: "Done", limitDays: 0, columns: ["Done"] },
+  { lane: "qa", label: "QA", defaultLabel: "QA", kind: "working", custom: false, hue: 0, limitDays: 3, columns: ["QA"] },
+  { lane: "review", label: "In Review", defaultLabel: "In Review", kind: "working", custom: false, hue: 0, limitDays: 2, columns: ["Review"] },
+  { lane: "prog", label: "In Progress", defaultLabel: "In Progress", kind: "working", custom: false, hue: 0, limitDays: 5, columns: ["In Progress"] },
+  { lane: "todo", label: "To Do", defaultLabel: "To Do", kind: "working", custom: false, hue: 0, limitDays: 10, columns: ["To Do"] },
+  { lane: "done", label: "Done", defaultLabel: "Done", kind: "done", custom: false, hue: 0, limitDays: 0, columns: ["Done"] },
 ];
 
 const OPTIONS: ViewOptions = {

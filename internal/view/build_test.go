@@ -332,11 +332,11 @@ func TestBuild_Kanban_HasNoSprintAndDoneLabelIsFourteenDays(t *testing.T) {
 func TestBuild_Lanes_WalkOrderThenDoneWithLabelsLimitsAndColumns(t *testing.T) {
 	v := build(t, mainWorld().snap, mainAsOf)
 	want := []LaneInfo{
-		{Lane: "qa", Label: "QA", LimitDays: 3, Columns: []string{"Testing"}},
-		{Lane: "review", Label: "In Review", LimitDays: 2, Columns: []string{"Review"}},
-		{Lane: "prog", Label: "In Progress", LimitDays: 5, Columns: []string{"In Progress", "Blocked"}},
-		{Lane: "todo", Label: "To Do", LimitDays: 10, Columns: []string{"To Do"}},
-		{Lane: "done", Label: "Done", LimitDays: 0, Columns: []string{"Done"}},
+		{Lane: "qa", Label: "QA", DefaultLabel: "QA", Kind: "working", LimitDays: 3, Columns: []string{"Testing"}},
+		{Lane: "review", Label: "In Review", DefaultLabel: "In Review", Kind: "working", LimitDays: 2, Columns: []string{"Review"}},
+		{Lane: "prog", Label: "In Progress", DefaultLabel: "In Progress", Kind: "working", LimitDays: 5, Columns: []string{"In Progress", "Blocked"}},
+		{Lane: "todo", Label: "To Do", DefaultLabel: "To Do", Kind: "working", LimitDays: 10, Columns: []string{"To Do"}},
+		{Lane: "done", Label: "Done", DefaultLabel: "Done", Kind: "done", LimitDays: 0, Columns: []string{"Done"}},
 	}
 	if !reflect.DeepEqual(v.Lanes, want) {
 		t.Errorf("Lanes =\n %+v\nwant\n %+v", v.Lanes, want)
@@ -1227,11 +1227,21 @@ func TestBuildConfig_MapsEveryField(t *testing.T) {
 			{ColumnName: "Icebox", StatusNames: []string{}, Lane: "hidden", Auto: false},
 		},
 		Lanes: []LaneInfo{
-			{Lane: "qa", Label: "QA", LimitDays: 3, Columns: []string{"Testing"}},
-			{Lane: "review", Label: "In Review", LimitDays: 2, Columns: []string{"Review"}},
-			{Lane: "prog", Label: "In Progress", LimitDays: 5, Columns: []string{"In Progress", "Blocked"}},
-			{Lane: "todo", Label: "To Do", LimitDays: 10, Columns: []string{"To Do"}},
+			{Lane: "qa", Label: "QA", DefaultLabel: "QA", Kind: "working", LimitDays: 3, Columns: []string{"Testing"}},
+			{Lane: "review", Label: "In Review", DefaultLabel: "In Review", Kind: "working", LimitDays: 2, Columns: []string{"Review"}},
+			{Lane: "prog", Label: "In Progress", DefaultLabel: "In Progress", Kind: "working", LimitDays: 5, Columns: []string{"In Progress", "Blocked"}},
+			{Lane: "todo", Label: "To Do", DefaultLabel: "To Do", Kind: "working", LimitDays: 10, Columns: []string{"To Do"}},
 		},
+		LaneOptions: []LaneInfo{
+			{Lane: "backlog", Label: "Backlog", DefaultLabel: "Backlog", Kind: "backlog", Columns: []string{"Backlog"}},
+			{Lane: "todo", Label: "To Do", DefaultLabel: "To Do", Kind: "working", LimitDays: 10, Columns: []string{"To Do"}},
+			{Lane: "prog", Label: "In Progress", DefaultLabel: "In Progress", Kind: "working", LimitDays: 5, Columns: []string{"In Progress", "Blocked"}},
+			{Lane: "review", Label: "In Review", DefaultLabel: "In Review", Kind: "working", LimitDays: 2, Columns: []string{"Review"}},
+			{Lane: "qa", Label: "QA", DefaultLabel: "QA", Kind: "working", LimitDays: 3, Columns: []string{"Testing"}},
+			{Lane: "done", Label: "Done", DefaultLabel: "Done", Kind: "done", Columns: []string{"Done"}},
+			{Lane: "hidden", Label: "Hidden", DefaultLabel: "Hidden", Kind: "hidden", Columns: []string{"Parked", "Icebox"}},
+		},
+		WalkLeftToRight:  []string{"todo", "prog", "review", "qa"},
 		UnmappedStatuses: []string{"Mystery"},
 		RowsMode:         "roomy",
 		Speakers: []SpeakerConfig{

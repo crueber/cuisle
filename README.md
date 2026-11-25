@@ -98,13 +98,23 @@ sort by most active, leave someone out for a day, remove them, or add someone wh
 | `↑` `↓` | Previous / next speaker (the whole board sits after the last speaker) |
 | `←` `→` | Previous / next standup |
 | `B` | Whole board; press again right away to return to the person you left |
+| `G` | On the whole board: group by Assignee or by Status (remembered per standup) |
+| `+` `-` `0` | Zoom the screen in, out, or back to 100% (also with `⌘`/`Ctrl`); the header does not zoom |
 | `1`–`9` | Switch standup |
 | `R` / `Shift+R` | Sync changes / full resync |
+| `⌘K` / `Ctrl+K`, `T` | Find a ticket or run a command (the command palette: `>` commands, `#` tickets, `@` people) |
 | `/` | Standup switcher |
 | `,` | Configure |
 | `?` | Key and pulse legend |
 | `Esc` | Close a popover, or leave Configure |
 | `Enter` | Open the focused ticket in Jira |
+
+### Zoom
+
+Hard to read from across the room? Press `+` (or use the `− 100% +` control in the title row) to zoom everything below the
+header in, `-` to zoom out, `0` to reset. Zoom re-runs the layout rather than just magnifying: zoomed out, the whole board
+goes to three columns and fits more; zoomed in, the rail shrinks, the columns drop to one and the person view tightens its
+rows. Nothing is hidden, a bar says what is below. Each standup remembers its own zoom.
 
 ### Reading the pulse track
 
@@ -126,7 +136,10 @@ Every control saves as you change it. Text fields save after a short pause. High
 - **Person view:** the walk order of lanes, and whether rows tighten to fit or always stay roomy.
 - **Pulse:** days shown, which marks to draw, per-lane day limits, weekend shading, and a live preview.
 - **Whole board:** the Done window (sprint, 14 days or since yesterday) and how many backlog rows to show.
-- **Status mapping:** board columns to lanes. When several columns share a lane, you choose their order.
+- **Status mapping:** board columns to lanes, including lanes you name yourself: type a new name in a column's lane
+  box and choose *Create lane*. Your lanes work like In Progress (limits, walk order, the whole board) and get their own
+  colour; any lane (and Done) can be renamed, and your own lanes deleted. When several columns share a lane, you choose
+  their order.
 - **Export:** send a standup to a folder as JSON (`cuisle.export.v1`) by hand or after every sync. No comment
   bodies, emails or secrets are ever exported.
 - **Display:** light, dark or system theme. Standard or Large (TV) text. Sync on open (when stale, always or never).
@@ -184,7 +197,7 @@ task package    # a bundle for this OS in bin/
 - **Performance budgets are CI gates:**
   - cold start under 500 ms;
   - switching standups or people in under 50 ms;
-  - the JS bundle under 70 KB gzipped.
+  - the startup JS under 80 KB gzipped (lazy chunks such as the command palette under 20 KB).
 
 The design and the reasoning behind it are in [`docs/`](docs):
 - [product spec](docs/product-spec.md)

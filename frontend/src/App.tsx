@@ -2,6 +2,7 @@
 // open so Done returns instantly with scroll intact (architecture §4.5).
 import { useEffect } from "preact/hooks";
 import { standups } from "./state/app";
+import { paletteOpen } from "./state/palette";
 import { route } from "./state/route";
 import { currentView } from "./state/standup";
 import { backTicket, closeTicket, openLinkedTicket, stepToTicket, ticketSession } from "./state/ticket";
@@ -14,7 +15,11 @@ import { ConnectScreen } from "./views/connect/ConnectScreen";
 import { ReconnectScreen } from "./views/connect/ReconnectScreen";
 import { Banner } from "./components/Banner";
 import { KeyLegend } from "./components/KeyLegend";
+import { lazy } from "./components/lazy";
 import { Toast } from "./components/Toast";
+
+// The command palette (F14) is a lazy chunk, fetched the first time it opens: cold start stays flat.
+const Palette = lazy(() => import("./views/palette/PaletteDialog").then((m) => m.PaletteDialog));
 
 /** "/" (ux-spec §8): open the switcher menu when the tabs collapsed to it, else focus the first tab. One-shot. */
 function openSwitcher(): void {
@@ -83,16 +88,20 @@ export function App() {
           onClose={closeTicket}
         />
       ) : null}
-      <KeyLegend
-        open={legendOpen && r.view === "standup"}
-        onClose={() => {
-          keyLegendOpen.value = false;
-        }}
-        showCommits={options?.showCommits ?? false}
-        showPRs={options?.showPRs ?? false}
-        showComments={options?.showComments ?? false}
-        devActivity={options?.devActivity ?? "unknown"}
-      />
+      {paletteOpen.value !== null ? <Palette /> : null}
+      {legendOpen && r.view === "standup" ? (
+        <KeyLegend
+          open
+          onClose={() => {
+            keyLegendOpen.value = false;
+          }}
+          showCommits={options?.showCommits ?? false}
+          showPRs={options?.showPRs ?? false}
+          showComments={options?.showComments ?? false}
+          devActivity={options?.devActivity ?? "unknown"}
+          lanes={currentView.value?.lanes}
+        />
+      ) : null}
       <div class="toasts" aria-live="polite">
         {toasts.value.map((t) => (
           <Toast

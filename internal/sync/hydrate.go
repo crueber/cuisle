@@ -107,8 +107,8 @@ func (rn *runner) devTargets(ctx context.Context, f *Fetched, members []Member, 
 		} else {
 			statusID, lastStatus = cachedStatus[m.SourceID], stamp.LastStatusAt
 		}
-		switch lanes[statusID] {
-		case model.LaneProg, model.LaneReview, model.LaneQA:
+		// Tickets in a lane past To Do (In Progress, In Review, QA or a custom working lane) are always re-checked.
+		if l := lanes[statusID]; l != model.LaneTodo && model.IsWorkingLane(l) {
 			out = append(out, m.SourceID)
 			continue
 		}

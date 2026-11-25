@@ -88,6 +88,20 @@ describe("PulseTrack", () => {
     expect(root.style.height).toBe("38px");
   });
 
+  it("multiplies its height by the scale the caller gives it (the standup screen's text size × zoom), else by the text scale only", async () => {
+    // F15: the ticket modal's header and Configure's preview use PulseTrack with no scale, so a standup's zoom never moves them
+    const { seedZooms } = await import("../../state/zoom");
+    const { route } = await import("../../state/route");
+    route.value = { view: "standup", standupId: 1, person: null };
+    seedZooms({ "1": 150 });
+    try {
+      expect(track(renderTrack({ pulse: HISTORY, rowH: 40, scale: 1.5 }).container).style.height).toBe("60px");
+      expect(track(renderTrack({ pulse: HISTORY, rowH: 40 }).container).style.height).toBe("40px");
+    } finally {
+      seedZooms({});
+    }
+  });
+
   it("exposes the day count to CSS as --days", () => {
     const { container } = renderTrack({ pulse: HISTORY, days: 28 });
     expect(cssVar(track(container), "--days")).toBe(28);

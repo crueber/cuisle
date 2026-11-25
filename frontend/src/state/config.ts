@@ -189,6 +189,49 @@ export function setLaneLimit(lane: WalkLane, days: number): void {
   saveAck(c.id, `limit:${lane}`, () => api().config.setLaneLimit(c.id, lane, days));
 }
 
+// Custom lanes (ux-spec §9.4 Status mapping). Go picks the id and colour, so creating and deleting replace the config
+// with the server's reply; they are list operations (in order, never retried, never merged).
+function laneOp(run: (id: number) => Promise<StandupConfig>): void {
+  const id = config.value?.id;
+  if (id === undefined) return;
+  // A rejected create/delete (e.g. a name taken, the lane cap) shows in Status mapping until the next lane action.
+  const prefix = `${id}:lanes#`;
+  if ([...fieldErrors.value.keys()].some((k) => k.startsWith(prefix))) {
+    fieldErrors.value = new Map([...fieldErrors.value].filter(([k]) => !k.startsWith(prefix)));
+  }
+  listOp<StandupConfig>(`${id}:lanes`, () => run(id), (next) => {
+    replaceConfig(id, next);
+    refreshViewQuietly(id);
+  });
+}
+
+/** The message of the last rejected lane create/delete for this standup, if any. */
+export function laneError(standupId: number): string | undefined {
+  const prefix = `${standupId}:lanes#`;
+  return [...fieldErrors.value].filter(([k]) => k.startsWith(prefix)).at(-1)?.[1].message;
+}
+
+/** Creates a working lane named label; when columnName is set that column is mapped to it. */
+export function createLane(label: string, columnName = ""): void {
+  laneOp((id) => api().config.createLane(id, label, columnName));
+}
+
+/** Deletes a custom lane; its columns move to moveTo. */
+export function deleteLane(lane: string, moveTo: string): void {
+  laneOp((id) => api().config.deleteLane(id, lane, moveTo));
+}
+
+/** Renames a lane (text: 400 ms debounce). "" restores a built-in lane's label (shown once committed). */
+export function renameLane(lane: string, label: string, commit = false): void {
+  const c = config.value;
+  if (!c) return;
+  const blank = commit && label.trim() === "";
+  const shown = blank ? (c.laneOptions.find((o) => o.lane === lane)?.defaultLabel || label) : label;
+  const relabel = (l: LaneInfo) => (l.lane === lane ? { ...l, label: shown } : l);
+  config.value = { ...c, lanes: c.lanes.map(relabel), laneOptions: c.laneOptions.map(relabel) };
+  saveAck(c.id, `label:${lane}`, () => api().config.renameLane(c.id, lane, label), true, TEXT_DEBOUNCE_MS);
+}
+
 export function setSpeakerIncluded(accountId: string, included: boolean): void {
   const c = config.value;
   if (!c) return;
