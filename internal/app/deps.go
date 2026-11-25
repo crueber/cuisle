@@ -51,8 +51,12 @@ type Deps struct {
 	// The finder's lane lookups (F14): a standup's effective config by rev, so a hit row costs no config read.
 	findCfgMu gosync.Mutex
 	findCfg   map[int64]findCfgEntry
-	bgCtx     context.Context
-	bgCancel  context.CancelFunc
+	// The finder's title index (find_index.go), rebuilt when the issue generation moves.
+	findIdxMu     gosync.Mutex
+	findIdx       *titleIndex
+	findIdxBuilds atomic.Int64 // how many times the index was (re)built; a test asserts unrelated writes do not
+	bgCtx         context.Context
+	bgCancel      context.CancelFunc
 }
 
 // Services is every bound service, sharing Deps.

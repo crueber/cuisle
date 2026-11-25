@@ -21,6 +21,10 @@ CREATE TABLE issue ( id INTEGER PRIMARY KEY, connection_id INTEGER NOT NULL REFE
 CREATE INDEX issue_assignee ON issue(assignee_account_id);
 CREATE TABLE issue_content ( issue_id INTEGER PRIMARY KEY REFERENCES issue(id) ON DELETE CASCADE, description_adf TEXT, environment_adf TEXT, watchers INTEGER NOT NULL DEFAULT -1, content_hash TEXT NOT NULL, updated_at INTEGER NOT NULL ) STRICT;
 CREATE TABLE issue_field_value ( issue_id INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE, field_id TEXT NOT NULL, kind TEXT NOT NULL, value_json TEXT NOT NULL, PRIMARY KEY (issue_id, field_id) ) STRICT, WITHOUT ROWID;
+CREATE TABLE issue_gen ( id INTEGER PRIMARY KEY CHECK (id = 1), n INTEGER NOT NULL );
+CREATE TRIGGER issue_gen_delete AFTER DELETE ON issue BEGIN INSERT INTO issue_gen (id, n) VALUES (1, 1) ON CONFLICT (id) DO UPDATE SET n = n + 1; END;
+CREATE TRIGGER issue_gen_insert AFTER INSERT ON issue BEGIN INSERT INTO issue_gen (id, n) VALUES (1, 1) ON CONFLICT (id) DO UPDATE SET n = n + 1; END;
+CREATE TRIGGER issue_gen_update AFTER UPDATE OF key, summary, status_id ON issue WHEN old.key IS NOT new.key OR old.summary IS NOT new.summary OR old.status_id IS NOT new.status_id BEGIN INSERT INTO issue_gen (id, n) VALUES (1, 1) ON CONFLICT (id) DO UPDATE SET n = n + 1; END;
 CREATE UNIQUE INDEX issue_key ON issue(connection_id, key);
 CREATE TABLE issue_link ( issue_id INTEGER NOT NULL REFERENCES issue(id) ON DELETE CASCADE, link_id TEXT NOT NULL, relation TEXT NOT NULL CHECK (relation IN ('link','subtask')), label TEXT NOT NULL DEFAULT '', position INTEGER NOT NULL DEFAULT 0, other_source_id TEXT NOT NULL, other_key TEXT NOT NULL, other_summary TEXT NOT NULL DEFAULT '', other_status_id TEXT, other_type_id TEXT, other_assignee_account_id TEXT, PRIMARY KEY (issue_id, link_id) ) STRICT, WITHOUT ROWID;
 CREATE INDEX issue_link_other ON issue_link(other_source_id);

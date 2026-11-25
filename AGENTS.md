@@ -246,7 +246,8 @@ Follow [docs/agent-plan.md](docs/agent-plan.md):
   macOS they run before the page sees `⌘+`. No new dependency; no `StandupView` change.
 - **Decided 2026-11-25 (F14):** a command palette with a ticket finder (`⌘K` / `Ctrl+K`, `T`, the Find button; ux-spec §15,
   docs/features/command-palette/).
-  - Tickets are found by key only, locally (`TicketService.FindByKey`, zero network); the one network call is the explicit
+  - Tickets are found by key and, since 2026-11-25 (later), by title, locally (`TicketService.FindByKey`, zero network;
+    ux-spec §15.3); the one network call is the explicit
     "isn't synced" fetch row (`TicketService.FetchByKey`, one request, the limiter's interactive lane).
   - The palette dialog and the commands are a lazy chunk. `size-limit` now gates the **entry** JS and CSS (80 KB and 18 KB,
     Chris's 2026-11-25 numbers) apart from the lazy chunks (JS 20 KB, CSS 3 KB together), so lazy code does not eat the

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { AppError } from "./index";
 import { createMockApi } from "./mock";
-import { classify, parseQuery } from "./mock-find";
+import { classify, parseQuery, parseTitle, scoreTitle } from "./mock-find";
 
 describe("parseQuery / classify (port of internal/keyfind)", () => {
   it("normalises", () => {
@@ -93,5 +93,94 @@ describe("mock facade: fetchByKey (magic keys)", () => {
     expect(await code(api.ticket.fetchByKey(1, "NOPE-12"))).toBe("not_found");
     expect(await code(api.ticket.fetchByKey(1, "MOB-5000"))).toBe("not_found");
     expect(await code(api.ticket.fetchByKey(1, "nonsense"))).toBe("validation");
+  });
+});
+
+// The same example table as internal/keyfind/title_test.go (TestTitleMatchTable, TestParseTitle, TestTitleScoreOrder):
+// the mock's matcher is a port, so the two must agree.
+describe("title matcher (port of internal/keyfind/title.go)", () => {
+  const S = "Recipe card crops the hero photo";
+  const ink = (q: string, summary: string): number[] | null => {
+    const w = parseTitle(q);
+    return w ? (scoreTitle(w, summary)?.indexes ?? null) : null;
+  };
+  const score = (q: string, summary: string): number => scoreTitle(parseTitle(q)!, summary)!.score;
+
+  it("parseTitle: two non-space characters, at least one letter or digit", () => {
+    expect(parseTitle("recipe card")).toHaveLength(2);
+    expect(parseTitle("  Recipe   CARD ")).toEqual([[..."recipe"], [..."card"]]);
+    for (const q of ["a", "a ", " ", "", "-", "--", "寿"]) expect(parseTitle(q), q).toBeNull();
+    for (const q of ["ab", "mob1429", "v2", "1429", "14 29", "1429 share", "寿司"]) expect(parseTitle(q), q).not.toBeNull();
+  });
+
+  it("numbers match titles only contiguously", () => {
+    const T = "Upgrade to node 2024 and 14 more";
+    expect(ink("2024", T)).toEqual([16, 17, 18, 19]);
+    expect(ink("14", T)).toEqual([25, 26]);
+    expect(ink("224", T)).toBeNull(); // digits scattered across "2024" do not match
+  });
+
+  it("matches the Go table: words, order, partial words, case, substring, subsequence, compactness", () => {
+    expect(ink("recipe card", S)).toEqual([0, 1, 2, 3, 4, 5, 7, 8, 9, 10]);
+    expect(ink("card recipe", S)).toEqual([0, 1, 2, 3, 4, 5, 7, 8, 9, 10]);
+    expect(ink("rec ca", S)).toEqual([0, 1, 2, 7, 8]);
+    expect(ink("RECIPE CARD", S)).toEqual([0, 1, 2, 3, 4, 5, 7, 8, 9, 10]);
+    expect(ink("cip", S)).toEqual([2, 3, 4]);
+    expect(ink("rcd", S)).toEqual([0, 7, 10]);
+    expect(ink("recipe photo cat zzz", S)).toBeNull();
+    expect(ink("zebra", S)).toBeNull();
+    expect(ink("ce", "Recipe card")).toBeNull(); // 2-rune words must be contiguous
+    expect(ink("rpe", "Recipe card")).not.toBeNull();
+    expect(ink("mob", "Meal plan templates for busy weeks")).toBeNull(); // not compact
+    expect(ink("mpt", "Meal plan templates")).toEqual([0, 5, 10]);
+  });
+
+  it("scores: whole word > word start > substring > subsequence; two whole words beat two starts", () => {
+    const whole = score("card", "Recipe card crops");
+    const start = score("card", "Cardinal photo crops");
+    const sub = score("card", "Discard the crops");
+    const seq = score("crd", "Recipe card crops");
+    expect(whole).toBeGreaterThan(start);
+    expect(start).toBeGreaterThan(sub);
+    expect(sub).toBeGreaterThan(seq);
+    expect(seq).toBeGreaterThan(0);
+    expect(score("recipe card", "Recipe card")).toBeGreaterThan(score("recipe card", "Recipes cardinal"));
+    expect(score("rcp", "Recipe card crops")).toBeGreaterThan(score("rcp", "xrxxcxxpx"));
+  });
+
+  it("indexes are code point indexes (an emoji is one), case folding keeps positions", () => {
+    const s = "🍳 Crème brûlée soufflé";
+    const idx = ink("brûlée", s)!;
+    expect([...s].slice(idx[0], idx[idx.length - 1]! + 1).join("")).toBe("brûlée");
+    expect(ink("été", "Été à Paris")).toEqual([0, 1, 2]);
+    expect(ink("寿司", "今日の寿司メニュー")).toEqual([3, 4]);
+  });
+});
+
+describe("mock facade: title finder", () => {
+  it("recipe card: a title hit with the summary's characters inked; key tiers are not involved", async () => {
+    const api = createMockApi();
+    const r = await api.ticket.find("recipe card", 1, 20);
+    expect(r.hits.length).toBeGreaterThan(0);
+    expect(r.hits.every((h) => h.tier === "title" && h.match.length === 0)).toBe(true);
+    const h = r.hits[0]!;
+    expect(h.summary).toMatch(/^Recipe card crops/);
+    expect([...h.summary].filter((_, i) => h.titleMatch.includes(i)).join("")).toBe("Recipecard");
+  });
+
+  it("key matches come first; short or symbol-only queries find nothing", async () => {
+    const api = createMockApi();
+    const k = await api.ticket.find("mob1429", 1, 20);
+    expect(k.hits[0]).toMatchObject({ key: "MOB-1429", tier: "exact" });
+    expect(k.hits.some((h) => h.tier === "title")).toBe(false);
+    for (const q of ["r", "-", "--"]) expect((await api.ticket.find(q, 1, 20)).hits, q).toHaveLength(0);
+  });
+
+  it("the title tier shows ten and counts the rest", async () => {
+    const api = createMockApi();
+    const r = await api.ticket.find("re", 1, 40);
+    const n = r.hits.filter((h) => h.tier === "title").length;
+    expect(n).toBeLessThanOrEqual(10);
+    if (n === 10) expect(r.titleMore).toBeGreaterThanOrEqual(0);
   });
 });

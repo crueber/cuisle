@@ -53,6 +53,8 @@ ideal… Fuzzy finder and command palette."
   most-run, falling back to Resync, Group board by…, Go to person…, Switch standup…, Open Configure).
 
 ### 15.3 Ticket matching (key only in v1; titles are not searched)
+> **Superseded 2026-11-25:** titles are searched too (words, any order, fuzzy; key tiers first). The current rules are in
+> `docs/ux-spec.md` §15.3; the text below is the original key-only design.
 - **Normalise the query:** lowercase, drop spaces and `-`. Split it into a letters part and a digits part: `mob1429`
   → `mob` + `1429`, `m14` → `m` + `14`, `1429` → `` + `1429`.
   - The letters part must be a **prefix of the project key** (`m` → MOB; `pl` → PLAT).

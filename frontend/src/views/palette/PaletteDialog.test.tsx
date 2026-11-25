@@ -229,6 +229,48 @@ describe("nested commands and Esc", () => {
     expect(document.activeElement).toBe(opener);
     opener.remove();
   });
+
+  it("when nothing had focus at open (the modal's own focus step lands just after), the dialog adopts the element focused as it mounts", async () => {
+    const late = document.createElement("div");
+    late.tabIndex = -1;
+    document.body.append(late);
+    mock = createMockApi();
+    setApi(mock);
+    setEventBus(mock.bus);
+    initFromBoot(await mock.app.bootstrap());
+    route.value = { view: "standup", standupId: 1, person: null };
+    off = installRecents();
+    (document.activeElement as HTMLElement | null)?.blur();
+    openPalette(); // nothing focused yet
+    late.focus(); // the modal's focus effect runs before the palette's
+    render(<PaletteDialog />);
+    await press("Escape");
+    cleanup();
+    expect(document.activeElement).toBe(late);
+    late.remove();
+  });
+
+  it("the opener is the element focused when the palette was OPENED, even if the lazy dialog mounts late and focus has moved", async () => {
+    const opener = document.createElement("button");
+    const other = document.createElement("button");
+    document.body.append(opener, other);
+    mock = createMockApi();
+    setApi(mock);
+    setEventBus(mock.bus);
+    initFromBoot(await mock.app.bootstrap());
+    route.value = { view: "standup", standupId: 1, person: null };
+    off = installRecents();
+    opener.focus();
+    openPalette(); // the key press / click
+    other.focus(); // the chunk is still loading and something else takes the focus
+    render(<PaletteDialog />); // the chunk arrives
+    expect(document.activeElement).toBe(input());
+    await press("Escape");
+    cleanup();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+    other.remove();
+  });
 });
 
 describe("tickets", () => {
@@ -240,6 +282,47 @@ describe("tickets", () => {
     expect(first.textContent).toContain("MOB-1429");
     expect(first.querySelector(".pal-hl")!.textContent).toBe("1429");
     expect(options().some((o) => o.textContent?.includes("Refresh MOB-1429 from Jira"))).toBe(true);
+  });
+
+  it("words find tickets by title: the title label, the matched summary characters inked, key not inked", async () => {
+    await setup();
+    await type("recipe card");
+    await waitFor(() => expect(document.querySelector(".pal-row--ticket")).not.toBeNull());
+    const first = document.querySelector(".pal-row--ticket")!;
+    expect(first.querySelector(".pal-title")!.textContent).toMatch(/^Recipe card crops/);
+    const inked = [...first.querySelectorAll(".pal-title .pal-hl")].map((m) => m.textContent);
+    expect(inked).toEqual(["Recipe", "card"]);
+    expect(first.querySelector(".pal-key .pal-hl")).toBeNull();
+    const title = screen.getByText("TICKETS").parentElement!;
+    expect(title.textContent).toContain("title");
+  });
+
+  it("a key hit still inks the key and leaves the title plain; a letters query offers no ticket commands", async () => {
+    await setup();
+    await type("1429");
+    await waitFor(() => expect(document.querySelector(".pal-row--ticket")).not.toBeNull());
+    const first = document.querySelector(".pal-row--ticket")!;
+    expect(first.querySelector(".pal-key .pal-hl")!.textContent).toBe("1429");
+    expect(first.querySelector(".pal-title .pal-hl")).toBeNull();
+    await type("recipe");
+    await waitFor(() => expect(document.querySelector(".pal-row--ticket .pal-title .pal-hl")).not.toBeNull());
+    expect(options().some((o) => /Refresh MOB-\d+ from Jira/.test(o.textContent ?? ""))).toBe(false);
+  });
+
+  it("# mode finds by title too, and a single letter asks the user for more", async () => {
+    await setup("#");
+    await type("r");
+    expect(screen.getByText(/a few letters of its title/)).toBeTruthy();
+    expect(methods()).not.toContain("ticket.find");
+    await type("recipe card");
+    await waitFor(() => expect(document.querySelector(".pal-row--ticket")).not.toBeNull());
+    expect(methods()).toContain("ticket.find");
+    expect(input().placeholder).toBe("Find a ticket by key or title");
+  });
+
+  it("the placeholder names both ways to find a ticket", async () => {
+    await setup();
+    expect(input().placeholder).toBe("Find a ticket by key or title, or run a command");
   });
 
   it("↵ on a ticket opens the modal in its standup and records it as a recent", async () => {

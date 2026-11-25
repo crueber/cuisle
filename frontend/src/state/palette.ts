@@ -19,14 +19,44 @@ export const RECENT_MAX = 8;
 export const isMac = (): boolean => /Mac|iPhone|iPad/.test(navigator.platform);
 export const findKeyLabel = (): string => (isMac() ? "⌘K" : "Ctrl K");
 
+/** The element to give the focus back to when the palette closes. It is captured when the palette is OPENED (openPalette, in
+ *  the same synchronous step as the key press or click), because the lazy dialog may mount late and by then something else
+ *  (a re-render, the page) may have taken the focus. If nothing had focus at that moment, the dialog adopts whatever has it
+ *  as it mounts (adoptOpener): over the ticket modal, the modal's own focus step may land just after the key press. */
+let opener: HTMLElement | null = null;
+
+const usable = (a: Element | null): a is HTMLElement => a instanceof HTMLElement && a !== document.body && a !== document.documentElement;
+
 /** Opens the palette on the standup or Configure screen (never on the Connect screen, which has nothing to find). */
 export function openPalette(mode: PaletteMode = ""): void {
   if (route.peek().view === "connect") return;
+  if (paletteOpen.peek() === null) {
+    const a = document.activeElement;
+    opener = usable(a) ? a : null;
+  }
   paletteOpen.value = { mode };
 }
 
 export function closePalette(): void {
   paletteOpen.value = null;
+}
+
+/** The dialog, as it mounts: when the open-time capture found nothing, the element that has the focus now is the opener. */
+export function adoptOpener(active: Element | null, dialog: Element | null): void {
+  if (opener === null && usable(active) && !dialog?.contains(active)) opener = active;
+}
+
+/** Gives the focus back to the element that opened the palette (the dialog calls it as it unmounts), once. An opener that
+ *  has left the page falls back to the ticket modal when one is open, so Esc from the palette over the modal always lands
+ *  in the modal. */
+export function restoreFocus(): void {
+  const el = opener;
+  opener = null;
+  if (el && document.contains(el)) {
+    el.focus();
+    return;
+  }
+  if (ticketSession.peek() !== null) document.querySelector<HTMLElement>(".tm")?.focus();
 }
 
 /** Recents not saved yet: stepping J/K through tickets saves once, 1 s after the last step (a UI timer, no request). */

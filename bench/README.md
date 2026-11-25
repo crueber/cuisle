@@ -9,7 +9,7 @@ compare against a baseline recorded on the CI runner.
 | `BenchmarkBootstrap/L` (open DB + migrate check + Bootstrap, dataset L) | `internal/app` | <= 60 ms/op |
 | `BenchmarkStandupView/L` (load + build, dataset L) | `internal/app` | <= 15 ms/op |
 | `BenchmarkStandupView` (pure `view.Build`, 400 tickets, 3 years of history on a third) | `internal/view` | <= 15 ms/op, <= 2 MB/op |
-| `FindByKey` (ticket finder, F14: `TestFindByKey_P95UnderFiveMsAt5kIssues` asserts p95 < 5 ms; `BenchmarkFindByKey/L` is the mean over a 12-query mix) | `internal/app` | p95 < 5 ms at 5 000 issues (about 3 ms here) |
+| `FindByKey` (ticket finder, F14: `TestFindByKey_P95UnderFiveMsAt5kIssues` asserts p95 < 5 ms; `BenchmarkFindByKey/L` is the mean over a 20-query mix: 12 key queries and 8 title queries over varied summaries; the title scan runs over an in-memory index that is rebuilt only after an issue is added or its key, summary or status changes (migration 0008), so a settings save or a resync that finds nothing new costs nothing; the first title query after a change pays one rebuild of about 4.5 ms at 5 000 issues, asserted < 15 ms by `TestFindByKey_ColdTitleIndexAfterAnIssueChangeAt5kIssues`) | `internal/app` | p95 < 5 ms at 5 000 issues (about 2.7 ms here) |
 | `BenchmarkConfigUpdate` (one Configure save, file DB) | `internal/settings` | <= 10 ms/op |
 | `BenchmarkOpenExisting` (reopen a migrated file DB) | `internal/store` | floor of Bootstrap |
 

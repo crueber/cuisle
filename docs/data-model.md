@@ -755,6 +755,11 @@ CREATE TABLE IF NOT EXISTS schema_migration (
     and never blanks a known value.
   - `0005_board_group` (F13): `standup_ui_state.board_group` ('assignee'|'status'), see §2.1.
   - `0007_zoom` (F15): `standup_ui_state.zoom` (the nine steps, default 100), see §2.1.
+  - `0008_issue_gen` (palette title index): `issue_gen(id = 1, n)`, empty at creation (no row reads as 0), and three triggers
+    on `issue` that `INSERT … ON CONFLICT DO UPDATE SET n = n + 1` after an insert, a delete, or an update that changes
+    `key`, `summary` or `status_id`. Nothing else moves it (`last_seen_at`, `removed_at`, dev fingerprints, other tables).
+    The finder reads it in the same read transaction as the rows of its in-memory summary index and rebuilds the index only
+    when it differs. No record row is changed.
   - `0006_custom_lanes` (2026-11-25, `-- cuisle:fk-off`): rebuilds `standup_lane`, `standup_column_map` and
     `standup_status_lane` only to widen their lane CHECKs to custom ids `c<N>` (every row copied unchanged, `lane_order`
     kept, the status-lane foreign key still cascades), adds `standup_lane.label`/`.hue`, and

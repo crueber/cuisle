@@ -38,6 +38,8 @@ replaces that with a screen built for the meeting:
   turns red past the limit you set for that lane.
 - **The whole board on one screen.** A two-column overview of every person's work, with unassigned tickets first,
   plus what finished this sprint and the top of the backlog.
+- **Find any ticket.** `⌘K` finds tickets by key or by words from the title, fuzzily, across every synced standup, and
+  runs any command. It works offline, from what Cuisle has already synced.
 - **Open any ticket in place.** A dense panel shows the description (images included), every comment, and all fields
   including custom ones. Move, reassign, flag or comment without leaving standup.
 - **Several standups, one app.** Each team gets a tab. Press `1`–`9` to switch instantly.
@@ -102,7 +104,7 @@ sort by most active, leave someone out for a day, remove them, or add someone wh
 | `+` `-` `0` | Zoom the screen in, out, or back to 100% (also with `⌘`/`Ctrl`); the header does not zoom |
 | `1`–`9` | Switch standup |
 | `R` / `Shift+R` | Sync changes / full resync |
-| `⌘K` / `Ctrl+K`, `T` | Find a ticket or run a command (the command palette: `>` commands, `#` tickets, `@` people) |
+| `⌘K` / `Ctrl+K`, `T` | Find a ticket by key or title, or run a command (the command palette: `>` commands, `#` tickets, `@` people) |
 | `/` | Standup switcher |
 | `,` | Configure |
 | `?` | Key and pulse legend |

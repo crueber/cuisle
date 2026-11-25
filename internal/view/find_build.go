@@ -11,7 +11,7 @@ import (
 // BuildHit fills a TicketHit (F14) from an issue's facts as seen from one standup: its lane in that standup's mapping
 // (the same fallback the ticket modal uses for a status the standup does not map: the provider category), days in
 // lane and the over-limit flag, computed exactly as the board row does. cfg nil (no standup to look from) leaves Lane
-// empty and the counters zero. The caller sets StandupID, StandupIDs, Removed, Tier and Match.
+// empty and the counters zero. The caller sets StandupID, StandupIDs, Removed, Tier, Match and TitleMatch.
 func BuildHit(f cache.HitFact, cfg *model.EffectiveConfig, asOf time.Time) TicketHit {
 	h := TicketHit{
 		IssueID:          f.LocalID,
@@ -23,6 +23,7 @@ func BuildHit(f cache.HitFact, cfg *model.EffectiveConfig, asOf time.Time) Ticke
 		AssigneeInitials: Initials(f.AssigneeName),
 		StandupIDs:       []int64{},
 		Match:            []int{},
+		TitleMatch:       []int{},
 	}
 	if cfg == nil {
 		return h

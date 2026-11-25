@@ -1,6 +1,7 @@
 // Package keyfind is the pure matching of the palette's ticket finder (ux-spec §15.3, F14): it normalises a typed query
 // into a project-prefix part and a digits part and classifies an issue key against it as exact, starts-with or close
-// (one digit off, or two adjacent digits swapped). Stdlib only; no I/O.
+// (one digit off, or two adjacent digits swapped). The title half (words matched fuzzily against a summary) is in
+// title.go. Stdlib only; no I/O.
 package keyfind
 
 import (

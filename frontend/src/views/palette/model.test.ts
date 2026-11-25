@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import { BUILTIN } from "../../commands/builtin";
 import { makeCtx } from "../../commands/testutil";
 import type { PersonHit, TicketFind, TicketHit } from "../../api/types";
-import { applyPrefix, buildSections, flatten, fullKey, hasDigit, matchedTicket, type ModelInput } from "./model";
+import { applyPrefix, buildSections, flatten, fullKey, hasDigit, matchedTicket, wantsTickets, type ModelInput } from "./model";
 
 const hit = (id: number, key: string, tier: TicketHit["tier"], over: Partial<TicketHit> = {}): TicketHit => ({
   issueId: id, key, summary: `Summary ${key}`, type: "story", lane: "prog", statusName: "In Progress", assignee: "u1", assigneeInitials: "IC",
-  daysInLane: 3, overLimit: false, done: false, removed: false, standupId: 1, standupIds: [1], tier, match: [], ...over,
+  daysInLane: 3, overLimit: false, done: false, removed: false, standupId: 1, standupIds: [1], tier, match: [], titleMatch: [], ...over,
 });
-const find = (hits: TicketHit[], prefixMore = 0): TicketFind => ({ hits, prefixMore });
+const find = (hits: TicketHit[], prefixMore = 0, titleMore = 0): TicketFind => ({ hits, prefixMore, titleMore });
 const person = (id: string, name: string, standups: [number, number][]): PersonHit => ({
   accountId: id, displayName: name, initials: name.slice(0, 2).toUpperCase(), standups: standups.map(([standupId, active]) => ({ standupId, active })),
 });
@@ -73,9 +73,21 @@ describe("section order (ux-spec §15.2)", () => {
     const order = s.map((x) => x.title);
     expect(order.indexOf("TICKETS")).toBeLessThan(order.indexOf("PEOPLE") === -1 ? 99 : order.indexOf("PEOPLE"));
   });
-  it("no digit: commands first, then people; tickets are not asked for", () => {
-    const s = buildSections(input({ text: "no", people, find: f, findFor: "no" }));
+  it("no digit and no title hit: commands first, then people", () => {
+    const s = buildSections(input({ text: "no", people, find: find([]), findFor: "no" }));
     expect(s.map((x) => x.title)).toEqual(["COMMANDS", "PEOPLE"]);
+  });
+  it("letters only: tickets whose titles match come last, after commands and people", () => {
+    const t = find([hit(5, "MOB-1399", "title", { titleMatch: [0, 1] })]);
+    const s = buildSections(input({ text: "no", people, find: t, findFor: "no" }));
+    expect(s.map((x) => x.title)).toEqual(["COMMANDS", "PEOPLE", "TICKETS"]);
+    expect(s[2]!.hint).toBe("title");
+  });
+  it("a digit and a title hit: tickets stay first, key tiers before the title tier", () => {
+    const t = find([hit(9, "MOB-1429", "exact"), hit(5, "MOB-1399", "title")]);
+    const s = buildSections(input({ text: "m 14", people: [], find: t, findFor: "m 14" }));
+    expect(titles(s).filter((x) => x.startsWith("TICKETS"))).toEqual(["TICKETS exact", "TICKETS title"]);
+    expect(s[0]!.id).toBe("tickets-exact");
   });
   it("empty sections are omitted", () => {
     expect(buildSections(input({ text: "qqqzz" }))).toEqual([]);
@@ -90,6 +102,24 @@ describe("ticket tiers", () => {
     expect(s[1]!.rows.map((r) => r.kind)).toEqual(["ticket", "ticket", "more"]);
     expect(s[1]!.rows[2]).toMatchObject({ text: "↓ 7 more · keep typing" });
     expect(flatten(s)).toHaveLength(4); // the more row is not selectable
+  });
+  it("title tier: its own section and its own more row; # mode and the unprefixed mode both show it", () => {
+    const hits = [hit(1, "MOB-7", "title", { summary: "Recipe card crops", titleMatch: [0, 1, 2] }), hit(2, "MOB-8", "title")];
+    for (const mode of ["#", ""] as const) {
+      const s = buildSections(input({ mode, text: "recipe card", find: find(hits, 0, 4), findFor: "recipe card" }));
+      const t = s.find((x) => x.id === "tickets-title")!;
+      expect(titles([t])).toEqual(["TICKETS title"]);
+      expect(t.rows.map((r) => r.kind)).toEqual(["ticket", "ticket", "more"]);
+      expect(t.rows[2]).toMatchObject({ text: "↓ 4 more · keep typing" });
+      expect(t.rows[0]).toMatchObject({ kind: "ticket", hit: { titleMatch: [0, 1, 2] } });
+    }
+  });
+  it("wantsTickets: a digit, or two characters", () => {
+    expect(wantsTickets("7")).toBe(true);
+    expect(wantsTickets("re")).toBe(true);
+    expect(wantsTickets("r")).toBe(false);
+    expect(wantsTickets(" r ")).toBe(false);
+    expect(wantsTickets("")).toBe(false);
   });
   it("ignores a find result for a different query (stale)", () => {
     const s = buildSections(input({ mode: "#", text: "145", find: find([hit(1, "MOB-14", "exact")]), findFor: "14" }));
@@ -160,6 +190,12 @@ describe("> mode and nested levels", () => {
 });
 
 describe("matchedTicket", () => {
+  it("a title hit never becomes the matched ticket (no ticket commands for \"resync\")", () => {
+    const f = find([hit(5, "MOB-1399", "title")]);
+    expect(matchedTicket(f, "resync", "resync", 1)).toBeNull();
+    const g = find([hit(5, "MOB-1399", "title"), hit(8, "MOB-1428", "close")]);
+    expect(matchedTicket(g, "m 14", "m 14", 1)).toMatchObject({ key: "MOB-1428" });
+  });
   it("prefers the exact hit, needs a fresh result", () => {
     const f = find([hit(8, "MOB-1428", "close"), hit(9, "MOB-1429", "exact", { standupId: 2 })]);
     expect(matchedTicket(f, "1429", "1429", 1)).toEqual({ issueId: 9, key: "MOB-1429", standupId: 2 });

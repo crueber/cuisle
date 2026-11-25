@@ -1,8 +1,9 @@
 package cache
 
 // Reads for the palette's ticket finder (F14, ux-spec §15.3) and the `@` people list. All local: one reader
-// transaction, no network (AGENTS invariant 2). The matching itself lives in internal/keyfind; this file only narrows
-// the candidates with SQL and loads the facts a hit row shows.
+// transaction, no network (AGENTS invariant 2). The matching itself (key and title) lives in internal/keyfind; this
+// file only narrows the candidates with SQL (keys) or lists them for the title index and loads the facts a hit row
+// shows.
 
 import (
 	"context"
@@ -62,6 +63,36 @@ func FindKeysTx(ctx context.Context, tx *sql.Tx, connID int64, letters string, m
 		out = append(out, FindKeyRow{ID: id, Key: string(key)})
 	}
 	return out, dbErr(rows.Err(), "The tickets could not be searched.")
+}
+
+// IssueGenTx reads the issue generation (migration 0008): it moves when an issue is added, removed, or its key, summary
+// or status changes, and not for any other write. Read it in the same transaction as the rows an index is built from.
+func IssueGenTx(ctx context.Context, tx *sql.Tx) (int64, error) {
+	var n int64
+	err := tx.QueryRowContext(ctx, `SELECT coalesce(max(n), 0) FROM issue_gen`).Scan(&n)
+	return n, dbErr(err, "The tickets could not be searched.")
+}
+
+// LoadTitleEntriesTx calls add for every issue of the connection (Done ones, ones on no board, ones fetched on their own)
+// for the title index; the byte slices are valid only during the call. A title cannot be narrowed in SQL and 5 000 rows
+// through database/sql cost more than the 5 ms the finder may take, so the caller keeps the list in memory and rebuilds
+// it only when an issue has changed (IssueGenTx); reading the columns as raw bytes keeps that rebuild
+// cheap.
+func LoadTitleEntriesTx(ctx context.Context, tx *sql.Tx, connID int64, add func(id int64, key, statusID, summary []byte)) error {
+	rows, err := tx.QueryContext(ctx, `SELECT id, key, status_id, summary FROM issue WHERE connection_id = ?`, connID)
+	if err != nil {
+		return dbErr(err, "The tickets could not be searched.")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		var key, status, summary sql.RawBytes
+		if err := rows.Scan(&id, &key, &status, &summary); err != nil {
+			return dbErr(err, "The tickets could not be searched.")
+		}
+		add(id, key, status, summary)
+	}
+	return dbErr(rows.Err(), "The tickets could not be searched.")
 }
 
 // FindContext is the small, connection-wide lookup that orders finder hits.

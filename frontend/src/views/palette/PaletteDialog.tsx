@@ -18,9 +18,9 @@ import { allCommands, type CommandHit } from "../../commands/registry";
 import type { Command } from "../../commands/types";
 import { bumpUsage, readUsage } from "../../commands/usage";
 import { tabStandups } from "../../state/app";
-import { closePalette, isMac, paletteOpen, recentTicketIds, type PaletteMode } from "../../state/palette";
+import { adoptOpener, closePalette, isMac, paletteOpen, recentTicketIds, restoreFocus, type PaletteMode } from "../../state/palette";
 import { views } from "../../state/standup";
-import { applyPrefix, buildSections, flatten, hasDigit, matchedTicket, type Row, type Section } from "./model";
+import { applyPrefix, buildSections, flatten, matchedTicket, wantsTickets, type Row, type Section } from "./model";
 import { PaletteRow } from "./Rows";
 import "./palette.css";
 
@@ -47,7 +47,7 @@ export function fetchErrorText(code: string, key: string, fallback: string): str
 }
 
 const MODE_NAMES: Record<string, string> = { ">": "commands", "#": "tickets", "@": "people" };
-const PLACEHOLDERS: Record<string, string> = { ">": "Run a command", "#": "Find a ticket by key", "@": "Find a person" };
+const PLACEHOLDERS: Record<string, string> = { ">": "Run a command", "#": "Find a ticket by key or title", "@": "Find a person" };
 
 export function PaletteDialog() {
   const start = paletteOpen.value;
@@ -62,20 +62,20 @@ export function PaletteDialog() {
   const [fetching, setFetching] = useState<FetchState>(IDLE);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const seq = useRef(0);
   const parent = stack.length > 0 ? stack[stack.length - 1]! : null;
 
   const ctx0 = buildCtx();
   const current = ctx0.standupId;
-  const wantTickets = parent === null && (mode === "" || mode === "#") && hasDigit(text);
+  const wantTickets = parent === null && (mode === "" || mode === "#") && wantsTickets(text);
 
   // Focus goes to the input, and back to the opener (the modal, a button, the page) when the palette closes.
+  // The opener is captured when the palette is opened (state/palette.ts); this only fills it in when nothing had focus then.
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
+    adoptOpener(document.activeElement, dialogRef.current);
     inputRef.current?.focus();
-    return () => {
-      if (opener && opener !== document.body && document.contains(opener)) opener.focus();
-    };
+    return restoreFocus;
   }, []);
 
   // Local reads, once per open: the recent tickets and everyone who speaks anywhere.
@@ -293,9 +293,9 @@ export function PaletteDialog() {
     if (fetching.phase !== "idle") setFetching(IDLE);
   };
 
-  const placeholder = parent ? (parent.placeholder ?? "Choose an option") : (PLACEHOLDERS[mode] ?? "Find a ticket or run a command");
+  const placeholder = parent ? (parent.placeholder ?? "Choose an option") : (PLACEHOLDERS[mode] ?? "Find a ticket by key or title, or run a command");
   const chip = parent ? `${String(typeof parent.title === "function" ? parent.title(ctx) : parent.title).replace(/…$/, "")}` : null;
-  const needDigits = mode === "#" && parent === null && text.trim() !== "" && !hasDigit(text);
+  const needDigits = mode === "#" && parent === null && text.trim() !== "" && !wantsTickets(text);
   const empty = total === 0 && !needDigits && (text.trim() !== "" || mode !== "");
   let n = -1;
 
@@ -308,6 +308,7 @@ export function PaletteDialog() {
     >
       <div
         class="pal"
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Find a ticket or run a command"
@@ -391,7 +392,7 @@ export function PaletteDialog() {
               })}
             </div>
           ))}
-          {needDigits ? <div class="pal-empty">Type a ticket number, like 1429 or mob-1429.</div> : null}
+          {needDigits ? <div class="pal-empty">Type a ticket key or a few letters of its title, like 1429, mob-1429 or recipe card.</div> : null}
           {empty ? <div class="pal-empty">Nothing matches “{text}”.</div> : null}
         </div>
         {parent ? (

@@ -846,6 +846,50 @@ func TestMigrate_0007_Zoom_ExistingRowsDefaultTo100(t *testing.T) {
 	assertIntegrity(t, raw)
 }
 
+// 0008 adds the issue generation: an empty table, three triggers. Nothing is dropped; the counter moves for an issue
+// that is added, removed, or whose key, summary or status changes, and for nothing else.
+func TestMigrate_0008_IssueGen_TriggersMoveTheCounterOnlyForRealIssueChanges(t *testing.T) {
+	defer recoverStub(t)
+	head := embeddedList(t)
+	raw, dir := freshRaw(t)
+	mustMigrate(t, raw, head[:4], dir)
+	seedFile(t, raw, filepath.Join("testdata", "v4.sql"))
+	mustMigrate(t, raw, head[:7], dir)
+	before := rowCounts(t, raw)
+
+	applied, _, err := migrate(t, raw, head[:8], dir, store.Options{})
+	if err != nil || !reflect.DeepEqual(applied, []int{8}) {
+		t.Fatalf("Migrate = %v, %v; want [8], nil", applied, err)
+	}
+	after := rowCounts(t, raw)
+	if n := after["issue_gen"]; n != 0 {
+		t.Errorf("issue_gen has %d rows after the migration, want 0 (it starts empty)", n)
+	}
+	delete(after, "issue_gen")
+	if !reflect.DeepEqual(after, before) {
+		t.Errorf("row counts changed by 0008:\n got %v\nwant %v", after, before)
+	}
+	gen := func() int64 { return scalarInt(t, raw, "SELECT coalesce(max(n), 0) FROM issue_gen") }
+	if gen() != 0 {
+		t.Fatalf("generation = %d, want 0", gen())
+	}
+	step := func(what, sql string, wantMove bool) {
+		t.Helper()
+		was := gen()
+		mustExec(t, raw, sql)
+		if moved := gen() != was; moved != wantMove {
+			t.Errorf("%s: generation %d -> %d, moved = %v, want %v", what, was, gen(), moved, wantMove)
+		}
+	}
+	step("summary changes", "UPDATE issue SET summary = summary || '!' WHERE id = 1", true)
+	step("same summary written again", "UPDATE issue SET summary = summary WHERE id = 1", false)
+	step("status changes", "UPDATE issue SET status_id = status_id || 'x' WHERE id = 1", true)
+	step("key changes", "UPDATE issue SET key = key || 'x' WHERE id = 1", true)
+	step("last_seen_at and removed_at", "UPDATE issue SET last_seen_at = 99, removed_at = 98 WHERE id = 1", false)
+	step("a settings write", "UPDATE ui_state SET last_standup_id = last_standup_id", false)
+	assertIntegrity(t, raw)
+}
+
 // ---- LoadMigrations -------------------------------------------------------------------------------------------
 
 func mapFS(files map[string]string) fs.FS {

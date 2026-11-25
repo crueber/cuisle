@@ -64,7 +64,7 @@ function TicketOption(p: RowProps & { row: Extract<Row, { kind: "ticket" }> }) {
         <Hl text={hit.key} indexes={hit.match} />
       </span>
       <span class="pal-title" title={hit.summary}>
-        {hit.summary}
+        <Hl text={hit.summary} indexes={hit.titleMatch} />
         {hit.removed ? <span class="pal-off">not on board</span> : null}
       </span>
       <span class="pal-lane">

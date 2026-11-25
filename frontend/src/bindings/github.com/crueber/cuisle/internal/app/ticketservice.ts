@@ -66,9 +66,11 @@ export function FetchByKey(standupID: number, key: string): $CancellablePromise<
 }
 
 /**
- * FindByKey is the palette's ticket finder (ux-spec §15.3): LOCAL ONLY, zero network. Keys only; titles are not
- * searched. currentStandupID (0 = none) puts that standup's tickets first within a tier and is the lane mapping of a
- * ticket that is on no board. limit caps the total hits (<= 0 means 20).
+ * FindByKey is the palette's ticket finder (ux-spec §15.3): LOCAL ONLY, zero network. It matches the key (the tiers
+ * exact, prefix, close) and the summary (the tier title); the key tiers come first. Title matching is skipped only for a
+ * query with under two characters; numbers search titles too ("1429" lists its key matches, then titles containing
+ * "1429"; "404" finds "Fix the 404 page"). A ticket that matches both ways is listed once, in its key tier. currentStandupID (0 = none) puts that standup's tickets first
+ * within a tier and is the lane mapping of a ticket that is on no board. limit caps the total hits (<= 0 means 20).
  */
 export function FindByKey(query: string, currentStandupID: number, limit: number): $CancellablePromise<view$0.TicketFind> {
     return $Call.ByID(3840420010, query, currentStandupID, limit);

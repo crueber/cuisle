@@ -17,6 +17,9 @@ export function applyPrefix(raw: string, mode: PaletteMode, nested: boolean): { 
 /** The query has a digit, so it can name a ticket (ux-spec §15.2: tickets then come first). */
 export const hasDigit = (text: string): boolean => /\d/.test(text);
 
+/** The query is worth asking the finder about: a digit (a key) or two characters (a title); the same floor as Go's. */
+export const wantsTickets = (text: string): boolean => hasDigit(text) || [...text.replace(/\s/g, "")].length >= 2;
+
 /** "mob-1729" is a fully specified key (letters, a hyphen, digits); returns it upper-cased, else null. */
 export function fullKey(text: string): string | null {
   const m = /^\s*([A-Za-z][A-Za-z0-9_]+)-(\d+)\s*$/.exec(text);
@@ -87,6 +90,12 @@ function ticketSections(i: ModelInput): Section[] {
     out.push({ id: "tickets-prefix", title: "TICKETS", hint: "starts with", rows });
   }
   if (close.length > 0) out.push({ id: "tickets-close", title: "TICKETS", hint: "one character off", rows: ticketRows(close, i.standupLabel) });
+  const title = f.hits.filter((h) => h.tier === "title");
+  if (title.length > 0) {
+    const rows = ticketRows(title, i.standupLabel);
+    if (f.titleMore > 0) rows.push({ kind: "more", id: "more-title", text: `↓ ${f.titleMore} more · keep typing` });
+    out.push({ id: "tickets-title", title: "TICKETS", hint: "title", rows });
+  }
   return out;
 }
 
@@ -183,18 +192,21 @@ export function buildSections(i: ModelInput): Section[] {
     const sug = suggestedCommands(i.commands, i.ctx, i.usage);
     return [...recentSection(i, RECENT_SHOWN), ...(sug.length > 0 ? [{ id: "commands", title: "COMMANDS", rows: commandRows(sug) }] : [])];
   }
-  const tickets = hasDigit(i.text) ? ticketSections(i) : [];
+  // The find result is only fresh for a query worth asking about, so no guard is needed here. With a digit the query can
+  // name a ticket: tickets first. Letters only: commands and people first, then the tickets whose titles match.
+  const tickets = ticketSections(i);
   const commands = commandSection(i, MAX_COMMANDS);
   const people = peopleSection(i, MAX_PEOPLE, false);
-  return hasDigit(i.text) ? [...tickets, ...commands, ...people] : [...commands, ...people];
+  return hasDigit(i.text) ? [...tickets, ...commands, ...people] : [...commands, ...people, ...tickets];
 }
 
 /** The rows the keyboard moves over, in display order. */
 export const flatten = (sections: Section[]): Row[] => sections.flatMap((s) => s.rows).filter(selectable);
 
-/** The ticket the ticket commands act on while typing: the best hit of the current query (exact tier first). */
+/** The ticket the ticket commands act on while typing: the best KEY hit of the current query (exact tier first). A title hit
+ *  does not count: typing "resync" must not offer "Refresh MOB-12 from Jira" because some summary contains the word. */
 export function matchedTicket(find: TicketFind | null, findFor: string, text: string, standupId: number | null): { issueId: number; key: string; standupId: number } | null {
   if (!find || findFor !== text) return null;
-  const hit = find.hits.find((h) => h.tier === "exact") ?? find.hits[0];
+  const hit = find.hits.find((h) => h.tier === "exact") ?? find.hits.find((h) => h.tier !== "title");
   return hit ? { issueId: hit.issueId, key: hit.key, standupId: hit.standupId || standupId || 0 } : null;
 }

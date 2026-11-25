@@ -763,25 +763,58 @@ small eager half). The dialog and the commands are a **lazy chunk** fetched on f
   except the recents and the command usage (§15.7).
 
 ### 15.2 Input and modes
-- **Input:** 62px, search icon, mono 22 semibold, placeholder "Find a ticket or run a command". An `Esc` chip at the
+- **Input:** 62px, search icon, mono 22 semibold, placeholder "Find a ticket by key or title, or run a command" (`#`: "Find a
+  ticket by key or title"). An `Esc` chip at the
   right. The **mode chip** (`>`, `#`, `@`; mono 15 bold on ink) sits before the text; `⌫` on an empty input removes it.
-- **No prefix** searches everything. A query with a digit lists tickets, then commands, then people; otherwise commands,
-  then people (tickets need a number). Empty sections are omitted.
+- **No prefix** searches everything. A query with a digit lists tickets, then commands, then people; a query of letters
+  only lists commands, then people, then the tickets whose **titles** match (§15.3). Empty sections are omitted. The
+  finder is asked for any query with a digit or two non-space characters; a single letter asks for nothing.
 - **Empty query:** RECENT TICKETS (the last 3 opened from any path), then suggested COMMANDS: the five most run
   (`palette.command_usage`), topped up with Resync, Group board by…, Go to person…, Switch standup…, Open Configure.
-- `>` lists every command. `#` takes a ticket key (empty: up to 8 recents; no digit: "Type a ticket number, like 1429 or
-  mob-1429."). `@` lists people (§15.5).
+- `>` lists every command. `#` takes a ticket key or title words (empty: up to 8 recents; one letter: "Type a ticket key or a few
+  letters of its title, like 1429, mob-1429 or recipe card."). `@` lists people (§15.5).
 
-### 15.3 Ticket matching (the key only in v1; titles are not searched)
-- **Normalise** the query: lower-case, drop spaces and `-`, split into letters and digits (`mob1429` → `mob` + `1429`).
-  The letters must be a prefix of the project key (`m` → MOB); no letters = any project.
-- **Candidates:** every synced issue of the connection across all standups, including Done and issues no longer on a
-  board (muted "not on board"). Matching is local Go (`TicketService.FindByKey`), p95 under 5 ms at 5,000 issues.
-- **Tiers**, each ordered current standup first, then active before done, then key ascending:
+### 15.3 Ticket matching (by key and by title)
+The finder matches the **key** (tiers 1 to 3) and the **summary** (tier 4). Key tiers always rank first. Matching is local
+Go (`TicketService.FindByKey`; `internal/keyfind`), p95 under 5 ms at 5,000 issues, and never touches the network.
+- **Candidates** (both kinds): every synced issue of the connection across all standups, including Done issues and issues
+  no longer on a board (muted "not on board"). Within a tier: current standup first, then active before done, then key
+  ascending (a title tier ranks by score first, below).
+- **Key matching.** Normalise the query: lower-case, drop spaces and `-`, split into letters and digits (`mob1429` →
+  `mob` + `1429`). The letters must be a prefix of the project key (`m` → MOB); no letters = any project. Tiers:
   1. **exact** (digits equal the number);
   2. **starts with** (digits are a prefix; first 10, then "↓ N more · keep typing");
   3. **one character off** (same length, one digit substituted or two adjacent digits swapped; 2+ digits; at most 5).
-- **Highlight:** ink background, paper text, on the matched characters; the differing digit of a near match stays plain.
+- **Title matching** (tier 4, label **title**, first 10, then "↓ N more · keep typing").
+  - **Words.** The query is split on spaces; every word must match the summary, in any order, case-insensitively
+    (`card recipe` finds "Recipe card crops the hero photo"). A word matches, best first:
+    1. a **whole word** ("card" in "Recipe card crops"): 4000
+    2. a **word start** ("rec" in "Recipe card crops"): 3000
+    3. a **substring** ("cip" in "Recipe card crops"): 2000
+    4. an in-order **subsequence**, fzf-style, for words of **3 or more** characters ("rcd" → **R**ecipe **c**ar**d**): at
+       most 999. A match scores 16, +8 at the start of a word, +8 when it follows the previous match directly, and
+       costs 3 for a gap's first character and 1 for each more. The matched characters must lie within 3 × length + 3
+       characters of each other, so "mob" does not match "**M**eal plan templates f**o**r **b**usy weeks".
+    A one- or two-character word, and **any word containing a digit**, must match contiguously (whole word, word
+    start or substring), so `1429` never matches digits scattered across a title. A ticket's score is the sum over its words; words are matched
+    independently, so two words may ink the same characters. Higher scores first, then the order above.
+  - **When it runs.** The query needs two non-space characters, including at least one letter or digit. **Numbers
+    search titles too** (changed 2026-11-25, maintainer): `404` finds "Fix the 404 page", and `1429` lists the key
+    matches (MOB-1429, …) first, then titles containing "1429". Key-shaped queries (`mob1429`, `m14`) likewise list key
+    matches first, then titles. A query of several words searches both: `m 14` lists the tickets numbered 14… first,
+    then those whose title has an "m" and a "14". A ticket that hits
+    both ways is listed once, in its key tier. The key itself is not searched as title text (`1429 share` finds titles
+    containing both words).
+  - **Examples** (summary "Recipe card crops the hero photo"): `recipe card`, `card recipe`, `RECIPE CARD`, `rec ca`
+    (word starts), `cip` (substring) and `rcd` (subsequence) all match; `ce` does not (two characters, not contiguous);
+    `recipe photo zzz` does not (a word is missing).
+  - **Ink positions** are indexes of the summary's characters as code points (Go runes; the frontend walks `[...summary]`,
+    so an emoji counts as one). Case folding maps one character to one character, so positions never shift.
+- **Highlight:** ink background, paper text, on the matched characters. A key hit inks the matched digits of the key (the
+  differing digit of a near match stays plain) and leaves the title plain; a title hit inks the matched summary
+  characters and leaves the key plain.
+- **Ticket commands are key-driven:** a title hit never makes "Refresh MOB-12 from Jira" appear under COMMANDS (typing
+  `resync` must not offer commands for an unrelated ticket whose title contains the word).
 - **Row (48px):** type icon, key (mono 17 bold), title (17 semibold, ellipsis), lane swatch + lane name (12 bold caps,
   from the standup's lane data, so custom lanes work), assignee initials or the dashed `··` box, days chip (red over the
   limit; none for Done), the standup key (mono 12 muted).

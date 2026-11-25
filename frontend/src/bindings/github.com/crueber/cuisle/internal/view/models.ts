@@ -722,7 +722,7 @@ export interface TicketFieldPrefs {
  */
 export interface TicketFind {
     /**
-     * exact (all), prefix (first 10), close (first 5); each tier in the §15.3 order
+     * exact (all), prefix (first 10), close (first 5), then title (first 10); each tier in the §15.3 order
      */
     "hits": TicketHit[] | null;
 
@@ -730,6 +730,11 @@ export interface TicketFind {
      * starts-with matches beyond the 10 shown
      */
     "prefixMore": number;
+
+    /**
+     * title matches beyond the 10 shown
+     */
+    "titleMore": number;
 }
 
 /**
@@ -776,14 +781,19 @@ export interface TicketHit {
     "standupIds": number[] | null;
 
     /**
-     * exact|prefix|close
+     * exact|prefix|close|title
      */
     "tier": string;
 
     /**
-     * character indexes of Key to ink (exact/prefix: the matched digits; close: the equal digits)
+     * character indexes of Key to ink (exact/prefix: the matched digits; close: the equal digits); empty for a title hit
      */
     "match": number[] | null;
+
+    /**
+     * rune indexes of Summary to ink (a title hit; empty for a key hit)
+     */
+    "titleMatch": number[] | null;
 }
 
 export interface TicketView {

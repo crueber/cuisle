@@ -1,6 +1,6 @@
 package app
 
-// The palette's local reads (F14, ux-spec §15): TicketService.FindByKey, TicketService.ByIDs and
+// The palette's local reads (F14, ux-spec §15): TicketService.FindByKey (by key and by title), TicketService.ByIDs and
 // StandupService.People. LOCAL ONLY: one reader transaction each, never the network (AGENTS invariant 2; a test asserts
 // it). The matching is internal/keyfind; the SQL is internal/cache/find.go.
 
@@ -21,16 +21,20 @@ const (
 	findDefaultLimit = 20
 	findPrefixShown  = 10
 	findCloseShown   = 5
+	findTitleShown   = 10
 )
 
-// FindByKey is the palette's ticket finder (ux-spec §15.3): LOCAL ONLY, zero network. Keys only; titles are not
-// searched. currentStandupID (0 = none) puts that standup's tickets first within a tier and is the lane mapping of a
-// ticket that is on no board. limit caps the total hits (<= 0 means 20).
+// FindByKey is the palette's ticket finder (ux-spec §15.3): LOCAL ONLY, zero network. It matches the key (the tiers
+// exact, prefix, close) and the summary (the tier title); the key tiers come first. Title matching is skipped only for a
+// query with under two characters; numbers search titles too ("1429" lists its key matches, then titles containing
+// "1429"; "404" finds "Fix the 404 page"). A ticket that matches both ways is listed once, in its key tier. currentStandupID (0 = none) puts that standup's tickets first
+// within a tier and is the lane mapping of a ticket that is on no board. limit caps the total hits (<= 0 means 20).
 func (s *TicketService) FindByKey(ctx context.Context, query string, currentStandupID int64, limit int) (out view.TicketFind, err error) {
 	defer s.d.guard("FindByKey", &err)
 	out = view.TicketFind{Hits: []view.TicketHit{}}
-	q, ok := keyfind.Parse(query)
-	if !ok {
+	kq, keyOK := keyfind.Parse(query)
+	tq, titleOK := keyfind.ParseTitle(query)
+	if !keyOK && !titleOK {
 		return out, nil
 	}
 	if limit <= 0 {
@@ -42,64 +46,127 @@ func (s *TicketService) FindByKey(ctx context.Context, query string, currentStan
 	}
 	asOf := s.d.viewTime()
 	err = s.d.DB.ReadTx(ctx, func(tx *sql.Tx) error {
-		keys, err := cache.FindKeysTx(ctx, tx, row.ID, q.Letters, len(q.Digits), q.Digits, func(key []byte) bool {
-			_, ok := keyfind.Tier(q, string(key))
-			return ok
-		})
-		if err != nil {
-			return err
-		}
 		type cand struct {
 			id      int64
 			key     string
 			tier    string
 			project string
 			num     int
+			score   int  // title tier: the match score
 			cur     bool // a live member of the current standup
 			done    bool
 		}
-		cands := make([]cand, 0, len(keys))
-		matched := make([]int64, 0, len(keys))
-		for _, k := range keys {
-			tier, _ := keyfind.Tier(q, k.Key)
-			project, _, _ := keyfind.SplitKey(k.Key)
-			cands = append(cands, cand{id: k.ID, key: k.Key, tier: tier, project: project, num: keyfind.Number(k.Key)})
-			matched = append(matched, k.ID)
-		}
-		if len(cands) == 0 {
-			return nil
-		}
-		fc, err := cache.LoadFindContextTx(ctx, tx, row.ID)
-		if err != nil {
+		var fc cache.FindContext
+		fcLoaded := false
+		loadFC := func() error {
+			if fcLoaded {
+				return nil
+			}
+			var err error
+			fc, err = cache.LoadFindContextTx(ctx, tx, row.ID)
+			fcLoaded = err == nil
 			return err
 		}
-		statusOf, err := cache.StatusIDsTx(ctx, tx, matched)
-		if err != nil {
-			return err
-		}
-		byTier := map[string][]cand{}
-		for _, c := range cands {
+		// place sets cur and done from the standups the issue is a member of and its current status.
+		place := func(c *cand, status string) {
 			members := fc.Members[c.id]
 			home := homeStandup(members, currentStandupID)
 			c.cur = currentStandupID != 0 && home == currentStandupID && len(members) > 0
-			st := statusOf[c.id]
-			c.done = fc.DoneStatuses[home][st] || fc.DoneCategory[st]
+			c.done = fc.DoneStatuses[home][status] || fc.DoneCategory[status]
+		}
+		inOrder := func(a, b *cand) bool {
+			switch {
+			case a.cur != b.cur:
+				return a.cur
+			case a.done != b.done:
+				return !a.done
+			case a.project != b.project:
+				return a.project < b.project
+			}
+			return a.num < b.num
+		}
+
+		// Keys.
+		var keyCands []cand
+		if keyOK {
+			keys, err := cache.FindKeysTx(ctx, tx, row.ID, kq.Letters, len(kq.Digits), kq.Digits, func(key []byte) bool {
+				_, ok := keyfind.Tier(kq, string(key))
+				return ok
+			})
+			if err != nil {
+				return err
+			}
+			if len(keys) > 0 {
+				if err := loadFC(); err != nil {
+					return err
+				}
+				matched := make([]int64, len(keys))
+				for i, k := range keys {
+					matched[i] = k.ID
+				}
+				statusOf, err := cache.StatusIDsTx(ctx, tx, matched)
+				if err != nil {
+					return err
+				}
+				keyCands = make([]cand, 0, len(keys))
+				for _, k := range keys {
+					tier, _ := keyfind.Tier(kq, k.Key)
+					project, _, _ := keyfind.SplitKey(k.Key)
+					c := cand{id: k.ID, key: k.Key, tier: tier, project: project, num: keyfind.Number(k.Key)}
+					place(&c, statusOf[k.ID])
+					keyCands = append(keyCands, c)
+				}
+			}
+		}
+
+		// Titles.
+		var titleCands []cand
+		var tm *keyfind.TitleMatcher
+		if titleOK {
+			if err := loadFC(); err != nil {
+				return err
+			}
+			idx, err := s.d.titleIndexTx(ctx, tx, row.ID)
+			if err != nil {
+				return err
+			}
+			tm = keyfind.NewTitleMatcher(tq)
+			seen := make(map[int64]bool, len(keyCands))
+			for _, c := range keyCands {
+				seen[c.id] = true
+			}
+			for i := range idx.ents {
+				e := &idx.ents[i]
+				sc, ok := tm.ScoreFolded(idx.arena[e.off : e.off+e.n])
+				if !ok || seen[e.id] { // an issue that is a key hit is shown once, in its key tier
+					continue
+				}
+				project, _, _ := keyfind.SplitKey(e.key)
+				c := cand{id: e.id, key: e.key, tier: keyfind.Title, project: project, num: keyfind.Number(e.key), score: sc}
+				place(&c, e.statusID)
+				titleCands = append(titleCands, c)
+			}
+		}
+		if len(keyCands) == 0 && len(titleCands) == 0 {
+			return nil
+		}
+
+		byTier := map[string][]cand{}
+		for _, c := range keyCands {
 			byTier[c.tier] = append(byTier[c.tier], c)
 		}
 		for _, list := range byTier {
-			sort.Slice(list, func(i, j int) bool {
-				a, b := &list[i], &list[j]
-				switch {
-				case a.cur != b.cur:
-					return a.cur
-				case a.done != b.done:
-					return !a.done
-				case a.project != b.project:
-					return a.project < b.project
-				}
-				return a.num < b.num
-			})
+			sort.Slice(list, func(i, j int) bool { return inOrder(&list[i], &list[j]) })
 		}
+		sort.Slice(titleCands, func(i, j int) bool {
+			a, b := &titleCands[i], &titleCands[j]
+			if a.score != b.score {
+				return a.score > b.score
+			}
+			return inOrder(a, b)
+		})
+		byTier[keyfind.Title] = titleCands
+
 		var seeds []hitSeed
 		room := limit
 		take := func(tier string, max int) int {
@@ -112,7 +179,10 @@ func (s *TicketService) FindByKey(ctx context.Context, query string, currentStan
 				n = room
 			}
 			for _, c := range list[:n] {
-				_, match, _ := keyfind.Classify(q, c.key)
+				var match []int
+				if tier != keyfind.Title {
+					_, match, _ = keyfind.Classify(kq, c.key)
+				}
 				seeds = append(seeds, hitSeed{id: c.id, tier: c.tier, match: match})
 			}
 			room -= n
@@ -121,9 +191,16 @@ func (s *TicketService) FindByKey(ctx context.Context, query string, currentStan
 		take(keyfind.Exact, limit)
 		out.PrefixMore = take(keyfind.Prefix, findPrefixShown)
 		take(keyfind.Close, findCloseShown)
+		out.TitleMore = take(keyfind.Title, findTitleShown)
 		hits, err := s.d.buildHits(ctx, tx, row.ID, fc, seeds, currentStandupID, asOf)
 		if err != nil {
 			return err
+		}
+		for i := range hits {
+			if hits[i].Tier == keyfind.Title {
+				// nil when the summary no longer matches (an index a write has just outdated): [] not null, for the frontend
+				hits[i].TitleMatch = append([]int{}, tm.Indexes(hits[i].Summary)...)
+			}
 		}
 		out.Hits = hits
 		return nil
@@ -175,7 +252,7 @@ type findCfgEntry struct {
 type hitSeed struct {
 	id    int64
 	tier  string
-	match []int
+	match []int // key ink indexes
 }
 
 // homeStandup is the standup a ticket opens in: the current one when it is a live member, else the first member by tab

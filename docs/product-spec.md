@@ -230,15 +230,20 @@ IDs are referenced from the roadmap and tests.
 
 ### F14. Command palette and ticket finder
 - A **Find** button in the header (`⌘K` / `Ctrl+K`, or `T` with no field focused) opens one palette that finds a ticket by
-  its key and runs any app action. Typing `#`, `@` or `>` first narrows it to tickets, people or commands.
-- Ticket search is by key only, fuzzy over the number: exact, starts with, and one character off (a typo or a swapped
-  pair), across every synced issue of every standup, including Done ones. `↵` opens the ticket modal (F12); `⌘↵` opens Jira.
+  its key **or its title** and runs any app action. Typing `#`, `@` or `>` first narrows it to tickets, people or commands.
+- Ticket search by key is fuzzy over the number: exact, starts with, and one character off (a typo or a swapped pair).
+  Ticket search by title matches the words you type against the summary, in any order, whole words first, then word
+  starts, then anywhere, then loosely ("rcd" finds "Recipe card crops"); the matched letters are inked. Keys rank before
+  titles. Both search every synced issue of every standup, including Done ones. `↵` opens the ticket modal (F12);
+  `⌘↵` opens Jira. Rules and examples: ux-spec §15.3.
 - A fully typed key that has not been synced (`mob-1729`) offers one explicit "fetch just this ticket" request.
 - It lists the recent tickets and suggested commands when empty, and ranks commands by how well they match and how often
   you run them.
 - **AC:**
   - Typing in the palette never calls Jira; the only request it can make is the explicit fetch row, through the limiter's
     interactive lane, exactly one per press.
+  - A title search finds the ticket by words from its summary, in any order and in part (`recipe card`, `rcd`), with the
+    matched letters inked; numbers match titles too (contiguously, e.g. `404`); key matches rank first; it stays local.
   - ⌘K works over Configure and over the ticket modal (Esc returns to the modal); focus returns to where it was.
   - Nothing scrolls sideways at any size with Find in the header; it is icon-only below 1280.
   - Commands and lane names come from the data and the registry, never a fixed lane list.

@@ -56,6 +56,15 @@ test.describe("1920x1080", () => {
     await expect(page).toHaveScreenshot("palette-ticket-1920x1080.png", SHOT);
   });
 
+  test("a title search: recipe card, summary characters inked", async ({ page }) => {
+    await open(page);
+    await openPalette(page);
+    await input(page).fill("recipe card");
+    await expect(page.locator(".pal-row--ticket").first()).toBeVisible();
+    await expect(page.locator(".pal-row--ticket .pal-title .pal-hl").first()).toBeVisible();
+    await expect(page).toHaveScreenshot("palette-title-1920x1080.png", SHOT);
+  });
+
   test("> commands: sta", async ({ page }) => {
     await open(page);
     await openPalette(page);
@@ -103,6 +112,24 @@ test.describe("behaviour", () => {
     await page.keyboard.press("Escape");
     await expect(palette(page)).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Find a ticket or run a command/ })).toBeFocused();
+  });
+
+  test("focus returns to the opener even when the lazy chunk is slow and focus has moved meanwhile", async ({ page }) => {
+    await page.route("**/lazy-PaletteDialog*", async (route) => {
+      await new Promise((r) => setTimeout(r, 1500)); // a loaded machine
+      await route.continue();
+    });
+    await open(page);
+    const find = page.getByRole("button", { name: /Find a ticket or run a command/ });
+    await find.focus();
+    await page.keyboard.press("Enter");
+    // while the chunk is loading, something else takes the focus (here: the page body)
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await expect(find).not.toBeFocused();
+    await palette(page).waitFor();
+    await page.keyboard.press("Escape");
+    await expect(palette(page)).toHaveCount(0);
+    await expect(find).toBeFocused({ timeout: 1000 });
   });
 
   test("Enter on a ticket opens the modal; ⌘K over the modal, Esc returns to the modal", async ({ page }) => {
@@ -171,6 +198,28 @@ test.describe("axe", () => {
       await input(page).fill("14");
       await expect(page.locator(".pal-row--ticket").first()).toBeVisible();
       expect((await new AxeBuilder({ page }).include(".pal").analyze()).violations).toEqual([]);
+      await input(page).fill("recipe card");
+      await expect(page.locator(".pal-row--ticket .pal-title .pal-hl").first()).toBeVisible();
+      expect((await new AxeBuilder({ page }).include(".pal").analyze()).violations).toEqual([]);
+    });
+  }
+});
+
+test.describe("title search layout", () => {
+  for (const { w, h } of [
+    { w: 1920, h: 1080 },
+    { w: 1280, h: 720 },
+    { w: 1024, h: 640 },
+  ] as const) {
+    test(`${w}x${h}: a title search fits and nothing scrolls sideways`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await open(page);
+      await openPalette(page);
+      await input(page).fill("re");
+      await expect(page.locator(".pal-row--ticket").first()).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      const list = page.locator(".pal [role=listbox]");
+      expect(await list.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     });
   }
 });
