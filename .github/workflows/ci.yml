@@ -55,7 +55,7 @@ jobs:
         run: |
           CGO_ENABLED=0 go vet -tags purego ./...
           go run ./scripts/layercheck
-          if [ "$RUNNER_OS" = "Windows" ]; then CGO_ENABLED=0 go test -tags purego ./... -count=1; else go test -race -tags gtk3 ./... -count=1; fi
+          if [ "$RUNNER_OS" = "Windows" ]; then CGO_ENABLED=0 go test -tags purego ./... -count=1; else go test -race -timeout 30m -tags gtk3 ./... -count=1; fi  # -race is 5-10x slower; internal/app passed 10 min on ubuntu runners
       - name: Frontend
         shell: bash
         run: |
