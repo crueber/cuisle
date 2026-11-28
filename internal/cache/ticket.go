@@ -307,11 +307,14 @@ func loadTicketLinks(ctx context.Context, tx *sql.Tx, t *Ticket) error {
 // resolveParent fills the local id and live fields of the parent link from the synced issue with that key.
 func resolveParent(ctx context.Context, tx *sql.Tx, t *Ticket) error {
 	p := t.Parent
-	var typeID string
+	var typeID, typeKind string
 	err := tx.QueryRowContext(ctx, `
-		SELECT o.id, o.source_id, o.summary, o.status_id, o.issue_type_id, COALESCE(o.assignee_account_id, '')
-		  FROM issue o WHERE o.connection_id = ? AND o.key = ?`, t.ConnectionID, p.OtherKey).
-		Scan(&p.OtherIssueID, &p.OtherSourceID, &p.LiveSummary, &p.LiveStatusID, &typeID, &p.OtherAssigneeID)
+		SELECT o.id, o.source_id, o.summary, o.status_id, o.issue_type_id,
+		       COALESCE(o.assignee_account_id, ''), COALESCE(it.kind, '')
+		  FROM issue o
+		  LEFT JOIN issue_type it ON it.connection_id = o.connection_id AND it.id = o.issue_type_id
+		 WHERE o.connection_id = ? AND o.key = ?`, t.ConnectionID, p.OtherKey).
+		Scan(&p.OtherIssueID, &p.OtherSourceID, &p.LiveSummary, &p.LiveStatusID, &typeID, &p.LiveAssigneeID, &typeKind)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return dbErr(err, "The parent could not be read.")
 	}
@@ -320,6 +323,10 @@ func resolveParent(ctx context.Context, tx *sql.Tx, t *Ticket) error {
 	}
 	if p.OtherTypeID == "" {
 		p.OtherTypeID = typeID
+	}
+	if typeKind != "" {
+		p.OtherTypeKind = typeKind
+		return nil
 	}
 	if typeID == "" {
 		return nil

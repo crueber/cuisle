@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -138,7 +139,7 @@ func Migrate(ctx context.Context, w *sql.DB, list []Migration, backupDir string,
 
 	if maxApplied > 0 && backupDir != "" {
 		backup = filepath.Join(backupDir, fmt.Sprintf("cuisle.db.bak-v%d", maxApplied))
-		if err := writeSnapshot(ctx, conn, backup); err != nil {
+		if err := writeSnapshot(ctx, conn, backup, "The backup could not be written."); err != nil {
 			return nil, "", err
 		}
 		if err := pruneVersionedBackups(backupDir, 2); err != nil {
@@ -236,20 +237,24 @@ func applyOne(ctx context.Context, conn *sql.Conn, m Migration, at time.Time) (e
 	return nil
 }
 
+type sqlExecer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 // writeSnapshot writes a consistent copy of the database to target, replacing any file already there.
 // It writes target+".tmp" first and renames, so a crash never leaves a half-written file under the backup's name.
-func writeSnapshot(ctx context.Context, conn *sql.Conn, target string) error {
+func writeSnapshot(ctx context.Context, ex sqlExecer, target, errMsg string) error {
 	tmp := target + ".tmp"
-	if err := os.Remove(tmp); err != nil && !os.IsNotExist(err) {
-		return apperr.Wrap(apperr.DB, "The backup could not be written.", err)
+	if err := os.Remove(tmp); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return apperr.Wrap(apperr.DB, errMsg, err)
 	}
-	if _, err := conn.ExecContext(ctx, "VACUUM INTO ?", tmp); err != nil {
+	if _, err := ex.ExecContext(ctx, "VACUUM INTO ?", tmp); err != nil {
 		_ = os.Remove(tmp)
-		return apperr.Wrap(apperr.DB, "The backup could not be written.", err)
+		return apperr.Wrap(apperr.DB, errMsg, err)
 	}
 	if err := os.Rename(tmp, target); err != nil {
 		_ = os.Remove(tmp)
-		return apperr.Wrap(apperr.DB, "The backup could not be written.", err)
+		return apperr.Wrap(apperr.DB, errMsg, err)
 	}
 	return nil
 }

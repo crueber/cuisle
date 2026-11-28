@@ -88,6 +88,7 @@ export function SourceSection({ config }: SectionProps) {
         <span class="cfg-field-label">Board</span>
         <div class="cfg-field-control">
           <Combobox<BoardOption>
+            key={config.space?.key ?? ""}
             id="cfg-source-board"
             label="Board"
             value={config.board}

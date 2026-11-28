@@ -24,15 +24,15 @@ var contentSkipKeys = map[string]bool{
 
 // wireIssueRef is a short issue reference inside links, subtasks and the parent.
 type wireIssueRef struct {
-	ID     flexID `json:"id"`
+	ID     refID  `json:"id"`
 	Key    string `json:"key"`
 	Fields struct {
 		Summary string `json:"summary"`
 		Status  struct {
-			ID flexID `json:"id"`
+			ID refID `json:"id"`
 		} `json:"status"`
 		IssueType struct {
-			ID flexID `json:"id"`
+			ID refID `json:"id"`
 		} `json:"issuetype"`
 	} `json:"fields"`
 }
@@ -45,7 +45,7 @@ func (r *wireIssueRef) toRef() model.IssueRef {
 }
 
 type wireAttachment struct {
-	ID       flexID    `json:"id"`
+	ID       refID     `json:"id"`
 	Filename string    `json:"filename"`
 	MimeType string    `json:"mimeType"`
 	Size     int64     `json:"size"`
@@ -54,7 +54,7 @@ type wireAttachment struct {
 }
 
 type wireLink struct {
-	ID   flexID `json:"id"`
+	ID   refID `json:"id"`
 	Type struct {
 		Name    string `json:"name"`
 		Inward  string `json:"inward"`

@@ -99,18 +99,6 @@ func speakerViews(cfg model.EffectiveConfig, slots []pulse.SpeakerSlot, activeBy
 	return out
 }
 
-// columnNamesFor lists the board column names mapped to lane, in board column order; never nil.
-func columnNamesFor(cols []model.ColumnLane, lane string) []string {
-	sorted := sortedColumns(cols)
-	out := []string{}
-	for _, c := range sorted {
-		if c.Lane == lane {
-			out = append(out, c.ColumnName)
-		}
-	}
-	return out
-}
-
 // statusNamesFor lists the status names of one board column, in StatusLanes order; never nil.
 func statusNamesFor(rows []model.StatusLane, column string) []string {
 	out := []string{}

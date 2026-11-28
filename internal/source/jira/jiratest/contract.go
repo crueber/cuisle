@@ -254,4 +254,5 @@ type Server struct {
 	srv          *http.Server
 	counter      int            // request counter for Throttle
 	failed       map[string]int // FailStatus counters by PathPrefix
+	f12          *f12State      // F12 fault state (RefreshFails, StaleChangelog)
 }

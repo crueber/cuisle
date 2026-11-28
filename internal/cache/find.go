@@ -31,9 +31,12 @@ func FindKeysTx(ctx context.Context, tx *sql.Tx, connID int64, letters string, m
 	args := []any{connID}
 	if letters != "" {
 		lo := strings.ToUpper(letters)
-		hi := lo[:len(lo)-1] + string(lo[len(lo)-1]+1)
-		q += ` AND key >= ? AND key < ?`
-		args = append(args, lo, hi)
+		if asciiPrefixUpperBound(lo) {
+			b := []byte(lo)
+			b[len(b)-1]++
+			q += ` AND key >= ? AND key < ?`
+			args = append(args, lo, string(b))
+		}
 	}
 	// A number can match when it starts with the digits (exact, starts-with) or has exactly their length (close). Keys
 	// hold one '-', so key LIKE '%-D%' is "the number starts with D". Filtering here keeps non-candidates from crossing
@@ -298,6 +301,50 @@ func SpeakersTx(ctx context.Context, tx *sql.Tx) ([]PersonRow, error) {
 		out = append(out, r)
 	}
 	return out, dbErr(rows.Err(), "The speakers could not be read.")
+}
+
+// asciiPrefixUpperBound reports whether s is non-empty pure ASCII with every byte < 0x7f so incrementing the last byte
+// yields a valid UTF-8 exclusive upper bound for SQLite range scans.
+func asciiPrefixUpperBound(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
+// StandupActiveByAssigneeTx counts, per non-empty assignee, the active board tickets of one standup whose status is
+// mapped to a working lane (not done, hidden, backlog or unmapped). Used by Configure and SortSpeakers without
+// rebuilding the full StandupView; matches ActiveByAssigneeTx and LoadCurrentTx.
+func StandupActiveByAssigneeTx(ctx context.Context, tx *sql.Tx, standupID int64) (map[string]int, error) {
+	rows, err := tx.QueryContext(ctx,
+		`SELECT i.assignee_account_id, count(*)
+		   FROM standup_issue si
+		   JOIN issue i ON i.id = si.issue_id
+		   JOIN standup_status_lane sl ON sl.standup_id = si.standup_id AND sl.status_id = i.status_id
+		  WHERE si.standup_id = ?
+		    AND si.role = 'board'
+		    AND i.assignee_account_id IS NOT NULL AND i.assignee_account_id <> ''
+		    AND sl.lane NOT IN ('done', 'hidden', 'backlog')
+		  GROUP BY i.assignee_account_id`, standupID)
+	if err != nil {
+		return nil, dbErr(err, "The ticket counts could not be read.")
+	}
+	defer rows.Close()
+	out := map[string]int{}
+	for rows.Next() {
+		var account string
+		var n int
+		if err := rows.Scan(&account, &n); err != nil {
+			return nil, dbErr(err, "The ticket counts could not be read.")
+		}
+		out[account] = n
+	}
+	return out, dbErr(rows.Err(), "The ticket counts could not be read.")
 }
 
 // ActiveByAssigneeTx counts, per standup and assignee, the board tickets whose lane in that standup is a working lane

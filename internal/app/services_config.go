@@ -50,11 +50,7 @@ func (s *ConfigService) DiscardDraft(ctx context.Context, standupID int64) (err 
 
 func (s *ConfigService) Delete(ctx context.Context, standupID int64) (ack SaveAck, err error) {
 	defer s.d.guard("Delete", &err)
-	a, err := s.d.Settings.Archive(ctx, standupID)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.Archive(ctx, standupID))
 }
 
 func (s *ConfigService) Restore(ctx context.Context, standupID int64) (ack SaveAck, err error) {
@@ -70,20 +66,12 @@ func (s *ConfigService) Restore(ctx context.Context, standupID int64) (ack SaveA
 
 func (s *ConfigService) Move(ctx context.Context, standupID int64, toPosition int) (ack SaveAck, err error) {
 	defer s.d.guard("Move", &err)
-	a, err := s.d.Settings.Move(ctx, standupID, toPosition)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.Move(ctx, standupID, toPosition))
 }
 
 func (s *ConfigService) Update(ctx context.Context, standupID int64, patch StandupPatch) (ack SaveAck, err error) {
 	defer s.d.guard("Update", &err)
-	a, err := s.d.Settings.Update(ctx, standupID, patch)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.Update(ctx, standupID, patch))
 }
 
 func (s *ConfigService) SetSpace(ctx context.Context, standupID int64, spaceID string) (out view.StandupConfig, err error) {
@@ -132,30 +120,28 @@ func (s *ConfigService) SetBoard(ctx context.Context, standupID int64, boardID s
 	if boardID == "" {
 		return view.StandupConfig{}, apperr.Validationf("boardId", "Choose a board.")
 	}
-	row, ok, err := d.connRow(ctx)
-	if err != nil {
-		return view.StandupConfig{}, err
-	}
-	if !ok {
-		return view.StandupConfig{}, apperr.New(apperr.AuthMissing, "Connect to Jira to choose a board.")
-	}
-	if row.AuthState == "invalid" {
-		return view.StandupConfig{}, apperr.New(apperr.AuthInvalid, "Jira rejected the token. Reconnect to choose a board.")
-	}
-	src, err := d.openSource(row, false)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to choose a board.")
 	if err != nil {
 		return view.StandupConfig{}, err
 	}
 	cfg, err := src.BoardConfig(ctx, boardID)
 	if err != nil {
-		d.noteSourceError(ctx, row, err)
+		if ctx.Err() == nil {
+			d.noteNet(err)
+			d.noteSourceError(ctx, row, err)
+		}
 		return view.StandupConfig{}, apperr.From(err)
 	}
+	d.noteNet(nil)
 	statuses, _, err := src.Reference(ctx)
 	if err != nil {
-		d.noteSourceError(ctx, row, err)
+		if ctx.Err() == nil {
+			d.noteNet(err)
+			d.noteSourceError(ctx, row, err)
+		}
 		return view.StandupConfig{}, apperr.From(err)
 	}
+	d.noteNet(nil)
 	// The adapter does not know the space; keep the cached board filed under the standup's space.
 	cfg.Board.SpaceID = st.SpaceID
 	if _, err := d.Settings.SetBoard(ctx, standupID, cfg, statuses); err != nil {
@@ -181,11 +167,7 @@ func (s *ConfigService) CreateLane(ctx context.Context, standupID int64, label s
 // label). No sync is needed.
 func (s *ConfigService) RenameLane(ctx context.Context, standupID int64, lane string, label string) (ack SaveAck, err error) {
 	defer s.d.guard("RenameLane", &err)
-	a, err := s.d.Settings.RenameLane(ctx, standupID, lane, label)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.RenameLane(ctx, standupID, lane, label))
 }
 
 // DeleteLane removes a custom lane, moving its columns to moveTo. Synced history is untouched.
@@ -213,57 +195,33 @@ func (s *ConfigService) SetColumnLane(ctx context.Context, standupID int64, colu
 	if !found {
 		return SaveAck{}, apperr.New(apperr.NotFound, "That column is not on this board.")
 	}
-	a, err := s.d.Settings.SetColumnLane(ctx, standupID, columnName, lane)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.SetColumnLane(ctx, standupID, columnName, lane))
 }
 
 // MoveColumn reorders a board column among the columns mapped to the same lane; tickets in that lane follow the order.
 func (s *ConfigService) MoveColumn(ctx context.Context, standupID int64, columnName string, toIndex int) (ack SaveAck, err error) {
 	defer s.d.guard("MoveColumn", &err)
-	a, err := s.d.Settings.MoveColumn(ctx, standupID, columnName, toIndex)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.MoveColumn(ctx, standupID, columnName, toIndex))
 }
 
 func (s *ConfigService) SetWalkOrder(ctx context.Context, standupID int64, lanes []string) (ack SaveAck, err error) {
 	defer s.d.guard("SetWalkOrder", &err)
-	a, err := s.d.Settings.SetWalkOrder(ctx, standupID, lanes)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.SetWalkOrder(ctx, standupID, lanes))
 }
 
 func (s *ConfigService) SetLaneLimit(ctx context.Context, standupID int64, lane string, days int) (ack SaveAck, err error) {
 	defer s.d.guard("SetLaneLimit", &err)
-	a, err := s.d.Settings.SetLaneLimit(ctx, standupID, lane, days)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.SetLaneLimit(ctx, standupID, lane, days))
 }
 
 func (s *ConfigService) SetSpeakerIncluded(ctx context.Context, standupID int64, accountID string, included bool) (ack SaveAck, err error) {
 	defer s.d.guard("SetSpeakerIncluded", &err)
-	a, err := s.d.Settings.SetSpeakerIncluded(ctx, standupID, accountID, included)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.SetSpeakerIncluded(ctx, standupID, accountID, included))
 }
 
 func (s *ConfigService) MoveSpeaker(ctx context.Context, standupID int64, accountID string, toPosition int) (ack SaveAck, err error) {
 	defer s.d.guard("MoveSpeaker", &err)
-	a, err := s.d.Settings.MoveSpeaker(ctx, standupID, accountID, toPosition)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.MoveSpeaker(ctx, standupID, accountID, toPosition))
 }
 
 func (s *ConfigService) SortSpeakers(ctx context.Context, standupID int64, mode string) (out []view.SpeakerConfig, err error) {
@@ -316,11 +274,7 @@ func (s *ConfigService) AddSpeaker(ctx context.Context, standupID int64, account
 
 func (s *ConfigService) RemoveSpeaker(ctx context.Context, standupID int64, accountID string) (ack SaveAck, err error) {
 	defer s.d.guard("RemoveSpeaker", &err)
-	a, err := s.d.Settings.RemoveSpeaker(ctx, standupID, accountID)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.RemoveSpeaker(ctx, standupID, accountID))
 }
 
 func (s *ConfigService) speakers(ctx context.Context, standupID int64) ([]view.SpeakerConfig, error) {

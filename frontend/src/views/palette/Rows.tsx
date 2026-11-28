@@ -2,8 +2,7 @@
 // options of the listbox. Colours are tokens; lanes come from the data (TicketHit.lane, the view's lane labels).
 import type { ComponentChildren } from "preact";
 import type { TicketHit } from "../../api/types";
-import { Icon } from "../../components/Icon";
-import type { IconName } from "../../components/props";
+import { Icon, issueTypeIcon } from "../../components/Icon";
 import type { Command, Ctx } from "../../commands/types";
 import type { CommandHit } from "../../commands/registry";
 import { hueOf } from "../../state/lanes";
@@ -31,8 +30,6 @@ export function Hl({ text, indexes }: { text: string; indexes: readonly number[]
   return <>{parts}</>;
 }
 
-const typeIcon = (t: string): IconName => (t === "story" || t === "bug" || t === "task" || t === "spike" ? t : "other");
-
 interface RowProps {
   row: Row;
   index: number;
@@ -57,9 +54,10 @@ const optionProps = (p: RowProps, extra: { disabled?: boolean } = {}) => ({
 function TicketOption(p: RowProps & { row: Extract<Row, { kind: "ticket" }> }) {
   const { hit, standupLabel } = p.row;
   const done = hit.done;
+  const icon = issueTypeIcon(hit.type);
   return (
     <div {...optionProps(p)} class="pal-row pal-row--ticket" data-done={done ? "true" : "false"}>
-      <Icon name={typeIcon(hit.type)} size={20} strokeWidth={2} class={`ticket-icon type-${typeIcon(hit.type)}`} />
+      <Icon name={icon} size={20} strokeWidth={2} class={`ticket-icon type-${icon}`} />
       <span class="pal-key">
         <Hl text={hit.key} indexes={hit.match} />
       </span>

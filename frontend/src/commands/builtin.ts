@@ -3,15 +3,15 @@
 // Lane names never appear here: nothing in this file knows the lanes.
 import { api, toAppError } from "../api";
 import { setAppSetting } from "../state/app";
-import { createStandup, duplicateStandup } from "../state/config";
+import { createStandup, duplicateStandup, leaveConfigure } from "../state/config";
 import { isMac } from "../state/palette";
-import { goConfigure, goConnect } from "../state/route";
+import { goConfigure, goConnect, route } from "../state/route";
 import { selectPerson, setBoardGroup, switchStandup } from "../state/standup";
 import { cancelSync, startSync } from "../state/sync";
 import { resetZoom, zoomBy, zoomOf, ZOOM_DEFAULT, ZOOM_STEPS } from "../state/zoom";
 import { refreshTicket } from "../state/ticket";
 import { keyLegendOpen, showToast } from "../state/ui";
-import { checkNow, updateAvailable, updateDialogOpen, updateStatus } from "../state/update";
+import { checkError, checkNow, updateAvailable, updateDialogOpen, updateStatus } from "../state/update";
 import { openIssueKey } from "../views/ticket/TicketModal.util";
 import { copyText, openTicketIn } from "./actions";
 import { registerCommands } from "./registry";
@@ -62,6 +62,11 @@ async function copyDiagnostics(): Promise<void> {
 
 async function checkForUpdates(): Promise<void> {
   await checkNow();
+  const err = checkError.value;
+  if (err) {
+    showToast({ message: err, timeoutMs: 4000 });
+    return;
+  }
   const v = updateStatus.value.available?.version;
   showToast({ message: v ? `Cuisle ${v} is available` : "You're up to date", timeoutMs: 3500 });
 }
@@ -195,7 +200,10 @@ export const BUILTIN: Command[] = [
         shortcut: i < 9 ? String(i + 1) : undefined,
         detail: () => (t.spaceKey !== "" ? t.spaceKey : undefined),
         checked: (x: Ctx) => x.standupId === t.id,
-        run: () => switchStandup(t.id),
+        run: async () => {
+          if (route.value.view === "configure") await leaveConfigure();
+          await switchStandup(t.id);
+        },
       })),
   },
   {
@@ -310,7 +318,7 @@ export const BUILTIN: Command[] = [
     run: async (c) => {
       const t = c.ticket!;
       await openTicketIn(t.standupId, t.issueId);
-      await refreshTicket();
+      await refreshTicket({ standupId: t.standupId, issueId: t.issueId });
     },
   },
   {

@@ -204,30 +204,37 @@ function Row({ row, children, pair }: { row: RailRow; children: ComponentChildre
 export function FieldRail(props: FieldRailProps & { rest?: boolean }) {
   const { rest, detail, geometry, layout, writes, offline, openToken, ctx, onTransition, onAssign, onFlag, onRetry, onOpenUrl, onOpenParent } = props;
   const [statusOpen, setStatusOpen] = useState(false);
-  const assigneeRef = useRef<HTMLDivElement>(null);
+  const [assigneeOpen, setAssigneeOpen] = useState(false);
   const lastToken = useRef(openToken?.token);
+  const saving = (f: EditField): boolean => writes[f].phase === "saving";
+  const statusDisabled = !detail.can.transition || offline || saving("status");
+  const assigneeDisabled = !detail.can.assign || offline || saving("assignee");
 
-  // The S / A keys: only a CHANGE of the token opens a combobox (a re-render with the same token does not).
+  // The S / A keys: only a CHANGE of the token opens a combobox (a re-render with the same token does not),
+  // and only when the field is enabled so pressing S/A while disabled never latches it open.
   useLayoutEffect(() => {
     if (!openToken || openToken.token === lastToken.current) return;
     lastToken.current = openToken.token;
     if (openToken.field === "status") {
-      setStatusOpen(true);
-    } else {
-      const el = assigneeRef.current?.querySelector<HTMLInputElement>("input[role=combobox]");
-      if (el && !el.disabled) {
-        el.focus();
-        el.click();
-      }
+      if (!statusDisabled) setStatusOpen(true);
+    } else if (!assigneeDisabled) {
+      setAssigneeOpen(true);
     }
-  }, [openToken?.token, openToken?.field]);
+  }, [openToken?.token, openToken?.field, statusDisabled, assigneeDisabled]);
+
+  useLayoutEffect(() => {
+    if (statusDisabled && statusOpen) setStatusOpen(false);
+  }, [statusDisabled, statusOpen]);
+
+  useLayoutEffect(() => {
+    if (assigneeDisabled && assigneeOpen) setAssigneeOpen(false);
+  }, [assigneeDisabled, assigneeOpen]);
 
   const groups: RailGroup[] = rest
     ? detail.rail.filter((g) => g.id !== "state")
     : layout === "strip"
       ? detail.rail.filter((g) => g.id === "state")
       : detail.rail;
-  const saving = (f: EditField): boolean => writes[f].phase === "saving";
 
   const stateRow = (row: RailRow) => {
     if (row.edit === "status") {
@@ -257,7 +264,7 @@ export function FieldRail(props: FieldRailProps & { rest?: boolean }) {
         : UNASSIGNED;
       return (
         <Row row={row} key={row.fieldId}>
-          <div class="fr-assignee" ref={assigneeRef} data-unassigned={current ? undefined : "true"}>
+          <div class="fr-assignee" data-unassigned={current ? undefined : "true"}>
             {current ? (
               <span class="fr-assignee-ini">
                 <Initials text={current.initials} />
@@ -267,6 +274,8 @@ export function FieldRail(props: FieldRailProps & { rest?: boolean }) {
               id="ticket-assignee"
               label="Assignee"
               value={value}
+              open={assigneeOpen}
+              onOpenChange={setAssigneeOpen}
               getKey={(u) => u.accountId}
               getLabel={(u) => u.displayName}
               load={async (q, signal) => {

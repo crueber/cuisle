@@ -1,8 +1,6 @@
 package pulse
 
 import (
-	"time"
-
 	"github.com/crueber/cuisle/internal/model"
 )
 
@@ -11,34 +9,41 @@ import (
 // before the ticket's creation day are dropped. Only non-zero days, ascending.
 func Marks(t Ticket, w Window, people map[string]model.Person) []Mark {
 	n := w.Days
-	if n <= 0 || len(w.Starts) < n+1 {
+	if n <= 0 || len(w.Starts) < n+1 || (len(t.Dev) == 0 && len(t.Comments) == 0) {
 		return nil
 	}
 	commits := make([]int, n)
 	prs := make([]int, n)
 	comments := make([]int, n)
-	prSeen := map[mkPRKey]bool{}
-	shaSeen := map[string]bool{} // commit SHAs already counted on this ticket
-	created := mkDateKey(t.CreatedAt, w.Loc)
+	var prSeen map[mkPRKey]bool
+	var shaSeen map[string]bool // commit SHAs already counted on this ticket
+	createdDay := w.DayIndex(t.CreatedAt)
 
 	for _, ev := range t.Dev {
 		if ev.At.After(w.AsOf) {
 			continue
 		}
-		k := mkDayIndex(w, ev.At)
-		if k < 0 || mkDateKey(ev.At, w.Loc) < created {
+		k := w.DayIndex(ev.At)
+		if k < 0 || k >= n || k < createdDay {
 			continue
 		}
 		switch ev.Kind {
 		case model.DevCommit:
-			if ev.Merge || shaSeen[ev.ID] {
+			if ev.Merge {
+				continue
+			}
+			if shaSeen == nil {
+				shaSeen = map[string]bool{}
+			} else if shaSeen[ev.ID] {
 				continue
 			}
 			shaSeen[ev.ID] = true
 			commits[k]++
 		case model.DevPR:
 			key := mkPRKey{day: k, id: ev.ID}
-			if prSeen[key] {
+			if prSeen == nil {
+				prSeen = map[mkPRKey]bool{}
+			} else if prSeen[key] {
 				continue
 			}
 			prSeen[key] = true
@@ -50,8 +55,8 @@ func Marks(t Ticket, w Window, people map[string]model.Person) []Mark {
 		if c.At.After(w.AsOf) {
 			continue
 		}
-		k := mkDayIndex(w, c.At)
-		if k < 0 || mkDateKey(c.At, w.Loc) < created {
+		k := w.DayIndex(c.At)
+		if k < 0 || k >= n || k < createdDay {
 			continue
 		}
 		if p, ok := people[c.AuthorID]; ok && p.Kind == "app" {
@@ -80,25 +85,8 @@ func Totals(marks []Mark) (commits, prs, comments int) {
 	return commits, prs, comments
 }
 
-// mkDayIndex returns k such that Starts[k] ≤ at < Starts[k+1], or -1 when at is outside the window.
-func mkDayIndex(w Window, at time.Time) int {
-	n := w.Days
-	for k := 0; k < n; k++ {
-		if !at.Before(w.Starts[k]) && at.Before(w.Starts[k+1]) {
-			return k
-		}
-	}
-	return -1
-}
-
 // mkPRKey identifies one PR on one day.
 type mkPRKey struct {
 	day int
 	id  string
-}
-
-// mkDateKey encodes the local calendar date of at as YYYYMMDD so dates compare with <.
-func mkDateKey(at time.Time, loc *time.Location) int {
-	y, mo, d := at.In(loc).Date()
-	return y*10000 + int(mo)*100 + d
 }

@@ -267,8 +267,7 @@ func rateLimitedWrite(wait time.Duration) error {
 // errors are offline. Anything else means the request may have reached Jira, so it is timeout and is never re-sent
 // (the next refresh decides whether the change landed).
 func writeTransportError(err error) error {
-	if unreachable(err) || isHTTPOnHTTPS(err) || errors.Is(err, context.Canceled) ||
-		errors.Is(err, context.DeadlineExceeded) || isNetTimeout(err) {
+	if unreachable(err) || isHTTPOnHTTPS(err) || errors.Is(err, context.Canceled) {
 		return MapError(err)
 	}
 	return apperr.Wrap(apperr.Timeout, msgNoTimeAnswer, err).WithDetail(redactDetail(err.Error()))

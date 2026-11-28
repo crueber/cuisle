@@ -57,7 +57,9 @@ func (d *Deps) titleIndexTx(ctx context.Context, tx *sql.Tx, connID int64) (*tit
 		return nil, err
 	}
 	d.findIdxMu.Lock()
-	d.findIdx = idx
+	if d.findIdx == nil || d.findIdx.conn != connID || idx.gen > d.findIdx.gen {
+		d.findIdx = idx
+	}
 	d.findIdxMu.Unlock()
 	return idx, nil
 }

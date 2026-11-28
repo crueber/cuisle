@@ -15,11 +15,6 @@
   font-family: var(--font-family-sans);
 }
 
-:is(.seg-option, .switch, .stepper-btn, .stepper-value, .toast-action, .toast-dismiss, .banner-action, .banner-dismiss, .saved-retry, .keylegend-close, .checkbox, .tf-control):focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
-
 /* Segmented */
 .seg {
   display: inline-flex;
@@ -399,14 +394,14 @@ textarea.tf-control {
   border-radius: 2px;
   background: var(--color-lane-todo);
 }
-.legend-swatch[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.legend-swatch[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.legend-swatch[data-lane="qa"] {
-  background: var(--color-lane-qa);
+/* Built-in lane colours (shared across pulse tracks, legends, Configure swatches and the ticket modal). */
+[data-lane="todo"] { --lane-bg: var(--color-lane-todo); }
+[data-lane="prog"] { --lane-bg: var(--color-lane-prog); }
+[data-lane="review"] { --lane-bg: var(--color-lane-review); }
+[data-lane="qa"] { --lane-bg: var(--color-lane-qa); }
+[data-lane="done"] { --lane-bg: var(--color-lane-done); }
+:is(.pulse-seg, .legend-swatch, .cfg-swatch, .personview-swatch, .sc-sw, .sc-now, .th-swatch):is([data-lane="todo"], [data-lane="prog"], [data-lane="review"], [data-lane="qa"], [data-lane="done"]) {
+  background: var(--lane-bg);
 }
 /* Lanes the user names (ux-spec §9.4): data-hue 1..8 picks the extended lane palette. One resolver, one paint rule for
    every lane-coloured element; built-in lanes have no data-hue and keep their data-lane rules. The done-history rule
@@ -468,16 +463,4 @@ textarea.tf-control {
   width: calc(var(--scale) * 0.25rem);
   height: calc(var(--scale) * 0.375rem);
   background: var(--color-tick-comment);
-}
-
-/* Visually hidden but still the accessible name (used where a row already shows the label). */
-.sr-only,
-.cfg-field .tf-label,
-.speakers-row .checkbox-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }

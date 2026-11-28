@@ -1,7 +1,6 @@
 package adf
 
 import (
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -42,82 +41,91 @@ type parser struct {
 func (p *parser) nodes(ns []rawNode) []Node {
 	out := make([]Node, 0, len(ns))
 	for _, n := range ns {
-		out = append(out, p.node(n)...)
+		out = p.appendNode(out, n)
 	}
 	return out
 }
 
-// node normalises one raw node. It returns a slice because a mediaGroup flattens into several file nodes.
-func (p *parser) node(n rawNode) []Node {
+// appendNode normalises one raw node onto out (mediaGroup flattens into several file nodes without intermediate slices).
+func (p *parser) appendNode(out []Node, n rawNode) []Node {
 	a := n.Attrs
 	switch n.Type {
 	case "paragraph":
-		return one(Node{T: NodeParagraph, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeParagraph, C: p.nodes(n.Content)})
 	case "heading":
-		return one(withAttrs(Node{T: NodeHeading, C: p.nodes(n.Content)}, Attrs{Level: attrInt(a, "level")}))
+		return append(out, withAttrs(Node{T: NodeHeading, C: p.nodes(n.Content)}, Attrs{Level: attrInt(a, "level")}))
 	case "text":
-		return one(Node{T: NodeText, Text: n.Text, Marks: p.marks(n.Marks)})
+		return append(out, Node{T: NodeText, Text: n.Text, Marks: p.marks(n.Marks)})
 	case "hardBreak":
-		return one(Node{T: NodeHardBreak})
+		return append(out, Node{T: NodeHardBreak})
 	case "bulletList":
-		return one(Node{T: NodeBulletList, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeBulletList, C: p.nodes(n.Content)})
 	case "orderedList":
-		return one(withAttrs(Node{T: NodeOrderedList, C: p.nodes(n.Content)}, Attrs{Order: attrInt(a, "order")}))
+		return append(out, withAttrs(Node{T: NodeOrderedList, C: p.nodes(n.Content)}, Attrs{Order: attrInt(a, "order")}))
 	case "listItem":
-		return one(Node{T: NodeListItem, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeListItem, C: p.nodes(n.Content)})
 	case "taskList":
-		return one(Node{T: NodeTaskList, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeTaskList, C: p.nodes(n.Content)})
 	case "taskItem":
-		return one(withAttrs(Node{T: NodeTaskItem, C: p.nodes(n.Content)}, Attrs{Done: attrStr(a, "state") == "DONE"}))
+		return append(out, withAttrs(Node{T: NodeTaskItem, C: p.nodes(n.Content)}, Attrs{Done: attrStr(a, "state") == "DONE"}))
 	case "decisionList":
-		return one(Node{T: NodeDecision, C: p.decisionItems(n.Content)})
+		return append(out, Node{T: NodeDecision, C: p.decisionItems(n.Content)})
 	case "blockquote":
-		return one(Node{T: NodeQuote, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeQuote, C: p.nodes(n.Content)})
 	case "rule":
-		return one(Node{T: NodeRule})
+		return append(out, Node{T: NodeRule})
 	case "codeBlock":
-		return one(withAttrs(Node{T: NodeCode, Text: allText(n)}, Attrs{Lang: attrStr(a, "language")}))
+		return append(out, withAttrs(Node{T: NodeCode, Text: allText(n)}, Attrs{Lang: attrStr(a, "language")}))
 	case "panel":
-		return one(withAttrs(Node{T: NodePanel, C: p.nodes(n.Content)}, Attrs{Panel: panelKind(attrStr(a, "panelType"))}))
+		return append(out, withAttrs(Node{T: NodePanel, C: p.nodes(n.Content)}, Attrs{Panel: panelKind(attrStr(a, "panelType"))}))
 	case "table":
-		return one(Node{T: NodeTable, C: p.nodes(n.Content)})
+		return append(out, Node{T: NodeTable, C: p.nodes(n.Content)})
 	case "tableRow":
-		return one(withAttrs(Node{T: NodeRow, C: p.nodes(n.Content)}, Attrs{Header: isHeaderRow(n.Content)}))
+		return append(out, withAttrs(Node{T: NodeRow, C: p.nodes(n.Content)}, Attrs{Header: isHeaderRow(n.Content)}))
 	case "tableHeader":
-		return one(withAttrs(Node{T: NodeHeaderCell, C: p.nodes(n.Content)}, cellAttrs(a)))
+		return append(out, withAttrs(Node{T: NodeHeaderCell, C: p.nodes(n.Content)}, cellAttrs(a)))
 	case "tableCell":
-		return one(withAttrs(Node{T: NodeCell, C: p.nodes(n.Content)}, cellAttrs(a)))
+		return append(out, withAttrs(Node{T: NodeCell, C: p.nodes(n.Content)}, cellAttrs(a)))
 	case "expand", "nestedExpand":
-		return one(withAttrs(Node{T: NodeExpand, C: p.nodes(n.Content)}, Attrs{
+		return append(out, withAttrs(Node{T: NodeExpand, C: p.nodes(n.Content)}, Attrs{
 			Title: attrStr(a, "title"), Collapsed: attrBool(a, "collapsed")}))
 	case "status":
-		return one(withAttrs(Node{T: NodeStatus}, Attrs{Label: attrStr(a, "text"), Lozenge: lozenge(attrStr(a, "color"))}))
+		return append(out, withAttrs(Node{T: NodeStatus}, Attrs{Label: attrStr(a, "text"), Lozenge: lozenge(attrStr(a, "color"))}))
 	case "mention":
-		return one(p.mention(n))
+		return append(out, p.mention(n))
 	case "date":
-		return one(p.date(n))
+		return append(out, p.date(n))
 	case "emoji":
-		return one(emoji(n))
+		return append(out, emoji(n))
 	case "inlineCard", "blockCard":
-		return one(p.card(n))
+		return append(out, p.card(n))
 	case "mediaSingle":
-		return one(p.mediaSingle(n))
+		return append(out, p.mediaSingle(n))
 	case "mediaGroup":
-		return p.mediaGroup(n)
+		return p.appendMediaGroup(out, n)
 	case "mediaInline":
-		return one(p.mediaInline(n))
+		return append(out, p.mediaInline(n))
 	case "media":
-		return one(p.media(n, false, "", ""))
+		return append(out, p.media(n, false, "", ""))
 	default:
-		return one(p.unknown(n))
+		return append(out, p.unknown(n))
 	}
 }
 
-func one(n Node) []Node { return []Node{n} }
+func (a Attrs) isZero() bool {
+	return a.Level == 0 && a.Lang == "" && a.Panel == "" && a.Title == "" && !a.Done && !a.Collapsed &&
+		a.Order == 0 && a.Colspan == 0 && a.Rowspan == 0 && len(a.Colwidth) == 0 && !a.Header &&
+		a.Lozenge == "" && a.Label == "" && a.AccountID == "" && !a.Self &&
+		a.Date == "" && !a.Past && a.Emoji == "" && a.ShortName == "" &&
+		a.URL == "" && a.Host == "" && a.Path == "" &&
+		a.IssueID == 0 && a.Key == "" && a.Summary == "" && a.TypeKind == "" && a.StatusName == "" && a.StatusLozenge == "" &&
+		a.AttachmentID == "" && a.Name == "" && a.Mime == "" && a.Bytes == 0 && a.Width == 0 && a.Height == 0 &&
+		a.Layout == "" && a.Caption == "" && a.Cached == "" && !a.Missing && !a.Block
+}
 
 // withAttrs sets Node.A unless every attribute is zero, so no empty "a" key is serialised.
 func withAttrs(n Node, a Attrs) Node {
-	if !reflect.ValueOf(a).IsZero() {
+	if !a.isZero() {
 		n.A = &a
 	}
 	return n
@@ -133,7 +141,7 @@ func (p *parser) decisionItems(ns []rawNode) []Node {
 	out := make([]Node, 0, len(ns))
 	for _, it := range ns {
 		if it.Type != "decisionItem" {
-			out = append(out, p.node(it)...)
+			out = p.appendNode(out, it)
 			continue
 		}
 		out = append(out, Node{T: NodeParagraph, C: p.nodes(it.Content)})
@@ -243,23 +251,38 @@ func (p *parser) mediaSingle(n rawNode) Node {
 	return p.media(*m, true, attrStr(n.Attrs, "layout"), caption)
 }
 
-// mediaGroup flattens into one file node per media child, in place.
-func (p *parser) mediaGroup(n rawNode) []Node {
-	out := make([]Node, 0, len(n.Content))
+// appendMediaGroup flattens into one file node per media child, in place.
+func (p *parser) appendMediaGroup(out []Node, n rawNode) []Node {
 	for _, c := range n.Content {
 		if c.Type == "media" {
 			out = append(out, p.file(c))
 			continue
 		}
-		out = append(out, p.node(c)...)
+		out = p.appendNode(out, c)
 	}
 	return out
 }
 
-// mediaInline becomes a media node when it resolves to an image, otherwise a file node.
+const maxInlineImageBytes = 25 << 20
+
+func isInlineImage(att model.Attachment) bool {
+	if att.Bytes > maxInlineImageBytes {
+		return false
+	}
+	switch strings.ToLower(att.Mime) {
+	case "image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp":
+		return true
+	}
+	return false
+}
+
+// mediaInline becomes a media node when it resolves to a renderable image, otherwise a file node (or card if external).
 func (p *parser) mediaInline(n rawNode) Node {
+	if isExternal(n) {
+		return externalCard(n, false)
+	}
 	att, cached, ok := p.attachment(n)
-	if ok && strings.HasPrefix(att.Mime, "image/") {
+	if ok && isInlineImage(att) {
 		a := Attrs{Width: att.Width, Height: att.Height}
 		a.setAttachment(att, cached)
 		return withAttrs(Node{T: NodeMedia}, a)
@@ -355,7 +378,7 @@ func (p *parser) marks(ms []rawMark) []Mark {
 			}
 		case "textColor":
 			if c := attrStr(m.Attrs, "color"); validColor(c) {
-				out = append(out, Mark{T: MarkColor, V: c})
+				out = append(out, Mark{T: MarkColor, V: strings.ToLower(c)})
 			}
 		}
 	}

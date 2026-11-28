@@ -12,6 +12,8 @@ import (
 // Evict removes originals only, least recently viewed first, until the cached originals are within the cap, and then
 // sweeps orphan files (see evictLocked).
 func (c *cache) Evict(ctx context.Context) (int64, error) {
+	c.ioMu.Lock()
+	defer c.ioMu.Unlock()
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.evictLocked(ctx)
@@ -23,10 +25,17 @@ type victim struct {
 	bytes int64
 }
 
-// evictLocked must run with mu held. Order: never-viewed rows first by oldest created_at, then viewed rows by
-// oldest last_viewed_at. Each victim keeps its thumbnail; its row gets file_path NULL, cached_bytes 0 and evicted_at.
-// Then the orphan sweep runs, so freedBytes counts both released originals and removed orphans.
-func (c *cache) evictLocked(ctx context.Context) (int64, error) {
+// evictOverCapLocked removes originals only until total cached_bytes is within the cap. The caller holds c.mu.
+func (c *cache) evictOverCapLocked(ctx context.Context) (int64, error) {
+	limit := c.capLimit()
+	var total int64
+	if err := c.db.R.QueryRowContext(ctx, `SELECT COALESCE(SUM(cached_bytes), 0) FROM attachment WHERE file_path IS NOT NULL`).Scan(&total); err != nil {
+		return 0, dbErr(err)
+	}
+	if total <= limit {
+		return 0, nil
+	}
+
 	rows, err := c.db.R.QueryContext(ctx, `SELECT id, file_path, cached_bytes FROM attachment
 		WHERE file_path IS NOT NULL
 		ORDER BY last_viewed_at IS NOT NULL,
@@ -35,32 +44,24 @@ func (c *cache) evictLocked(ctx context.Context) (int64, error) {
 	if err != nil {
 		return 0, dbErr(err)
 	}
-	var all []victim
-	var total int64
+	var victims []victim
 	for rows.Next() {
+		if total <= limit {
+			break
+		}
 		var v victim
 		if err := rows.Scan(&v.id, &v.rel, &v.bytes); err != nil {
 			_ = rows.Close()
 			return 0, dbErr(err)
 		}
-		all = append(all, v)
-		total += v.bytes
+		victims = append(victims, v)
+		total -= v.bytes
 	}
 	if err := rows.Err(); err != nil {
 		_ = rows.Close()
 		return 0, dbErr(err)
 	}
 	_ = rows.Close()
-
-	limit := c.capLimit()
-	var victims []victim
-	for _, v := range all {
-		if total <= limit {
-			break
-		}
-		victims = append(victims, v)
-		total -= v.bytes
-	}
 
 	var freed int64
 	if len(victims) > 0 {
@@ -78,7 +79,7 @@ func (c *cache) evictLocked(ctx context.Context) (int64, error) {
 			return 0, err
 		}
 		for _, v := range victims {
-			// A failed removal leaves an unreferenced file; the sweep below retries it and counts it then.
+			// A failed removal leaves an unreferenced file; the sweep retries it and counts it then.
 			if err := c.removeRel(v.rel); err != nil {
 				c.log.Warn("media: evicted original not removed", "attachment", v.id, "err", err)
 				continue
@@ -86,7 +87,15 @@ func (c *cache) evictLocked(ctx context.Context) (int64, error) {
 			freed += v.bytes
 		}
 	}
+	return freed, nil
+}
 
+// evictLocked runs cap eviction followed by the orphan sweep. The caller holds c.ioMu and c.mu.
+func (c *cache) evictLocked(ctx context.Context) (int64, error) {
+	freed, err := c.evictOverCapLocked(ctx)
+	if err != nil {
+		return freed, err
+	}
 	swept, err := c.sweepLocked(ctx)
 	if err != nil {
 		return freed, err

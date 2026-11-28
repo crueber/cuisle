@@ -1,12 +1,12 @@
 // Implementation: WP-24. One ticket as a whole-row button (ux-spec §5.4). Enter and click both come from the native button.
 import { contentScale } from "../../state/app";
-import { Icon } from "../../components/Icon";
+import { Icon, issueTypeIcon } from "../../components/Icon";
 import { PulseTrack } from "./PulseTrack";
 import type { TicketRowProps } from "./props";
 
 /** The issue-type icon, shared by the person rows and the whole-board rows (sized in CSS). */
 export function TypeIcon({ type, done }: { type: string; done?: boolean }) {
-  const kind = type === "story" || type === "bug" || type === "task" || type === "spike" ? type : "other";
+  const kind = issueTypeIcon(type);
   return <Icon name={kind} class={`ticket-icon type-${kind}${done ? " is-done-icon" : ""}`} />;
 }
 

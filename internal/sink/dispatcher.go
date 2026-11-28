@@ -264,10 +264,21 @@ func (d *dispatcher) runJob(ctx context.Context, outboxID int64) error {
 	var receipt Receipt
 	var lastErr *apperr.Error
 	for try := 0; try < budget; try++ {
+		if ctx.Err() != nil {
+			if try == 0 {
+				return dbErr(ctx, ctx.Err())
+			}
+			lastErr = apperr.From(ctx.Err())
+			break
+		}
 		attempts++
-		if _, err := d.db.W.ExecContext(ctx,
+		if _, err := d.db.W.ExecContext(context.WithoutCancel(ctx),
 			`UPDATE sink_outbox SET status='delivering', attempts=?, updated_at=? WHERE id=?`,
 			attempts, d.now().UnixMilli(), row.id); err != nil {
+			if try > 0 {
+				lastErr = apperr.From(dbErr(ctx, err))
+				break
+			}
 			return dbErr(ctx, err)
 		}
 		receipt, err = kind.Deliver(ctx, Delivery{

@@ -22,6 +22,13 @@ const SHAPES: Record<IconName, readonly string[]> = {
   download: ["M12 4v11", "M7 10l5 5 5-5", "M5 20h14"], // arrow into a tray (the Update button)
 };
 
+export type IssueIconName = "story" | "bug" | "task" | "spike" | "other";
+
+/** Maps a Jira issue type kind onto its shared Icon name (subtask/epic/unknown → "other"). */
+export function issueTypeIcon(type: string): IssueIconName {
+  return type === "story" || type === "bug" || type === "task" || type === "spike" ? type : "other";
+}
+
 export function Icon(props: IconProps) {
   const size = props.size ?? 18;
   const strokeWidth = props.strokeWidth ?? 2.4;

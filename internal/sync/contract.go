@@ -221,11 +221,13 @@ type Orchestrator struct {
 	runs map[int64]*run // by standup id
 	last map[int64]Status
 	sem  chan struct{}
-	wg   gosync.WaitGroup
+	wg   waitGroup
 
-	// Guarded by mu (unexported additions; the exported API is unchanged).
-	closed   bool                    // set by Shutdown: Start refuses
-	starting map[int64]chan struct{} // closed when a reserved run has its id (or failed to get one)
+	// Guarded by mu.
+	closed       bool                            // set by Shutdown: Start refuses
+	paused       int                             // incremented by PauseAndCancel: Start and mediaContext refuse
+	starting     map[int64]chan struct{}         // closed when a reserved run has its id (or failed to get one)
+	mediaCancels map[*context.CancelFunc]struct{} // active post-sync media phases, cancelled by Shutdown and PauseAndCancel
 }
 
 // run is the state of one in-flight run (WP-29 may add fields in orchestrator.go via an embedded struct if needed).

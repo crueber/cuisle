@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/crueber/cuisle/internal/model"
@@ -62,22 +63,64 @@ func ApplyDevTx(ctx context.Context, tx *sql.Tx, issueID int64, da model.DevActi
 
 // MarkDevCheckedTx sets issue.dev_checked_at = at for the given local issue ids.
 func MarkDevCheckedTx(ctx context.Context, tx *sql.Tx, issueIDs []int64, at time.Time) error {
-	for _, id := range issueIDs {
-		if _, err := tx.ExecContext(ctx, `UPDATE issue SET dev_checked_at = ? WHERE id = ?`, store.Ms(at), id); err != nil {
-			return dbErr(err, "The development activity could not be saved.")
-		}
+	if len(issueIDs) == 0 {
+		return nil
+	}
+	arr, err := json.Marshal(issueIDs)
+	if err != nil {
+		return dbErr(err, "The development activity could not be saved.")
+	}
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE issue SET dev_checked_at = ? WHERE id IN (SELECT value FROM json_each(?))`,
+		store.Ms(at), string(arr)); err != nil {
+		return dbErr(err, "The development activity could not be saved.")
 	}
 	return nil
 }
 
 // MarkSeenTx sets issue.last_seen_at = at for the given local issue ids (every member the scan returned).
 func MarkSeenTx(ctx context.Context, tx *sql.Tx, issueIDs []int64, at time.Time) error {
-	for _, id := range issueIDs {
-		if _, err := tx.ExecContext(ctx, `UPDATE issue SET last_seen_at = ? WHERE id = ?`, store.Ms(at), id); err != nil {
-			return dbErr(err, "The issues could not be saved.")
-		}
+	if len(issueIDs) == 0 {
+		return nil
+	}
+	arr, err := json.Marshal(issueIDs)
+	if err != nil {
+		return dbErr(err, "The issues could not be saved.")
+	}
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE issue SET last_seen_at = ? WHERE id IN (SELECT value FROM json_each(?))`,
+		store.Ms(at), string(arr)); err != nil {
+		return dbErr(err, "The issues could not be saved.")
 	}
 	return nil
+}
+
+// IssueIDsForTx maps provider issue id → local issue id for the given provider issue ids of the connection.
+func IssueIDsForTx(ctx context.Context, tx *sql.Tx, connID int64, sourceIDs []string) (map[string]int64, error) {
+	out := make(map[string]int64, len(sourceIDs))
+	if len(sourceIDs) == 0 {
+		return out, nil
+	}
+	arr, err := json.Marshal(sourceIDs)
+	if err != nil {
+		return nil, dbErr(err, "The issues could not be read.")
+	}
+	rows, err := tx.QueryContext(ctx,
+		`SELECT source_id, id FROM issue WHERE connection_id = ? AND source_id IN (SELECT value FROM json_each(?))`,
+		connID, string(arr))
+	if err != nil {
+		return nil, dbErr(err, "The issues could not be read.")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var src string
+		var id int64
+		if err := rows.Scan(&src, &id); err != nil {
+			return nil, dbErr(err, "The issues could not be read.")
+		}
+		out[src] = id
+	}
+	return out, dbErr(rows.Err(), "The issues could not be read.")
 }
 
 // IssueIDsTx maps provider issue id → local issue id for every cached issue of the connection.

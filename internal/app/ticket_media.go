@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -172,22 +173,15 @@ func (d *Deps) fetchOriginal(ctx context.Context, ar attachmentRow) error {
 	if d.Media == nil {
 		return apperr.New(apperr.MediaUnavailable, "Images are not stored in this build.")
 	}
-	row, ok, err := d.connRow(ctx)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return apperr.New(apperr.AuthMissing, "Connect to Jira to load images.")
-	}
-	if err := authError(row.AuthState); err != nil {
-		return err
-	}
-	src, err := d.openSource(row, false)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to load images.")
 	if err != nil {
 		return err
 	}
 	blob, err := src.FetchMedia(source.WithInteractive(ctx), ar.Att, false)
 	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		d.noteNet(err)
 		d.noteSourceError(ctx, row, err)
 		return apperr.From(err)
@@ -355,22 +349,15 @@ func (s *TicketService) OpenAttachment(ctx context.Context, attachmentID int64) 
 		d.emit(syncpkg.EvMediaReady, syncpkg.MediaReady{AttachmentID: attachmentID, IssueID: ar.IssueID, Cached: "full"})
 		body = f
 	} else {
-		row, ok, err := d.connRow(ctx)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return apperr.New(apperr.AuthMissing, "Connect to Jira to open files.")
-		}
-		if err := authError(row.AuthState); err != nil {
-			return err
-		}
-		src, err := d.openSource(row, false)
+		src, row, err := d.requireSource(ctx, "Connect to Jira to open files.")
 		if err != nil {
 			return err
 		}
 		blob, err := src.FetchMedia(source.WithInteractive(ctx), ar.Att, false)
 		if err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 			d.noteNet(err)
 			d.noteSourceError(ctx, row, err)
 			return apperr.From(err)
@@ -410,23 +397,23 @@ func (s *TicketService) OpenAttachment(ctx context.Context, attachmentID int64) 
 
 // ── background thumbnails after a Refresh ────────────────────────────────────────
 
-func (d *Deps) background() context.Context {
-	d.ticketMu.Lock()
-	defer d.ticketMu.Unlock()
-	if d.bgCtx == nil {
-		d.bgCtx, d.bgCancel = context.WithCancel(context.Background())
-	}
-	return d.bgCtx
-}
-
 // fetchThumbsAsync downloads the thumbnails of the issue's new image attachments (the media lane of the limiter) after
 // a Refresh, and emits media:ready for each. It never blocks the Refresh and never reports failure.
 func (d *Deps) fetchThumbsAsync(src source.Source, row cache.ConnRow, ref issueRef) {
 	if d.Media == nil || !src.Capabilities().Content {
 		return
 	}
-	ctx := d.background()
+	d.ticketMu.Lock()
+	if d.bgStopped || d.bgPaused > 0 {
+		d.ticketMu.Unlock()
+		return
+	}
+	if d.bgCtx == nil {
+		d.bgCtx, d.bgCancel = context.WithCancel(context.Background())
+	}
+	ctx := d.bgCtx
 	d.bg.Add(1)
+	d.ticketMu.Unlock()
 	go func() {
 		defer d.bg.Done()
 		defer func() {
@@ -444,6 +431,9 @@ func (d *Deps) fetchThumbsAsync(src source.Source, row cache.ConnRow, ref issueR
 			}
 			blob, err := src.FetchMedia(ctx, t.Att, false)
 			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
 				_ = cache.SetAttachmentFetchError(context.WithoutCancel(ctx), d.DB.W, t.Att.LocalID, string(apperr.From(err).Code))
 				continue
 			}
@@ -483,19 +473,13 @@ func (s *Services) WaitBackground() { s.App.d.bg.Wait() }
 func (s *Services) Shutdown(ctx context.Context) error {
 	d := s.App.d
 	d.ticketMu.Lock()
+	d.bgStopped = true
 	cancel := d.bgCancel
 	d.ticketMu.Unlock()
 	if cancel != nil {
 		cancel()
 	}
-	done := make(chan struct{})
-	go func() { d.bg.Wait(); close(done) }()
-	select {
-	case <-done:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	}
+	return d.bg.WaitContext(ctx)
 }
 
 // ── /media routes ────────────────────────────────────────────────────────────────
@@ -548,11 +532,7 @@ func (s *Services) serveMedia(w http.ResponseWriter, r *http.Request, rest strin
 		http.NotFound(w, r)
 		return
 	}
-	ok := false
-	for _, m := range media.ImageMimes {
-		ok = ok || m == mime
-	}
-	if !ok {
+	if !slices.Contains(media.ImageMimes, mime) {
 		mime = "application/octet-stream"
 	}
 	h := w.Header()
@@ -560,8 +540,8 @@ func (s *Services) serveMedia(w http.ResponseWriter, r *http.Request, rest strin
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Cache-Control", "private, max-age=31536000, immutable")
 	h.Set("Content-Security-Policy", "default-src 'none'; sandbox")
-	if !thumb {
-		d.Media.Touch(id)
-	}
 	http.ServeContent(w, r, "", info.ModTime(), f)
+	if !thumb && r.Method == http.MethodGet {
+		d.Media.Touch(id) // LRU update after sending bytes so SQLite write contention doesn't stall image rendering
+	}
 }

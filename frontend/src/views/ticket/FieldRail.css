@@ -2,7 +2,6 @@
    2px rule-soft; under 340 wide the labels stack above the values and short values pair two-up. The only white boxes are
    Status and Assignee (the affordance). Tokens only; sizes scale with --scale. */
 .fr {
-  box-sizing: border-box;
   padding: 14px var(--space-5);
   font-family: var(--font-family-sans);
   color: var(--color-fg);
@@ -64,11 +63,6 @@
 .fr-value[data-mono="true"] {
   font-family: var(--font-family-mono);
   font-size: calc(var(--scale) * 0.9375rem);
-}
-
-/* narrow rail: shorter label column */
-.tm-rail .fr:not([data-stacked="true"]) .fr-row {
-  grid-template-columns: calc(var(--scale) * var(--size-rail-label)) minmax(0, 1fr);
 }
 
 /* labels stacked above the values (rail < 340), short values paired two-up */
@@ -148,7 +142,6 @@
   place-items: center;
   min-width: calc(var(--scale) * 1.625rem);
   height: calc(var(--scale) * 1.375rem);
-  box-sizing: border-box;
   padding: 0 var(--space-1);
   border: 2px solid var(--color-rule);
   border-radius: var(--radius-chip);
@@ -184,10 +177,6 @@
 .fr-parent-open:hover .fr-key,
 .fr-parent-open:focus-visible .fr-key {
   text-decoration: underline;
-}
-.fr-parent-open:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
 }
 .fr-key {
   font-family: var(--font-family-mono);
@@ -282,8 +271,7 @@
   color: var(--color-alert-text);
   font-weight: var(--font-weight-bold);
 }
-.fr-row.fr-flag,
-.tm-rail .fr:not([data-stacked="true"]) .fr-row.fr-flag {
+.fr-row.fr-flag {
   grid-template-columns: calc(var(--scale) * var(--size-rail-label)) auto minmax(0, 1fr);
   align-items: center;
 }
@@ -306,9 +294,6 @@
   align-items: center;
   gap: var(--space-2);
   margin-left: var(--space-3);
-}
-.fr-flag[aria-disabled] .switch {
-  opacity: 0.5;
 }
 .fr-blocked {
   padding: 0 var(--space-2);

@@ -2,20 +2,33 @@
 // Used for rarely opened overlays (the command palette, the key legend, the Update dialog) so the entry bundle stays inside
 // the 70 KB budget (architecture §6.1).
 import type { ComponentType } from "preact";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
-export function lazy<P extends object>(load: () => Promise<ComponentType<P>>): ComponentType<P> {
+export function lazy<P extends object>(load: () => Promise<ComponentType<P>>, onError?: () => void): ComponentType<P> {
   let C: ComponentType<P> | null = null;
   let loading: Promise<void> | null = null;
   return function Lazy(props: P) {
     const [, update] = useState(0);
-    if (C === null) {
-      loading ??= load().then((c) => {
-        C = c;
+    useEffect(() => {
+      if (C !== null) return;
+      let alive = true;
+      loading ??= load()
+        .then((c) => {
+          C = c;
+        })
+        .catch(() => {
+          loading = null;
+        });
+      void loading.then(() => {
+        if (!alive) return;
+        if (C !== null) update((n) => n + 1);
+        else onError?.();
       });
-      void loading.then(() => update(1));
-      return null;
-    }
+      return () => {
+        alive = false;
+      };
+    }, []);
+    if (C === null) return null;
     return <C {...props} />;
   };
 }

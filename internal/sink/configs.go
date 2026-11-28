@@ -156,15 +156,23 @@ func applySecret(kr secrets.Keyring, account string, secret *string) (bool, erro
 // DeleteConfig deletes the sink (outbox rows cascade) and its keychain item.
 func DeleteConfig(ctx context.Context, db *store.DB, kr secrets.Keyring, id int64) error {
 	return db.WriteTx(ctx, func(tx *sql.Tx) error {
-		res, err := tx.ExecContext(ctx, `DELETE FROM sink WHERE id=?`, id)
+		var kindName string
+		err := tx.QueryRowContext(ctx, `SELECT kind FROM sink WHERE id=?`, id).Scan(&kindName)
+		if errors.Is(err, sql.ErrNoRows) {
+			return apperr.New(apperr.NotFound, "The sink was not found.")
+		}
 		if err != nil {
 			return err
 		}
-		if n, _ := res.RowsAffected(); n == 0 {
-			return apperr.New(apperr.NotFound, "The sink was not found.")
+		if _, err := tx.ExecContext(ctx, `DELETE FROM sink WHERE id=?`, id); err != nil {
+			return err
 		}
 		// Keychain last: if it fails the transaction rolls back and the sink stays, with its secret.
+		// A sink kind that never uses a secret (e.g., JSON file) can still be deleted when the OS keychain is unavailable.
 		if _, err := applySecret(kr, secrets.SinkAccount(id), ptr("")); err != nil {
+			if k, ok := Get(kindName); ok && !k.Capabilities().NeedsSecret && errors.Is(err, secrets.ErrUnavailable) {
+				return nil
+			}
 			return err
 		}
 		return nil

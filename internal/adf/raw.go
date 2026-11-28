@@ -118,13 +118,13 @@ func hrefOK(href string) bool {
 	return false
 }
 
-// validColor reports whether s is exactly a lowercase #rrggbb colour.
+// validColor reports whether s is a #rrggbb hex colour (case-insensitive).
 func validColor(s string) bool {
 	if len(s) != 7 || s[0] != '#' {
 		return false
 	}
 	for _, c := range s[1:] {
-		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
 			return false
 		}
 	}

@@ -24,6 +24,8 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     options,
     load,
     onSelect,
+    open: controlledOpen,
+    onOpenChange,
     placeholder,
     minChars = 0,
     clearable,
@@ -54,7 +56,9 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     typedRef.current = v;
     setTypedState(v);
   };
-  const [open, setOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = !disabled && (controlled ? controlledOpen : internalOpen);
   const [active, setActive] = useState(-1);
   const [remote, setRemote] = useState<T[]>([]);
   const [status, setStatus] = useState<LoadStatus>("idle");
@@ -70,6 +74,10 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const abortRef = useRef<AbortController | null>(null);
   const seqRef = useRef(0);
+  const prevOpenRef = useRef(false);
+  const openLastRef = useRef(false);
+  const skipOpenLoadRef = useRef(false);
+  const committedJustNowRef = useRef(false);
 
   // The query only filters once the user has typed; opening shows the full (or initial) list.
   const q = typed ? text : "";
@@ -104,25 +112,63 @@ export function Combobox<T>(props: ComboboxProps<T>) {
     if (isMenu && open) inputRef.current?.focus();
   }, [isMenu, open]);
 
-  // Position the popup under its anchor (flips above when there is no room below).
+  // Position the popup under its anchor (flips above when there is no room below) and track scroll/resize while open.
   useLayoutEffect(() => {
     if (!showPopup) return;
-    const anchor = isMenu ? btnRef.current : fieldRef.current;
-    const pop = popupRef.current;
-    if (!anchor || !pop) return;
-    const r = anchor.getBoundingClientRect();
-    const next = popupPosition(
-      { top: r.top, bottom: r.bottom, left: r.left, width: r.width },
-      pop.offsetHeight,
-      window.innerHeight,
-    );
-    setPos((prev) =>
-      prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next,
-    );
-  });
+    const place = () => {
+      const anchor = isMenu ? btnRef.current : fieldRef.current;
+      const pop = popupRef.current;
+      if (!anchor || !pop) return;
+      const r = anchor.getBoundingClientRect();
+      const next = popupPosition(
+        { top: r.top, bottom: r.bottom, left: r.left, width: r.width },
+        pop.offsetHeight,
+        window.innerHeight,
+      );
+      setPos((prev) =>
+        prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next,
+      );
+    };
+    place();
+    window.addEventListener("scroll", place, { capture: true, passive: true });
+    window.addEventListener("resize", place, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [showPopup, count, status, searching, isMenu]);
 
   // Abort in-flight loads and clear timers on unmount.
   useEffect(() => () => stopLoads(), []);
+
+  // Synchronise side-effects whenever `open` transitions (handles both controlled and uncontrolled open/close).
+  useLayoutEffect(() => {
+    const was = prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (open === was) return;
+    if (open) {
+      if (!isMenu && document.activeElement !== inputRef.current) inputRef.current?.focus();
+      if (!skipOpenLoadRef.current) {
+        scheduleLoad(q);
+        setActive(count === 0 ? -1 : openLastRef.current ? count - 1 : 0);
+      }
+      skipOpenLoadRef.current = false;
+      openLastRef.current = false;
+    } else {
+      stopLoads();
+      setSearching(false);
+      setTyped(false);
+      setActive(-1);
+      if (!committedJustNowRef.current) setText(isMenu || clearOnSelect ? "" : committed);
+      committedJustNowRef.current = false;
+    }
+  }, [open]);
+
+  function setOpen(next: boolean) {
+    if (next === open) return;
+    if (!controlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  }
 
   function stopLoads() {
     clearTimeout(debounceRef.current);
@@ -176,10 +222,11 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   function openList(last: boolean) {
     if (disabled) return;
     if (!open) {
+      openLastRef.current = last;
       setOpen(true);
-      scheduleLoad(q);
+    } else {
+      setActive(count === 0 ? -1 : last ? count - 1 : 0);
     }
-    setActive(count === 0 ? -1 : last ? count - 1 : 0);
   }
 
   function closeList() {
@@ -194,21 +241,24 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   function commit(o: T) {
     stopLoads();
     setSearching(false);
-    onSelect(o);
+    const keep = onSelect(o) === false;
+    if (open) committedJustNowRef.current = true;
     setOpen(false);
     setTyped(false);
     setActive(-1);
-    setText(isMenu || clearOnSelect ? "" : getLabel(o));
+    setText(isMenu || clearOnSelect ? "" : keep ? committed : getLabel(o));
     if (isMenu) btnRef.current?.focus();
   }
 
   function create() {
     stopLoads();
+    setSearching(false);
     onCreate?.(createText);
     setOpen(false);
     setTyped(false);
     setActive(-1);
     setText(isMenu || clearOnSelect ? "" : committed);
+    if (isMenu) btnRef.current?.focus();
   }
 
   function clearValue() {
@@ -220,6 +270,7 @@ export function Combobox<T>(props: ComboboxProps<T>) {
   function onTyped(v: string) {
     setText(v);
     setTyped(true);
+    if (!open) skipOpenLoadRef.current = true;
     setOpen(true);
     setActive(0);
     scheduleLoad(v);
@@ -328,7 +379,9 @@ export function Combobox<T>(props: ComboboxProps<T>) {
       ref={popupRef}
       class="cbx-popup"
       style={{ top: pos.top, left: pos.left, width: pos.width }}
-      onMouseDown={(e) => e.preventDefault()} // keep focus in the input on clicks inside the popup
+      onMouseDown={(e) => {
+        if (e.target !== inputRef.current) e.preventDefault(); // keep focus in the input without blocking input caret clicks
+      }}
     >
       {isMenu ? renderInput(true) : null}
       {listShown ? (
@@ -361,6 +414,7 @@ export function Combobox<T>(props: ComboboxProps<T>) {
           })}
           {canCreate ? (
             <li
+              key="__create__"
               id={optId(items.length)}
               role="option"
               aria-selected="false"

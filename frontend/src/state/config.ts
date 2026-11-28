@@ -6,7 +6,7 @@ import type {
   LaneInfo, MapLane, SaveAck, SpaceOption, BoardOption, SpeakerConfig, SpeakerSort, StandupConfig, StandupPatch, UserOption, WalkLane,
 } from "../api/types";
 import { refreshStandups, standups, tabStandups } from "./app";
-import { enqueue, failedKeys, fieldErrors, flush, retryFailed, TEXT_DEBOUNCE_MS } from "./save";
+import { clearKeysWithPrefix, enqueue, failedKeys, fieldErrors, flush, retryFailed, TEXT_DEBOUNCE_MS } from "./save";
 import { goConfigure, goStandup, navigate, route } from "./route";
 import { refreshView } from "./standup";
 import { startSync } from "./sync";
@@ -24,11 +24,19 @@ route.subscribe((r) => {
 /** Source fields change the data, so they need a sync first and do not re-request the view (architecture §5.3). */
 const SOURCE_FIELDS = new Set<string>(["scope", "extraFilter"]);
 
-// Every change of `config` that did not come from loadConfig bumps this token, so a late Get never overwrites it.
-let loadToken = 0;
+// `loadSeq` tracks the active load or explicit replacement (`setConfig`) that owns `configLoading`.
+// `editGen` tracks mutations per standup id so a fast save ack for standup A never cancels an in-flight load of standup B,
+// while a live edit to standup A still prevents a stale get(A) from overwriting it (and still clears `configLoading`).
+let loadSeq = 0;
+const editGen = new Map<number, number>();
+
+function bumpStandup(id: number): void {
+  editGen.set(id, (editGen.get(id) ?? 0) + 1);
+}
 
 function setConfig(next: StandupConfig | null): void {
-  loadToken++;
+  loadSeq++;
+  configLoading.value = false;
   draftText.clear();
   config.value = next;
 }
@@ -58,6 +66,7 @@ function listOp<R>(list: string, run: () => Promise<R>, onSaved?: (result: R) =>
 function patchConfig(id: number, fn: (c: StandupConfig) => StandupConfig): void {
   const c = config.value;
   if (!c || c.id !== id) return;
+  bumpStandup(id);
   config.value = fn(c);
 }
 
@@ -65,7 +74,10 @@ function patchConfig(id: number, fn: (c: StandupConfig) => StandupConfig): void 
 function replaceConfig(id: number, next: StandupConfig): void {
   let out = next;
   for (const d of draftText.values()) if (d.id === id) out = { ...out, [d.field]: d.value } as StandupConfig;
-  if (config.value?.id === id) config.value = out;
+  if (config.value?.id === id) {
+    bumpStandup(id);
+    config.value = out;
+  }
 }
 
 function applyAck(id: number, ack: SaveAck): void {
@@ -93,15 +105,16 @@ function fail(e: unknown): void {
   showBanner({ kind: "error", message: toAppError(e).message, dismissible: true });
 }
 
-/** Loads a standup's config; a reply that was overtaken by another load, a leave or an edit is dropped. */
+/** Loads a standup's config; a reply that was overtaken by another load, a leave or an edit to that standup is dropped. */
 export async function loadConfig(standupId: number): Promise<void> {
-  const token = ++loadToken;
+  const seq = ++loadSeq;
+  const gen = editGen.get(standupId) ?? 0;
   configLoading.value = true;
   try {
     const c = await api().config.get(standupId);
-    if (token === loadToken) config.value = c;
+    if (seq === loadSeq && (editGen.get(standupId) ?? 0) === gen) config.value = c;
   } finally {
-    if (token === loadToken) configLoading.value = false;
+    if (seq === loadSeq) configLoading.value = false;
   }
 }
 
@@ -112,6 +125,7 @@ export function saveField<K extends keyof StandupPatch>(field: K, value: NonNull
   const id = c.id;
   const name = String(field);
   const key = `${id}:${name}`;
+  bumpStandup(id);
   config.value = { ...c, [name]: value } as StandupConfig;
   if (opts?.text) draftText.set(key, { id, field: name, value: String(value) });
   enqueue<SaveAck>({
@@ -127,18 +141,18 @@ export function saveField<K extends keyof StandupPatch>(field: K, value: NonNull
 }
 
 // Server-shaped responses replace local state (SetSpace, SetBoard, SortSpeakers, AddSpeaker, Create, Duplicate).
-// SetSpace and SetBoard call Jira, so they never retry.
+// SetSpace and SetBoard call Jira, so they never retry and share a per-standup queue key so they stay serialized.
 export function setSpace(space: SpaceOption): void {
   const id = config.value?.id;
   if (id === undefined) return;
-  enqueue<StandupConfig>({ key: `${id}:space`, noRetry: true, run: () => api().config.setSpace(id, space.id), onSaved: (next) => replaceConfig(id, next) });
+  enqueue<StandupConfig>({ key: `${id}:source`, noRetry: true, run: () => api().config.setSpace(id, space.id), onSaved: (next) => replaceConfig(id, next) });
 }
 
 export function setBoard(board: BoardOption): void {
   const id = config.value?.id;
   if (id === undefined) return;
   enqueue<StandupConfig>({
-    key: `${id}:board`,
+    key: `${id}:source`,
     noRetry: true,
     run: () => api().config.setBoard(id, board.id),
     onSaved: (next) => {
@@ -151,7 +165,7 @@ export function setBoard(board: BoardOption): void {
 export function setColumnLane(columnName: string, lane: MapLane): void {
   const c = config.value;
   if (!c) return;
-  config.value = { ...c, columns: c.columns.map((col) => (col.columnName === columnName ? { ...col, lane, auto: false } : col)) } as StandupConfig;
+  patchConfig(c.id, (cur) => ({ ...cur, columns: cur.columns.map((col) => (col.columnName === columnName ? { ...col, lane, auto: false } : col)) }) as StandupConfig);
   saveAck(c.id, `column:${columnName}`, () => api().config.setColumnLane(c.id, columnName, lane), false);
 }
 
@@ -163,7 +177,7 @@ export function moveColumn(columnName: string, toIndex: number): void {
   const group = c.columns.filter((x) => x.lane === col.lane && x !== col).sort((a, b) => a.order - b.order);
   group.splice(Math.max(0, Math.min(toIndex, group.length)), 0, col);
   const order = new Map(group.map((x, i) => [x.columnName, i]));
-  config.value = { ...c, columns: c.columns.map((x) => ({ ...x, order: order.get(x.columnName) ?? x.order })) };
+  patchConfig(c.id, (cur) => ({ ...cur, columns: cur.columns.map((x) => ({ ...x, order: order.get(x.columnName) ?? x.order })) }));
   const id = c.id;
   // An ordered list op, like speaker moves: every move is sent, in order (never merged into the latest).
   listOp<SaveAck>(`${id}:columnOrder`, () => api().config.moveColumn(id, columnName, toIndex), (ack) => {
@@ -178,14 +192,14 @@ export function setWalkOrder(lanes: WalkLane[]): void {
   const byLane = new Map<string, LaneInfo>(c.lanes.map((l) => [l.lane, l]));
   const walk = lanes.map((l) => byLane.get(l)).filter((l): l is LaneInfo => l !== undefined);
   const done = byLane.get("done");
-  config.value = { ...c, lanes: done ? [...walk, done] : walk };
+  patchConfig(c.id, (cur) => ({ ...cur, lanes: done ? [...walk, done] : walk }));
   saveAck(c.id, "walkOrder", () => api().config.setWalkOrder(c.id, lanes));
 }
 
 export function setLaneLimit(lane: WalkLane, days: number): void {
   const c = config.value;
   if (!c) return;
-  config.value = { ...c, lanes: c.lanes.map((l) => (l.lane === lane ? { ...l, limitDays: days } : l)) };
+  patchConfig(c.id, (cur) => ({ ...cur, lanes: cur.lanes.map((l) => (l.lane === lane ? { ...l, limitDays: days } : l)) }));
   saveAck(c.id, `limit:${lane}`, () => api().config.setLaneLimit(c.id, lane, days));
 }
 
@@ -228,14 +242,14 @@ export function renameLane(lane: string, label: string, commit = false): void {
   const blank = commit && label.trim() === "";
   const shown = blank ? (c.laneOptions.find((o) => o.lane === lane)?.defaultLabel || label) : label;
   const relabel = (l: LaneInfo) => (l.lane === lane ? { ...l, label: shown } : l);
-  config.value = { ...c, lanes: c.lanes.map(relabel), laneOptions: c.laneOptions.map(relabel) };
+  patchConfig(c.id, (cur) => ({ ...cur, lanes: cur.lanes.map(relabel), laneOptions: cur.laneOptions.map(relabel) }));
   saveAck(c.id, `label:${lane}`, () => api().config.renameLane(c.id, lane, label), true, TEXT_DEBOUNCE_MS);
 }
 
 export function setSpeakerIncluded(accountId: string, included: boolean): void {
   const c = config.value;
   if (!c) return;
-  config.value = { ...c, speakers: c.speakers.map((s) => (s.accountId === accountId ? { ...s, included } : s)) };
+  patchConfig(c.id, (cur) => ({ ...cur, speakers: cur.speakers.map((s) => (s.accountId === accountId ? { ...s, included } : s)) }));
   saveAck(c.id, `included:${accountId}`, () => api().config.setSpeakerIncluded(c.id, accountId, included));
 }
 
@@ -298,7 +312,7 @@ export function removeSpeaker(accountId: string): void {
   const at = c.speakers.findIndex((s) => s.accountId === accountId);
   const removed = c.speakers[at];
   if (!removed) return;
-  config.value = { ...c, speakers: c.speakers.filter((_, i) => i !== at).map((s, i) => ({ ...s, position: i })) };
+  patchConfig(id, (cur) => ({ ...cur, speakers: cur.speakers.filter((_, i) => i !== at).map((s, i) => ({ ...s, position: i })) }));
   listOp<SaveAck>(
     `${id}:speakers`,
     () => api().config.removeSpeaker(id, accountId),
@@ -394,6 +408,7 @@ export async function deleteStandup(standupId: number): Promise<void> {
     fail(e);
     return;
   }
+  clearKeysWithPrefix(`${standupId}:`);
   if (config.value?.id === standupId) {
     setConfig(null);
     const next = tabStandups()[0] ?? standups.value[0];
@@ -443,6 +458,7 @@ export async function leaveConfigure(): Promise<void> {
     for (const t of standups.value) {
       if (!t.configured && t.spaceKey === "") {
         discarded = true;
+        clearKeysWithPrefix(`${t.id}:`);
         await api().config.discardDraft(t.id).catch(() => undefined);
       }
     }

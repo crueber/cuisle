@@ -107,7 +107,21 @@ func (o *Orchestrator) applyTx(ctx context.Context, tx *sql.Tx, f *Fetched, ex *
 		}
 	}
 	res.Hydrated = len(f.Details)
-	ids, err := cache.IssueIDsTx(ctx, tx, connID)
+	needSet := make(map[string]struct{}, len(f.Members)+len(f.Dev)+len(f.DevChecked))
+	for _, m := range f.Members {
+		needSet[m.SourceID] = struct{}{}
+	}
+	for _, src := range f.DevChecked {
+		needSet[src] = struct{}{}
+	}
+	for src := range f.Dev {
+		needSet[src] = struct{}{}
+	}
+	needed := make([]string, 0, len(needSet))
+	for src := range needSet {
+		needed = append(needed, src)
+	}
+	ids, err := cache.IssueIDsForTx(ctx, tx, connID, needed)
 	if err != nil {
 		return res, err
 	}

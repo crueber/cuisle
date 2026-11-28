@@ -35,6 +35,7 @@ function runZoomKey(k: "in" | "out" | "reset"): boolean {
 
 /** Handles one keydown per the ux-spec §8 map; returns true when handled (caller preventDefaults). */
 export function handleGlobalKey(e: KeyboardEvent): boolean {
+  if (e.isComposing) return false;
   // ⌘K / Ctrl+K opens the command palette everywhere (standup, Configure, over the ticket modal) and, in a field, still
   // wins over the field. It toggles: while the palette is open its own input handles keys first, so this only sees the
   // press when focus left the input.

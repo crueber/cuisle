@@ -52,11 +52,7 @@ func (s *AppService) Bootstrap(ctx context.Context) (out Bootstrap, err error) {
 
 func (s *AppService) SetAppSetting(ctx context.Context, key string, value string) (ack SaveAck, err error) {
 	defer s.d.guard("SetAppSetting", &err)
-	a, err := s.d.Settings.SetAppSetting(ctx, key, value)
-	if err != nil {
-		return SaveAck{}, err
-	}
-	return saveAck(a), nil
+	return ackResult(s.d.Settings.SetAppSetting(ctx, key, value))
 }
 
 func (s *AppService) SetUIState(ctx context.Context, patch UIStatePatch) (err error) {
@@ -176,9 +172,11 @@ func (s *AppService) LogClientError(ctx context.Context, message string, stack s
 	message, stack = truncate(message, clientErrorMaxMessage), truncate(stack, clientErrorMaxStack)
 	sum := sha256.Sum256([]byte(message + "\x00" + stack))
 	key := hex.EncodeToString(sum[:])
-	now := s.d.now()
+	var now time.Time
 	if s.d.Clock != nil {
 		now = s.d.Clock.Now()
+	} else {
+		now = s.d.now()
 	}
 
 	s.mu.Lock()
@@ -202,7 +200,7 @@ func (s *AppService) LogClientError(ctx context.Context, message string, stack s
 		return nil
 	}
 	if len(s.seen) >= clientErrorMaxSeen {
-		s.seen = map[string]struct{}{}
+		clear(s.seen)
 	}
 	s.seen[key] = struct{}{}
 	s.logged = append(s.logged, now)
@@ -271,9 +269,16 @@ func (d *Deps) bootstrap(ctx context.Context) (Bootstrap, error) {
 		return Bootstrap{}, err
 	}
 	if id := visibleStandup(b.Standups, b.UI.LastStandupID); id != 0 {
-		v, err := d.buildView(ctx, id)
+		v, st, err := d.buildViewCore(ctx, id)
 		if err != nil {
 			return Bootstrap{}, err
+		}
+		v.Sync = view.SyncStatus{StandupID: id, State: "idle", Warnings: []string{}, NeedsSync: st.NeedsSync}
+		for _, s := range b.Sync {
+			if s.StandupID == id {
+				v.Sync = s
+				break
+			}
 		}
 		b.View = &v
 	}

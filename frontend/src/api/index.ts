@@ -128,8 +128,8 @@ export interface Api {
 
 // Go never sends nil lists (architecture §3.2); `arr` only guards the generated `T[] | null` types.
 const arr = <X>(p: PromiseLike<X[] | null>): Promise<X[]> => wrap(p).then((v) => v ?? []);
-// The generated types carry `| null` on list fields; the casts below narrow them to the Fix<> types.
-const as = <X>(p: PromiseLike<unknown>): Promise<X> => wrap(p) as Promise<X>;
+// The generated types carry `| null` on list fields; `as` narrows R to Fix<R> while checking assignability to Api.
+const as = <R>(p: PromiseLike<R>): Promise<T.Fix<R>> => wrap(p) as unknown as Promise<T.Fix<R>>;
 
 export const wailsApi: Api = {
   app: {
@@ -224,8 +224,8 @@ export const wailsApi: Api = {
     viewAsOf: (id, d) => as(HistorySvc.ViewAsOf(id, d)),
   },
   update: {
-    status: () => as(UpdateSvc.Status()),
-    checkNow: () => as(UpdateSvc.CheckNow()),
+    status: () => as(UpdateSvc.Status()) as Promise<T.UpdateStatus>,
+    checkNow: () => as(UpdateSvc.CheckNow()) as Promise<T.UpdateStatus>,
     install: () => wrap(UpdateSvc.Install()),
   },
 };

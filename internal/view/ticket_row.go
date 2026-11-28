@@ -18,12 +18,14 @@ type ticketBuilder struct {
 	asOf time.Time
 	opts TicketOptions
 
-	win         pulse.Window
-	statusLanes map[string]string // cfg status id → lane (as the board maps it)
-	statusNames map[string]string // status id → name (the standup's name first)
-	limits      map[string]int
-	blocked     map[string]bool
-	people      map[string]model.Person
+	win          pulse.Window
+	statusLanes  map[string]string // cfg status id → lane (as the board maps it)
+	statusNames  map[string]string // status id → name (the standup's name first)
+	limits       map[string]int
+	blocked      map[string]bool
+	people       map[string]model.Person
+	attByMediaID map[string]int // MediaFileID → index in t.Attachments
+	attByName    map[string]int // Name → unique index in t.Attachments (-1 = duplicate)
 
 	unresolvedMedia bool
 }
@@ -32,12 +34,28 @@ func newTicketBuilder(snap model.BoardSnapshot, t cache.Ticket, asOf time.Time, 
 	cfg := snap.Config
 	b := &ticketBuilder{
 		snap: snap, t: t, asOf: asOf, opts: opts,
-		win:         pulse.NewWindow(asOf, TicketPulseDays),
-		statusLanes: make(map[string]string, len(cfg.StatusLanes)),
-		statusNames: map[string]string{},
-		limits:      map[string]int{},
-		blocked:     map[string]bool{},
-		people:      make(map[string]model.Person, len(snap.People)+len(t.People)),
+		win:          pulse.NewWindow(asOf, TicketPulseDays),
+		statusLanes:  drawableLanes(cfg),
+		statusNames:  map[string]string{},
+		limits:       map[string]int{},
+		blocked:      map[string]bool{},
+		people:       make(map[string]model.Person, len(snap.People)+len(t.People)),
+		attByMediaID: make(map[string]int, len(t.Attachments)),
+		attByName:    make(map[string]int, len(t.Attachments)),
+	}
+	for i, a := range t.Attachments {
+		if a.MediaFileID != "" {
+			if _, dup := b.attByMediaID[a.MediaFileID]; !dup {
+				b.attByMediaID[a.MediaFileID] = i
+			}
+		}
+		if a.Name != "" {
+			if _, seen := b.attByName[a.Name]; seen {
+				b.attByName[a.Name] = -1
+			} else {
+				b.attByName[a.Name] = i
+			}
+		}
 	}
 	for id, st := range snap.Statuses {
 		b.statusNames[id] = st.Name
@@ -45,7 +63,6 @@ func newTicketBuilder(snap model.BoardSnapshot, t cache.Ticket, asOf time.Time, 
 			b.blocked[id] = true
 		}
 	}
-	b.statusLanes = drawableLanes(cfg)
 	for _, r := range cfg.StatusLanes {
 		if r.StatusName != "" {
 			b.statusNames[r.StatusID] = r.StatusName
@@ -83,51 +100,13 @@ func (b *ticketBuilder) statusName(statusID string) string { return b.statusName
 // row builds the header row and returns the blocked days over the window.
 func (b *ticketBuilder) row() (TicketView, int) {
 	is := b.t.Issue
-	h := b.t.History
-	lane := b.lane(is.StatusID)
-
-	pt := pulse.Ticket{
-		CreatedAt: is.CreatedAt, UpdatedAt: is.UpdatedAt, StatusID: is.StatusID, Flagged: is.Flagged,
-		StatusChanges: h.StatusChanges, FlagChanges: h.FlagChanges, Comments: h.Comments, Dev: h.Dev,
+	rc := rowContext{
+		cfg: b.snap.Config, urlPrefix: b.snap.IssueURLPrefix, asOf: b.asOf, win: b.win,
+		statusLanes: b.statusLanes, blocked: b.blocked, limits: b.limits, people: b.people,
 	}
-	tl := pulse.Timeline(pt, b.statusLanes, b.asOf)
-	entered := pulse.EnteredLane(tl)
-	days := pulse.DaysInLane(entered, b.asOf)
-	marks := pulse.Marks(pt, b.win, b.people)
-	spans := pulse.BlockedSpans(pt, tl, b.blocked, b.win, b.asOf)
-	segs := pulse.Segments(tl, b.win)
-	if segs == nil {
-		segs = []pulse.Seg{}
-	}
-	if marks == nil {
-		marks = []pulse.Mark{}
-	}
-	if spans == nil {
-		spans = []pulse.Span{}
-	}
-
-	commits, prs, comments := pulse.Totals(marks)
-	prevLabel, prevDays := "", 0
-	if n := len(segs); n >= 2 {
-		prevLabel = b.snap.Config.LaneLabel(segs[n-2].Lane)
-		prevDays = segs[n-2].To - segs[n-2].From
-	}
-	label := pulse.Label(pulse.LabelInput{
-		LaneLabel: b.snap.Config.LaneLabel(lane), DaysInLane: days, PrevLaneLabel: prevLabel, PrevDays: prevDays,
-		Commits: commits, PRs: prs, Comments: comments, Days: b.win.Days, BlockedDays: pulse.BlockedDays(spans),
-		Done: lane == model.LaneDone,
-	})
-
-	var doneAt int64
-	if lane == model.LaneDone {
-		doneAt = entered.UnixMilli()
-	}
-	tv := TicketView{
-		ID: b.t.LocalID, SourceID: is.SourceID, Key: is.Key, Summary: is.Summary, URL: b.snap.IssueURLPrefix + is.Key,
-		Type: b.t.TypeKind, Assignee: is.AssigneeID, Lane: lane, StatusName: b.statusName(is.StatusID),
-		DaysInLane: days, OverLimit: pulse.OverLimit(lane, days, b.limits[lane]),
-		Blocked: pulse.BlockedNow(is.Flagged, b.blocked[is.StatusID]), DoneAt: doneAt,
-		Pulse: Pulse{Segs: segs, Marks: marks, Blocked: spans, Label: label},
-	}
-	return tv, pulse.BlockedDays(spans)
+	tv, _, blockedDays, _ := rc.buildRow(rowItem{
+		localID: b.t.LocalID, issue: is, typeKind: b.t.TypeKind,
+		statusName: b.statusName(is.StatusID), lane: b.lane(is.StatusID), history: b.t.History,
+	}, false)
+	return tv, blockedDays
 }

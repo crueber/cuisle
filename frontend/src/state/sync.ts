@@ -96,7 +96,7 @@ function onFinished(p: SyncFinished): void {
   if (p.status === "ok" || p.status === "partial") {
     patchStatus(p.standupId, {
       state: "idle", lastStatus: p.status, warnings, lastSuccessAt: p.finishedAt, lastAttemptAt: p.finishedAt,
-      errorCode: "", errorMessage: "",
+      errorCode: "", errorMessage: "", needsSync: false,
     });
     void refreshView(p.standupId).catch(() => undefined);
     return;
@@ -106,7 +106,8 @@ function onFinished(p: SyncFinished): void {
     return;
   }
   patchStatus(p.standupId, {
-    state: "failed", lastStatus: "failed", warnings, errorCode: p.errorCode ?? "", errorMessage: p.errorMessage ?? "",
+    state: "failed", lastStatus: "failed", warnings, lastAttemptAt: p.finishedAt,
+    errorCode: p.errorCode ?? "", errorMessage: p.errorMessage ?? "",
   });
   // Banners only for failures of a sync the user started; sync-on-open stays quiet (ux-spec §2.1).
   if (trigger === "manual" && p.errorCode === "offline") {

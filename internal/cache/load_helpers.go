@@ -36,28 +36,7 @@ func dbErr(err error, msg string) error {
 
 // withWriteTx runs fn in one immediate write transaction on the writer pool.
 func withWriteTx(ctx context.Context, w *sql.DB, fn func(tx *sql.Tx) error) error {
-	tx, err := w.BeginTx(ctx, nil)
-	if err != nil {
-		return dbErr(err, "The data could not be saved.")
-	}
-	// A panic in fn must not leave the single writer connection inside an open transaction: roll back, then let
-	// the panic continue to the caller's recover.
-	done := false
-	defer func() {
-		if !done {
-			_ = tx.Rollback()
-		}
-	}()
-	if err := fn(tx); err != nil {
-		done = true
-		_ = tx.Rollback()
-		return dbErr(err, "The data could not be saved.")
-	}
-	done = true
-	if err := tx.Commit(); err != nil {
-		return dbErr(err, "The data could not be saved.")
-	}
-	return nil
+	return (&store.DB{W: w}).WriteTx(ctx, fn)
 }
 
 // nullMs stores a time as Unix ms, or NULL for the zero time.

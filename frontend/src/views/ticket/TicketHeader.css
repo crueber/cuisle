@@ -2,7 +2,6 @@
    ellipsised, row 3 is the pulse strip (40px, 28 short). Tokens only; sizes scale with --scale. */
 .th {
   flex: none;
-  box-sizing: border-box;
   padding: 0 var(--size-modal-pad);
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--color-rule-soft);
@@ -77,7 +76,6 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  box-sizing: border-box;
   min-width: calc(var(--scale) * var(--size-button-height));
   height: calc(var(--scale) * var(--size-button-height));
   padding: 0 var(--space-2);
@@ -164,21 +162,6 @@
   height: calc(var(--scale) * 0.75rem);
   background: var(--color-lane-backlog);
 }
-.th-swatch[data-lane="todo"] {
-  background: var(--color-lane-todo);
-}
-.th-swatch[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.th-swatch[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.th-swatch[data-lane="qa"] {
-  background: var(--color-lane-qa);
-}
-.th-swatch[data-lane="done"] {
-  background: var(--color-lane-done);
-}
 
 .th-track {
   position: relative;
@@ -206,7 +189,6 @@
 }
 .th-days {
   flex: none;
-  box-sizing: border-box;
   min-width: calc(var(--scale) * var(--size-days-chip));
   padding: 0 var(--space-1);
   text-align: center;

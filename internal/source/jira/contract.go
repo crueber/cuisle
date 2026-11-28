@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -172,7 +173,7 @@ type HTTPError struct {
 	NonJSON     bool   // body was not JSON (dev-status degrade signal)
 }
 
-func (e *HTTPError) Error() string { return e.Method + " " + e.Path + ": HTTP " + itoa(e.Status) }
+func (e *HTTPError) Error() string { return e.Method + " " + e.Path + ": HTTP " + strconv.Itoa(e.Status) }
 
 // Time decodes Jira timestamps: ISO-8601 with offset ("2026-11-23T09:15:02.123+0000", "…Z", "…+00:00"), epoch
 // milliseconds as a number or numeric string, and null/"" (zero time). Implemented in client.go (WP-06).
@@ -203,21 +204,17 @@ type Policy struct {
 }
 
 var (
-	defaultPolicyOnce sync.Once
-	defaultPolicy     *Policy
+	policyMu      sync.Mutex
+	defaultPolicy *Policy
 )
-
-var policyMu sync.Mutex
 
 // DefaultPolicy returns the process-wide policy with the jira-sync.md §1/§3 numbers.
 func DefaultPolicy() *Policy {
 	policyMu.Lock()
 	defer policyMu.Unlock()
-	defaultPolicyOnce.Do(func() {
-		if defaultPolicy == nil {
-			defaultPolicy = NewPolicy(PolicyOptions{})
-		}
-	})
+	if defaultPolicy == nil {
+		defaultPolicy = NewPolicy(PolicyOptions{})
+	}
 	return defaultPolicy
 }
 
@@ -226,7 +223,6 @@ func DefaultPolicy() *Policy {
 func SetDefaultPolicy(p *Policy) (restore func()) {
 	policyMu.Lock()
 	defer policyMu.Unlock()
-	defaultPolicyOnce.Do(func() {})
 	prev := defaultPolicy
 	defaultPolicy = p
 	return func() {
@@ -271,26 +267,4 @@ func metaToMap(m Meta) map[string]any {
 		out["fieldsFetchedAt"] = m.FieldsFetchedAt.UTC().Format(time.RFC3339Nano)
 	}
 	return out
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	neg := n < 0
-	if neg {
-		n = -n
-	}
-	var b [20]byte
-	i := len(b)
-	for n > 0 {
-		i--
-		b[i] = byte('0' + n%10)
-		n /= 10
-	}
-	if neg {
-		i--
-		b[i] = '-'
-	}
-	return string(b[i:])
 }

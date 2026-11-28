@@ -32,8 +32,8 @@ var tablesOf0001 = []string{
 	"ticket_field_pref", "transition_cache", "ui_state",
 }
 
-// headVersion is the newest embedded migration (0008_issue_gen).
-const headVersion = 8
+// headVersion is the newest embedded migration (0009_perf_indexes).
+const headVersion = 9
 
 func TestOpen_FreshFile_ReportsMigrationAndNoRecovery(t *testing.T) {
 	defer recoverStub(t)
@@ -41,8 +41,8 @@ func TestOpen_FreshFile_ReportsMigrationAndNoRecovery(t *testing.T) {
 	if info.SchemaVersion != headVersion {
 		t.Errorf("SchemaVersion = %d, want %d", info.SchemaVersion, headVersion)
 	}
-	if !reflect.DeepEqual(info.Migrated, []int{1, 2, 3, 4, 5, 6, 7, 8}) {
-		t.Errorf("Migrated = %v, want [1 2 3 4 5 6 7 8]", info.Migrated)
+	if !reflect.DeepEqual(info.Migrated, []int{1, 2, 3, 4, 5, 6, 7, 8, 9}) {
+		t.Errorf("Migrated = %v, want [1 2 3 4 5 6 7 8 9]", info.Migrated)
 	}
 	if info.BackupPath != "" {
 		t.Errorf("BackupPath = %q, want empty (nothing to back up on a new file)", info.BackupPath)
@@ -62,7 +62,7 @@ func TestOpen_FreshFile_WriterPragmas(t *testing.T) {
 		{"busy_timeout", "5000"},
 		{"temp_store", "2"},   // MEMORY
 		{"auto_vacuum", "2"},  // INCREMENTAL, set when the file is created
-		{"user_version", "8"}, // headVersion
+		{"user_version", "9"}, // headVersion
 		{"query_only", "0"},
 	}
 	for _, c := range want {

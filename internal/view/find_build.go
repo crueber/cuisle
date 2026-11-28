@@ -28,9 +28,8 @@ func BuildHit(f cache.HitFact, cfg *model.EffectiveConfig, asOf time.Time) Ticke
 	if cfg == nil {
 		return h
 	}
-	statusLanes := make(map[string]string, len(cfg.StatusLanes))
+	statusLanes := drawableLanes(*cfg)
 	for _, r := range cfg.StatusLanes {
-		statusLanes[r.StatusID] = r.Lane
 		if r.StatusID == f.StatusID && r.StatusName != "" {
 			h.StatusName = r.StatusName
 		}

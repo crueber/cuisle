@@ -557,6 +557,7 @@ export function createMockApi(given?: MockOptions): MockApi {
             needsSync: false,
             draft: true,
           };
+          syncLaneColumns(draft);
           configs.push(draft);
           return draft;
         }),
@@ -762,8 +763,8 @@ export function createMockApi(given?: MockOptions): MockApi {
         run<T.SaveAck>("config.moveSpeaker", [id, accountId, toPosition], () => {
           const cfg = findCfg(id);
           const from = cfg.speakers.findIndex((x) => x.accountId === accountId);
-          const moved = cfg.speakers.splice(from, 1)[0];
-          if (!moved) throw notFound("Speaker");
+          if (from < 0) throw notFound("Speaker");
+          const moved = cfg.speakers.splice(from, 1)[0]!;
           cfg.speakers.splice(Math.min(Math.max(toPosition, 0), cfg.speakers.length), 0, moved);
           cfg.speakers.forEach((s, i) => (s.position = i));
           changed(cfg);
@@ -1130,7 +1131,7 @@ export function createMockApi(given?: MockOptions): MockApi {
       status: () => run<T.UpdateStatus>("update.status", [], updateNow),
       checkNow: () =>
         run<T.UpdateStatus>("update.checkNow", [], () => {
-          if (update.channel !== "") setUpdate({ lastCheckedAt: Date.now(), lastError: "" });
+          if (update.channel !== "") setUpdate({ lastCheckedAt: app.now, lastError: "" });
           return updateNow();
         }),
       install: () =>

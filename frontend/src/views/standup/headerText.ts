@@ -1,9 +1,9 @@
 // Pure text and width helpers for the standup header (ux-spec §2.1). No DOM, no timers: callers pass `now`.
 import type { SyncStatus } from "../../api/types";
+import { MONTHS } from "../../format";
 import type { HeaderCollapse } from "../../layout/responsive";
 
 const WEEKDAYS = ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MS_PER_MIN = 60_000;
 
 /** "2 min", "3h", "2 days" for an age in milliseconds (timestamps are unix ms). */

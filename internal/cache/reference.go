@@ -60,19 +60,7 @@ func UpsertBoards(ctx context.Context, w *sql.DB, connID int64, boards []model.B
 
 func UpsertPeople(ctx context.Context, w *sql.DB, connID int64, people []model.Person, at time.Time) error {
 	return withWriteTx(ctx, w, func(tx *sql.Tx) error {
-		for _, p := range people {
-			_, err := tx.ExecContext(ctx, `
-				INSERT INTO person (connection_id, account_id, display_name, active, account_type, fetched_at) VALUES (?, ?, ?, ?, ?, ?)
-				ON CONFLICT(connection_id, account_id) DO UPDATE SET
-			   display_name = CASE WHEN excluded.display_name <> '' THEN excluded.display_name ELSE person.display_name END,
-			   active = CASE WHEN excluded.display_name <> '' THEN excluded.active ELSE person.active END,
-			   account_type = COALESCE(excluded.account_type, person.account_type), fetched_at = excluded.fetched_at`,
-				connID, p.AccountID, p.DisplayName, boolInt(p.Active), nullStr(p.Kind), store.Ms(at))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return ApplyPeopleTx(ctx, tx, connID, people, at)
 	})
 }
 

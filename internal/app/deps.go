@@ -46,7 +46,7 @@ type Deps struct {
 	busy      map[int64]struct{}
 	refreshAt map[int64]time.Time
 	offlineAt atomic.Int64 // unix ms of the last offline verdict, 0 = online (see noteNet and Deps.isOffline)
-	bg        gosync.WaitGroup
+	bg        waitGroup
 
 	// The finder's lane lookups (F14): a standup's effective config by rev, so a hit row costs no config read.
 	findCfgMu gosync.Mutex
@@ -57,6 +57,10 @@ type Deps struct {
 	findIdxBuilds atomic.Int64 // how many times the index was (re)built; a test asserts unrelated writes do not
 	bgCtx         context.Context
 	bgCancel      context.CancelFunc
+	bgStopped     bool
+	bgPaused      int
+	wipeMu        gosync.Mutex
+	ticketWG      waitGroup
 }
 
 // Services is every bound service, sharing Deps.

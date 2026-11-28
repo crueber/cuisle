@@ -1,6 +1,6 @@
 // KeyLegend: the "?" popover with the ux-spec §8 keyboard map and the §7 pulse legend.
 // Esc closes through a document keydown listener that exists only while open.
-import { useEffect } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import type { KeyLegendProps } from "./props";
 
 const KEYS: [string[], string][] = [
@@ -28,21 +28,34 @@ const LANES = [
 ];
 
 export function KeyLegend({ open, onClose, showCommits, showPRs, showComments, devActivity, lanes }: KeyLegendProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
+    const opener = document.activeElement as HTMLElement | null;
+    ref.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        onCloseRef.current();
+      }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener && opener !== document.body && document.contains(opener)) opener.focus();
+    };
+  }, [open]);
 
   if (!open) return null;
 
   const devAvailable = devActivity !== "unavailable";
 
   return (
-    <div class="keylegend" role="dialog" aria-label="Keys and pulse legend">
+    <div class="keylegend" role="dialog" aria-label="Keys and pulse legend" tabIndex={-1} ref={ref}>
       <div class="keylegend-head">
         <span class="keylegend-title">Keys</span>
         <button type="button" class="keylegend-close" aria-label="Close" onClick={() => onClose()}>

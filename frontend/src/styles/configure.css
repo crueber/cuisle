@@ -461,28 +461,19 @@
   border-radius: var(--radius-chip);
   background: var(--color-lane-backlog);
 }
-.cfg-swatch[data-lane="todo"] {
-  background: var(--color-lane-todo);
-}
-.cfg-swatch[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.cfg-swatch[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.cfg-swatch[data-lane="qa"] {
-  background: var(--color-lane-qa);
-}
-.cfg-swatch[data-lane="done"] {
-  background: var(--color-lane-done);
-}
 .cfg-swatch[data-lane="hidden"] {
   background: transparent;
   border: 1px dashed var(--color-rule-mid);
 }
 
-/* Buttons shared by section toolbars (Speakers sort, Person view presets). */
-.cfg-btn {
+/* Buttons shared by Configure sections (Speakers, Person view, Connection, Display, Export, Storage, Ticket fields). */
+.cfg-btn,
+.conn-btn,
+.disp-btn,
+.exp-btn,
+.sto-btn,
+.tf-btn,
+.tf-toggle {
   min-height: var(--size-button-height);
   padding: 0 var(--space-3);
   border: 2px solid var(--color-rule);
@@ -493,8 +484,41 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
-.cfg-btn:hover {
+.cfg-btn:hover,
+.conn-btn:hover,
+.disp-btn:hover,
+.sto-btn:hover,
+.tf-btn:hover {
   background: var(--color-rule-soft);
+}
+.conn-btn:disabled,
+.disp-btn:disabled,
+.exp-btn:disabled,
+.sto-btn:disabled,
+.tf-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Section alerts and empty notes shared across Configure sections. */
+.conn-alert,
+.exp-alert,
+.sto-alert,
+.tf-alert,
+.exp-empty,
+.tf-empty {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+.conn-alert,
+.exp-alert,
+.sto-alert,
+.tf-alert {
+  color: var(--color-alert-text);
+}
+.exp-empty,
+.tf-empty {
+  color: var(--color-muted);
 }
 
 /* Ordered-list chevrons: stacked, 24x19 each (ux-spec §9.3). */

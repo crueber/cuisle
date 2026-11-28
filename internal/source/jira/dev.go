@@ -49,7 +49,7 @@ type devDetail struct {
 			} `json:"commits"`
 		} `json:"repositories"`
 		PullRequests []struct {
-			ID             flexID `json:"id"`
+			ID             refID  `json:"id"`
 			Name           string `json:"name"` // the pull request title
 			Status         string `json:"status"`
 			LastUpdate     Time   `json:"lastUpdate"`

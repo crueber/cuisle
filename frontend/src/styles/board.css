@@ -12,7 +12,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
-  box-sizing: border-box;
   height: calc(var(--scale) * 48px);
   min-width: 0;
 }
@@ -56,7 +55,7 @@
 }
 
 .board-sub-alert,
-[data-alert="true"] {
+.board-sec-alert[data-alert="true"] {
   color: var(--color-alert-text);
 }
 
@@ -105,7 +104,6 @@
 /* The label block spans icon + key + title and its gaps, so the axis track starts where the lane tracks do. */
 .board-axis-label {
   flex: 0 0 auto;
-  box-sizing: border-box;
   width: calc(var(--scale) * 14px + var(--key-w) + var(--title-w) + var(--space-2) * 3 + var(--assignee-w, 0px));
   padding-bottom: 6px;
   font-size: calc(var(--scale) * var(--font-size-small));
@@ -303,7 +301,6 @@
   display: flex;
   align-items: flex-end;
   gap: var(--space-3);
-  box-sizing: border-box;
   height: calc(var(--scale) * 36px);
   padding-bottom: 5px;
   border-bottom: var(--size-rule-heavy) solid var(--color-rule);
@@ -413,7 +410,6 @@
 
 /* The shared Segmented, sized for the title row: 30px, a 2px ink border, selected = ink fill. */
 .board-group .seg {
-  box-sizing: border-box;
   height: calc(var(--scale) * 30px);
   min-height: 0;
   border: var(--size-rule-row) solid var(--color-rule);
@@ -433,7 +429,6 @@
 
 .board-group-kbd {
   display: inline-block;
-  box-sizing: border-box;
   min-width: calc(var(--scale) * 20px);
   padding: 0 var(--space-1);
   border: 1px solid var(--color-rule-mid);
@@ -465,7 +460,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  box-sizing: border-box;
   height: calc(var(--scale) * var(--size-lane-head));
   margin-bottom: 3px;
   padding-bottom: 2px;
@@ -562,7 +556,6 @@
 }
 
 .board-assignee--none {
-  box-sizing: border-box;
   width: calc(var(--scale) * 30px);
   height: calc(var(--scale) * 18px);
   border: 1.5px dashed var(--color-unassigned-border);

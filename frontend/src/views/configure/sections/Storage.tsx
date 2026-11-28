@@ -6,21 +6,16 @@ import { useEffect, useState } from "preact/hooks";
 import { api } from "../../../api";
 import type { Diagnostics, MediaCacheInfo } from "../../../api/types";
 import { Stepper } from "../../../components/Stepper";
+import { formatBytes } from "../../../format";
 import { setAppSetting, settings } from "../../../state/app";
 import type { AppSectionProps } from "../props";
 import "./Storage.css";
 
+export { formatBytes };
+
 const DEFAULT_CAP_GB = 2;
 const MIN_CAP_GB = 1;
 const MAX_CAP_GB = 64;
-
-/** Decimal units (1 KB = 1000 B), as in the mockup: "1.2 GB", "640 MB", "412 KB". */
-export function formatBytes(n: number): string {
-  if (n >= 1e9) return `${(n / 1e9).toFixed(1)} GB`;
-  if (n >= 1e6) return `${Math.round(n / 1e6)} MB`;
-  if (n >= 1e3) return n >= 1e5 ? `${Math.round(n / 1e3)} KB` : `${(n / 1e3).toFixed(1)} KB`;
-  return `${n} B`;
-}
 
 /** The cleanup cap is stored in MiB (like every *_mb setting) and shown in GB (1 GB = 1024 MB). */
 function capGb(raw: string | undefined): number {

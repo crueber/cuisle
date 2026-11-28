@@ -10,22 +10,33 @@ import (
 	"github.com/crueber/cuisle/internal/model"
 )
 
+// columnsByLane groups board column names by lane in board column order.
+func columnsByLane(cols []model.ColumnLane) map[string][]string {
+	sorted := sortedColumns(cols)
+	byLane := make(map[string][]string)
+	for _, c := range sorted {
+		byLane[c.Lane] = append(byLane[c.Lane], c.ColumnName)
+	}
+	return byLane
+}
+
 // laneInfos returns the working lanes (custom lanes included) in walk order, then done when withDone is set.
 func laneInfos(cfg model.EffectiveConfig, withDone bool) []LaneInfo {
 	walk := append([]model.LaneConfig(nil), cfg.Lanes...)
 	sort.SliceStable(walk, func(i, j int) bool { return walk[i].Position < walk[j].Position })
+	cols := columnsByLane(cfg.Columns)
 	out := make([]LaneInfo, 0, len(walk)+1)
 	for _, l := range walk {
-		out = append(out, laneInfo(cfg, l.Lane, l.LimitDays, l.Hue))
+		out = append(out, laneInfo(cfg, l.Lane, l.LimitDays, l.Hue, cols))
 	}
 	if withDone {
-		out = append(out, laneInfo(cfg, model.LaneDone, 0, 0))
+		out = append(out, laneInfo(cfg, model.LaneDone, 0, 0, cols))
 	}
 	return out
 }
 
 // laneInfo describes one lane of cfg.
-func laneInfo(cfg model.EffectiveConfig, lane string, limit, hue int) LaneInfo {
+func laneInfo(cfg model.EffectiveConfig, lane string, limit, hue int, colsByLane map[string][]string) LaneInfo {
 	kind := LaneKindWorking
 	switch lane {
 	case model.LaneDone:
@@ -35,9 +46,13 @@ func laneInfo(cfg model.EffectiveConfig, lane string, limit, hue int) LaneInfo {
 	case model.LaneHidden:
 		kind = LaneKindHidden
 	}
+	cols := colsByLane[lane]
+	if cols == nil {
+		cols = []string{}
+	}
 	return LaneInfo{
 		Lane: lane, Label: cfg.LaneLabel(lane), DefaultLabel: model.DefaultLaneLabel(lane), Kind: kind,
-		Custom: model.IsCustomLane(lane), Hue: hue, LimitDays: limit, Columns: columnNamesFor(cfg.Columns, lane),
+		Custom: model.IsCustomLane(lane), Hue: hue, LimitDays: limit, Columns: cols,
 	}
 }
 
@@ -53,15 +68,16 @@ func laneOptions(cfg model.EffectiveConfig) []LaneInfo {
 		}
 	}
 	sort.SliceStable(custom, func(i, j int) bool { return customSeq(custom[i].Lane) < customSeq(custom[j].Lane) })
+	cols := columnsByLane(cfg.Columns)
 	out := make([]LaneInfo, 0, len(cfg.Lanes)+3)
-	out = append(out, laneInfo(cfg, model.LaneBacklog, 0, 0))
+	out = append(out, laneInfo(cfg, model.LaneBacklog, 0, 0, cols))
 	for _, id := range model.WorkingLanes {
-		out = append(out, laneInfo(cfg, id, byLane[id].LimitDays, 0))
+		out = append(out, laneInfo(cfg, id, byLane[id].LimitDays, 0, cols))
 	}
 	for _, l := range custom {
-		out = append(out, laneInfo(cfg, l.Lane, l.LimitDays, l.Hue))
+		out = append(out, laneInfo(cfg, l.Lane, l.LimitDays, l.Hue, cols))
 	}
-	return append(out, laneInfo(cfg, model.LaneDone, 0, 0), laneInfo(cfg, model.LaneHidden, 0, 0))
+	return append(out, laneInfo(cfg, model.LaneDone, 0, 0, cols), laneInfo(cfg, model.LaneHidden, 0, 0, cols))
 }
 
 // customSeq is the number of a custom lane id ("c12" → 12; 0 for anything else).

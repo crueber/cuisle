@@ -7,13 +7,11 @@ package jiratest
 //   - StaleChangelog: a write applies as usual, but POST changelog/bulkfetch omits the changelog entries that write
 //     created until the next Mutate (Jira's changelog lagging behind a write).
 //
-// The frozen Server struct has no slot for this state, so it lives in a package-level table keyed by *Server and is
-// dropped by Close. Every function here runs with Server.mu held (handlers do), except forget, which takes it itself.
+// State lives on Server.f12 and every function here runs with Server.mu held (handlers and Mutate hold it).
 
 import (
 	"net/http"
 	"strings"
-	"sync"
 )
 
 type f12State struct {
@@ -21,27 +19,11 @@ type f12State struct {
 	hidden  map[string]bool // changelog entry ids bulkfetch omits (StaleChangelog)
 }
 
-var f12 = struct {
-	mu sync.Mutex
-	m  map[*Server]*f12State
-}{m: map[*Server]*f12State{}}
-
 func (s *Server) f12State(create bool) *f12State {
-	f12.mu.Lock()
-	defer f12.mu.Unlock()
-	st := f12.m[s]
-	if st == nil && create {
-		st = &f12State{written: map[string]bool{}, hidden: map[string]bool{}}
-		f12.m[s] = st
+	if s.f12 == nil && create {
+		s.f12 = &f12State{written: map[string]bool{}, hidden: map[string]bool{}}
 	}
-	return st
-}
-
-// f12Forget drops the server's fault state (Close).
-func (s *Server) f12Forget() {
-	f12.mu.Lock()
-	delete(f12.m, s)
-	f12.mu.Unlock()
+	return s.f12
 }
 
 // f12WriteTarget returns the issue a light-write request addresses, or nil when the request is not a write.
@@ -108,7 +90,7 @@ func (s *Server) f12Stale(id string) bool {
 
 // f12Mutated serves the lagging entries again: Mutate is "the next moment the dataset is touched".
 func (s *Server) f12Mutated() {
-	if st := s.f12State(false); st != nil {
-		st.hidden = map[string]bool{}
+	if s.f12 != nil {
+		clear(s.f12.hidden)
 	}
 }

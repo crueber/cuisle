@@ -1,8 +1,9 @@
 // Update confirm dialog (ux-spec §2.1 Update, ADR 0016): current → new version, What's new (the release page), and
 // Install and restart. While installing it shows the phase and download percent; failures say what went wrong and
 // nothing was installed. A click on the scrim or Escape closes it (not while installing).
-import { useEffect, useRef } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import type { UpdateStatus } from "../../api/types";
+import { trapTab, useDialogFocus } from "../../components/modal";
 import { installUpdate, installing, openReleasePage, updateDialogOpen, updateStatus } from "../../state/update";
 import "./UpdateDialog.css";
 
@@ -21,21 +22,6 @@ export function phaseText(s: UpdateStatus): string {
   return "";
 }
 
-/** Keeps Tab and Shift+Tab inside the dialog (it is aria-modal): wraps from the last enabled button to the first
- *  and back, and pulls focus in when it sits on the dialog itself. */
-export function trapTab(e: KeyboardEvent, dialog: HTMLElement | null): void {
-  if (!dialog) return;
-  const items = Array.from(dialog.querySelectorAll<HTMLElement>("button:not([disabled]), a[href], [tabindex]:not([tabindex='-1'])"));
-  e.preventDefault();
-  if (items.length === 0) {
-    dialog.focus();
-    return;
-  }
-  const i = items.indexOf(document.activeElement as HTMLElement);
-  const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : i < 0 || i === items.length - 1 ? 0 : i + 1;
-  items[next]?.focus();
-}
-
 export function UpdateDialog() {
   const s = updateStatus.value;
   const avail = s.available;
@@ -43,13 +29,7 @@ export function UpdateDialog() {
   const ref = useRef<HTMLDivElement>(null);
   const scrimDown = useRef(false);
 
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
-    return () => {
-      if (opener && opener !== document.body && document.contains(opener)) opener.focus();
-    };
-  }, []);
+  useDialogFocus(ref);
 
   const close = () => {
     if (!busy) updateDialogOpen.value = false;

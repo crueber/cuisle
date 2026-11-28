@@ -1,5 +1,5 @@
 // FROZEN SIGNATURES (architecture §4.3). Implementation: WP-15. Module-level signals; no providers.
-import { computed, signal } from "@preact/signals";
+import { batch, computed, signal } from "@preact/signals";
 import { api } from "../api/index";
 import type { Bootstrap, BuildInfo, Connection, StandupTab, Theme, TextSize } from "../api/types";
 import { enqueue } from "./save";
@@ -22,22 +22,26 @@ export const contentScale = computed(() => textScale.value * (currentZoom() / 10
 export function initFromBoot(boot: Bootstrap): void {
   const s: Record<string, string> = {};
   for (const [k, v] of Object.entries(boot.settings ?? {})) if (v !== undefined) s[k] = v;
-  settings.value = s;
-  connection.value = boot.connection;
-  standups.value = boot.standups;
-  build.value = boot.build;
-  recovered.value = boot.recovered;
-  views.value = boot.view ? new Map([[boot.view.standupId, boot.view]]) : new Map();
-  syncStatus.value = new Map(boot.sync.map((s) => [s.standupId, s]));
-  seedBoardGroups(boot.ui?.boardGroup);
-  seedZooms(boot.ui?.zoom);
-  applyAppearance(themeOf(settings.value), textSizeOf(settings.value));
-  route.value = initialRoute(boot);
+  batch(() => {
+    settings.value = s;
+    connection.value = boot.connection;
+    standups.value = boot.standups;
+    build.value = boot.build;
+    recovered.value = boot.recovered;
+    views.value = boot.view ? new Map([[boot.view.standupId, boot.view]]) : new Map();
+    syncStatus.value = new Map(boot.sync.map((st) => [st.standupId, st]));
+    seedBoardGroups(boot.ui?.boardGroup);
+    seedZooms(boot.ui?.zoom);
+    applyAppearance(themeOf(s), textSizeOf(s));
+    route.value = initialRoute(boot);
+  });
 }
+
+const configuredTabs = computed(() => standups.value.filter((t) => t.configured).sort((a, b) => a.position - b.position));
 
 /** Configured standups (tabs and 1–9 shortcuts), in position order. */
 export function tabStandups(): StandupTab[] {
-  return standups.value.filter((t) => t.configured).sort((a, b) => a.position - b.position);
+  return configuredTabs.value;
 }
 
 function themeOf(s: Record<string, string>): Theme {

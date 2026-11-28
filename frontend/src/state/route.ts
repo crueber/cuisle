@@ -12,6 +12,17 @@ export const route = signal<Route>({ view: "connect" });
 
 const UI_PERSIST_MS = 500;
 let uiTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingUIPatch: UIStatePatch | null = null;
+
+/** Flushes any debounced UI-state persistence immediately (e.g. on pagehide). */
+export function flushUIState(): void {
+  if (!uiTimer) return;
+  clearTimeout(uiTimer);
+  uiTimer = null;
+  const patch = pendingUIPatch;
+  pendingUIPatch = null;
+  if (patch) void api().app.setUIState(patch).catch(() => undefined);
+}
 
 /** connect when connection is missing and there are no standups; configure when only drafts exist; else the last standup/person. */
 export function initialRoute(boot: Bootstrap): Route {
@@ -43,10 +54,13 @@ export function navigate(to: Route): void {
   route.value = to;
   if (uiTimer) clearTimeout(uiTimer);
   uiTimer = null;
+  pendingUIPatch = null;
   const patch = patchFor(to);
   if (!patch) return;
+  pendingUIPatch = patch;
   uiTimer = setTimeout(() => {
     uiTimer = null;
+    pendingUIPatch = null;
     api().app.setUIState(patch).catch(() => undefined);
   }, UI_PERSIST_MS);
 }

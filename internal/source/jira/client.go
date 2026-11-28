@@ -55,9 +55,6 @@ func NewClient(baseURL, account, token string, opts ClientOptions) *Client {
 	if c.pol == nil {
 		c.pol = DefaultPolicy()
 	}
-	if c.pol == nil { // SetDefaultPolicy's restore can leave nil behind when the default was never created (contract.go)
-		c.pol = fallbackPolicy()
-	}
 	if c.now == nil {
 		c.now = time.Now
 	}
@@ -184,8 +181,8 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, payl
 			}
 			retries5xx++
 			wait := c.pol.Backoff(retries5xx)
-			if ra := hdr.Get("Retry-After"); ra != "" {
-				wait = min(RetryAfter(ra, "", c.now()), c.pol.opts.MaxGate)
+			if hdr.Get("Retry-After") != "" {
+				wait = min(limiter.RetryAfter(hdr, c.now()), c.pol.opts.MaxGate)
 			}
 			if serr := c.pol.sleep(ctx, wait); serr != nil {
 				return serr

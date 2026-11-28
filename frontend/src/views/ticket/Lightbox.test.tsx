@@ -81,6 +81,11 @@ describe("top bar and image", () => {
     expect(screen.getByText("1 / 2")).toBeTruthy();
   });
 
+  it("formatsSingleDigitMegabytesWithOneDecimal", () => {
+    renderBox({ images: [{ ...IMG_201, bytes: 1_500_000 }] });
+    expect(screen.getByRole("dialog", { name: "Image viewer" }).textContent).toContain("1.5 MB");
+  });
+
   it("showsTheFullImageAtItsNaturalSizeWhenItFits_WithA100PercentReadout", () => {
     renderBox();
     const image = img("unit-toggle-v3.png");

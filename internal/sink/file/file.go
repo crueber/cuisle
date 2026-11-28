@@ -56,7 +56,7 @@ func (fileSink) Validate(cfg map[string]string) error {
 		return err
 	}
 	if fn := cfg["filename"]; fn != "" {
-		if filepath.IsAbs(fn) || strings.ContainsAny(fn, `/\`) || fn == "." || fn == ".." {
+		if filepath.IsAbs(fn) || strings.ContainsAny(fn, `/\:`+"\x00") || fn == "." || fn == ".." {
 			return apperr.Validationf("filename", "The file name must not contain folders.")
 		}
 	}
@@ -79,6 +79,9 @@ func (fileSink) Deliver(ctx context.Context, d sink.Delivery) (sink.Receipt, err
 	dir := strings.TrimSpace(d.Config["dir"])
 	if dir == "" {
 		return sink.Receipt{}, apperr.Validationf("dir", "Choose a folder.")
+	}
+	if !filepath.IsAbs(dir) {
+		return sink.Receipt{}, apperr.Validationf("dir", "Choose a full folder path.")
 	}
 	if err := checkOverwrite(d.Config["overwrite"]); err != nil {
 		return sink.Receipt{}, err
@@ -111,11 +114,11 @@ func render(tmpl, standupKey, date string) (string, error) {
 	if strings.TrimSpace(tmpl) == "" {
 		tmpl = defaultName
 	}
-	if strings.ContainsAny(standupKey+date, `/\`) {
+	if strings.ContainsAny(standupKey+date, `/\:`+"\x00") {
 		return "", apperr.Validationf("filename", "The standup key or date contains a folder separator.")
 	}
 	name := strings.NewReplacer("{standupKey}", standupKey, "{date}", date).Replace(tmpl)
-	if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\`) || filepath.IsAbs(name) {
+	if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\:`+"\x00") || filepath.IsAbs(name) {
 		return "", apperr.Validationf("filename", "The file name must not contain folders.")
 	}
 	return name, nil

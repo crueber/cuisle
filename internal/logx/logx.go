@@ -53,7 +53,7 @@ func New(opts Options) (*slog.Logger, io.Closer, error) {
 	hopts := &slog.HandlerOptions{Level: opts.Level}
 	var h slog.Handler = slog.NewJSONHandler(w, hopts)
 	if opts.Dev {
-		h = fanout{h, slog.NewTextHandler(os.Stderr, hopts)}
+		h = slog.NewMultiHandler(h, slog.NewTextHandler(os.Stderr, hopts))
 	}
 	return slog.New(RedactingHandler(h)), w, nil
 }
@@ -102,6 +102,11 @@ func (w *rotatingWriter) open() error {
 func (w *rotatingWriter) Write(p []byte) (int, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	if w.f == nil {
+		if err := w.open(); err != nil {
+			return 0, err
+		}
+	}
 	if w.size > 0 && w.size+int64(len(p)) > w.maxBytes {
 		if err := w.rotate(); err != nil {
 			return 0, err
@@ -114,8 +119,12 @@ func (w *rotatingWriter) Write(p []byte) (int, error) {
 
 // rotate shifts path -> path.1 -> ... -> path.<keep> (dropping the oldest) and reopens path.
 func (w *rotatingWriter) rotate() error {
-	if err := w.f.Close(); err != nil {
-		return fmt.Errorf("close log: %w", err)
+	if w.f != nil {
+		f := w.f
+		w.f, w.size = nil, 0
+		if err := f.Close(); err != nil {
+			return fmt.Errorf("close log: %w", err)
+		}
 	}
 	if w.keep < 1 {
 		if err := os.Remove(w.path); err != nil && !errors.Is(err, fs.ErrNotExist) {
@@ -139,7 +148,12 @@ func (w *rotatingWriter) rotate() error {
 func (w *rotatingWriter) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	return w.f.Close()
+	if w.f == nil {
+		return nil
+	}
+	f := w.f
+	w.f, w.size = nil, 0
+	return f.Close()
 }
 
 // Redact removes secrets from s: Authorization header values ("Basic …", "Bearer …"), "token"/"secret"/"password"
@@ -209,34 +223,12 @@ func redactAttr(a slog.Attr) slog.Attr {
 		}
 		return slog.Group(a.Key, out...)
 	case slog.KindAny:
-		if err, ok := a.Value.Any().(error); ok {
-			return slog.String(a.Key, Redact(err.Error()))
+		switch v := a.Value.Any().(type) {
+		case error:
+			return slog.String(a.Key, Redact(v.Error()))
+		case fmt.Stringer:
+			return slog.String(a.Key, Redact(v.String()))
 		}
 	}
 	return a
-}
-
-// fanout sends each record to every handler (used for the dev stderr copy).
-type fanout struct {
-	a, b slog.Handler
-}
-
-func (f fanout) Enabled(ctx context.Context, lvl slog.Level) bool {
-	return f.a.Enabled(ctx, lvl) || f.b.Enabled(ctx, lvl)
-}
-
-func (f fanout) Handle(ctx context.Context, r slog.Record) error {
-	err := f.a.Handle(ctx, r.Clone())
-	if err2 := f.b.Handle(ctx, r.Clone()); err == nil {
-		err = err2
-	}
-	return err
-}
-
-func (f fanout) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return fanout{f.a.WithAttrs(attrs), f.b.WithAttrs(attrs)}
-}
-
-func (f fanout) WithGroup(name string) slog.Handler {
-	return fanout{f.a.WithGroup(name), f.b.WithGroup(name)}
 }

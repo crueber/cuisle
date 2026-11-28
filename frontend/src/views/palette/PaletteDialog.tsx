@@ -78,19 +78,32 @@ export function PaletteDialog() {
     return restoreFocus;
   }, []);
 
+  // Sync mode if openPalette(mode) is called while already mounted.
+  useEffect(() => {
+    if (start && start.mode !== mode) enterMode(start.mode);
+  }, [start?.mode]);
+
   // Local reads, once per open: the recent tickets and everyone who speaks anywhere.
   useEffect(() => {
+    let alive = true;
     const ids = recentTicketIds();
     if (ids.length > 0) {
       api()
         .ticket.byIds(ids, current ?? 0)
-        .then(setRecents)
+        .then((r) => {
+          if (alive) setRecents(r);
+        })
         .catch(() => undefined);
     }
     api()
       .standup.people()
-      .then(setPeople)
+      .then((p) => {
+        if (alive) setPeople(p);
+      })
       .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // The ticket finder: local only, answered in a few ms, so no debounce; a stale answer is dropped.
@@ -116,10 +129,8 @@ export function PaletteDialog() {
   const matched = matchedTicket(find, findFor, text, current);
   const ctx = buildCtx({ matched, setMode: (m) => enterMode(m) });
   const usage = readUsage();
-  const labelOf = (id: number): string => {
-    const t = tabStandups().find((x) => x.id === id);
-    return t ? t.spaceKey || t.name : "";
-  };
+  const standupLabels = new Map(tabStandups().map((x) => [x.id, x.spaceKey || x.name] as const));
+  const labelOf = (id: number): string => standupLabels.get(id) ?? "";
   const sections: Section[] = buildSections({ mode, parent, text, ctx, usage, commands: allCommands(), find, findFor, recents, people, standupLabel: labelOf });
   const rows: Row[] = flatten(sections);
   const total = rows.length;
@@ -130,7 +141,7 @@ export function PaletteDialog() {
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`#pal-opt-${at}`);
     el?.scrollIntoView?.({ block: "nearest" });
-  }, [at, sections]);
+  }, [at, total]);
 
   function enterMode(m: PaletteMode) {
     setMode(m);
@@ -150,9 +161,11 @@ export function PaletteDialog() {
     setFetching({ phase: "fetching", message: "" });
     try {
       const detail = await api().ticket.fetchByKey(current, key);
+      if (paletteOpen.peek() === null) return; // dismissed while fetch was in flight
       closePalette();
       await openTicketIn(current, detail.issueId);
     } catch (e) {
+      if (paletteOpen.peek() === null) return;
       const err = toAppError(e);
       setFetching({ phase: "error", message: fetchErrorText(err.code, key, err.message) });
     }

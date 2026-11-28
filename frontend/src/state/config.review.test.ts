@@ -325,3 +325,48 @@ describe("connect detour (fix 12)", () => {
     expect(T.R.route.value).toEqual({ view: "standup", standupId: 2, person: "p1" });
   });
 });
+
+describe("loadConfig vs save acks and edits", () => {
+  it("a flushed save ack for standup A does not drop an in-flight load of standup B or leave configLoading stuck", async () => {
+    let resolveB!: (c: StandupConfig) => void;
+    T.fake.config!.update!.mockResolvedValue(ack(6));
+    T.fake.config!.get!.mockImplementationOnce(
+      () => new Promise<StandupConfig>((resolve) => { resolveB = resolve; }),
+    );
+
+    T.C.config.value = cfg(1, { name: "Standup A" });
+    T.C.saveField("name", "Standup A edited", { text: true });
+
+    // Mirrors switching standups in ConfigureScreen: effect cleanup flushes standup A, new effect loads standup B.
+    const flushed = T.Sv.flush();
+    const loadingB = T.C.loadConfig(2);
+    await flushed;
+    expect(T.C.config.value?.id).toBe(1);
+    expect(T.C.configLoading.value).toBe(true);
+
+    resolveB(cfg(2, { name: "Standup B" }));
+    await loadingB;
+
+    expect(T.C.config.value?.id).toBe(2);
+    expect(T.C.config.value?.name).toBe("Standup B");
+    expect(T.C.configLoading.value).toBe(false);
+  });
+
+  it("a live edit to standup A drops a stale loadConfig(A) reply while still clearing configLoading", async () => {
+    let resolveA!: (c: StandupConfig) => void;
+    T.fake.config!.update!.mockResolvedValue(ack(6));
+    T.fake.config!.get!.mockImplementationOnce(
+      () => new Promise<StandupConfig>((resolve) => { resolveA = resolve; }),
+    );
+
+    T.C.config.value = cfg(1, { name: "Old" });
+    const loadingA = T.C.loadConfig(1);
+    T.C.saveField("name", "Typed locally", { text: true });
+
+    resolveA(cfg(1, { name: "Stale from server" }));
+    await loadingA;
+
+    expect(T.C.config.value?.name).toBe("Typed locally");
+    expect(T.C.configLoading.value).toBe(false);
+  });
+});

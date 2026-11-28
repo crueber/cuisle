@@ -58,7 +58,6 @@ func Start(fx *Fixture, opts Options) (*Server, error) {
 
 // Close stops the server.
 func (s *Server) Close() {
-	s.f12Forget()
 	if s.srv != nil {
 		_ = s.srv.Close()
 	}

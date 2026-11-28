@@ -21,7 +21,7 @@ import { setEventBus } from "../../api/events";
 import { setApi } from "../../api/index";
 import { createMockApi, type MockApi } from "../../api/mock";
 import { views } from "../../state/standup";
-import { resetTicketState, ticketSession } from "../../state/ticket";
+import { resetTicketState, ticketDetail, ticketSession } from "../../state/ticket";
 import { TicketModal } from "./TicketModal";
 import type { TicketContentProps, TicketModalProps } from "./props";
 
@@ -177,6 +177,50 @@ describe("action keys", () => {
     press("a");
     await waitFor(() => expect(assigneeInput().getAttribute("aria-expanded")).toBe("true"));
     expect(statusInput().getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("sAndA_DoNotLatchOpenWhenFieldsLaterBecomeEnabled", async () => {
+    mock = createMockApi({ handBuiltTickets: true });
+    setApi(mock);
+    setEventBus(mock.bus);
+    views.value = new Map([[1, clone(await mock.standup.view(1))]]);
+    const disabledDetail = clone(await mock.ticket.get(1, 107));
+    disabledDetail.can.transition = false;
+    disabledDetail.can.assign = false;
+    const enabledDetail = clone(disabledDetail);
+    enabledDetail.can.transition = true;
+    enabledDetail.can.assign = true;
+    vi.spyOn(mock.ticket, "get").mockResolvedValueOnce(disabledDetail);
+    mock.resetCalls();
+    render(
+      <TicketModal
+        standupId={1}
+        issueId={107}
+        steps={STEPS}
+        stack={[]}
+        vw={1920}
+        vh={1080}
+        onStep={vi.fn()}
+        onOpenLinked={vi.fn()}
+        onBack={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await settle();
+    // Press S and A while both fields are disabled: neither may latch open state.
+    press("s");
+    press("a");
+    expect(screen.queryByRole("listbox")).toBeNull();
+    // Re-enable both fields (e.g., reconnect or write completion): popups must remain closed and no fetch fires.
+    act(() => {
+      ticketDetail.value = enabledDetail;
+    });
+    await settle();
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(statusInput().getAttribute("aria-expanded")).toBe("false");
+    expect(assigneeInput().getAttribute("aria-expanded")).toBe("false");
+    expect(mock.calls.filter((c) => c.method === "ticket.transitions")).toHaveLength(0);
+    expect(mock.calls.filter((c) => c.method === "ticket.searchUsers")).toHaveLength(0);
   });
 
   it("f_TogglesTheFlag_OptimisticallyThenBack", async () => {

@@ -23,26 +23,6 @@
   height: calc(var(--scale) * 0.75rem);
   background: var(--color-lane-backlog);
 }
-.sc-sw[data-lane="todo"],
-.sc-now[data-lane="todo"] {
-  background: var(--color-lane-todo);
-}
-.sc-sw[data-lane="prog"],
-.sc-now[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.sc-sw[data-lane="review"],
-.sc-now[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.sc-sw[data-lane="qa"],
-.sc-now[data-lane="qa"] {
-  background: var(--color-lane-qa);
-}
-.sc-sw[data-lane="done"],
-.sc-now[data-lane="done"] {
-  background: var(--color-lane-done);
-}
 .sc-row[data-muted="true"] {
   color: var(--color-muted); /* the muted token alone meets 4.5:1; extra opacity failed axe color-contrast on Linux */
 }

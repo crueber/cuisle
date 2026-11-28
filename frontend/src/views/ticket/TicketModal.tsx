@@ -6,7 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { api, toAppError } from "../../api";
 import type { AttachmentView, CommentOrder, TicketDetail } from "../../api/types";
 import type { AdfContext } from "../../components/adf/props";
+import { trapTab, useDialogFocus } from "../../components/modal";
 import { connection, setAppSetting, settings } from "../../state/app";
+import { paletteOpen } from "../../state/palette";
+import { updateDialogOpen } from "../../state/update";
 import {
   applyAssign,
   applyFlag,
@@ -121,20 +124,16 @@ export function TicketModal(props: TicketModalProps) {
   const theme: "light" | "dark" = (document.documentElement.dataset.theme ?? wantedTheme) === "dark" ? "dark" : "light";
   const images: AttachmentView[] = detail ? detail.attachments.filter((a) => a.image) : [];
 
-  // Load whenever the issue changes (a local read; the only call opening makes).
+  // Load whenever the issue changes (a local read; the only call opening makes) and reset per-ticket UI overlays.
   useEffect(() => {
+    setLightbox(null);
+    setHintsOpen(false);
+    setExpandAll(undefined);
     void loadTicket(standupId, issueId);
   }, [standupId, issueId]);
 
   // Mount: take focus (keys work from the dialog), and give it back to the opener on close. Unmount: save the draft.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
-    return () => {
-      releaseTicket();
-      if (opener && opener !== document.body && document.contains(opener)) opener.focus();
-    };
-  }, []);
+  useDialogFocus(dialogRef, releaseTicket);
 
   const step = (delta: 1 | -1) => {
     const at = steps.indexOf(issueId);
@@ -151,7 +150,12 @@ export function TicketModal(props: TicketModalProps) {
       const dlg = dialogRef.current;
       const target = e.target as Element | null;
       if (!dlg || s.lightbox !== null) return; // the lightbox owns the keys while it is open
+      if (paletteOpen.peek() !== null || updateDialogOpen.peek()) return; // higher overlay owns the keys
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+      if (e.key === "Tab") {
+        trapTab(e, dlg);
+        return;
+      }
       if (!(target === document.body || target === document.documentElement || (target && dlg.contains(target)))) return;
       if (e.defaultPrevented) return; // a combobox closed itself: the modal stays
 
@@ -182,10 +186,14 @@ export function TicketModal(props: TicketModalProps) {
           setFocusToken((n) => n + 1);
           break;
         case "s":
-          setOpenToken((p) => ({ field: "status", token: (p?.token ?? 0) + 1 }));
+          if (d && d.can.transition && !s.offline && ticketWrites.value.status.phase !== "saving") {
+            setOpenToken((p) => ({ field: "status", token: (p?.token ?? 0) + 1 }));
+          }
           break;
         case "a":
-          setOpenToken((p) => ({ field: "assignee", token: (p?.token ?? 0) + 1 }));
+          if (d && d.can.assign && !s.offline && ticketWrites.value.assignee.phase !== "saving") {
+            setOpenToken((p) => ({ field: "assignee", token: (p?.token ?? 0) + 1 }));
+          }
           break;
         case "f":
           if (d && d.can.flag && !s.offline && ticketWrites.value.flag.phase !== "saving") void applyFlag(!d.row.blocked);
@@ -226,6 +234,14 @@ export function TicketModal(props: TicketModalProps) {
   };
   const ensureMedia = (id: number): Promise<AttachmentView> => api().ticket.ensureMedia(id);
 
+  const attachmentCache = useMemo(() => {
+    const m = new Map<number, string>();
+    if (detail) {
+      for (const a of detail.attachments) m.set(a.id, a.cached);
+    }
+    return m;
+  }, [detail?.attachments]);
+
   const ctx: AdfContext | null = detail && {
     onOpenIssue: (id) => onOpenLinked(id),
     onOpenUrl: (url) => openLink(url, detail.row.key),
@@ -240,6 +256,7 @@ export function TicketModal(props: TicketModalProps) {
     issueUrl: detail.url,
     theme,
     expandAll,
+    mediaCached: (id) => attachmentCache.get(id),
   };
 
   const selfName = connection.value?.displayName || "you";
@@ -307,11 +324,10 @@ export function TicketModal(props: TicketModalProps) {
         style={{ width: scale(geometry.modalW), height: scale(geometry.modalH) }}
       >
         {detail ? (
-          <TicketHeader
+          <TicketHeaderHost
             detail={detail}
             geometry={geometry}
             backKey={backKey}
-            refresh={ticketRefresh.value}
             onBack={onBack}
             onRefresh={() => void refreshTicket()}
             onOpenInJira={() => openIssueKey(detail.row.key)}
@@ -340,35 +356,16 @@ export function TicketModal(props: TicketModalProps) {
           <div class="tm-body">
             <div class="tm-content" style={{ maxWidth: scale(geometry.contentW) }}>
               {geometry.narrow ? <div class="tm-rest">{rail("inline")}</div> : null}
-              <TicketContent
+              <TicketContentHost
                 detail={detail}
                 geometry={geometry}
                 ctx={ctx}
-                updated={ticketUpdated.value}
-                onReload={() => void reloadTicket()}
-                comments={{
-                  comments: detail.comments,
-                  order,
-                  onOrder: (o) => setAppSetting("ticket.comment_order", o),
-                  newSince: detail.newSince,
-                  pending: ticketPending.value,
-                  onRetry: (id) => void retryComment(id),
-                  onEdit: editComment,
-                  onDiscard: discardComment,
-                  ctx,
-                  composer: {
-                    draft: ticketDraft.value,
-                    selfName,
-                    selfInitials: initials(selfName),
-                    disabled: !detail.can.comment || offline,
-                    disabledReason,
-                    focusToken,
-                    onChange: editDraft,
-                    onSend: (input) => void sendComment(input),
-                    onBlur: () => void flushDraft(),
-                    searchMentions: (q) => api().ticket.searchMentions(standupId, q),
-                  },
-                }}
+                standupId={standupId}
+                order={order}
+                selfName={selfName}
+                offline={offline}
+                disabledReason={disabledReason}
+                focusToken={focusToken}
               />
             </div>
             {geometry.narrow ? null : (
@@ -411,5 +408,66 @@ export function TicketModal(props: TicketModalProps) {
         />
       ) : null}
     </div>
+  );
+}
+
+/** Isolates high-frequency refresh countdown ticks so they don't re-render TicketModal/FieldRail/TicketContent. */
+function TicketHeaderHost(props: Omit<Parameters<typeof TicketHeader>[0], "refresh">) {
+  return <TicketHeader {...props} refresh={ticketRefresh.value} />;
+}
+
+/** Isolates composer draft & pending comment signals so typing never re-renders TicketHeader or FieldRail. */
+function TicketContentHost({
+  detail,
+  geometry,
+  ctx,
+  standupId,
+  order,
+  selfName,
+  offline,
+  disabledReason,
+  focusToken,
+}: {
+  detail: TicketDetail;
+  geometry: ModalGeometry;
+  ctx: AdfContext;
+  standupId: number;
+  order: CommentOrder;
+  selfName: string;
+  offline: boolean;
+  disabledReason: string;
+  focusToken: number;
+}) {
+  return (
+    <TicketContent
+      detail={detail}
+      geometry={geometry}
+      ctx={ctx}
+      updated={ticketUpdated.value}
+      onReload={() => void reloadTicket()}
+      comments={{
+        comments: detail.comments,
+        order,
+        onOrder: (o) => setAppSetting("ticket.comment_order", o),
+        newSince: detail.newSince,
+        pending: ticketPending.value,
+        onRetry: (id) => void retryComment(id),
+        onEdit: editComment,
+        onDiscard: discardComment,
+        ctx,
+        composer: {
+          draft: ticketDraft.value,
+          selfName,
+          selfInitials: initials(selfName),
+          disabled: !detail.can.comment || offline,
+          disabledReason,
+          focusToken,
+          onChange: editDraft,
+          onSend: (input) => void sendComment(input),
+          onBlur: () => void flushDraft(),
+          searchMentions: (q) => api().ticket.searchMentions(standupId, q),
+        },
+      }}
+    />
   );
 }

@@ -18,11 +18,17 @@ type dayTimer struct {
 	emitter syncpkg.Emitter
 	timer   *time.Timer
 	stopped bool
+	lastDay string
 	onRoll  func()
 }
 
 func startDayTimer(clock syncpkg.Clock, emitter syncpkg.Emitter, onRoll func()) *dayTimer {
-	d := &dayTimer{clock: clock, emitter: emitter, onRoll: onRoll}
+	d := &dayTimer{
+		clock:   clock,
+		emitter: emitter,
+		lastDay: clock.Now().In(clock.Location()).Format("2006-01-02"),
+		onRoll:  onRoll,
+	}
 	d.mu.Lock()
 	d.arm()
 	d.mu.Unlock()
@@ -38,7 +44,11 @@ func nextLocalMidnight(now time.Time) time.Time {
 // arm schedules the next fire. The caller holds d.mu.
 func (d *dayTimer) arm() {
 	now := d.clock.Now().In(d.clock.Location())
-	d.timer = time.AfterFunc(nextLocalMidnight(now).Sub(now), d.fire)
+	wait := nextLocalMidnight(now).Sub(now)
+	if wait < time.Second {
+		wait = time.Second
+	}
+	d.timer = time.AfterFunc(wait, d.fire)
 }
 
 func (d *dayTimer) fire() {
@@ -48,9 +58,12 @@ func (d *dayTimer) fire() {
 		return
 	}
 	today := d.clock.Now().In(d.clock.Location()).Format("2006-01-02")
-	d.emitter.Emit(app.EvDayRolled, app.DayRolled{Today: today})
-	if d.onRoll != nil {
-		go d.onRoll()
+	if today > d.lastDay {
+		d.lastDay = today
+		d.emitter.Emit(app.EvDayRolled, app.DayRolled{Today: today})
+		if d.onRoll != nil {
+			go d.onRoll()
+		}
 	}
 	d.arm()
 }

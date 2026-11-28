@@ -98,14 +98,8 @@ func decodeFieldValue(d *model.IssueDetail, id, kind string, raw json.RawMessage
 			return unknownValue(id, raw)
 		}
 		fv.Text = displayOf(m)
-		if fv.Text == "" && kind == model.FieldGroup {
-			fv.Text = jsonStr(m, "name")
-		}
 		if fv.Text == "" && kind == model.FieldTeam {
 			fv.Text = jsonStr(m, "title")
-		}
-		if fv.Text == "" && (kind == model.FieldGroup || kind == model.FieldVersion || kind == model.FieldProject) {
-			fv.Text = jsonStr(m, "name")
 		}
 		return fv, fv.Text != ""
 	case model.FieldOptions, model.FieldVersions, model.FieldComponents, model.FieldGroups, model.FieldLabels:

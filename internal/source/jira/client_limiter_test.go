@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -90,7 +91,7 @@ func TestBypass_EveryAdapterRequestPassesTheLimiter(t *testing.T) {
 	var boardID, spaceKey, issueID string
 	for _, b := range fx.Boards {
 		if b.ProjectKey == "MOB" {
-			boardID, spaceKey = itoa(b.ID), b.ProjectKey
+			boardID, spaceKey = strconv.Itoa(b.ID), b.ProjectKey
 		}
 	}
 	if boardID == "" {

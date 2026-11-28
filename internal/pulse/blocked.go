@@ -58,11 +58,20 @@ func BlockedSpans(t Ticket, tl []Interval, blockedStatuses map[string]bool, w Wi
 		}
 		if on {
 			add(onAt, asOf)
+		} else if t.Flagged {
+			at := t.UpdatedAt
+			if last := fcs[len(fcs)-1].At; at.Before(last) {
+				at = last
+			}
+			if at.After(asOf) {
+				at = asOf
+			}
+			add(at, asOf)
 		}
 	}
 
 	for _, iv := range tl {
-		if blockedStatuses[iv.StatusID] {
+		if blockedStatuses[iv.StatusID] && iv.From.Before(iv.To) {
 			add(iv.From, iv.To)
 		}
 	}
@@ -88,6 +97,15 @@ func BlockedSpans(t Ticket, tl []Interval, blockedStatuses map[string]bool, w Wi
 
 // BlockedDays = number of distinct days covered by spans.
 func BlockedDays(spans []Span) int {
+	switch len(spans) {
+	case 0:
+		return 0
+	case 1:
+		if spans[0].To < spans[0].From {
+			return 0
+		}
+		return spans[0].To - spans[0].From + 1
+	}
 	seen := map[int]bool{}
 	for _, s := range spans {
 		for d := s.From; d <= s.To; d++ {

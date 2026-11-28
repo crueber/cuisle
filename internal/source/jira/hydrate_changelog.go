@@ -71,7 +71,7 @@ func (a *Adapter) bulkChangelog(ctx context.Context, ids []string, fieldIDs []st
 		var page struct {
 			NextPageToken   string `json:"nextPageToken"`
 			IssueChangeLogs []struct {
-				IssueID         flexID        `json:"issueId"`
+				IssueID         refID         `json:"issueId"`
 				ChangeHistories []wireHistory `json:"changeHistories"`
 			} `json:"issueChangeLogs"`
 		}
@@ -82,7 +82,7 @@ func (a *Adapter) bulkChangelog(ctx context.Context, ids []string, fieldIDs []st
 			id := string(l.IssueID)
 			out[id] = append(out[id], l.ChangeHistories...)
 		}
-		if page.NextPageToken == "" {
+		if page.NextPageToken == "" || page.NextPageToken == token || len(page.IssueChangeLogs) == 0 {
 			return out, nil
 		}
 		token = page.NextPageToken

@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/crueber/cuisle/internal/apperr"
@@ -128,6 +129,11 @@ func ApplyIssueDetailTx(ctx context.Context, tx *sql.Tx, connID int64, d model.I
 		}
 	}
 	id := res.IssueID
+	if res.Status {
+		if err := DropTransitionCacheTx(ctx, tx, id); err != nil {
+			return res, err
+		}
+	}
 
 	for _, c := range d.StatusChanges {
 		if _, err := tx.ExecContext(ctx,
@@ -377,32 +383,44 @@ func replaceFieldValuesTx(ctx context.Context, tx *sql.Tx, issueID int64, c *mod
 		next[parentFieldID] = string(b)
 		kinds[parentFieldID] = model.FieldUnknown
 	}
+	changed := false
 	if len(old) != len(next) {
-		res.Fields = true
+		changed = true
 	} else {
 		for k, v := range next {
 			if old[k] != v {
-				res.Fields = true
+				changed = true
 				break
 			}
 		}
 	}
+	if !changed {
+		return nil
+	}
+	res.Fields = true
 	if _, err := tx.ExecContext(ctx, `DELETE FROM issue_field_value WHERE issue_id = ?`, issueID); err != nil {
 		return dbErr(err, "The ticket content could not be saved.")
+	}
+	if len(next) == 0 {
+		return nil
 	}
 	ids := make([]string, 0, len(next))
 	for k := range next {
 		ids = append(ids, k)
 	}
 	sort.Strings(ids)
+	stmt, err := tx.PrepareContext(ctx,
+		`INSERT INTO issue_field_value (issue_id, field_id, kind, value_json) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return dbErr(err, "The ticket content could not be saved.")
+	}
+	defer stmt.Close()
 	for _, fid := range ids {
 		kind := kinds[fid]
 		if kind == "" {
 			kind = model.FieldUnknown
 		}
-		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO issue_field_value (issue_id, field_id, kind, value_json) VALUES (?, ?, ?, ?)`,
-			issueID, fid, kind, next[fid]); err != nil {
+		if _, err := stmt.ExecContext(ctx, issueID, fid, kind, next[fid]); err != nil {
 			return dbErr(err, "The ticket content could not be saved.")
 		}
 	}
@@ -425,18 +443,28 @@ func replaceLinksTx(ctx context.Context, tx *sql.Tx, issueID int64, c *model.Iss
 		otherSource, otherKey, otherSummary   string
 		otherStatus, otherType, otherAssignee any
 	}
+	// Deduplicate by link_id (last wins, matching SQL ON CONFLICT) so duplicate fallback IDs don't cause false diffs.
 	var next []linkRow
+	byID := map[string]int{}
+	addRow := func(r linkRow) {
+		if idx, dup := byID[r.id]; dup {
+			next[idx] = r
+			return
+		}
+		byID[r.id] = len(next)
+		next = append(next, r)
+	}
 	for i, l := range c.Links {
 		id := l.ID
 		if id == "" {
 			id = "link:" + l.OtherSourceID
 		}
-		next = append(next, linkRow{id: id, relation: "link", label: l.Label, position: i,
+		addRow(linkRow{id: id, relation: "link", label: l.Label, position: i,
 			otherSource: l.OtherSourceID, otherKey: l.OtherKey, otherSummary: l.OtherSummary,
 			otherStatus: nullStr(l.OtherStatusID), otherType: nullStr(l.OtherTypeID)})
 	}
 	for i, s := range c.Subtasks {
-		next = append(next, linkRow{id: "sub:" + s.SourceID, relation: "subtask", position: i,
+		addRow(linkRow{id: "sub:" + s.SourceID, relation: "subtask", position: i,
 			otherSource: s.SourceID, otherKey: s.Key, otherSummary: s.Summary,
 			otherStatus: nullStr(s.StatusID), otherType: nullStr(s.TypeID), otherAssignee: nullStr(s.AssigneeID)})
 	}
@@ -445,8 +473,9 @@ func replaceLinksTx(ctx context.Context, tx *sql.Tx, issueID int64, c *model.Iss
 	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM issue_link WHERE issue_id = ?`, issueID).Scan(&n); err != nil {
 		return dbErr(err, "The ticket content could not be read.")
 	}
+	changed := false
 	if n != len(next) {
-		res.Fields = true
+		changed = true
 	} else if n > 0 {
 		// Same count: compare the rows in key order.
 		old := map[string]string{}
@@ -472,28 +501,35 @@ func replaceLinksTx(ctx context.Context, tx *sql.Tx, issueID int64, c *model.Iss
 			return dbErr(err, "The ticket content could not be read.")
 		}
 		for _, l := range next {
-			sig := l.label + "|" + itoa(l.position) + "|" + l.otherSource + "|" + l.otherKey + "|" + l.otherSummary +
+			sig := l.label + "|" + strconv.Itoa(l.position) + "|" + l.otherSource + "|" + l.otherKey + "|" + l.otherSummary +
 				"|" + anyStr(l.otherStatus) + "|" + anyStr(l.otherType) + "|" + anyStr(l.otherAssignee)
 			if old[l.id] != sig {
-				res.Fields = true
+				changed = true
 				break
 			}
 		}
 	}
+	if !changed {
+		return nil
+	}
+	res.Fields = true
 
 	if _, err := tx.ExecContext(ctx, `DELETE FROM issue_link WHERE issue_id = ?`, issueID); err != nil {
 		return dbErr(err, "The ticket content could not be saved.")
 	}
+	if len(next) == 0 {
+		return nil
+	}
+	stmt, err := tx.PrepareContext(ctx,
+		`INSERT INTO issue_link (issue_id, link_id, relation, label, position, other_source_id, other_key,
+		                         other_summary, other_status_id, other_type_id, other_assignee_account_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return dbErr(err, "The ticket content could not be saved.")
+	}
+	defer stmt.Close()
 	for _, l := range next {
-		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO issue_link (issue_id, link_id, relation, label, position, other_source_id, other_key,
-			                         other_summary, other_status_id, other_type_id, other_assignee_account_id)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			 ON CONFLICT(issue_id, link_id) DO UPDATE SET relation = excluded.relation, label = excluded.label,
-			   position = excluded.position, other_source_id = excluded.other_source_id,
-			   other_key = excluded.other_key, other_summary = excluded.other_summary,
-			   other_status_id = excluded.other_status_id, other_type_id = excluded.other_type_id,
-			   other_assignee_account_id = excluded.other_assignee_account_id`,
+		if _, err := stmt.ExecContext(ctx,
 			issueID, l.id, l.relation, l.label, l.position, l.otherSource, l.otherKey, l.otherSummary,
 			l.otherStatus, l.otherType, l.otherAssignee); err != nil {
 			return dbErr(err, "The ticket content could not be saved.")
@@ -505,11 +541,6 @@ func replaceLinksTx(ctx context.Context, tx *sql.Tx, issueID int64, c *model.Iss
 func anyStr(v any) string {
 	s, _ := v.(string)
 	return s
-}
-
-func itoa(n int) string {
-	b, _ := json.Marshal(n)
-	return string(b)
 }
 
 // upsertAttachmentsTx upserts attachment metadata by (issue_id, source_id), keeping the row id and every cache column,

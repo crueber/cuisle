@@ -12,7 +12,6 @@ package jira
 // in-flight cap) → countRT (sync_run.requests) → the caller's transport.
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -57,27 +56,10 @@ func limiterFor(key string, pol *Policy) *limiter.Limiter {
 	return l
 }
 
-var (
-	fallbackOnce sync.Once
-	fallbackPol  *Policy
-)
-
-// fallbackPolicy is the one process-wide policy used when DefaultPolicy() is nil. That happens only after
-// SetDefaultPolicy was called before the default was ever created and its restore function then ran (contract.go
-// restores "prev", which is nil then, and the creation Once is already spent). Reported as a contract issue.
-func fallbackPolicy() *Policy {
-	fallbackOnce.Do(func() { fallbackPol = NewPolicy(PolicyOptions{}) })
-	return fallbackPol
-}
-
 // LimiterFor returns the limiter shared by every Client and Adapter of conn (under the process-wide DefaultPolicy). Use
 // it for Diagnostics (Stats) and to subscribe to throttle events; requests must not be paced through it by hand.
 func LimiterFor(conn model.Connection) *limiter.Limiter {
-	pol := DefaultPolicy()
-	if pol == nil {
-		pol = fallbackPolicy()
-	}
-	return limiterFor(connectionKey(conn.BaseURL, conn.Account), pol)
+	return limiterFor(connectionKey(conn.BaseURL, conn.Account), DefaultPolicy())
 }
 
 // limiterConfig derives the limiter's numbers from the Policy, so SetDefaultPolicy (the tests' fast policy, a future
@@ -93,11 +75,12 @@ func (p *Policy) limiterConfig() limiter.Config {
 		Clock:            policyClock{p},
 		// The Policy's gate and sleeper stay the way a 429 is waited out (client and sync tests pin both fake-Sleep styles,
 		// and real-time Retry-After handling): the limiter closes the Policy gate as it closes its own, and waits for a
-		// closed gate through Policy.waitGate (Policy.sleep, honouring PolicyOptions.Sleep). The limiter's own gate stays
-		// per connection, for fail-fast writes, Stats and lane order; the Policy gate is process-wide, as before.
+		// closed gate through Policy.waitGateUntil (honouring PolicyOptions.Sleep and never bypassing until even if
+		// OnGate runs after bump). The limiter's own gate stays per connection, for fail-fast writes, Stats and lane
+		// order; the Policy gate is process-wide, as before.
 		ManualGate: true, // Client.do closes the gate after its retry and cumulative-wait budgets (a Retry-After beyond MaxGate closes none)
 		OnGate:     p.closeGate,
-		WaitGate:   func(ctx context.Context, _ time.Time) error { return p.waitGate(ctx) },
+		WaitGate:   p.waitGateUntil,
 	}
 }
 
@@ -205,13 +188,12 @@ func MapWriteError(err error) error {
 	if !errors.As(err, &he) || he.Status != http.StatusTooManyRequests {
 		return mapped
 	}
-	var ae *apperr.Error
-	if errors.As(mapped, &ae) && ae.Code == apperr.RateLimited {
+	if ae, ok := errors.AsType[*apperr.Error](mapped); ok && ae.Code == apperr.RateLimited {
 		d := he.RetryAfter
 		if d <= 0 {
 			d = defaultRetryAfter
 		}
-		ae.WithRetryIn((d + time.Millisecond - 1).Milliseconds())
+		return ae.WithRetryIn((d + time.Millisecond - 1).Milliseconds())
 	}
 	return mapped
 }

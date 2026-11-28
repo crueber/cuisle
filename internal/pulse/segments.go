@@ -105,8 +105,18 @@ func Timeline(t Ticket, statusLanes map[string]string, asOf time.Time) []Interva
 // at its creation day, the last segment ends at Days. Contiguous, oldest first.
 func Segments(tl []Interval, w Window) []Seg {
 	var segs []Seg
+	idx := 0
 	for k := 0; k < w.Days; k++ {
-		lane, ok := dayLane(tl, w.Starts[k], w.Starts[k+1])
+		start, end := w.Starts[k], w.Starts[k+1]
+		for idx < len(tl) && (!tl[idx].To.After(start) || !tl[idx].From.Before(tl[idx].To)) {
+			idx++
+		}
+		lane, ok := "", false
+		for j := idx; j < len(tl) && tl[j].From.Before(end); j++ {
+			if tl[j].To.After(start) && tl[j].From.Before(tl[j].To) {
+				lane, ok = tl[j].Lane, true
+			}
+		}
 		if !ok {
 			continue
 		}
@@ -117,18 +127,6 @@ func Segments(tl []Interval, w Window) []Seg {
 		segs = append(segs, Seg{Lane: lane, From: k, To: k + 1})
 	}
 	return segs
-}
-
-// dayLane returns the drawn lane active at the end of the day [start, end): the last non-zero-width interval that
-// overlaps the day.
-func dayLane(tl []Interval, start, end time.Time) (string, bool) {
-	lane, ok := "", false
-	for _, iv := range tl {
-		if iv.From.Before(end) && iv.To.After(start) && iv.From.Before(iv.To) {
-			lane, ok = iv.Lane, true
-		}
-	}
-	return lane, ok
 }
 
 // laneOf maps a status to its drawn lane and its real lane (jira-sync.md §5.2). Unmapped statuses draw as todo with

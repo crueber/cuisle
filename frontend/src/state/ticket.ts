@@ -6,7 +6,7 @@
 // TicketService.Get (local). Writes, Refresh, transitions and drafts are explicit user triggers. A write is optimistic,
 // reverted on failure, and NEVER re-sent by a timer: only the user's explicit Retry re-sends it. Every timer in this file
 // is UI-only (the draft debounce, the Refresh countdown tick).
-import { signal } from "@preact/signals";
+import { batch, signal } from "@preact/signals";
 import { toAppError, type AppError } from "../api/errors";
 import { on } from "../api/events";
 import { api } from "../api/index";
@@ -107,6 +107,7 @@ export const ticketDraft = signal<CommentInput>(emptyDraft());
 /** Per-issue UI state: write phases, the closures an explicit Retry re-runs, pending comments and the Refresh machine. */
 interface Rec {
   writes: Record<EditField, WriteState>;
+  inFlight: Partial<Record<EditField, (d: TicketDetail) => TicketDetail>>;
   retry: Partial<Record<EditField, () => Promise<void>>>;
   pending: PendingComment[];
   refresh: { phase: RefreshState["phase"]; at: number; reason: string; cooldownUntil: number; waitUntil: number };
@@ -118,6 +119,7 @@ let localSeq = 0;
 const recs = new Map<number, Rec>();
 const keyCache = new Map<number, string>();
 const knownUsers = new Map<string, UserOption>();
+const draftSaves = new Map<number, Promise<void>>();
 let unsubs: Array<() => void> = [];
 let ticker: ReturnType<typeof setTimeout> | undefined;
 let draftTimer: ReturnType<typeof setTimeout> | undefined;
@@ -126,7 +128,7 @@ let draftPending: { issueId: number; input: CommentInput } | null = null;
 function rec(issueId: number): Rec {
   let r = recs.get(issueId);
   if (!r) {
-    r = { writes: idleWrites(), retry: {}, pending: [], refresh: { phase: "idle", at: 0, reason: "", cooldownUntil: 0, waitUntil: 0 } };
+    r = { writes: idleWrites(), inFlight: {}, retry: {}, pending: [], refresh: { phase: "idle", at: 0, reason: "", cooldownUntil: 0, waitUntil: 0 } };
     recs.set(issueId, r);
   }
   return r;
@@ -231,26 +233,43 @@ export async function loadTicket(standupId: number, issueId: number): Promise<vo
   if (!active || active.issueId !== issueId || active.standupId !== standupId) {
     void flushDraft(); // the old issue's unsaved draft, filed under the OLD issue id
     active = { standupId, issueId };
-    ticketDetail.value = null;
-    ticketError.value = null;
-    ticketUpdated.value = [];
-    ticketDraft.value = emptyDraft();
-    publishAll();
+    batch(() => {
+      ticketDetail.value = null;
+      ticketError.value = null;
+      ticketUpdated.value = [];
+      ticketDraft.value = emptyDraft();
+      publishAll();
+    });
   }
   const seq = ++loadSeq;
   try {
+    const saving = draftSaves.get(issueId);
+    if (saving) {
+      let t: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        saving,
+        new Promise<void>((r) => {
+          t = setTimeout(r, 1500);
+        }),
+      ]).finally(() => clearTimeout(t));
+    }
+    if (seq !== loadSeq) return;
     const d = await api().ticket.get(standupId, issueId);
     if (seq !== loadSeq) return;
     keyCache.set(d.issueId, d.row.key);
     reconcileSent(issueId, d);
-    ticketDetail.value = d;
-    ticketError.value = null;
-    ticketUpdated.value = [];
-    if (!(draftPending && draftPending.issueId === issueId)) ticketDraft.value = d.draft ?? emptyDraft();
+    batch(() => {
+      ticketDetail.value = d;
+      ticketError.value = null;
+      ticketUpdated.value = [];
+      if (!(draftPending && draftPending.issueId === issueId)) ticketDraft.value = d.draft ?? emptyDraft();
+    });
   } catch (e) {
     if (seq !== loadSeq) return;
-    ticketDetail.value = null;
-    ticketError.value = toAppError(e);
+    batch(() => {
+      ticketDetail.value = null;
+      ticketError.value = toAppError(e);
+    });
   }
 }
 
@@ -278,11 +297,13 @@ export function releaseTicket(): void {
   stopTicker();
   loadSeq++;
   active = null;
-  ticketDetail.value = null;
-  ticketError.value = null;
-  ticketUpdated.value = [];
-  ticketDraft.value = emptyDraft();
-  publishAll();
+  batch(() => {
+    ticketDetail.value = null;
+    ticketError.value = null;
+    ticketUpdated.value = [];
+    ticketDraft.value = emptyDraft();
+    publishAll();
+  });
 }
 
 /** Closes every subscription and clears every signal and timer (tests, unmount). */
@@ -292,19 +313,22 @@ export function resetTicketState(): void {
   clearTimeout(draftTimer);
   draftTimer = undefined;
   draftPending = null;
+  draftSaves.clear();
   loadSeq++;
   active = null;
   recs.clear();
   keyCache.clear();
   knownUsers.clear();
-  ticketSession.value = null;
-  ticketDetail.value = null;
-  ticketError.value = null;
-  ticketWrites.value = idleWrites();
-  ticketRefresh.value = idleRefresh();
-  ticketUpdated.value = [];
-  ticketPending.value = [];
-  ticketDraft.value = emptyDraft();
+  batch(() => {
+    ticketSession.value = null;
+    ticketDetail.value = null;
+    ticketError.value = null;
+    ticketWrites.value = idleWrites();
+    ticketRefresh.value = idleRefresh();
+    ticketUpdated.value = [];
+    ticketPending.value = [];
+    ticketDraft.value = emptyDraft();
+  });
 }
 
 // ── detail and cached-row patches ──
@@ -377,7 +401,21 @@ function reconcileSent(issueId: number, d: TicketDetail): void {
 function applyAuthoritative(issueId: number, d: TicketDetail): void {
   keyCache.set(d.issueId, d.row.key);
   reconcileSent(issueId, d);
-  if (isActive(issueId)) ticketDetail.value = d;
+  // Preserve optimistic transforms of any other field whose write is still in flight.
+  const r = recs.get(issueId);
+  let merged = d;
+  if (r) {
+    for (const fn of Object.values(r.inFlight)) {
+      if (fn) merged = fn(merged);
+    }
+  }
+  if (isActive(issueId)) {
+    batch(() => {
+      loadSeq++;
+      ticketDetail.value = merged;
+      ticketUpdated.value = [];
+    });
+  }
   const next = new Map(views.value);
   let changed = false;
   for (const [id, v] of next) {
@@ -385,7 +423,7 @@ function applyAuthoritative(issueId: number, d: TicketDetail): void {
     if (at < 0) continue;
     const old = v.tickets[at]!;
     const tickets = v.tickets.slice();
-    tickets[at] = v.pulseDays === d.pulseDays ? d.row : { ...d.row, pulse: old.pulse };
+    tickets[at] = v.pulseDays === merged.pulseDays ? merged.row : { ...merged.row, pulse: old.pulse };
     next.set(id, { ...v, tickets });
     changed = true;
   }
@@ -419,15 +457,18 @@ async function performWrite(spec: WriteSpec): Promise<void> {
   const r = rec(issueId);
   if (r.writes[field].phase === "saving") return;
   r.writes[field] = { phase: "saving", reason: "" };
+  r.inFlight[field] = spec.apply;
   delete r.retry[field];
   publishWrites(issueId);
   patchDetail(issueId, spec.apply);
   const before = patchRows(issueId, spec.rows);
   try {
     const d = await spec.call();
+    delete r.inFlight[field];
     r.writes[field] = idleWrite();
     applyAuthoritative(issueId, d);
   } catch (e) {
+    delete r.inFlight[field];
     patchDetail(issueId, spec.revert);
     restoreRows(issueId, before);
     r.writes[field] = { phase: "failed", reason: failureText(e) };
@@ -543,9 +584,10 @@ export async function loadAssignees(query: string, _signal: AbortSignal): Promis
 }
 
 // ── refresh ──
-export async function refreshTicket(): Promise<void> {
-  if (!active) return;
-  const { standupId, issueId } = active;
+export async function refreshTicket(target?: { standupId: number; issueId: number }): Promise<void> {
+  const who = target ?? active;
+  if (!who) return;
+  const { standupId, issueId } = who;
   const r = rec(issueId).refresh;
   if (r.phase === "refreshing" || r.phase === "waiting" || r.cooldownUntil > Date.now()) return;
   r.phase = "refreshing";
@@ -597,11 +639,17 @@ export async function flushDraft(): Promise<void> {
   const p = draftPending;
   if (!p) return;
   draftPending = null;
-  try {
-    await api().ticket.saveDraft(p.issueId, p.input);
-  } catch {
-    // The text stays in the composer; the next edit or flush saves it again.
-  }
+  const saveP = api()
+    .ticket.saveDraft(p.issueId, p.input)
+    .then(() => undefined)
+    .catch(() => {
+      // The text stays in the composer; the next edit or flush saves it again.
+    })
+    .finally(() => {
+      if (draftSaves.get(p.issueId) === saveP) draftSaves.delete(p.issueId);
+    });
+  draftSaves.set(p.issueId, saveP);
+  await saveP;
 }
 
 const runes = (s: string): number => Array.from(s).length;
@@ -621,13 +669,14 @@ async function submitComment(issueId: number, standupId: number, localId: string
       ? r.pending.map((p) => (p.localId === localId ? { ...p, state: "sent", reason: "" } : p))
       : r.pending.filter((p) => p.localId !== localId);
     applyAuthoritative(issueId, d);
-    if (isActive(issueId)) ticketDraft.value = emptyDraft();
   } catch (e) {
     const ae = toAppError(e);
     const why = ae.code === "rate_limited" ? rateText(ae.retryInMs) : ae.message;
     r.pending = r.pending.map((p) => (p.localId === localId ? { ...p, state: "failed", reason: why } : p));
-    // The text must survive a restart: store it as the draft (explicitly; nothing re-sends it by itself).
-    void api().ticket.saveDraft(issueId, input).catch(() => undefined);
+    // The text must survive a restart: store it as the draft unless the user has already started typing a newer draft.
+    if (draftPending?.issueId !== issueId && (!isActive(issueId) || ticketDraft.peek().text === "")) {
+      void api().ticket.saveDraft(issueId, input).catch(() => undefined);
+    }
   }
   publishPending(issueId);
 }

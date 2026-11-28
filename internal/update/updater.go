@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -283,6 +284,14 @@ func (u *Updater) Check(ctx context.Context, t Trigger) (Status, error) {
 	}
 	u.setPhase(ctx, PhaseChecking, 0)
 	found, err := u.lookup(ctx)
+	if err != nil && errors.Is(err, context.Canceled) && ctx.Err() != nil {
+		// App quit or caller cancelled mid-check: don't burn the daily quota or persist a false offline error.
+		u.mu.Lock()
+		u.phase, u.progress = PhaseIdle, 0
+		u.mu.Unlock()
+		u.notify(context.WithoutCancel(ctx))
+		return u.Status(context.WithoutCancel(ctx)), nil
+	}
 	now := u.o.Now()
 
 	u.mu.Lock()
@@ -337,8 +346,8 @@ func (u *Updater) lookup(ctx context.Context) (*Found, error) {
 		stable = append(stable, r)
 	}
 	// newest first; a newest release still missing files falls back to the next complete one
-	for len(stable) > 0 {
-		best, _ := Latest(stable)
+	slices.SortFunc(stable, func(a, b Release) int { return b.Version.Compare(a.Version) })
+	for _, best := range stable {
 		asset, kind, ok := SelectAsset(best.Assets, u.o.GOOS, u.o.GOARCH, u.o.AppImage != "")
 		sums, hasSums := best.Asset(SumsName)
 		if ok && hasSums {
@@ -354,13 +363,6 @@ func (u *Updater) lookup(ctx context.Context) (*Found, error) {
 			}
 			u.o.Logger.Warn("update: skipping a release whose files don't fit its tag or host", "version", f.Version)
 		}
-		next := stable[:0]
-		for _, r := range stable {
-			if r.Tag != best.Tag {
-				next = append(next, r)
-			}
-		}
-		stable = next
 	}
 	return nil, nil
 }
@@ -564,6 +566,7 @@ func (u *Updater) get(ctx context.Context, raw string) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
 		return nil, fmt.Errorf("update: download answered HTTP %d", resp.StatusCode)
 	}
@@ -602,8 +605,13 @@ func (u *Updater) fetchSums(ctx context.Context, f *Found) (sums, sig []byte, er
 	return sums, sig, nil
 }
 
+// downloadTimeout caps an asset download so a stalled TCP connection cannot hold opMu forever.
+const downloadTimeout = 15 * time.Minute
+
 // download streams the asset to file, hashing as it goes, and reports progress. It returns the hex SHA-256.
 func (u *Updater) download(ctx context.Context, a Asset, file string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, downloadTimeout)
+	defer cancel()
 	resp, err := u.get(ctx, a.URL)
 	if err != nil {
 		return "", err

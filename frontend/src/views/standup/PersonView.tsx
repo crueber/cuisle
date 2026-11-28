@@ -41,16 +41,21 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const frame = useRef<number | null>(null);
-  const [pos, setPos] = useState({ top: 0, visibleH: H * k, end: false });
+  const live = useRef({ counts, density, H, k });
+  live.current = { counts, density, H, k };
+  const [more, setMore] = useState<{ end: boolean; summary: string }>(() => ({
+    end: false,
+    summary: belowFold(counts, density, H - MORE_BAR_H, 0).summary,
+  }));
 
   const measure = () => {
     const el = scrollRef.current;
     if (!el) return;
-    setPos({
-      top: el.scrollTop,
-      visibleH: el.clientHeight > 0 ? el.clientHeight : H * k,
-      end: isAtEnd(el.scrollTop, el.clientHeight, el.scrollHeight),
-    });
+    const s = live.current;
+    const visibleH = el.clientHeight > 0 ? el.clientHeight : s.H * s.k;
+    const end = isAtEnd(el.scrollTop, el.clientHeight, el.scrollHeight);
+    const summary = belowFold(s.counts, s.density, (visibleH - MORE_BAR_H * s.k) / s.k, el.scrollTop / s.k).summary;
+    setMore((prev) => (prev.end === end && prev.summary === summary ? prev : { end, summary }));
   };
   // Scroll handling is throttled to one animation frame.
   const onScroll = () => {
@@ -83,7 +88,6 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
     [],
   );
 
-  const below = belowFold(counts, density, (pos.visibleH - MORE_BAR_H * k) / k, pos.top / k);
   const side = density.side;
 
   return (
@@ -158,7 +162,7 @@ export function PersonView({ view, person, groups: allGroups, mainW, vh }: Perso
           })}
         </div>
         {groups.length === 0 ? <p class="person-empty">Nothing on the board for this person.</p> : null}
-        <MoreBar visible={scroll} atEnd={pos.end} summary={below.summary} />
+        <MoreBar visible={scroll} atEnd={more.end} summary={more.summary} />
       </div>
     </div>
   );

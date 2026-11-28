@@ -1,7 +1,7 @@
 // FROZEN SIGNATURES (architecture §5.3). Implementation: WP-15. Optimistic updates + save.enqueue.
 // Per-key serial queue, last-write-wins coalescing, 400 ms text debounce, "Saving…" only after 250 ms, Saved for 2 s
 // then "All changes saved", retry 3× (0.5 s, 1 s, 2 s) for retryable errors, validation errors stay on the field.
-import { signal } from "@preact/signals";
+import { batch, signal } from "@preact/signals";
 import { toAppError, type AppError } from "../api/errors";
 import { api } from "../api/index";
 
@@ -158,16 +158,18 @@ function succeed(key: string, st: KeyState, job: Job, r: unknown): void {
       report(e);
     }
   }
-  if (fieldErrors.value.has(key)) {
-    const m = new Map(fieldErrors.value);
-    m.delete(key);
-    fieldErrors.value = m;
-  }
-  if (failedKeys.value.has(key)) {
-    const s = new Set(failedKeys.value);
-    s.delete(key);
-    failedKeys.value = s;
-  }
+  batch(() => {
+    if (fieldErrors.value.has(key)) {
+      const m = new Map(fieldErrors.value);
+      m.delete(key);
+      fieldErrors.value = m;
+    }
+    if (failedKeys.value.has(key)) {
+      const s = new Set(failedKeys.value);
+      s.delete(key);
+      failedKeys.value = s;
+    }
+  });
   lastOk = true;
   finishChain(key, st);
 }
@@ -209,6 +211,32 @@ function failed(key: string, st: KeyState, job: Job, e: unknown, g: number): voi
 
 function finishChain(key: string, st: KeyState): void {
   startNext(key, st);
+  if (!st.busy && !st.pending && !st.debounce && !st.retry && !failedKeys.value.has(key) && !fieldErrors.value.has(key)) {
+    keys.delete(key);
+  }
+  refresh();
+  notifyIdle();
+}
+
+/** Drops queued/failed state for keys starting with prefix (e.g. a deleted or discarded standup). */
+export function clearKeysWithPrefix(prefix: string): void {
+  for (const [k, st] of [...keys]) {
+    if (!k.startsWith(prefix)) continue;
+    if (st.debounce) clearTimeout(st.debounce);
+    if (st.retry) clearTimeout(st.retry);
+    st.debounce = null;
+    st.retry = null;
+    st.pending = null;
+    if (!st.busy) keys.delete(k);
+  }
+  batch(() => {
+    if ([...fieldErrors.value.keys()].some((k) => k.startsWith(prefix))) {
+      fieldErrors.value = new Map([...fieldErrors.value].filter(([k]) => !k.startsWith(prefix)));
+    }
+    if ([...failedKeys.value].some((k) => k.startsWith(prefix))) {
+      failedKeys.value = new Set([...failedKeys.value].filter((k) => !k.startsWith(prefix)));
+    }
+  });
   refresh();
   notifyIdle();
 }
@@ -280,9 +308,11 @@ export function resetSaveQueue(): void {
   if (savingTimer) clearTimeout(savingTimer);
   savingTimer = null;
   clearSettle();
-  saveState.value = "idle";
-  fieldErrors.value = new Map();
-  failedKeys.value = new Set();
+  batch(() => {
+    saveState.value = "idle";
+    fieldErrors.value = new Map();
+    failedKeys.value = new Set();
+  });
   const w = waiters;
   waiters = [];
   for (const resolve of w) resolve();

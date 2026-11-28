@@ -427,8 +427,19 @@ func MergeSpeakersTx(ctx context.Context, tx *sql.Tx, id int64, seen []model.Per
 			return false, dbErr(err)
 		}
 	}
-	if err := writePositionsTx(ctx, tx, id, order); err != nil {
-		return false, err
+	needReorder := changed
+	if !needReorder {
+		for i, sp := range kept {
+			if sp.Position != i {
+				needReorder = true
+				break
+			}
+		}
+	}
+	if needReorder {
+		if err := writePositionsTx(ctx, tx, id, order); err != nil {
+			return false, err
+		}
 	}
 	return changed, nil
 }

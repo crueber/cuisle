@@ -21,6 +21,8 @@ export interface AdfContext {
   theme: "light" | "dark";
   /** Bumped by `E`: every expand toggles to the same state (true = expanded). undefined = as authored. */
   expandAll?: { open: boolean; token: number };
+  /** Live cache state lookup from detail.attachments so media:ready updates inline media nodes immediately. */
+  mediaCached?: (attachmentId: number) => string | undefined;
 }
 
 /** Text size of a document: the description at body size, comments at body−1, rail paragraphs at 15/22. */

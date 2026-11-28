@@ -2,19 +2,16 @@
 // props.ts IssueRowsProps). A row is one button; the parent decides modal (synced) or browser (not synced).
 import type { IssueRow } from "../../api/types";
 import { hueOf } from "../../state/lanes";
-import { Icon } from "../../components/Icon";
-import type { IconName } from "../../components/props";
+import { Icon, issueTypeIcon } from "../../components/Icon";
 import type { IssueRowsProps } from "./props";
 import "./IssueRows.css";
-
-const ICONS: Record<string, IconName> = { story: "story", bug: "bug", task: "task", spike: "spike" };
 
 function Row({ row, onOpen }: { row: IssueRow; onOpen: (row: IssueRow) => void }) {
   return (
     <li class="ir-row" data-done={row.done ? "true" : undefined}>
       <button type="button" class="ir-btn" onClick={() => onOpen(row)}>
         <span class="ir-type">
-          <Icon name={ICONS[row.typeKind] ?? "other"} size={16} />
+          <Icon name={issueTypeIcon(row.typeKind)} size={16} />
         </span>
         <span class="ir-key">{row.key}</span>
         <span class="ir-summary">{row.summary}</span>

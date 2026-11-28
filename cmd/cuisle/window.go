@@ -130,7 +130,12 @@ func (t *windowTracker) refresh() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.state.Maximised = maximised
-	if !maximised && t.calibrated && b.Width > 0 && b.Height > 0 {
+	if !maximised && b.Width > 0 && b.Height > 0 {
+		if !t.calibrated {
+			// Window started maximised so calibrate() was deferred; treat the first un-maximised bounds as baseline.
+			t.calibrated = true
+			t.haveState = true
+		}
 		t.state.X, t.state.Y, t.state.W, t.state.H = b.X, b.Y, b.Width-t.dw, b.Height-t.dh
 	}
 	t.touchLocked()

@@ -102,11 +102,11 @@ func validPaletteUsage(v string) bool {
 
 // UpdateCheckDaily reads KeyUpdateCheckDaily: on unless it is stored as "off".
 func (s *Store) UpdateCheckDaily(ctx context.Context) bool {
-	all, err := s.AppSettings(ctx)
-	if err != nil {
+	var v string
+	if err := s.DB.R.QueryRowContext(ctx, `SELECT value FROM app_setting WHERE key = ?`, KeyUpdateCheckDaily).Scan(&v); err != nil {
 		return true
 	}
-	return all[KeyUpdateCheckDaily] != "off"
+	return v != "off"
 }
 
 // validAppSetting checks one key/value pair. Field is the key for a bad value, and "key" for an unknown key.

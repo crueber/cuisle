@@ -6,10 +6,12 @@ package app
 // them). Nothing here touches the network.
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
@@ -53,10 +55,25 @@ func (d *Deps) issueRef(ctx context.Context, issueID int64) (issueRef, error) {
 
 // ── locks, cooldown, offline verdict ─────────────────────────────────────────────
 
-// lockIssue takes the in-flight lock of an issue (one write or Refresh at a time); ok=false means one is running.
+// enterTicketOp registers a short-lived ticket apply that isn't keyed by an existing issueID (FetchByKey).
+// Returns ok=false once background work is stopped or paused for a disconnect wipe.
+func (d *Deps) enterTicketOp() (release func(), ok bool) {
+	d.ticketMu.Lock()
+	defer d.ticketMu.Unlock()
+	if d.bgStopped || d.bgPaused > 0 {
+		return nil, false
+	}
+	d.ticketWG.Add(1)
+	return func() { d.ticketWG.Done() }, true
+}
+
+// lockIssue takes the in-flight lock of an issue (one write or Refresh at a time); ok=false means one is running or paused.
 func (d *Deps) lockIssue(issueID int64) (release func(), ok bool) {
 	d.ticketMu.Lock()
 	defer d.ticketMu.Unlock()
+	if d.bgStopped || d.bgPaused > 0 {
+		return nil, false
+	}
 	if d.busy == nil {
 		d.busy = map[int64]struct{}{}
 	}
@@ -64,10 +81,12 @@ func (d *Deps) lockIssue(issueID int64) (release func(), ok bool) {
 		return nil, false
 	}
 	d.busy[issueID] = struct{}{}
+	d.ticketWG.Add(1)
 	return func() {
 		d.ticketMu.Lock()
 		delete(d.busy, issueID)
 		d.ticketMu.Unlock()
+		d.ticketWG.Done()
 	}, true
 }
 
@@ -88,6 +107,11 @@ func (d *Deps) refreshWait(issueID int64) time.Duration {
 		if left := refreshCooldown - now.Sub(last); left > 0 {
 			return left
 		}
+	}
+	if len(d.refreshAt) > 64 {
+		maps.DeleteFunc(d.refreshAt, func(_ int64, t time.Time) bool {
+			return now.Sub(t) >= refreshCooldown
+		})
 	}
 	d.refreshAt[issueID] = now
 	return 0
@@ -132,8 +156,7 @@ func (d *Deps) writesOf(row cache.ConnRow) view.TicketWrites {
 	if err != nil {
 		return view.TicketWrites{}
 	}
-	w := src.Capabilities().Writes
-	return view.TicketWrites{Transition: w.Transition, Assign: w.Assign, Flag: w.Flag, Comment: w.Comment}
+	return ticketWrites(src)
 }
 
 // ticketDetail is the modal payload of an issue as seen from a standup: one reader transaction (config, snapshot,
@@ -198,19 +221,12 @@ func prefsOf(reg []cache.TicketFieldDef) view.TicketFieldPrefs {
 			p.Available = append(p.Available, view.FieldOption{FieldID: e.Def.ID, Name: e.Def.Name, Kind: e.Def.Kind, Custom: true})
 		}
 	}
-	byName := func(a, b string, ai, bi string) bool {
-		if la, lb := strings.ToLower(a), strings.ToLower(b); la != lb {
-			return la < lb
-		}
-		return ai < bi
+	byName := func(a, b, ai, bi string) int {
+		return cmp.Or(cmp.Compare(strings.ToLower(a), strings.ToLower(b)), cmp.Compare(ai, bi))
 	}
-	sort.SliceStable(p.Pinned, func(i, j int) bool { return p.Pinned[i].Position < p.Pinned[j].Position })
-	sort.SliceStable(p.Hidden, func(i, j int) bool {
-		return byName(p.Hidden[i].Name, p.Hidden[j].Name, p.Hidden[i].FieldID, p.Hidden[j].FieldID)
-	})
-	sort.SliceStable(p.Available, func(i, j int) bool {
-		return byName(p.Available[i].Name, p.Available[j].Name, p.Available[i].FieldID, p.Available[j].FieldID)
-	})
+	slices.SortStableFunc(p.Pinned, func(a, b view.FieldPref) int { return cmp.Compare(a.Position, b.Position) })
+	slices.SortStableFunc(p.Hidden, func(a, b view.FieldPref) int { return byName(a.Name, b.Name, a.FieldID, b.FieldID) })
+	slices.SortStableFunc(p.Available, func(a, b view.FieldOption) int { return byName(a.Name, b.Name, a.FieldID, b.FieldID) })
 	return p
 }
 
@@ -406,27 +422,34 @@ func (d *Deps) writeTransitionCache(ctx context.Context, issueID int64, list []m
 // category (new todo, indeterminate prog, done done). The standup is the first live one that has the issue.
 func (d *Deps) laneResolver(ctx context.Context, connID, issueID int64) func(statusID string) string {
 	mapped := map[string]string{}
+	cats := map[string]string{}
 	_ = d.DB.ReadTx(ctx, func(tx *sql.Tx) error {
-		ids, err := cache.LiveStandupIDsTx(ctx, tx, issueID)
-		if err != nil || len(ids) == 0 {
-			return err
+		if ids, err := cache.LiveStandupIDsTx(ctx, tx, issueID); err == nil && len(ids) > 0 {
+			if cfg, err := settings.EffectiveTx(ctx, tx, ids[0]); err == nil {
+				for _, sl := range cfg.StatusLanes {
+					mapped[sl.StatusID] = sl.Lane
+				}
+			}
 		}
-		cfg, err := settings.EffectiveTx(ctx, tx, ids[0])
+		rows, err := tx.QueryContext(ctx, `SELECT id, category FROM status WHERE connection_id = ?`, connID)
 		if err != nil {
 			return err
 		}
-		for _, sl := range cfg.StatusLanes {
-			mapped[sl.StatusID] = sl.Lane
+		defer rows.Close()
+		for rows.Next() {
+			var id, cat string
+			if err := rows.Scan(&id, &cat); err != nil {
+				return err
+			}
+			cats[id] = cat
 		}
-		return nil
+		return rows.Err()
 	})
 	return func(statusID string) string {
 		if l := mapped[statusID]; model.IsShownLane(l) {
 			return l
 		}
-		var cat string
-		_ = d.DB.R.QueryRowContext(ctx, `SELECT category FROM status WHERE connection_id = ? AND id = ?`, connID, statusID).Scan(&cat)
-		switch cat {
+		switch cats[statusID] {
 		case "indeterminate":
 			return model.LaneProg
 		case "done":

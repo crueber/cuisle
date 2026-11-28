@@ -6,12 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setApi } from "../../../api";
 import { setEventBus } from "../../../api/events";
 import { createMockApi, type MockApi } from "../../../api/mock";
+import { FIXTURE_APP } from "../../../api/mock-fixtures";
 import type { UpdateStatus } from "../../../api/types";
 import { settings } from "../../../state/app";
 import { NO_UPDATE, checkError, updateStatus } from "../../../state/update";
 import { DisplaySection, lastCheckedText } from "./Display";
 
-const NOW = Date.UTC(2026, 10, 24, 12, 0, 0);
+const NOW = FIXTURE_APP.now;
 const CHANNEL: Partial<UpdateStatus> = { channel: "github", currentVersion: "v1.2.0", lastCheckedAt: NOW - 3 * 3_600_000 };
 
 let mock: MockApi;

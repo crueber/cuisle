@@ -6,12 +6,12 @@ import type { CommentOrder, CommentView } from "../../api/types";
 import { AdfDoc } from "../../components/adf/AdfDoc";
 import type { AdfContext } from "../../components/adf/props";
 import { Segmented } from "../../components/Segmented";
+import { MONTHS } from "../../format";
 import { Composer } from "./Composer";
 import type { CommentsProps, PendingComment } from "./props";
 import "./Comments.css";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ORDER: { value: CommentOrder; label: string }[] = [
   { value: "newest", label: "Newest" },
   { value: "oldest", label: "Oldest" },

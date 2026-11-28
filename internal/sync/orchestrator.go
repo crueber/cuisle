@@ -2,7 +2,9 @@ package sync
 
 import (
 	"context"
+	"errors"
 	"log/slog"
+	gosync "sync"
 	"time"
 
 	"github.com/crueber/cuisle/internal/apperr"
@@ -130,6 +132,10 @@ func (o *Orchestrator) Start(ctx context.Context, standupID int64, mode, trigger
 			o.mu.Unlock()
 			return 0, apperr.New(apperr.Internal, "Cuisle is shutting down.")
 		}
+		if o.paused > 0 {
+			o.mu.Unlock()
+			return 0, apperr.New(apperr.Conflict, "Sync is paused while disconnecting.")
+		}
 		if cur, ok := o.runs[standupID]; ok && cur.status.State == stateRunning {
 			if cur.id != 0 {
 				id := cur.id
@@ -231,6 +237,9 @@ func preKnownFull(state cache.SyncState, t time.Time) bool {
 func (o *Orchestrator) runningID(standupID int64) (int64, bool) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
+	if o.closed || o.paused > 0 {
+		return 0, false
+	}
 	if r, ok := o.runs[standupID]; ok && r.status.State == stateRunning && r.id != 0 {
 		return r.id, true
 	}
@@ -342,16 +351,59 @@ func (o *Orchestrator) Shutdown(ctx context.Context) error {
 	}
 	o.mu.Unlock()
 	o.cancelMedia()
+	return o.waitAll(ctx)
+}
 
-	waited := make(chan struct{})
-	go func() {
-		o.wg.Wait()
-		close(waited)
-	}()
+func (o *Orchestrator) waitAll(ctx context.Context) error {
+	if err := o.wg.WaitContext(ctx); err != nil {
+		if errors.Is(err, context.Canceled) {
+			return apperr.Wrap(apperr.Cancelled, "Cancelled.", err)
+		}
+		return apperr.Wrap(apperr.Timeout, "Sync did not stop in time.", err)
+	}
+	return nil
+}
+
+// waitGroup is a cancellable counter without sync.WaitGroup's reuse restriction after a timed-out Wait.
+type waitGroup struct {
+	mu    gosync.Mutex
+	count int
+	zero  chan struct{}
+}
+
+func (g *waitGroup) Add(delta int) {
+	g.mu.Lock()
+	g.count += delta
+	if g.count < 0 {
+		g.mu.Unlock()
+		panic("sync: negative waitGroup counter")
+	}
+	if g.count == 0 && g.zero != nil {
+		close(g.zero)
+		g.zero = nil
+	}
+	g.mu.Unlock()
+}
+
+func (g *waitGroup) Done() { g.Add(-1) }
+
+func (g *waitGroup) Wait() { _ = g.WaitContext(context.Background()) }
+
+func (g *waitGroup) WaitContext(ctx context.Context) error {
+	g.mu.Lock()
+	if g.count == 0 {
+		g.mu.Unlock()
+		return nil
+	}
+	if g.zero == nil {
+		g.zero = make(chan struct{})
+	}
+	ch := g.zero
+	g.mu.Unlock()
 	select {
-	case <-waited:
+	case <-ch:
 		return nil
 	case <-ctx.Done():
-		return apperr.Wrap(apperr.Timeout, "Sync did not stop in time.", ctx.Err())
+		return ctx.Err()
 	}
 }

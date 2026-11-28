@@ -19,30 +19,3 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-
-.sto-btn {
-  min-height: var(--size-button-height);
-  padding: 0 var(--space-3);
-  border: 2px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
-  color: var(--color-fg);
-  font: inherit;
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-.sto-btn:hover {
-  background: var(--color-rule-soft);
-}
-
-.sto-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.sto-alert {
-  margin: 0;
-  font-size: var(--font-size-small);
-  color: var(--color-alert-text);
-}

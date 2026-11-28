@@ -3,25 +3,11 @@ package jira
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/crueber/cuisle/internal/model"
 )
 
 // Wire shapes for the Jira search response. Comment bodies are deliberately not decoded (jira-sync.md §7).
-
-// flexID accepts a JSON string or number and keeps its text.
-type flexID string
-
-func (f *flexID) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), `"`)
-	if s == "null" {
-		s = ""
-	}
-	*f = flexID(s)
-	return nil
-}
 
 type wireIssue struct {
 	ID     string                     `json:"id"`
@@ -52,10 +38,10 @@ type wireStatus struct {
 }
 
 type wireSprint struct {
-	ID           flexID `json:"id"`
+	ID           refID  `json:"id"`
 	Name         string `json:"name"`
 	State        string `json:"state"`
-	BoardID      flexID `json:"boardId"`
+	BoardID      refID  `json:"boardId"`
 	StartDate    Time   `json:"startDate"`
 	EndDate      Time   `json:"endDate"`
 	CompleteDate Time   `json:"completeDate"`
@@ -69,7 +55,7 @@ type wireItem struct {
 }
 
 type wireHistory struct {
-	ID      flexID     `json:"id"`
+	ID      refID      `json:"id"`
 	Created Time       `json:"created"`
 	Items   []wireItem `json:"items"`
 }
@@ -112,7 +98,7 @@ func mapIssue(wi wireIssue, f hydrateFieldIDs, reg *fieldRegistry) (model.IssueD
 	}
 	if it != nil {
 		d.TypeID = it.ID
-		d.Type = model.IssueType{ID: it.ID, Name: it.Name, Kind: hydrateTypeKind(it.Name, it.Subtask, it.HierarchyLevel)}
+		d.Type = model.IssueType{ID: it.ID, Name: it.Name, Kind: IssueTypeKind(it.Name, it.Subtask, it.HierarchyLevel)}
 	}
 	var st *wireStatus
 	if err := decodeField(fs, "status", &st); err != nil {
@@ -120,7 +106,7 @@ func mapIssue(wi wireIssue, f hydrateFieldIDs, reg *fieldRegistry) (model.IssueD
 	}
 	if st != nil {
 		d.StatusID = st.ID
-		d.Status = model.Status{ID: st.ID, Name: st.Name, Category: st.StatusCategory.Key, BlockedHint: hydrateBlockedHint(st.Name)}
+		d.Status = model.Status{ID: st.ID, Name: st.Name, Category: st.StatusCategory.Key, BlockedHint: StatusBlockedHint(st.Name)}
 	}
 	var as *wireUser
 	if err := decodeField(fs, "assignee", &as); err != nil {
@@ -209,26 +195,6 @@ func addPerson(d *model.IssueDetail, p model.Person) {
 	}
 	d.People = append(d.People, p)
 }
-
-// hydrateTypeKind maps a Jira issue type to model kinds: subtask → subtask; hierarchyLevel 1 → epic; else by name.
-func hydrateTypeKind(name string, subtask bool, hierarchyLevel int) string {
-	switch {
-	case subtask:
-		return "subtask"
-	case hierarchyLevel == 1:
-		return "epic"
-	}
-	switch l := strings.ToLower(name); l {
-	case "story", "bug", "task", "spike":
-		return l
-	}
-	return "other"
-}
-
-var blockedHintRe = regexp.MustCompile(`(?i)\b(blocked|impeded|on hold)\b`)
-
-// hydrateBlockedHint reports whether a status name looks like a blocker.
-func hydrateBlockedHint(name string) bool { return blockedHintRe.MatchString(name) }
 
 // strOf renders a changelog from/to value: null is "", strings are kept.
 func strOf(v any) string {

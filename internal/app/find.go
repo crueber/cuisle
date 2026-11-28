@@ -7,9 +7,11 @@ package app
 import (
 	"context"
 	"database/sql"
+	"slices"
 	"sort"
 	"time"
 
+	"github.com/crueber/cuisle/internal/apperr"
 	"github.com/crueber/cuisle/internal/cache"
 	"github.com/crueber/cuisle/internal/keyfind"
 	"github.com/crueber/cuisle/internal/model"
@@ -258,10 +260,8 @@ type hitSeed struct {
 // homeStandup is the standup a ticket opens in: the current one when it is a live member, else the first member by tab
 // order, else the current one (0 = none).
 func homeStandup(members []int64, current int64) int64 {
-	for _, m := range members {
-		if m == current {
-			return current
-		}
+	if slices.Contains(members, current) {
+		return current
 	}
 	if len(members) > 0 {
 		return members[0]
@@ -295,7 +295,10 @@ func (d *Deps) buildHits(ctx context.Context, tx *sql.Tx, connID int64, fc cache
 		}
 		cfg, err := settings.EffectiveTx(ctx, tx, id)
 		if err != nil {
-			return nil, nil // gone or unreadable: no lane mapping to look from
+			if apperr.Is(err, apperr.NotFound) {
+				return nil, nil // gone: no lane mapping to look from
+			}
+			return nil, err
 		}
 		if live {
 			d.findCfgMu.Lock()

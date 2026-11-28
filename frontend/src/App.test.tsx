@@ -39,13 +39,13 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("KeyLegend", () => {
-  it("renders when keyLegendOpen is set, with the options of the current view, and closes through its own button", () => {
+  it("renders when keyLegendOpen is set, with the options of the current view, and closes through its own button", async () => {
     render(<App />);
     expect(screen.queryByRole("dialog")).toBeNull();
     act(() => {
       keyLegendOpen.value = true;
     });
-    const dialog = screen.getByRole("dialog", { name: /keys and pulse legend/i });
+    const dialog = await screen.findByRole("dialog", { name: /keys and pulse legend/i });
     expect(dialog.textContent).toMatch(/Commit tick/);
     expect(dialog.textContent).toMatch(/Comment that day/);
     expect(dialog.textContent).not.toMatch(/PR activity/);
@@ -54,11 +54,12 @@ describe("KeyLegend", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("Esc closes it", () => {
+  it("Esc closes it", async () => {
     render(<App />);
     act(() => {
       keyLegendOpen.value = true;
     });
+    await screen.findByRole("dialog", { name: /keys and pulse legend/i });
     fireEvent.keyDown(document, { key: "Escape" });
     expect(keyLegendOpen.value).toBe(false);
   });

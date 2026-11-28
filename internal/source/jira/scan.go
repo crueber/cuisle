@@ -74,7 +74,7 @@ func (a *Adapter) Scan(ctx context.Context, q source.Query) (source.ScanResult, 
 			res.Items = res.Items[:q.Limit]
 			break
 		}
-		if page.NextPageToken == "" {
+		if page.NextPageToken == "" || page.NextPageToken == token || len(page.Issues) == 0 {
 			break
 		}
 		token = page.NextPageToken

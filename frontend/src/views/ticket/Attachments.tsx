@@ -1,26 +1,12 @@
 // Attachments section of the ticket content column (ux-spec §14.4 "Attachments section"; props.ts AttachmentsProps).
 // Images first as 160x100 tiles (always the thumbnail), then file cards. Opening goes through the callbacks.
 import type { AttachmentView } from "../../api/types";
+import { formatBytes, shortDay } from "../../format";
 import type { AttachmentsProps } from "./props";
 import "./Attachments.css";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-/** Decimal units (1 KB = 1000 B): "412 KB", "18.4 KB". */
-function formatSize(n: number): string {
-  if (n >= 1e6) return `${Math.round(n / 1e6)} MB`;
-  if (n >= 1e3) return n >= 1e5 ? `${Math.round(n / 1e3)} KB` : `${(n / 1e3).toFixed(1)} KB`;
-  return `${n} B`;
-}
-
-/** Local calendar day, "18 Nov". */
-function dayLabel(ms: number): string {
-  const d = new Date(ms);
-  return `${d.getDate()} ${MONTHS[d.getMonth()] ?? ""}`;
-}
-
 function meta(a: AttachmentView): string {
-  return `${formatSize(a.bytes)} · ${a.authorInitials} · ${dayLabel(a.createdAt)}`;
+  return `${formatBytes(a.bytes)} · ${a.authorInitials} · ${shortDay(a.createdAt)}`;
 }
 
 export function Attachments({ items, onOpenImage, onOpenFile }: AttachmentsProps) {

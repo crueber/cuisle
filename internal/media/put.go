@@ -12,7 +12,6 @@ import (
 	"image/jpeg"
 	_ "image/png" // decoder registration
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -159,8 +158,8 @@ func (c *cache) attachmentDir(connectionID, rowID int64) (string, error) {
 
 // Put stores the original and derives the thumbnail (see Cache.Put).
 func (c *cache) Put(ctx context.Context, att model.Attachment, connectionID int64, r io.Reader) (Entry, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.ioMu.RLock()
+	defer c.ioMu.RUnlock()
 
 	exists, err := c.rowExists(ctx, att.LocalID)
 	if err != nil {
@@ -192,6 +191,9 @@ func (c *cache) Put(ctx context.Context, att model.Attachment, connectionID int6
 		}
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	relOrig, relThumb := origRel(connectionID, att.LocalID), thumbRel(connectionID, att.LocalID)
 	if err := orig.commit(filepath.Join(c.dir, filepath.FromSlash(relOrig))); err != nil {
 		return Entry{}, internalErr("The image could not be stored.", err)
@@ -201,14 +203,13 @@ func (c *cache) Put(ctx context.Context, att model.Attachment, connectionID int6
 		if err := thumb.commit(thumbPath); err != nil {
 			return Entry{}, internalErr("The preview could not be stored.", err)
 		}
-	} else if err := os.Remove(thumbPath); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		c.log.Warn("media: stale thumbnail not removed", "attachment", att.LocalID, "err", err)
 	}
 
 	hasThumb := thumb != nil
 	err = c.db.WriteTx(ctx, func(tx *sql.Tx) error {
-		res, err := tx.ExecContext(ctx, `UPDATE attachment SET file_path = ?, thumb_path = ?, cached_bytes = ?,
-				width = ?, height = ?, fetch_error = NULL WHERE id = ?`,
+		res, err := tx.ExecContext(ctx, `UPDATE attachment SET file_path = ?,
+				thumb_path = COALESCE(?, thumb_path), cached_bytes = ?,
+				width = COALESCE(?, width), height = COALESCE(?, height), fetch_error = NULL WHERE id = ?`,
 			relOrig, nullString(hasThumb, relThumb), size, nullInt(hasThumb, w), nullInt(hasThumb, h), att.LocalID)
 		if err != nil {
 			return err
@@ -222,7 +223,7 @@ func (c *cache) Put(ctx context.Context, att model.Attachment, connectionID int6
 		return Entry{}, err
 	}
 
-	if _, err := c.evictLocked(ctx); err != nil {
+	if _, err := c.evictOverCapLocked(ctx); err != nil {
 		c.log.Warn("media: eviction after put failed", "attachment", att.LocalID, "err", err)
 	}
 

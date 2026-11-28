@@ -422,6 +422,24 @@ describe("openToken (the S and A keys)", () => {
     await waitFor(() => expect(assigneeInput().getAttribute("aria-expanded")).toBe("true"));
     expect(statusInput().getAttribute("aria-expanded")).toBe("false");
   });
+
+  it("doesNotLatchOpen_WhenTokenArrivesWhileDisabled_AndClosesWhenDisabled", async () => {
+    const p = props();
+    const view = render(<FieldRail {...p} offline openToken={null} />);
+    view.rerender(<FieldRail {...p} offline openToken={{ field: "status", token: 1 }} />);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    // Re-enabling later must not pop open from the stale token.
+    view.rerender(<FieldRail {...p} offline={false} openToken={{ field: "status", token: 1 }} />);
+    expect(screen.queryByRole("listbox")).toBeNull();
+
+    // Opening while enabled, then becoming disabled, closes and stays closed on re-enable.
+    view.rerender(<FieldRail {...p} offline={false} openToken={{ field: "assignee", token: 2 }} />);
+    await waitFor(() => expect(assigneeInput().getAttribute("aria-expanded")).toBe("true"));
+    view.rerender(<FieldRail {...p} offline openToken={{ field: "assignee", token: 2 }} />);
+    await waitFor(() => expect(assigneeInput().getAttribute("aria-expanded")).toBe("false"));
+    view.rerender(<FieldRail {...p} offline={false} openToken={{ field: "assignee", token: 2 }} />);
+    expect(assigneeInput().getAttribute("aria-expanded")).toBe("false");
+  });
 });
 
 describe("layouts", () => {

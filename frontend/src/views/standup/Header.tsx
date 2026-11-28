@@ -2,6 +2,7 @@
 // (Find, sync status, Resync, Update when a newer release is available (ADR 0016), Configure).
 // What collapses with width comes from layout/responsive headerCollapse. Sync age uses Date.now() at render only.
 import { Icon } from "../../components/Icon";
+import { lazy } from "../../components/lazy";
 import { tabsAvailableWidth } from "../../layout/tabs";
 import { headerCollapse } from "../../layout/responsive";
 import { createStandup } from "../../state/config";
@@ -12,9 +13,16 @@ import { cancelSync, startSync, syncStatus } from "../../state/sync";
 import { updateAvailable, updateDialogOpen, updateStatus } from "../../state/update";
 import { findKeyLabel, openPalette, paletteOpen } from "../../state/palette";
 import { Tabs } from "./Tabs";
-import { UpdateDialog } from "./UpdateDialog";
 import { WORDMARK_WIDTH, dateWidth, dayLabel, rightClusterWidth, syncLabel } from "./headerText";
 import type { HeaderProps } from "./props";
+
+// Rarely opened overlay: lazy chunk fetched the first time the Update dialog opens (architecture §6.1).
+const UpdateDialog = lazy(
+  () => import("./UpdateDialog").then((m) => m.UpdateDialog),
+  () => {
+    updateDialogOpen.value = false;
+  },
+);
 
 export function Header(props: HeaderProps) {
   const { vw } = props;

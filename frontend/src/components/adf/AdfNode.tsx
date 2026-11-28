@@ -118,8 +118,11 @@ export function renderNode(n: Node, ctx: AdfContext, maxW?: number): ComponentCh
     case "card":
       return <Card a={a} ctx={ctx} />;
     case "media": {
-      const key = `${a.attachmentId ?? ""}:${a.cached ?? ""}`;
-      return <Media key={key} a={a} ctx={ctx} maxW={maxW} />;
+      const id = Number(a.attachmentId ?? 0);
+      const cached = (id > 0 ? ctx.mediaCached?.(id) : undefined) ?? a.cached;
+      const attrs = cached !== a.cached ? { ...a, cached } : a;
+      const key = `${a.attachmentId ?? ""}:${cached ?? ""}`;
+      return <Media key={key} a={attrs} ctx={ctx} maxW={maxW} />;
     }
     case "file":
       return <FileCard a={a} ctx={ctx} />;

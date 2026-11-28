@@ -24,7 +24,12 @@ export interface ComboboxProps<T> {
   renderOption?: (o: T, state: { active: boolean; selected: boolean }) => ComponentChildren;
   options?: T[]; // static: case-insensitive, prefix matches first, then substring
   load?: (query: string, signal: AbortSignal) => Promise<T[]>; // async: debounced 150 ms, stale dropped
-  onSelect: (o: T) => void;
+  /** Returning `false` keeps the committed label in the input instead of showing the picked option's label. */
+  onSelect: (o: T) => void | boolean;
+  /** Optional controlled open state; omit for uncontrolled open/close. */
+  open?: boolean;
+  /** Called whenever the user opens or closes the list. */
+  onOpenChange?: (open: boolean) => void;
   placeholder?: string;
   minChars?: number; // default 0
   clearable?: boolean;

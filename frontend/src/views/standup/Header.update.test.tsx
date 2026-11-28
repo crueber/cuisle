@@ -128,13 +128,15 @@ describe("Header: Update button", () => {
 });
 
 describe("Update dialog", () => {
-  const open = () => fireEvent.click(screen.getByRole("button", { name: "Update to v1.3.0" }));
+  const open = async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Update to v1.3.0" }));
+    return screen.findByRole("dialog", { name: "Update Cuisle" });
+  };
 
-  it("shows current → new, What's new opens the release page, Not now closes", () => {
+  it("shows current → new, What's new opens the release page, Not now closes", async () => {
     setup(AVAILABLE);
     render(<Header vw={1920} />);
-    open();
-    const dlg = screen.getByRole("dialog", { name: "Update Cuisle" });
+    const dlg = await open();
     expect(dlg.textContent).toContain("v1.2.0");
     expect(dlg.textContent).toContain("v1.3.0");
     fireEvent.click(screen.getByRole("button", { name: "What's new" }));
@@ -143,24 +145,23 @@ describe("Update dialog", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("closes on a scrim click and on Escape", () => {
+  it("closes on a scrim click and on Escape", async () => {
     setup(AVAILABLE);
     render(<Header vw={1920} />);
-    open();
+    await open();
     const scrim = document.querySelector(".ud-scrim")!;
     fireEvent.mouseDown(scrim);
     fireEvent.click(scrim);
     expect(screen.queryByRole("dialog")).toBeNull();
-    open();
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    const dlg = await open();
+    fireEvent.keyDown(dlg, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("traps Tab and Shift+Tab inside the dialog", () => {
+  it("traps Tab and Shift+Tab inside the dialog", async () => {
     setup(AVAILABLE);
     render(<Header vw={1920} />);
-    open();
-    const dlg = screen.getByRole("dialog");
+    const dlg = await open();
     const names = () => (document.activeElement as HTMLElement).textContent;
     fireEvent.keyDown(dlg, { key: "Tab" });
     expect(names()).toBe("What's new");
@@ -178,7 +179,7 @@ describe("Update dialog", () => {
   it("Install and restart runs the install and shows its progress", async () => {
     setup(AVAILABLE, "ok");
     render(<Header vw={1920} />);
-    open();
+    await open();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Install and restart" }));
     });
@@ -193,7 +194,7 @@ describe("Update dialog", () => {
   it("a verification failure says nothing was installed and offers Try again", async () => {
     setup(AVAILABLE, "verify");
     render(<Header vw={1920} />);
-    open();
+    await open();
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Install and restart" }));
     });
@@ -202,28 +203,28 @@ describe("Update dialog", () => {
     expect(screen.getByRole("button", { name: "Close" })).not.toBeNull();
   });
 
-  it("installed but not restarted: says so and offers only Close", () => {
+  it("installed but not restarted: says so and offers only Close", async () => {
     setup({ ...AVAILABLE, phase: "failed", errorCode: "restart", error: "Cuisle v1.3.0 is installed. Quit and open Cuisle again to finish." });
     render(<Header vw={1920} />);
-    open();
+    await open();
     expect(screen.getByRole("alert").textContent).toBe("Cuisle v1.3.0 is installed. Quit and open Cuisle again to finish.");
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Install and restart" })).toBeNull();
     expect(screen.getByRole("button", { name: "Close" })).not.toBeNull();
   });
 
-  it("shows download progress as a percentage", () => {
+  it("shows download progress as a percentage", async () => {
     setup({ ...AVAILABLE, phase: "downloading", progress: 42 });
     render(<Header vw={1920} />);
-    open();
+    await open();
     expect(within(screen.getByRole("dialog")).getByRole("status").textContent).toContain("Downloading… 42%");
     expect(screen.getByRole("progressbar", { name: "Update progress" }).getAttribute("aria-valuenow")).toBe("42");
   });
 
-  it("offers the release page when this copy can't replace itself", () => {
+  it("offers the release page when this copy can't replace itself", async () => {
     setup({ ...AVAILABLE, available: { ...AVAILABLE.available!, canInstall: false } });
     render(<Header vw={1920} />);
-    open();
+    await open();
     expect(screen.queryByRole("button", { name: "Install and restart" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Open the release page" }));
     expect(mock.calls.some((c) => c.method === "app.openUrl")).toBe(true);

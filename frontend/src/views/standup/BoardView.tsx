@@ -137,12 +137,12 @@ function Lane({ box, k, rowH, trackW, pulseDays, options, onSelect }: LaneProps)
 }
 
 /** One status section (§6.5): the header, then its rows in the sorted order. */
-function StatusLane({ section, compact, colW, speakers, ...row }: { section: StatusSection; compact: boolean; colW: number; speakers: SpeakerView[] } & Omit<RowProps, "t" | "who">) {
+function StatusLane({ section, compact, colW, speakerMap, ...row }: { section: StatusSection; compact: boolean; colW: number; speakerMap: Map<string, SpeakerView> } & Omit<RowProps, "t" | "who">) {
   return (
     <section role="group" aria-label={section.label} class="board-lane board-sec" data-sec="lane" data-sec-label={section.label} data-anchor={`sec:${section.lane}`}>
       <StatusSectionHeader section={section} compact={compact} colW={colW} />
       {section.tickets.map((t) => {
-        const s = t.assignee === "" ? undefined : speakers.find((x) => x.id === t.assignee);
+        const s = t.assignee === "" ? undefined : speakerMap.get(t.assignee);
         const who = t.assignee === "" ? { initials: "··", name: "Unassigned", none: true } : { initials: s?.initials ?? "··", name: s?.name ?? t.assignee, none: false };
         return <BoardRow key={t.key} t={t} who={who} {...row} />;
       })}
@@ -171,6 +171,7 @@ export function BoardView(props: BoardViewProps) {
   const backlog = view.backlog ?? [];
   const bottom = doneBacklogLayout(mainW);
   const speakers = view.speakers ?? [];
+  const speakerMap = new Map(speakers.map((s) => [s.id, s] as const));
 
   // The track takes whatever the row has left; the axis runs over the same span (plus the gap before the chip).
   const trackW = status
@@ -248,11 +249,12 @@ export function BoardView(props: BoardViewProps) {
         });
         summary = boardBelow(sections, foldY, scroller.scrollTop).summary;
       }
-      setMore({
+      const next = {
         visible: scroller.scrollHeight > scroller.clientHeight,
         atEnd: isAtEnd(scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight),
         summary,
-      });
+      };
+      setMore((prev) => (prev.visible === next.visible && prev.atEnd === next.atEnd && prev.summary === next.summary ? prev : next));
     };
     const schedule = () => {
       if (frame !== null) return;
@@ -333,7 +335,7 @@ export function BoardView(props: BoardViewProps) {
                   {backdrop}
                   {col.map((item) => {
                     if (item.kind === "lane") {
-                      return <StatusLane key={item.section.lane} section={item.section} compact={compact} colW={colW} speakers={speakers} {...rowProps} />;
+                      return <StatusLane key={item.section.lane} section={item.section} compact={compact} colW={colW} speakerMap={speakerMap} {...rowProps} />;
                     }
                     if (item.kind === "done") {
                       return (

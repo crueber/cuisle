@@ -18,9 +18,8 @@ import (
 // sync:throttled (jira-sync.md §3.1). The limiter lives in source/jira, which sync and app may not import, so the bridge
 // is here. It re-attaches on connection:auth because Connect may create the limiter after startup.
 type throttleBridge struct {
-	inner  syncpkg.Emitter
-	db     *store.DB
-	logger *slog.Logger
+	inner syncpkg.Emitter
+	db    *store.DB
 }
 
 func (b *throttleBridge) Emit(name string, payload any) {
@@ -33,8 +32,8 @@ func (b *throttleBridge) Emit(name string, payload any) {
 // attach hooks the stored connection's limiter, if there is one. Idempotent: the hook is replaced, not stacked.
 func (b *throttleBridge) attach() {
 	row, err := cache.GetConnection(context.Background(), b.db.R)
-	if err != nil {
-		return // no connection yet
+	if err != nil || row.Source != jira.Kind {
+		return // no Jira connection yet
 	}
 	jira.LimiterFor(model.Connection{Source: row.Source, BaseURL: row.BaseURL, Account: row.Account}).SetOnThrottle(func(e limiter.ThrottleEvent) {
 		var resume int64

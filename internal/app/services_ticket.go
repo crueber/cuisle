@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -48,17 +49,7 @@ func (s *TicketService) FetchByKey(ctx context.Context, standupID int64, key str
 	if _, err := d.loadLive(ctx, standupID); err != nil {
 		return view.TicketDetail{}, err
 	}
-	row, ok, err := d.connRow(ctx)
-	if err != nil {
-		return view.TicketDetail{}, err
-	}
-	if !ok {
-		return view.TicketDetail{}, apperr.New(apperr.AuthMissing, "Connect to Jira to fetch tickets.")
-	}
-	if err := authError(row.AuthState); err != nil {
-		return view.TicketDetail{}, err
-	}
-	src, err := d.openSource(row, false)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to fetch tickets.")
 	if err != nil {
 		return view.TicketDetail{}, err
 	}
@@ -72,6 +63,12 @@ func (s *TicketService) FetchByKey(ctx context.Context, standupID int64, key str
 		return view.TicketDetail{}, apperr.From(err)
 	}
 	d.noteNet(nil)
+	// Refuse to repopulate content while disconnecting, and track the apply in ticketWG so deleteContent drains it first.
+	releaseOp, ok := d.enterTicketOp()
+	if !ok {
+		return view.TicketDetail{}, apperr.New(apperr.Conflict, "Cannot save the ticket while disconnecting.")
+	}
+	defer releaseOp()
 	// The fetch is done: finish the local side even if the caller went away.
 	pctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 60*time.Second)
 	defer cancel()
@@ -93,22 +90,12 @@ func (s *TicketService) Transitions(ctx context.Context, issueID int64) (out vie
 	if err != nil {
 		return view.TransitionList{}, err
 	}
-	row, ok, err := d.connRow(ctx)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to change the status.")
 	if err != nil {
 		return view.TransitionList{}, err
 	}
-	if !ok {
-		return view.TransitionList{}, apperr.New(apperr.AuthMissing, "Connect to Jira to change the status.")
-	}
-	if err := authError(row.AuthState); err != nil {
-		return view.TransitionList{}, err
-	}
-	if !d.writesOf(row).Transition {
+	if !src.Capabilities().Writes.Transition {
 		return view.TransitionList{Items: []view.TransitionOption{}}, nil
-	}
-	src, err := d.openSource(row, false)
-	if err != nil {
-		return view.TransitionList{}, err
 	}
 	list, err := src.Transitions(source.WithInteractive(ctx), ref.SourceID)
 	offline := false
@@ -144,17 +131,6 @@ func (s *TicketService) Transitions(ctx context.Context, issueID int64) (out vie
 	return out, nil
 }
 
-// authError is the typed refusal for a connection that cannot talk to the source ("" and "ok" are fine).
-func authError(state string) error {
-	switch state {
-	case "", "ok":
-		return nil
-	case "missing":
-		return apperr.New(apperr.AuthMissing, "Connect to Jira to continue.")
-	}
-	return apperr.New(apperr.AuthInvalid, "Jira rejected the token. Reconnect to continue.")
-}
-
 // writeSpec describes one of the four light writes.
 type writeSpec struct {
 	action  string // transition|assign|flag|comment (the ticket:write_failed action)
@@ -186,17 +162,11 @@ func (s *TicketService) write(ctx context.Context, standupID, issueID int64, spe
 	if _, err := d.loadLive(ctx, standupID); err != nil {
 		return fail(err)
 	}
-	row, ok, err := d.connRow(ctx)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to make changes.")
 	if err != nil {
-		return view.TicketDetail{}, err
-	}
-	if !ok {
-		return fail(apperr.New(apperr.AuthMissing, "Connect to Jira to make changes."))
-	}
-	if err := authError(row.AuthState); err != nil {
 		return fail(err)
 	}
-	if !spec.allowed(d.writesOf(row)) {
+	if !spec.allowed(ticketWrites(src)) {
 		return fail(apperr.New(apperr.Unsupported, "This connection can't make that change."))
 	}
 	release, free := d.lockIssue(issueID)
@@ -204,10 +174,6 @@ func (s *TicketService) write(ctx context.Context, standupID, issueID int64, spe
 		return fail(errBusy())
 	}
 	defer release()
-	src, err := d.openSource(row, false)
-	if err != nil {
-		return fail(err)
-	}
 
 	if err := spec.send(source.WithInteractive(ctx), src, ref); err != nil {
 		if ctx.Err() == nil {
@@ -241,7 +207,7 @@ func (s *TicketService) write(ctx context.Context, standupID, issueID int64, spe
 			d.log().Warn("could not remove the sent draft", "err", err)
 		}
 	}
-	d.emitIssueUpdated(applied, ref, "write")
+	d.emitIssueUpdated(applied, ref, syncpkg.CauseWrite)
 	return d.ticketDetail(ctx, standupID, issueID, refreshFailed)
 }
 
@@ -277,7 +243,7 @@ func (s *TicketService) Transition(ctx context.Context, standupID, issueID int64
 		return view.TicketDetail{}, apperr.Validationf("transitionId", "Choose a transition.")
 	}
 	return s.write(ctx, standupID, issueID, writeSpec{
-		action:  "transition",
+		action:  ActionTransition,
 		allowed: func(w view.TicketWrites) bool { return w.Transition },
 		send: func(ctx context.Context, src source.Source, ref issueRef) error {
 			return src.Transition(ctx, ref.SourceID, transitionID)
@@ -304,7 +270,7 @@ func (s *TicketService) Assign(ctx context.Context, standupID, issueID int64, ac
 		return view.TicketDetail{}, apperr.Validationf("accountId", "That is not a person.")
 	}
 	return s.write(ctx, standupID, issueID, writeSpec{
-		action:  "assign",
+		action:  ActionAssign,
 		allowed: func(w view.TicketWrites) bool { return w.Assign },
 		send: func(ctx context.Context, src source.Source, ref issueRef) error {
 			return src.Assign(ctx, ref.SourceID, accountID)
@@ -319,7 +285,7 @@ func (s *TicketService) Assign(ctx context.Context, standupID, issueID int64, ac
 func (s *TicketService) SetFlag(ctx context.Context, standupID, issueID int64, flagged bool) (out view.TicketDetail, err error) {
 	defer s.d.guard("SetFlag", &err)
 	return s.write(ctx, standupID, issueID, writeSpec{
-		action:  "flag",
+		action:  ActionFlag,
 		allowed: func(w view.TicketWrites) bool { return w.Flag },
 		send: func(ctx context.Context, src source.Source, ref issueRef) error {
 			return src.SetFlag(ctx, ref.SourceID, flagged)
@@ -341,7 +307,7 @@ func (s *TicketService) AddComment(ctx context.Context, standupID, issueID int64
 	}
 	nc := toNewComment(in)
 	return s.write(ctx, standupID, issueID, writeSpec{
-		action:  "comment",
+		action:  ActionComment,
 		allowed: func(w view.TicketWrites) bool { return w.Comment },
 		send: func(ctx context.Context, src source.Source, ref issueRef) error {
 			_, err := src.AddComment(ctx, ref.SourceID, nc)
@@ -362,29 +328,19 @@ func (s *TicketService) Refresh(ctx context.Context, standupID, issueID int64) (
 	if _, err := d.loadLive(ctx, standupID); err != nil {
 		return view.TicketDetail{}, err
 	}
-	row, ok, err := d.connRow(ctx)
+	src, row, err := d.requireSource(ctx, "Connect to Jira to refresh.")
 	if err != nil {
 		return view.TicketDetail{}, err
-	}
-	if !ok {
-		return view.TicketDetail{}, apperr.New(apperr.AuthMissing, "Connect to Jira to refresh.")
-	}
-	if err := authError(row.AuthState); err != nil {
-		return view.TicketDetail{}, err
-	}
-	if left := d.refreshWait(issueID); left > 0 {
-		secs := (left + time.Second - 1) / time.Second
-		return view.TicketDetail{}, apperr.New(apperr.Cooldown, "Refreshed a moment ago. Try again in "+secs.String()+".").
-			WithRetryIn(left.Milliseconds() + 1)
 	}
 	release, free := d.lockIssue(issueID)
 	if !free {
 		return view.TicketDetail{}, errBusy()
 	}
 	defer release()
-	src, err := d.openSource(row, false)
-	if err != nil {
-		return view.TicketDetail{}, err
+	if left := d.refreshWait(issueID); left > 0 {
+		secs := (left + time.Second - 1) / time.Second
+		return view.TicketDetail{}, apperr.New(apperr.Cooldown, "Refreshed a moment ago. Try again in "+secs.String()+".").
+			WithRetryIn(left.Milliseconds() + 1)
 	}
 	applied, err := d.refreshAndApply(ctx, src, row, ref)
 	if err != nil {
@@ -395,7 +351,7 @@ func (s *TicketService) Refresh(ctx context.Context, standupID, issueID int64) (
 		return view.TicketDetail{}, apperr.From(err)
 	}
 	d.noteNet(nil)
-	d.emitIssueUpdated(applied, ref, "write")
+	d.emitIssueUpdated(applied, ref, syncpkg.CauseWrite)
 	d.fetchThumbsAsync(src, row, ref)
 	return d.ticketDetail(ctx, standupID, issueID, false)
 }
@@ -544,10 +500,8 @@ func (s *ConnectionService) PinTicketField(ctx context.Context, fieldID string) 
 		if err != nil {
 			return err
 		}
-		for _, f := range order {
-			if f == fieldID {
-				return nil // already pinned
-			}
+		if slices.Contains(order, fieldID) {
+			return nil // already pinned
 		}
 		_, err = tx.ExecContext(ctx, `
 			INSERT INTO ticket_field_pref (connection_id, field_id, position, hidden) VALUES (?, ?, ?, 0)
@@ -604,20 +558,13 @@ func (s *ConnectionService) MoveTicketField(ctx context.Context, fieldID string,
 		if err != nil {
 			return err
 		}
-		rest := make([]string, 0, len(order))
-		found := false
-		for _, f := range order {
-			if f == fieldID {
-				found = true
-				continue
-			}
-			rest = append(rest, f)
-		}
-		if !found {
+		idx := slices.Index(order, fieldID)
+		if idx < 0 {
 			return apperr.New(apperr.NotFound, "That field is not pinned.")
 		}
+		rest := slices.Delete(order, idx, idx+1)
 		pos := min(max(toPosition, 0), len(rest))
-		next := append(append(append([]string{}, rest[:pos]...), fieldID), rest[pos:]...)
+		next := slices.Insert(rest, pos, fieldID)
 		return renumber(ctx, tx, id, next)
 	})
 	if err != nil {

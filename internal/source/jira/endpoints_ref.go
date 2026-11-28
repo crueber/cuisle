@@ -167,22 +167,10 @@ func (a *Adapter) Reference(ctx context.Context) ([]model.Status, []model.IssueT
 	return statuses, types, nil
 }
 
-// discoverFields reads GET /rest/api/3/field and stores the sprint, rank and flagged field ids with the fetch time.
+// discoverFields reads GET /rest/api/3/field once and stores both the field registry and the discovered field ids.
 func (a *Adapter) discoverFields(ctx context.Context) error {
-	var fields []refField
-	if err := a.c.GetJSON(ctx, "/rest/api/3/field", nil, &fields); err != nil {
-		return MapError(err)
-	}
-	sprint, rank, flagged := refFindFields(fields)
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.meta.SprintFieldID = sprint
-	a.meta.RankFieldID = rank
-	a.meta.FlaggedFieldID = flagged
-	a.meta.DevSummaryFieldID = refFindDevSummary(fields)
-	a.meta.DevFieldChecked = true
-	a.meta.FieldsFetchedAt = a.now()
-	return nil
+	_, err := a.loadFields(ctx, true)
+	return err
 }
 
 // SearchUsers: GET /rest/api/3/user/assignable/search (§2.12); keeps active atlassian accounts (Kind "user").

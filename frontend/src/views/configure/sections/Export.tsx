@@ -167,6 +167,9 @@ export function ExportSection(props: SectionProps) {
 
   const addDraft = (kind: SinkKind) => commit([...latest.current, newRow(kind, standupId)]);
 
+  const standupRef = useRef(standupId);
+  standupRef.current = standupId;
+
   const remove = (r: Row) => {
     commit(latest.current.filter((x) => x.key !== r.key));
     // Through the save queue, so it runs after any save of this row that is still waiting or in flight.
@@ -185,8 +188,26 @@ export function ExportSection(props: SectionProps) {
         run: () => {
           // A new client key: its save is independent of the delete above and creates the sink again.
           const back: Row = { ...r, key: nextKey++, id: 0, hasSecret: false, lastDelivery: null, secretDraft: "", secretPending: null };
-          commit([...latest.current, back]);
-          persist(back.key, false);
+          if (standupRef.current === r.standupId) {
+            commit([...latest.current, back]);
+            persist(back.key, false);
+          } else {
+            enqueue({
+              key: `sink:${back.key}`,
+              run: async () => {
+                await api().sink.save({
+                  id: 0,
+                  kind: back.kind,
+                  name: back.name,
+                  standupId: back.standupId,
+                  config: back.config,
+                  sendOn: back.sendOn,
+                  enabled: back.enabled,
+                  secret: null,
+                });
+              },
+            });
+          }
         },
       },
       timeoutMs: 10_000,

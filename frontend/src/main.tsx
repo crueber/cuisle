@@ -9,7 +9,8 @@ import { installStandupEvents } from "./state/standup";
 import { installSyncEvents } from "./state/sync";
 import { installUpdateEvents, loadUpdateStatus } from "./state/update";
 import { installGlobalKeys } from "./keys";
-import { installRecents } from "./state/palette";
+import { flushRecents, installRecents } from "./state/palette";
+import { flushUIState } from "./state/route";
 import { flush } from "./state/save";
 import { App } from "./App";
 import "./styles/tokens.css";
@@ -23,6 +24,8 @@ async function start() {
     setApi(mock);
     setEventBus(mock.bus);
   }
+  window.addEventListener("error", (e) => void api().app.logClientError(String(e.message), String(e.error?.stack ?? "")).catch(() => {}));
+  window.addEventListener("unhandledrejection", (e) => void api().app.logClientError(String(e.reason), String(e.reason?.stack ?? "")).catch(() => {}));
   const boot: Bootstrap = window.__CUISLE_BOOT__ ?? (await api().app.bootstrap());
   initFromBoot(boot);
   installStandupEvents();
@@ -31,9 +34,11 @@ async function start() {
   void loadUpdateStatus(); // local only; Go runs the daily check itself (ADR 0016)
   installGlobalKeys();
   installRecents(); // every ticket the modal shows joins the palette's recents
-  window.addEventListener("pagehide", () => void flush());
-  window.addEventListener("error", (e) => void api().app.logClientError(String(e.message), String(e.error?.stack ?? "")).catch(() => {}));
-  window.addEventListener("unhandledrejection", (e) => void api().app.logClientError(String(e.reason), String(e.reason?.stack ?? "")).catch(() => {}));
+  window.addEventListener("pagehide", () => {
+    flushUIState();
+    flushRecents();
+    void flush();
+  });
   render(<App />, document.getElementById("app")!);
   requestAnimationFrame(() => {
     performance.mark("first-view");

@@ -185,17 +185,12 @@ func loadPeople(ctx context.Context, tx *sql.Tx, connID, standupID int64) (map[s
 	return out, nil
 }
 
-// loadStatuses returns the statuses the standup maps, the members are in, or the history moved through.
-func loadStatuses(ctx context.Context, tx *sql.Tx, connID, standupID int64) (map[string]model.Status, error) {
+// loadStatuses returns the connection's statuses (typically 10-40 rows; cheaper than scanning status_change twice).
+func loadStatuses(ctx context.Context, tx *sql.Tx, connID, _ int64) (map[string]model.Status, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT s.id, s.name, s.category, s.blocked_hint
 		  FROM status s
-		 WHERE s.connection_id = ? AND (
-		       s.id IN (SELECT status_id FROM standup_status_lane WHERE standup_id = ?)
-		    OR s.id IN (SELECT i.status_id FROM issue i JOIN standup_issue si ON si.issue_id = i.id WHERE si.standup_id = ?)
-		    OR s.id IN (SELECT c.from_status_id FROM status_change c JOIN standup_issue si ON si.issue_id = c.issue_id WHERE si.standup_id = ?)
-		    OR s.id IN (SELECT c.to_status_id FROM status_change c JOIN standup_issue si ON si.issue_id = c.issue_id WHERE si.standup_id = ?))`,
-		connID, standupID, standupID, standupID, standupID)
+		 WHERE s.connection_id = ?`, connID)
 	if err != nil {
 		return nil, dbErr(err, "The statuses could not be read.")
 	}

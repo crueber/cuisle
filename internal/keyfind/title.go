@@ -46,7 +46,8 @@ const (
 
 // TitleQuery is a normalised title query: lower-cased words.
 type TitleQuery struct {
-	words [][]rune
+	words    [][]rune
+	hasDigit []bool
 }
 
 // Words is the number of words in the query.
@@ -62,17 +63,21 @@ func ParseTitle(s string) (q TitleQuery, ok bool) {
 			break
 		}
 		w := make([]rune, 0, len(f))
+		digit := false
 		for _, r := range f {
 			if len(w) == maxTitleWordLen {
 				break
 			}
-			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			if unicode.IsDigit(r) {
+				alnum, digit = true, true
+			} else if unicode.IsLetter(r) {
 				alnum = true
 			}
 			w = append(w, unicode.ToLower(r))
 		}
 		count += len(w)
 		q.words = append(q.words, w)
+		q.hasDigit = append(q.hasDigit, digit)
 	}
 	if count < minTitleRunes || !alnum {
 		return TitleQuery{}, false
@@ -102,8 +107,8 @@ func (t *TitleMatcher) Score(summary []byte) (score int, ok bool) {
 
 // ScoreFolded is Score for a summary already folded with Fold (an index keeps them folded).
 func (t *TitleMatcher) ScoreFolded(s []rune) (score int, ok bool) {
-	for _, w := range t.q.words {
-		ws, ok := t.word(w, s, nil)
+	for i, w := range t.q.words {
+		ws, ok := t.word(w, t.q.hasDigit[i], s, nil)
 		if !ok {
 			return 0, false
 		}
@@ -128,9 +133,9 @@ func FoldBytes(dst []rune, b []byte) []rune { return foldBytes(dst, b) }
 func (t *TitleMatcher) Indexes(summary string) []int {
 	t.buf = Fold(t.buf[:0], summary)
 	mark := make([]bool, len(t.buf))
-	for _, w := range t.q.words {
+	for i, w := range t.q.words {
 		var idx []int
-		if _, ok := t.word(w, t.buf, &idx); !ok {
+		if _, ok := t.word(w, t.q.hasDigit[i], t.buf, &idx); !ok {
 			return nil
 		}
 		for _, i := range idx {
@@ -163,22 +168,17 @@ func foldBytes(dst []rune, b []byte) []rune {
 	return dst
 }
 
-func isWordRune(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
-
-// hasDigit reports whether a query word contains a digit.
-func hasDigit(w []rune) bool {
-	for _, r := range w {
-		if unicode.IsDigit(r) {
-			return true
-		}
+func isWordRune(r rune) bool {
+	if r < 128 {
+		return (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z')
 	}
-	return false
+	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
 func boundary(s []rune, i int) bool { return i == 0 || !isWordRune(s[i-1]) }
 
 // word scores one query word against the folded summary s. When idx is not nil the matched rune indexes are appended.
-func (t *TitleMatcher) word(w, s []rune, idx *[]int) (int, bool) {
+func (t *TitleMatcher) word(w []rune, digit bool, s []rune, idx *[]int) (int, bool) {
 	m, n := len(w), len(s)
 	if m == 0 || m > n {
 		return 0, false
@@ -218,7 +218,7 @@ func (t *TitleMatcher) word(w, s []rune, idx *[]int) (int, bool) {
 		return best, true
 	}
 	// No subsequence for short words or for words with a digit: "1429" must not match digits spread across a title.
-	if m < minSubseqLen || hasDigit(w) || !isSubsequence(w, s) {
+	if m < minSubseqLen || digit || !isSubsequence(w, s) {
 		return 0, false
 	}
 	sc := t.subseq(w, s, idx)

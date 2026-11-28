@@ -98,3 +98,18 @@ button {
 :root[data-theme="dark"] {
   color-scheme: dark;
 }
+
+/* Visually hidden, still the accessible name or live announcement. */
+.sr-only,
+.cbx-sr,
+.pal-sr,
+.cfg-field .tf-label,
+.speakers-row .checkbox-label,
+.tf-hide .switch-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

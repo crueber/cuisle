@@ -115,7 +115,7 @@ func (s *Store) SetBoard(ctx context.Context, id int64, cfg model.BoardConfig, s
 		byID[st.ID] = st
 	}
 	return s.writeStandup(ctx, id, func(tx *sql.Tx) error {
-		connID, _, err := standupBoardTx(ctx, tx, id)
+		connID, prevBoard, err := standupBoardTx(ctx, tx, id)
 		if err != nil {
 			return err
 		}
@@ -124,51 +124,41 @@ func (s *Store) SetBoard(ctx context.Context, id int64, cfg model.BoardConfig, s
 		}
 		// Speakers are the people on the board: another board (or a first board after a space change) starts a fresh
 		// list, which the next sync fills. Re-picking the same board keeps it.
-		var prev sql.NullString
-		if err := tx.QueryRowContext(ctx, `SELECT board_id FROM standup WHERE id = ?`, id).Scan(&prev); err != nil {
-			return dbErr(err)
-		}
-		if !prev.Valid || prev.String != cfg.Board.ID {
+		if !prevBoard.Valid || prevBoard.String != cfg.Board.ID {
 			if err := clearSpeakersTx(ctx, tx, id); err != nil {
 				return err
 			}
 		}
+		if _, err := tx.ExecContext(ctx,
+			`UPDATE standup
+			    SET board_id = ?, board_name = ?, board_type = ?, board_meta = ?,
+			        scope = CASE WHEN ? = 'kanban' THEN 'board' ELSE scope END,
+			        space_id = COALESCE(?, space_id)
+			  WHERE id = ?`,
+			cfg.Board.ID, cfg.Board.Name, kind, meta, kind, nullStr(cfg.Board.SpaceID), id); err != nil {
+			return dbErr(err)
+		}
 		if kind == "kanban" {
-			if _, err := tx.ExecContext(ctx, `UPDATE standup SET scope = 'board' WHERE id = ?`, id); err != nil {
-				return dbErr(err)
-			}
 			if _, err := tx.ExecContext(ctx,
 				`UPDATE standup_settings SET done_window = '14d' WHERE standup_id = ?`, id); err != nil {
 				return dbErr(err)
 			}
 		}
-		if _, err := tx.ExecContext(ctx,
-			`UPDATE standup SET board_id = ?, board_name = ?, board_type = ?, board_meta = ? WHERE id = ?`,
-			cfg.Board.ID, cfg.Board.Name, kind, meta, id); err != nil {
-			return dbErr(err)
-		}
-		if cfg.Board.SpaceID != "" {
-			if _, err := tx.ExecContext(ctx,
-				`UPDATE standup SET space_id = ? WHERE id = ?`, cfg.Board.SpaceID, id); err != nil {
-				return dbErr(err)
-			}
-		}
 		for _, st := range statuses {
+			cat := st.Category
+			if cat == "" {
+				cat = "undefined"
+			}
 			if _, err := tx.ExecContext(ctx,
 				`INSERT INTO status (connection_id, id, name, category, blocked_hint) VALUES (?, ?, ?, ?, ?)
 				 ON CONFLICT(connection_id, id) DO UPDATE SET name = excluded.name, category = excluded.category,
 				 blocked_hint = excluded.blocked_hint`,
-				connID.Int64, st.ID, st.Name, st.Category, boolInt(st.BlockedHint)); err != nil {
+				connID.Int64, st.ID, st.Name, cat, boolInt(st.BlockedHint)); err != nil {
 				return dbErr(err)
 			}
 		}
-		if err := ReplaceBoardColumnsTx(ctx, tx, connID.Int64, cfg); err != nil {
+		if err := replaceBoardColumnsTx(ctx, tx, connID.Int64, cfg, s.Now()); err != nil {
 			return err
-		}
-		if _, err := tx.ExecContext(ctx,
-			`UPDATE board SET config_fetched_at = ?, fetched_at = ? WHERE connection_id = ? AND id = ?`,
-			store.Ms(s.Now()), store.Ms(s.Now()), connID.Int64, cfg.Board.ID); err != nil {
-			return dbErr(err)
 		}
 		if _, err := MergeColumnsTx(ctx, tx, id, cfg.Columns, byID); err != nil {
 			return err
@@ -179,6 +169,10 @@ func (s *Store) SetBoard(ctx context.Context, id int64, cfg model.BoardConfig, s
 
 // ReplaceBoardColumnsTx replaces board/board_column/board_column_status cache rows for cfg.Board under connID.
 func ReplaceBoardColumnsTx(ctx context.Context, tx *sql.Tx, connID int64, cfg model.BoardConfig) error {
+	return replaceBoardColumnsTx(ctx, tx, connID, cfg, time.Now())
+}
+
+func replaceBoardColumnsTx(ctx context.Context, tx *sql.Tx, connID int64, cfg model.BoardConfig, at time.Time) error {
 	b := cfg.Board
 	meta, err := metaJSON(b.Meta)
 	if err != nil {
@@ -192,7 +186,7 @@ func ReplaceBoardColumnsTx(ctx context.Context, tx *sql.Tx, connID int64, cfg mo
 	if b.SpaceID != "" {
 		space = b.SpaceID
 	}
-	now := store.Ms(time.Now())
+	now := store.Ms(at)
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO board (connection_id, id, name, type, space_id, source_meta, config_fetched_at, fetched_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)

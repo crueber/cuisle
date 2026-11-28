@@ -102,6 +102,29 @@ func saveAck(a settings.Ack) SaveAck {
 	return SaveAck{Rev: a.Rev, SavedAt: store.Ms(a.SavedAt), NeedsSync: a.NeedsSync}
 }
 
+func ackResult(a settings.Ack, err error) (SaveAck, error) {
+	if err != nil {
+		return SaveAck{}, err
+	}
+	return saveAck(a), nil
+}
+
+// authError is the typed refusal for a connection that cannot talk to the source ("" and "ok" are fine).
+func authError(state string) error {
+	switch state {
+	case "", "ok":
+		return nil
+	case "missing":
+		return apperr.New(apperr.AuthMissing, "Connect to Jira to continue.")
+	}
+	return apperr.New(apperr.AuthInvalid, "Jira rejected the token. Reconnect to continue.")
+}
+
+func ticketWrites(src source.Source) view.TicketWrites {
+	w := src.Capabilities().Writes
+	return view.TicketWrites{Transition: w.Transition, Assign: w.Assign, Flag: w.Flag, Comment: w.Comment}
+}
+
 func errStandupGone() error { return apperr.New(apperr.NotFound, "That standup no longer exists.") }
 
 // ── connection and source ───────────────────────────────────────────────────────
@@ -172,6 +195,25 @@ func (d *Deps) openSource(row cache.ConnRow, full bool) (source.Source, error) {
 	}
 	return source.Open(model.Connection{ID: row.ID, Source: row.Source, BaseURL: row.BaseURL, Account: row.Account},
 		secret, d.srcOpts(row.SourceMeta, full))
+}
+
+// requireSource loads the single connection, verifies its auth state and opens its source adapter.
+func (d *Deps) requireSource(ctx context.Context, missingMsg string) (source.Source, cache.ConnRow, error) {
+	row, ok, err := d.connRow(ctx)
+	if err != nil {
+		return nil, cache.ConnRow{}, err
+	}
+	if !ok {
+		return nil, cache.ConnRow{}, apperr.New(apperr.AuthMissing, missingMsg)
+	}
+	if err := authError(row.AuthState); err != nil {
+		return nil, cache.ConnRow{}, err
+	}
+	src, err := d.openSource(row, false)
+	if err != nil {
+		return nil, cache.ConnRow{}, err
+	}
+	return src, row, nil
 }
 
 // setAuth persists the connection's auth state and tells the UI.
@@ -354,19 +396,15 @@ func splitFilterErrors(s string) []string {
 	return strings.Split(s, "; ")
 }
 
-// activeByAccount counts the active tickets per assignee from the current snapshot.
+// activeByAccount counts the active tickets per assignee from the current board membership without building StandupView.
 func (d *Deps) activeByAccount(ctx context.Context, id int64) (map[string]int, error) {
-	v, _, err := d.buildViewCore(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	out := map[string]int{}
-	for _, t := range v.Tickets {
-		if t.Lane != model.LaneDone && t.Assignee != "" {
-			out[t.Assignee]++
-		}
-	}
-	return out, nil
+	var out map[string]int
+	err := d.DB.ReadTx(ctx, func(tx *sql.Tx) error {
+		var err error
+		out, err = cache.StandupActiveByAssigneeTx(ctx, tx, id)
+		return err
+	})
+	return out, err
 }
 
 func (d *Deps) tabs(ctx context.Context) ([]view.StandupTab, error) {
@@ -395,17 +433,9 @@ func (d *Deps) saveSourceMeta(ctx context.Context, row cache.ConnRow, meta map[s
 	if cur, err := cache.GetConnection(ctx, d.DB.R); err == nil {
 		row = cur
 	}
-	tx, err := d.DB.W.BeginTx(ctx, nil)
-	if err != nil {
-		d.log().Warn("could not save the source meta", "err", err)
-		return
-	}
-	defer func() { _ = tx.Rollback() }()
-	if err := cache.SetConnectionMetaTx(ctx, tx, row.ID, meta, row.DevActivityState, row.DevCheckedAt); err != nil {
-		d.log().Warn("could not save the source meta", "err", err)
-		return
-	}
-	if err := tx.Commit(); err != nil {
+	if err := d.DB.WriteTx(ctx, func(tx *sql.Tx) error {
+		return cache.SetConnectionMetaTx(ctx, tx, row.ID, meta, row.DevActivityState, row.DevCheckedAt)
+	}); err != nil {
 		d.log().Warn("could not save the source meta", "err", err)
 	}
 }

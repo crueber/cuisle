@@ -72,6 +72,7 @@ export function Composer({
       e.preventDefault();
       send();
     } else if (e.key === "Escape" && picking) {
+      e.preventDefault();
       setAt(null);
     }
   };

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Runner runs system commands. The real one is ExecRunner; tests pass a fake that records calls.
@@ -75,7 +76,8 @@ func PowerShellPath(getenv func(string) string) string {
 
 // relaunchWait is the shell loop the macOS and Linux helpers run before starting the app again: it waits while
 // this process ($1) is alive, for at most 60 s (300 x 0.2 s; the Windows helper's Wait-Process -Timeout 60 matches).
-const relaunchWait = `i=0; while kill -0 "$1" 2>/dev/null && [ "$i" -lt 300 ]; do sleep 0.2; i=$((i+1)); done; `
+// If the old process is still alive after 60 s, the helper exits instead of starting a duplicate instance.
+const relaunchWait = `i=0; while kill -0 "$1" 2>/dev/null && [ "$i" -lt 300 ]; do sleep 0.2; i=$((i+1)); done; if kill -0 "$1" 2>/dev/null; then exit 0; fi; `
 
 // ErrCannotInstall is wrapped when this copy cannot be replaced in place.
 var ErrCannotInstall = errors.New("update: this copy cannot be replaced in place")
@@ -171,7 +173,9 @@ func (s *System) installDMG(ctx context.Context, dmg string) (err error) {
 	detach := func() {
 		if !detached {
 			detached = true
-			_ = s.Run.Run(context.Background(), hdiutil, "detach", mnt, "-force")
+			dctx, dcancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer dcancel()
+			_ = s.Run.Run(dctx, hdiutil, "detach", mnt, "-force")
 		}
 	}
 	defer detach()
@@ -281,14 +285,16 @@ func psQuote(s string) string {
 // default), start Cuisle again (the new one, or the old one if the check failed or the user declined the elevation
 // prompt) and remove the downloaded installer.
 func nsisScript(pid int, installer, sha256Hex, exe string) string {
+	dir := psQuote(filepath.Dir(installer))
 	return strings.Join([]string{
 		"$ErrorActionPreference = 'SilentlyContinue'",
 		fmt.Sprintf("Wait-Process -Id %d -Timeout 60", pid),
+		fmt.Sprintf("if (Get-Process -Id %d) { Remove-Item -LiteralPath %s -Recurse -Force; exit 0 }", pid, dir),
 		fmt.Sprintf("$h = (Get-FileHash -LiteralPath %s -Algorithm SHA256).Hash", psQuote(installer)),
 		fmt.Sprintf("if ($h -and $h.ToLower() -eq %s) { Start-Process -FilePath %s -ArgumentList '/S' -Verb RunAs -Wait }",
 			psQuote(strings.ToLower(sha256Hex)), psQuote(installer)),
 		fmt.Sprintf("Start-Process -FilePath %s", psQuote(exe)),
-		fmt.Sprintf("Remove-Item -LiteralPath %s -Recurse -Force", psQuote(filepath.Dir(installer))),
+		fmt.Sprintf("Remove-Item -LiteralPath %s -Recurse -Force", dir),
 	}, "; ")
 }
 

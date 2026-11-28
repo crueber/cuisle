@@ -57,6 +57,10 @@ func (a *Adapter) FetchMedia(ctx context.Context, att model.Attachment, thumb bo
 			_ = drainClose(resp)
 			return source.MediaBlob{}, apperr.New(apperr.MediaUnavailable, mediaUnavailableMsg)
 		}
+		if strings.HasPrefix(strings.ToLower(a.c.base), "https://") && !strings.EqualFold(loc.Scheme, "https") {
+			_ = drainClose(resp)
+			return source.MediaBlob{}, apperr.New(apperr.MediaUnavailable, mediaUnavailableMsg)
+		}
 		mediaID := ""
 		if m := mediaUUIDRe.FindStringSubmatch(loc.Path); m != nil {
 			mediaID = m[1]
@@ -125,8 +129,11 @@ func (a *Adapter) mediaFailure(resp *http.Response, path string, presigned bool)
 	data, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	now := time.Now()
 	if status == http.StatusTooManyRequests {
+		a.c.mu.Lock()
+		a.c.thrott++
+		a.c.mu.Unlock()
 		if ra := limiter.RetryAfter(resp.Header, now); ra <= a.c.pol.opts.MaxGate {
-			a.c.Limiter().CloseGate(now.Add(ra))
+			a.c.Limiter().CloseGate(now.Add(a.c.pol.wait429(ra)))
 		}
 	}
 	return MapError(newHTTPError(http.MethodGet, path, status, resp.Header, data, now))

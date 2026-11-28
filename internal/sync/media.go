@@ -22,39 +22,28 @@ import (
 // mediaPool is the number of concurrent downloads (jira-sync §2.14).
 const mediaWorkers = 2
 
-// mediaStops lets Shutdown cancel media phases that outlive their run (a finished run is no longer in Orchestrator.runs
-// and the frozen Orchestrator struct has no slot for them).
-var mediaStops = struct {
-	mu gosync.Mutex
-	m  map[*Orchestrator]map[*context.CancelFunc]struct{}
-}{m: map[*Orchestrator]map[*context.CancelFunc]struct{}{}}
-
-// mediaContext returns a context for one media phase, cancelled by Shutdown. ok is false once the orchestrator is closed.
+// mediaContext returns a context for one media phase, cancelled by Shutdown or PauseAndCancel. ok is false once the
+// orchestrator is closed or paused.
 func (o *Orchestrator) mediaContext() (ctx context.Context, done func(), ok bool) {
-	// Registered while o.mu is held: Shutdown sets closed under o.mu and cancels the registered phases after releasing it,
-	// so a phase either sees closed here or is cancelled there, never neither.
+	// Registered while o.mu is held: Shutdown and PauseAndCancel set closed/paused under o.mu and cancel the
+	// registered phases, so a phase either sees closed/paused here or is cancelled there, never neither.
 	o.mu.Lock()
-	if o.closed {
+	if o.closed || o.paused > 0 {
 		o.mu.Unlock()
 		return nil, nil, false
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	key := &cancel
-	mediaStops.mu.Lock()
-	if mediaStops.m[o] == nil {
-		mediaStops.m[o] = map[*context.CancelFunc]struct{}{}
+	if o.mediaCancels == nil {
+		o.mediaCancels = map[*context.CancelFunc]struct{}{}
 	}
-	mediaStops.m[o][key] = struct{}{}
-	mediaStops.mu.Unlock()
+	o.mediaCancels[key] = struct{}{}
 	o.mu.Unlock()
 	return ctx, func() {
 		cancel()
-		mediaStops.mu.Lock()
-		delete(mediaStops.m[o], key)
-		if len(mediaStops.m[o]) == 0 {
-			delete(mediaStops.m, o)
-		}
-		mediaStops.mu.Unlock()
+		o.mu.Lock()
+		delete(o.mediaCancels, key)
+		o.mu.Unlock()
 	}, true
 }
 
@@ -62,12 +51,47 @@ func (o *Orchestrator) mediaContext() (ctx context.Context, done func(), ok bool
 // the run is released, which is before its media phase ends). Shutdown waits for the same goroutines.
 func (o *Orchestrator) WaitMedia() { o.wg.Wait() }
 
+// PauseAndCancel prevents new runs and media phases from starting, cancels every active run and post-sync media phase,
+// and waits for all run goroutines to stop (bounded by ctx). Callers must invoke the returned resume function (even on
+// error) to unpause future syncs.
+func (o *Orchestrator) PauseAndCancel(ctx context.Context) (resume func(), err error) {
+	o.mu.Lock()
+	o.paused++
+	for _, r := range o.runs {
+		r.cancel()
+	}
+	cancels := make([]context.CancelFunc, 0, len(o.mediaCancels))
+	for c := range o.mediaCancels {
+		cancels = append(cancels, *c)
+	}
+	o.mu.Unlock()
+
+	for _, cancel := range cancels {
+		cancel()
+	}
+
+	resume = gosync.OnceFunc(func() {
+		o.mu.Lock()
+		o.paused--
+		o.mu.Unlock()
+	})
+
+	if err := o.waitAll(ctx); err != nil {
+		return resume, err
+	}
+	return resume, nil
+}
+
 // cancelMedia cancels every media phase of o (Shutdown).
 func (o *Orchestrator) cancelMedia() {
-	mediaStops.mu.Lock()
-	defer mediaStops.mu.Unlock()
-	for c := range mediaStops.m[o] {
-		(*c)()
+	o.mu.Lock()
+	cancels := make([]context.CancelFunc, 0, len(o.mediaCancels))
+	for c := range o.mediaCancels {
+		cancels = append(cancels, *c)
+	}
+	o.mu.Unlock()
+	for _, cancel := range cancels {
+		cancel()
 	}
 }
 
@@ -150,9 +174,12 @@ func (p *mediaPool) step() {
 }
 
 func (p *mediaPool) run(targets []cache.MediaTarget, fn func(cache.MediaTarget)) {
+	if len(targets) == 0 {
+		return
+	}
 	jobs := make(chan cache.MediaTarget)
 	var wg gosync.WaitGroup
-	for range min(mediaWorkers, max(len(targets), 1)) {
+	for range min(mediaWorkers, len(targets)) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -208,8 +235,12 @@ func (p *mediaPool) fetchImage(t cache.MediaTarget) {
 		p.fail(t, err)
 		return
 	}
-	cached, perr := p.store.Put(p.ctx, att, rn.conn.ID, blob.Body)
-	_ = blob.Body.Close()
+	cached, perr := func() (string, error) {
+		if blob.Body != nil {
+			defer func() { _ = blob.Body.Close() }()
+		}
+		return p.store.Put(p.ctx, att, rn.conn.ID, blob.Body)
+	}()
 	p.learn(t, blob.MediaFileID)
 	if perr != nil {
 		p.fail(t, perr)
@@ -231,9 +262,10 @@ func (p *mediaPool) thumbFallback(t cache.MediaTarget) string {
 		p.fail(t, err)
 		return ""
 	}
-	err = p.store.PutThumb(p.ctx, t.Att, p.rn.conn.ID, blob.Body)
-	_ = blob.Body.Close()
-	if err != nil {
+	if blob.Body != nil {
+		defer func() { _ = blob.Body.Close() }()
+	}
+	if err := p.store.PutThumb(p.ctx, t.Att, p.rn.conn.ID, blob.Body); err != nil {
 		p.fail(t, err)
 		return ""
 	}

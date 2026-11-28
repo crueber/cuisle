@@ -14,7 +14,7 @@ const commentPageSize = 100
 
 // wireCommentFull is one comment of the comment endpoint. The e-mail of an author is never decoded.
 type wireCommentFull struct {
-	ID         flexID          `json:"id"`
+	ID         refID           `json:"id"`
 	Created    Time            `json:"created"`
 	Updated    Time            `json:"updated"`
 	Author     *wireUser       `json:"author"`

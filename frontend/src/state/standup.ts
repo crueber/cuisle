@@ -192,11 +192,17 @@ function keepPerson(view: StandupView, person: string | null): string | null {
   return (view.speakers ?? []).some((s) => s.id === person && s.included) ? person : null;
 }
 
+const refreshSeq = new Map<number, number>();
+let switchSeq = 0;
+
 /** Re-requests a standup's view and replaces the cache entry. */
 export async function refreshView(standupId: number): Promise<StandupView> {
+  const seq = (refreshSeq.get(standupId) ?? 0) + 1;
+  refreshSeq.set(standupId, seq);
   const v = await api().standup.view(standupId);
-  // A reply that was overtaken by a newer one (lower rev than what is cached) must not roll the view back.
+  // A reply that was overtaken by a newer request or higher rev must not roll the view back.
   const cached = views.value.get(standupId);
+  if (seq !== refreshSeq.get(standupId)) return cached ?? v;
   if (cached && v.rev < cached.rev) return cached;
   views.value = new Map(views.value).set(standupId, v);
   if (staleViews.value.has(standupId)) {
@@ -208,6 +214,7 @@ export async function refreshView(standupId: number): Promise<StandupView> {
 }
 
 function markStale(ids: number[]): void {
+  if (ids.length === 0) return;
   const next = new Set(staleViews.value);
   for (const id of ids) next.add(id);
   staleViews.value = next;
@@ -215,6 +222,7 @@ function markStale(ids: number[]): void {
 
 /** Shows the cached view at once; calls StandupService.View only when missing or stale. Keeps the person if they speak there. */
 export async function switchStandup(standupId: number): Promise<void> {
+  const mySwitch = ++switchSeq;
   const r = route.value;
   const prev = r.view === "standup" ? r.person : null;
   const cached = views.value.get(standupId);
@@ -231,13 +239,18 @@ export async function switchStandup(standupId: number): Promise<void> {
     const fresh = await refreshView(standupId);
     const now = route.value;
     if (now.view === "standup" && now.standupId === standupId) {
-      navigate({ view: "standup", standupId, person: keepPerson(fresh, now.person) });
+      const nextPerson = keepPerson(fresh, now.person);
+      if (nextPerson !== now.person) {
+        navigate({ view: "standup", standupId, person: nextPerson });
+      }
     }
   } catch (e) {
-    const err = toAppError(e);
-    showBanner({ kind: "error", message: err.message, dismissible: true });
+    if (mySwitch === switchSeq) {
+      const err = toAppError(e);
+      showBanner({ kind: "error", message: err.message, dismissible: true });
+    }
   } finally {
-    loadingView.value = false;
+    if (mySwitch === switchSeq) loadingView.value = false;
   }
 }
 

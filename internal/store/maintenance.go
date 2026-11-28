@@ -39,18 +39,8 @@ func (db *DB) WeeklyBackup(ctx context.Context, now time.Time) (bool, error) {
 		return false, apperr.Wrap(apperr.DB, "The weekly backup could not be checked.", err)
 	}
 
-	// Write beside the target and rename, so a crash never leaves a half-written weekly backup in place.
-	tmp := target + ".tmp"
-	if err := os.Remove(tmp); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return false, apperr.Wrap(apperr.DB, "The weekly backup could not be written.", err)
-	}
-	if _, err := db.W.ExecContext(ctx, "VACUUM INTO ?", tmp); err != nil {
-		_ = os.Remove(tmp)
-		return false, apperr.Wrap(apperr.DB, "The weekly backup could not be written.", err)
-	}
-	if err := os.Rename(tmp, target); err != nil {
-		_ = os.Remove(tmp)
-		return false, apperr.Wrap(apperr.DB, "The weekly backup could not be written.", err)
+	if err := writeSnapshot(ctx, db.W, target, "The weekly backup could not be written."); err != nil {
+		return false, err
 	}
 	return true, nil
 }

@@ -2,6 +2,7 @@
 import { useState } from "preact/hooks";
 import type { JSX } from "preact";
 import type { AdfAttrs } from "../../api/types";
+import { formatBytes } from "../../format";
 import { openLink } from "./marks";
 import type { AdfContext } from "./props";
 
@@ -68,12 +69,6 @@ export function Media({ a, ctx, maxW }: { a: AdfAttrs; ctx: AdfContext; maxW?: n
       {caption}
     </Root>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** The upper-case extension after the last dot, or FILE when the name has none. */

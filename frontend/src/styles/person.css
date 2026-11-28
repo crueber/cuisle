@@ -14,7 +14,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
-  box-sizing: border-box;
   height: calc(var(--scale) * 46px);
 }
 .is-tall .person-title {
@@ -113,7 +112,7 @@
   position: relative;
 }
 .person-body > .track-backdrop {
-  right: calc(var(--size-days-chip) + var(--space-3));
+  right: calc(var(--scale) * var(--size-days-chip) + var(--space-3));
 }
 .person-empty {
   margin: 0;
@@ -133,7 +132,6 @@
 .person-group-head {
   display: flex;
   align-items: flex-end;
-  box-sizing: border-box;
   border-bottom: 3px solid var(--color-rule);
 }
 .person-group-count {
@@ -186,7 +184,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  box-sizing: border-box;
   width: 100%;
   margin: 0;
   padding: 0 0 0 var(--space-3);
@@ -201,10 +198,6 @@
 .ticket-row:hover,
 .ticket-row:focus-visible {
   background: var(--color-rule-soft);
-}
-.ticket-row:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
 }
 .ticket-icon {
   flex: none;
@@ -304,28 +297,12 @@
   position: relative;
   display: inline-block;
   flex: none;
-  box-sizing: border-box;
 }
 .pulse-seg {
   position: absolute;
   left: calc(var(--x) / var(--days) * 100%);
   width: calc(var(--w) / var(--days) * 100% - 2px);
   border-radius: var(--radius-chip);
-}
-.pulse-seg[data-lane="todo"] {
-  background: var(--color-lane-todo);
-}
-.pulse-seg[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.pulse-seg[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.pulse-seg[data-lane="qa"] {
-  background: var(--color-lane-qa);
-}
-.pulse-seg[data-lane="done"] {
-  background: var(--color-lane-done);
 }
 .pulse-track.is-done .pulse-seg:not([data-lane="done"]) {
   background: var(--color-lane-done-history);
@@ -389,7 +366,6 @@
   gap: var(--space-3);
   height: calc(var(--scale) * var(--size-more-bar));
   margin-top: var(--space-2);
-  box-sizing: border-box;
   border: 1px solid var(--color-rule-mid); /* an outline, not a filled block: it must not pull the eye (2026-11-24) */
   border-radius: var(--radius-rail-item);
   background: var(--color-more-bar-bg);
@@ -419,23 +395,6 @@
   align-items: center;
   gap: 5px;
   white-space: nowrap;
-}
-.legend-swatch {
-  display: inline-block;
-  width: 16px;
-  height: 9px;
-}
-.legend-swatch[data-lane="todo"] {
-  background: var(--color-lane-todo);
-}
-.legend-swatch[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-.legend-swatch[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-.legend-swatch[data-lane="qa"] {
-  background: var(--color-lane-qa);
 }
 .legend-blocked {
   display: inline-block;
@@ -484,10 +443,6 @@
   font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
-.legend-key:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
 
 /* ── zoom control (ux-spec §16.2): "− 100% +", 30px, 2px ink border; the level is ink-filled when zoom ≠ 100% ── */
 .zoom {
@@ -496,7 +451,6 @@
 }
 .zoom-ctl {
   display: flex;
-  box-sizing: border-box;
   height: calc(var(--scale) * 30px);
   border: var(--size-rule-row) solid var(--color-rule);
   border-radius: var(--radius-control);

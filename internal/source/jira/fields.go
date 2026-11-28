@@ -45,10 +45,11 @@ var registryCache = struct {
 
 // wireField is one entry of GET /rest/api/3/field.
 type wireField struct {
-	ID     string          `json:"id"`
-	Name   string          `json:"name"`
-	Custom bool            `json:"custom"`
-	Schema json.RawMessage `json:"schema"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Custom      bool            `json:"custom"`
+	ClauseNames []string        `json:"clauseNames"`
+	Schema      json.RawMessage `json:"schema"`
 }
 
 // fieldSchema is the part of a field's schema the kind table reads.
@@ -90,20 +91,48 @@ func (a *Adapter) registry(ctx context.Context) (*fieldRegistry, error) {
 	if ok && !force && now.Sub(e.at) < registryTTL {
 		return e.reg, nil
 	}
+	return a.loadFields(ctx, false)
+}
 
+// loadFields fetches GET /rest/api/3/field once, updates the connection's field registry cache, and (when updateMeta
+// is true, i.e. discoverFields) updates a.meta's discovered field IDs (Sprint, Rank, Flagged, DevSummary).
+func (a *Adapter) loadFields(ctx context.Context, updateMeta bool) (*fieldRegistry, error) {
 	var raw []wireField
 	if err := a.c.GetJSON(ctx, "/rest/api/3/field", nil, &raw); err != nil {
 		return nil, MapError(err)
 	}
 	reg := buildRegistry(raw)
+	now := a.now()
 
 	registryCache.mu.Lock()
-	registryCache.m[key] = registryEntry{reg: reg, at: now}
+	registryCache.m[a.registryKey()] = registryEntry{reg: reg, at: now}
 	registryCache.mu.Unlock()
 
-	a.mu.Lock()
-	a.meta.FieldsFetchedAt = now
-	a.mu.Unlock()
+	if updateMeta {
+		refs := make([]refField, 0, len(raw))
+		for _, e := range raw {
+			rf := refField{ID: e.ID, Name: e.Name, Custom: e.Custom, ClauseNames: e.ClauseNames}
+			if d, ok := reg.byID[e.ID]; ok {
+				rf.Schema.Custom = d.CustomType
+			}
+			refs = append(refs, rf)
+		}
+		sprint, rank, flagged := refFindFields(refs)
+		devSummary := refFindDevSummary(refs)
+
+		a.mu.Lock()
+		a.meta.SprintFieldID = sprint
+		a.meta.RankFieldID = rank
+		a.meta.FlaggedFieldID = flagged
+		a.meta.DevSummaryFieldID = devSummary
+		a.meta.DevFieldChecked = true
+		a.meta.FieldsFetchedAt = now
+		a.mu.Unlock()
+	} else {
+		a.mu.Lock()
+		a.meta.FieldsFetchedAt = now
+		a.mu.Unlock()
+	}
 	return reg, nil
 }
 

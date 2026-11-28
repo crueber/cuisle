@@ -138,7 +138,7 @@ func (a *Adapter) searchIssues(ctx context.Context, ids []string, fields []strin
 			return nil, MapError(err)
 		}
 		out = append(out, page.Issues...)
-		if page.NextPageToken == "" {
+		if page.NextPageToken == "" || page.NextPageToken == token || len(page.Issues) == 0 {
 			return out, nil
 		}
 		token = page.NextPageToken

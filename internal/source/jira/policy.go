@@ -88,18 +88,41 @@ func (p *Policy) slot(ctx context.Context) (release func(), err error) {
 
 // waitGate sleeps until the policy's 429 gate (Close429) is open.
 func (p *Policy) waitGate(ctx context.Context) error {
+	return p.waitGateUntil(ctx, time.Time{})
+}
+
+// waitGateUntil sleeps until both the policy's 429 gate and minUntil have passed. Accepting minUntil closes the race
+// where limiter.CloseGate wakes waiters via bump() before OnGate updates p.gate. When a fake PolicyOptions.Sleep does
+// not advance wall time, each gate target is slept at most once so tests never spin.
+func (p *Policy) waitGateUntil(ctx context.Context, minUntil time.Time) error {
+	var sleptUntil time.Time
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		wait := p.gateWait(time.Now())
+		target := p.gateTarget(minUntil)
+		if !target.After(sleptUntil) {
+			return nil
+		}
+		wait := time.Until(target)
 		if wait <= 0 {
 			return nil
 		}
 		if err := p.sleep(ctx, wait); err != nil {
 			return err
 		}
+		sleptUntil = target
 	}
+}
+
+func (p *Policy) gateTarget(minUntil time.Time) time.Time {
+	p.mu.Lock()
+	g := p.gate
+	p.mu.Unlock()
+	if minUntil.After(g) {
+		return minUntil
+	}
+	return g
 }
 
 func (p *Policy) takeSlot(ctx context.Context) (release func(), err error) {

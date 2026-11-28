@@ -31,7 +31,7 @@ func (r *recEmit) Emit(name string, payload any) {
 func TestThrottleBridge_LimiterThrottleBecomesSyncThrottled(t *testing.T) {
 	db := storetest.Open(t, time.Now)
 	rec := &recEmit{}
-	b := &throttleBridge{inner: rec, db: db, logger: slog.New(slog.DiscardHandler)}
+	b := &throttleBridge{inner: rec, db: db}
 	b.attach() // no connection yet: nothing to hook, no panic
 
 	row := cache.ConnRow{Source: "jira", BaseURL: "https://throttle-test.example.net", Account: "me@example.com", AuthState: "ok", CreatedAt: time.Now()}

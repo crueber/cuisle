@@ -54,7 +54,7 @@ export function TicketContent(props: TicketContentProps) {
           .find((id) => id !== null && visible.has(id));
         if (first) setTracked(first as AnchorId);
       },
-      { rootMargin: "-40px 0px -70% 0px" },
+      { root: root.parentElement, rootMargin: "-40px 0px -70% 0px" },
     );
     root.querySelectorAll("[data-section]").forEach((el) => io.observe(el));
     return () => io.disconnect();

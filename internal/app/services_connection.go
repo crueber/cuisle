@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/crueber/cuisle/internal/apperr"
@@ -52,11 +53,15 @@ func (s *ConnectionService) Connect(ctx context.Context, in ConnectInput) (out C
 	}
 	acct, err := src.Test(ctx)
 	if err != nil {
+		if ctx.Err() == nil {
+			d.noteNet(err)
+		}
 		if apperr.Is(err, apperr.AuthInvalid) {
 			d.emit(syncpkg.EvConnectionAuth, syncpkg.ConnectionAuth{State: "invalid"})
 		}
 		return Connection{}, apperr.From(err)
 	}
+	d.noteNet(nil)
 
 	prev, hadPrev, err := d.connRow(ctx)
 	if err != nil {
@@ -116,13 +121,7 @@ func validateConnectInput(in ConnectInput) (kind, baseURL string, err error) {
 	if kind == "" {
 		kind = "jira"
 	}
-	known := false
-	for _, k := range source.Kinds() {
-		if k == kind {
-			known = true
-		}
-	}
-	if !known {
+	if !slices.Contains(source.Kinds(), kind) {
 		return "", "", apperr.Validationf("source", "That source is not supported.")
 	}
 	raw := strings.TrimSpace(in.BaseURL)
@@ -321,25 +320,19 @@ func (s *ConnectionService) ValidateFilter(ctx context.Context, standupID int64,
 	}
 	ok, errs := true, []string{}
 	if strings.TrimSpace(expr) != "" {
-		row, has, err := d.connRow(ctx)
-		if err != nil {
-			return view.FilterCheck{}, err
-		}
-		if !has {
-			return view.FilterCheck{}, apperr.New(apperr.AuthMissing, "Connect to Jira to check the filter.")
-		}
-		if row.AuthState == "invalid" {
-			return view.FilterCheck{}, apperr.New(apperr.AuthInvalid, "Jira rejected the token. Reconnect to check the filter.")
-		}
-		src, err := d.openSource(row, false)
+		src, row, err := d.requireSource(ctx, "Connect to Jira to check the filter.")
 		if err != nil {
 			return view.FilterCheck{}, err
 		}
 		okRes, msgs, err := src.ValidateFilter(ctx, expr)
 		if err != nil {
-			d.noteSourceError(ctx, row, err)
+			if ctx.Err() == nil {
+				d.noteNet(err)
+				d.noteSourceError(ctx, row, err)
+			}
 			return view.FilterCheck{}, apperr.From(err)
 		}
+		d.noteNet(nil)
 		ok = okRes
 		if msgs != nil {
 			errs = msgs

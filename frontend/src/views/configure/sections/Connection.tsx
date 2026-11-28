@@ -8,7 +8,7 @@ import { Checkbox } from "../../../components/Checkbox";
 import { connection, settings } from "../../../state/app";
 import { ConnectScreen } from "../../connect/ConnectScreen";
 import type { AppSectionProps } from "../props";
-import { formatBytes } from "./Storage";
+import { formatBytes } from "../../../format";
 import "./Connection.css";
 
 const MIB = 1048576;

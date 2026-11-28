@@ -328,3 +328,70 @@ func TestBlockedDays(t *testing.T) {
 		}
 	}
 }
+
+func TestBlockedSpans_OptimisticFlagFallbackAndZeroWidthInterval(t *testing.T) {
+	chi := mustLoc(t, "America/Chicago")
+	asOf := ldt(chi, 2026, time.November, 23, 15, 0)
+	w := NewWindow(asOf, 21) // idx = day-of-month - 3 for November
+	created := ldt(chi, 2026, time.October, 1, 9, 0)
+	nov := func(d, h int) time.Time { return ldt(chi, 2026, time.November, d, h, 0) }
+	tl := []Interval{ivlS("s-prog", "prog", created, asOf)}
+	blocked := map[string]bool{"s-blocked": true}
+
+	t.Run("optimistic flag with empty FlagChanges synthesizes [UpdatedAt, asOf]", func(t *testing.T) {
+		tk := Ticket{CreatedAt: created, UpdatedAt: nov(20, 9), Flagged: true}
+		got := BlockedSpans(tk, tl, blocked, w, asOf)
+		assertSpans(t, got, []Span{{17, 20}})
+		if days := BlockedDays(got); days != 4 {
+			t.Errorf("BlockedDays(%+v) = %d, want 4", got, days)
+		}
+	})
+
+	t.Run("optimistic flag when FlagChanges ends with Flagged=false", func(t *testing.T) {
+		tk := Ticket{
+			CreatedAt: created,
+			UpdatedAt: nov(20, 9),
+			Flagged:   true,
+			FlagChanges: []model.FlagChange{
+				fc("1", nov(5, 10), true),  // idx 2
+				fc("2", nov(7, 10), false), // idx 4
+			},
+		}
+		got := BlockedSpans(tk, tl, blocked, w, asOf)
+		assertSpans(t, got, []Span{{2, 4}, {17, 20}})
+		if days := BlockedDays(got); days != 7 {
+			t.Errorf("BlockedDays(%+v) = %d, want 7", got, days)
+		}
+	})
+
+	t.Run("optimistic flag with UpdatedAt before last FlagChange clamps to last change", func(t *testing.T) {
+		tk := Ticket{
+			CreatedAt: created,
+			UpdatedAt: nov(10, 9),
+			Flagged:   true,
+			FlagChanges: []model.FlagChange{
+				fc("1", nov(15, 10), true),  // idx 12
+				fc("2", nov(18, 10), false), // idx 15
+			},
+		}
+		got := BlockedSpans(tk, tl, blocked, w, asOf)
+		assertSpans(t, got, []Span{{12, 20}})
+		if days := BlockedDays(got); days != 9 {
+			t.Errorf("BlockedDays(%+v) = %d, want 9", got, days)
+		}
+	})
+
+	t.Run("zero-width blocked status interval is ignored", func(t *testing.T) {
+		tk := Ticket{CreatedAt: created, UpdatedAt: asOf, StatusID: "s-prog"}
+		zeroTL := []Interval{
+			ivlS("s-prog", "prog", created, nov(12, 10)),
+			ivlS("s-blocked", "prog", nov(12, 10), nov(12, 10)),
+			ivlS("s-prog", "prog", nov(12, 10), asOf),
+		}
+		got := BlockedSpans(tk, zeroTL, blocked, w, asOf)
+		assertSpans(t, got, nil)
+		if days := BlockedDays(got); days != 0 {
+			t.Errorf("BlockedDays(%+v) = %d, want 0", got, days)
+		}
+	})
+}

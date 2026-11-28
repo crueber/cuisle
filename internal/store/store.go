@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -255,8 +256,11 @@ func isNotADatabase(err error) bool {
 	return strings.Contains(s, "file is not a database") || strings.Contains(s, "database disk image is malformed")
 }
 
-// quickCheck reports whether the file at path is damaged. A missing file is created empty (and is healthy).
+// quickCheck reports whether the file at path is damaged. A missing file is healthy and left untouched.
 func quickCheck(ctx context.Context, path string) (corrupt bool, err error) {
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
 	return quickCheckDSN(ctx, fileDSN(path))
 }
 
@@ -314,12 +318,9 @@ func checkOrRecover(ctx context.Context, path string, log *slog.Logger, now func
 		log.Warn("no backup found; starting with an empty database")
 		return nil
 	}
-	data, err := os.ReadFile(bak)
-	if err != nil {
-		return apperr.Wrap(apperr.DB, "The backup could not be read.", err)
-	}
 	tmp := path + ".restore-tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+	if err := copyFileSync(bak, tmp); err != nil {
+		_ = os.Remove(tmp)
 		return apperr.Wrap(apperr.DB, "The backup could not be restored.", err)
 	}
 	if err := os.Rename(tmp, path); err != nil {
@@ -329,6 +330,27 @@ func checkOrRecover(ctx context.Context, path string, log *slog.Logger, now func
 	info.RestoredFrom = bak
 	log.Warn("restored the database from a backup", "backup", bak)
 	return nil
+}
+
+func copyFileSync(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+		return err
+	}
+	if err := out.Sync(); err != nil {
+		_ = out.Close()
+		return err
+	}
+	return out.Close()
 }
 
 // newestBackup returns the most recently modified healthy <base>.bak-* file next to path ("" if none). Half-written

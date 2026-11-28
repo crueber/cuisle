@@ -35,8 +35,10 @@ func (s *SinkService) cachedSecret(id int64) (has, ok bool) {
 func (s *SinkService) setSecretBit(id int64, has bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.bits == nil || len(s.bits) >= maxSecretBits {
+	if s.bits == nil {
 		s.bits = map[int64]bool{}
+	} else if len(s.bits) >= maxSecretBits {
+		clear(s.bits)
 	}
 	s.bits[id] = has
 }

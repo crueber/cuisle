@@ -1,5 +1,5 @@
-/* Configure > Ticket fields. Section frame lives in styles/configure.css. Tokens only (AGENTS invariant 11). */
-.tf {
+/* Configure > Ticket fields. Section frame and shared buttons/alerts live in styles/configure.css. Tokens only (AGENTS invariant 11). */
+.cfg-section.tf {
   gap: var(--space-3);
 }
 
@@ -28,26 +28,9 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.tf-btn {
-  min-height: var(--size-button-height);
+.tf-row .tf-btn {
   min-width: var(--size-button-height);
   padding: 0 var(--space-2);
-  border: 2px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
-  color: var(--color-fg);
-  font: inherit;
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-.tf-btn:hover {
-  background: var(--color-rule-soft);
-}
-
-.tf-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 
 .tf-hide {
@@ -60,42 +43,10 @@
   color: var(--color-muted);
 }
 
-/* The Switch keeps its accessible name ("Hide <field>") while the visible row already shows the field name. */
-.tf-hide .switch-text {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
 .tf-hidden {
   margin-top: var(--space-2);
 }
 
-.tf-toggle {
-  min-height: var(--size-button-height);
-  padding: 0 var(--space-3);
-  border: 2px solid var(--color-rule);
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
-  color: var(--color-fg);
-  font: inherit;
+.tf-hidden .tf-toggle {
   font-family: var(--font-family-mono);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-.tf-empty,
-.tf-alert {
-  margin: 0;
-  font-size: var(--font-size-small);
-}
-
-.tf-empty {
-  color: var(--color-muted);
-}
-
-.tf-alert {
-  color: var(--color-alert-text);
 }

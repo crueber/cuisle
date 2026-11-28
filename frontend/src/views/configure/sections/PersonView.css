@@ -34,22 +34,6 @@
   background: var(--color-lane-todo);
 }
 
-.personview-swatch[data-lane="prog"] {
-  background: var(--color-lane-prog);
-}
-
-.personview-swatch[data-lane="review"] {
-  background: var(--color-lane-review);
-}
-
-.personview-swatch[data-lane="qa"] {
-  background: var(--color-lane-qa);
-}
-
-.personview-swatch[data-lane="done"] {
-  background: var(--color-lane-done);
-}
-
 .personview-name {
   font-size: var(--font-size-rail-name);
   font-weight: var(--font-weight-semibold);

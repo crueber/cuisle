@@ -477,8 +477,3 @@
   font-size: calc(var(--scale) * 0.75rem);
   color: var(--color-muted);
 }
-
-:is(.adf-link, .adf-muted-link, .adf-card, .adf-file, .adf-media-hit, .adf-expand-toggle, .adf-show-all, .adf-btn):focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}

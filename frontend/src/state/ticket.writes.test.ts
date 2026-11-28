@@ -91,6 +91,8 @@ describe("applyTransition: optimistic status", () => {
   });
 
   it("applyTransition_Success_ReplacesTheDetailAndTheRowWithTheAuthoritativeResult", async () => {
+    mock.bus.emit("ticket:updated", { issueId: 107, key: "MOB-1421", standupIds: [1], cause: "sync", changed: ["description"] });
+    expect(S.ticketUpdated.value).toEqual(["description"]);
     const result = answer((x) => {
       x.row.lane = "qa";
       x.row.statusName = "QA";
@@ -102,6 +104,7 @@ describe("applyTransition: optimistic status", () => {
     expect(detail().row.lane).toBe("qa");
     expect(viewRow().lane).toBe("qa");
     expect(viewRow().statusName).toBe("QA");
+    expect(S.ticketUpdated.value).toEqual([]);
     expect(S.ticketWrites.value.status).toEqual({ phase: "idle", reason: "" });
   });
 

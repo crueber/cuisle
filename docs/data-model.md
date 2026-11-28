@@ -760,6 +760,8 @@ CREATE TABLE IF NOT EXISTS schema_migration (
     `key`, `summary` or `status_id`. Nothing else moves it (`last_seen_at`, `removed_at`, dev fingerprints, other tables).
     The finder reads it in the same read transaction as the rows of its in-memory summary index and rebuilds the index only
     when it differs. No record row is changed.
+  - `0009_perf_indexes`: additive indexes `issue_space(connection_id, space_id)`, `issue_field_value_field(field_id, issue_id)`
+    and `flag_change_time(issue_id, changed_at)` for ticket-modal field-in-use lookups and flag history ordering. No rows changed.
   - `0006_custom_lanes` (2026-11-25, `-- cuisle:fk-off`): rebuilds `standup_lane`, `standup_column_map` and
     `standup_status_lane` only to widen their lane CHECKs to custom ids `c<N>` (every row copied unchanged, `lane_order`
     kept, the status-lane foreign key still cascades), adds `standup_lane.label`/`.hue`, and

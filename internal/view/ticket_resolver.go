@@ -4,6 +4,7 @@ package view
 // It never touches the network and reads only cache.Ticket. WP-T6.
 
 import (
+	"bytes"
 	"encoding/json"
 	"regexp"
 	"sort"
@@ -15,6 +16,8 @@ import (
 
 // resolverKeyRe finds an issue key in a card URL (…/browse/MOB-12) or a bare key.
 var resolverKeyRe = regexp.MustCompile(`[A-Z][A-Z0-9_]*-[0-9]+`)
+var mediaToken = []byte(`"media"`)
+var mediaInlineToken = []byte(`"mediaInline"`)
 
 // ticketResolver resolves one document. positional is the step-4 mapping (the n-th unresolved media node to the n-th
 // remaining attachment), computed per document.
@@ -24,8 +27,10 @@ type ticketResolver struct {
 }
 
 func newTicketResolver(b *ticketBuilder, raw model.RichText) *ticketResolver {
-	r := &ticketResolver{b: b, positional: map[string]int{}}
-	r.positional = r.positionalMap(mediaNodes(raw.Raw))
+	r := &ticketResolver{b: b}
+	if len(b.t.Attachments) > 0 && (bytes.Contains(raw.Raw, mediaToken) || bytes.Contains(raw.Raw, mediaInlineToken)) {
+		r.positional = r.positionalMap(mediaNodes(raw.Raw))
+	}
 	return r
 }
 
@@ -72,12 +77,8 @@ func (r *ticketResolver) byID(id string) (int, bool) {
 	if id == "" {
 		return 0, false
 	}
-	for i, a := range r.b.t.Attachments {
-		if a.MediaFileID == id {
-			return i, true
-		}
-	}
-	return 0, false
+	i, ok := r.b.attByMediaID[id]
+	return i, ok
 }
 
 // byName is the attachment whose name equals alt, when exactly one does (step 3).
@@ -85,16 +86,8 @@ func (r *ticketResolver) byName(alt string) (int, bool) {
 	if alt == "" {
 		return 0, false
 	}
-	found := -1
-	for i, a := range r.b.t.Attachments {
-		if a.Name == alt {
-			if found >= 0 {
-				return 0, false
-			}
-			found = i
-		}
-	}
-	return found, found >= 0
+	i, ok := r.b.attByName[alt]
+	return i, ok && i >= 0
 }
 
 // positionalMap is step 4: when the count of media nodes that steps 1 and 3 cannot place equals the count of

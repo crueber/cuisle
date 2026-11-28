@@ -51,10 +51,11 @@ type Error struct {
 	cause     error
 }
 
-// WithRetryIn sets RetryInMs and returns e (for cooldown and rate_limited errors).
+// WithRetryIn returns a copy with RetryInMs set (for cooldown and rate_limited errors).
 func (e *Error) WithRetryIn(ms int64) *Error {
-	e.RetryInMs = ms
-	return e
+	c := *e
+	c.RetryInMs = ms
+	return &c
 }
 
 // Error returns "code: message" only. Wails logs this string at ERR, so Detail is deliberately excluded.
@@ -100,8 +101,7 @@ func CodeOf(err error) Code {
 	if err == nil {
 		return ""
 	}
-	var e *Error
-	if errors.As(err, &e) {
+	if e, ok := errors.AsType[*Error](err); ok {
 		return e.Code
 	}
 	switch {

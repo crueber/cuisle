@@ -41,6 +41,9 @@ export function Segmented<V extends string>({ id, label, value, options, onChang
     );
   }
 
+  const checkedIdx = options.findIndex((o) => o.value === value && !o.disabled);
+  const focusIdx = checkedIdx >= 0 ? checkedIdx : options.findIndex((o) => !o.disabled);
+
   return (
     <div id={id} class="seg" role="radiogroup" aria-label={label}>
       {options.map((opt, i) => {
@@ -55,7 +58,7 @@ export function Segmented<V extends string>({ id, label, value, options, onChang
             role="radio"
             class="seg-option"
             aria-checked={checked ? "true" : "false"}
-            tabIndex={checked ? 0 : -1}
+            tabIndex={i === focusIdx ? 0 : -1}
             disabled={opt.disabled}
             onClick={() => {
               if (!opt.disabled && !checked) onChange(opt.value);

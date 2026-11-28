@@ -74,16 +74,23 @@ export function recentTicketIds(): number[] {
   }
 }
 
+/** Flushes any pending recent-tickets save immediately (e.g. on pagehide). */
+export function flushRecents(): void {
+  if (!pending) return;
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  const ids = pending;
+  pending = null;
+  setAppSetting(RECENT_KEY, JSON.stringify(ids));
+}
+
 /** Moves an issue to the front of the recents (max 8) and saves the app setting. */
 export function recordRecent(issueId: number): void {
   const ids = recentTicketIds();
   if (ids[0] === issueId) return;
   pending = [issueId, ...ids.filter((x) => x !== issueId)].slice(0, RECENT_MAX);
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    setAppSetting(RECENT_KEY, JSON.stringify(pending));
-    pending = null;
-  }, 1000);
+  saveTimer = setTimeout(flushRecents, 1000);
 }
 
 /** Records every ticket the modal shows, whichever path opened it (palette, row, inline card, stepping). */

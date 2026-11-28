@@ -76,7 +76,17 @@ func run() int {
 	db, info, err := store.Open(startup, p.DB(), store.Options{Logger: logger, Dev: dev})
 	if err != nil {
 		logger.Error("cannot open the database", "err", err)
+		_ = logCloser.Close()
 		return failStartup(opts, "cannot open the database", err)
+	}
+	closeEarly := func(fakeSrv *jiratest.Server) {
+		if fakeSrv != nil {
+			fakeSrv.Close()
+		}
+		cctx, ccancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer ccancel()
+		_ = db.Close(cctx)
+		_ = logCloser.Close()
 	}
 	if n, err := db.MarkInterruptedRuns(startup, time.Now()); err != nil {
 		logger.Warn("could not mark interrupted runs", "err", err)
@@ -105,15 +115,16 @@ func run() int {
 
 	clock := app.SystemClock{}
 	wailsEmitter := &app.WailsEmitter{} // App is set once the application exists
-	throttle := &throttleBridge{inner: wailsEmitter, db: db, logger: logger}
+	throttle := &throttleBridge{inner: wailsEmitter, db: db}
 	var emitter syncpkg.Emitter = throttle
-	applyMaxRPS(startup, settings.New(db, time.Now), logger)
+	st := settings.New(db, time.Now)
+	applyMaxRPS(startup, st, logger)
 	httpClient := newHTTPClient()
 	srcOpts := source.Options{HTTP: httpClient, Logger: logger, Now: time.Now, UserAgent: buildinfo.UserAgent()}
 
 	var wapp *application.App
 	deps := &app.Deps{
-		DB: db, Settings: settings.New(db, time.Now), Keyring: kr, Emitter: emitter, Clock: clock, Logger: logger,
+		DB: db, Settings: st, Keyring: kr, Emitter: emitter, Clock: clock, Logger: logger,
 		Paths: p, SourceOpts: srcOpts, HTTP: httpClient, Recovered: info.Recovered, Now: time.Now,
 		OpenURL: func(u string) error { return openURL(wapp, u) },
 	}
@@ -148,17 +159,20 @@ func run() int {
 		var fx *jiratest.Fixture
 		if fakeSrv, fx, err = startFakeJira(opts.fakeJira, storedFakeAddr(startup, db)); err != nil {
 			logger.Error("cannot start the fake jira", "err", err)
+			closeEarly(nil)
 			return fail("cannot start the fake Jira", err)
 		}
 		logger.Info("fake jira", "url", fakeSrv.URL)
 		if err := seedFake(startup, svcs, fakeSrv, fx); err != nil {
 			logger.Error("cannot set up the fake jira", "err", err)
+			closeEarly(fakeSrv)
 			return fail("cannot set up the fake Jira", err)
 		}
 	}
 
 	dist, err := fs.Sub(frontend.Dist, "dist")
 	if err != nil {
+		closeEarly(fakeSrv)
 		return fail("cannot read the embedded UI", err)
 	}
 
@@ -168,12 +182,28 @@ func run() int {
 		dayRoll    *dayTimer
 		openTimer  *time.Timer
 		openMu     sync.Mutex
+		bgStopping bool
+		bgWG       sync.WaitGroup
 		readyOnce  sync.Once
 		cleanOnce  sync.Once
+		startBG    = func(fn func()) {
+			openMu.Lock()
+			if bgStopping {
+				openMu.Unlock()
+				return
+			}
+			bgWG.Add(1)
+			openMu.Unlock()
+			go func() {
+				defer bgWG.Done()
+				fn()
+			}()
+		}
 		cleanupAll = func() {
 			cleanOnce.Do(func() {
 				cancelApp()
 				openMu.Lock()
+				bgStopping = true
 				if openTimer != nil {
 					openTimer.Stop()
 				}
@@ -196,6 +226,13 @@ func run() int {
 				}
 				if err := svcs.Shutdown(stop); err != nil {
 					logger.Warn("background work did not stop in time", "err", err)
+				}
+				bgDone := make(chan struct{})
+				go func() { bgWG.Wait(); close(bgDone) }()
+				select {
+				case <-bgDone:
+				case <-stop.Done():
+					logger.Warn("startup tasks did not stop in time")
 				}
 				if fakeSrv != nil {
 					fakeSrv.Close()
@@ -253,21 +290,25 @@ func run() int {
 			if probe != nil {
 				return // bench mode never syncs
 			}
-			go func() { // orphan sweep and cap check of the image cache, off the cold-start path (ADR 0015)
+			startBG(func() { // orphan sweep and cap check of the image cache, off the cold-start path (ADR 0015)
 				if _, err := deps.Media.Evict(appCtx); err != nil && appCtx.Err() == nil {
 					logger.Warn("image cache cleanup failed", "err", err)
 				}
-			}()
-			openMu.Lock()
-			defer openMu.Unlock()
-			openTimer = time.AfterFunc(syncOnOpenDelay, func() {
-				if err := svcs.RunSyncOnOpen(appCtx); err != nil {
-					logger.Warn("sync on open", "err", err)
-				}
 			})
+			openMu.Lock()
+			if !bgStopping {
+				openTimer = time.AfterFunc(syncOnOpenDelay, func() {
+					startBG(func() {
+						if err := svcs.RunSyncOnOpen(appCtx); err != nil && appCtx.Err() == nil {
+							logger.Warn("sync on open", "err", err)
+						}
+					})
+				})
+			}
+			openMu.Unlock()
 			// the daily update check on start (ADR 0016), on its own so a long sync-on-open doesn't delay it; it
 			// sends only when the last check is a day old
-			go svcs.CheckForUpdates(appCtx, update.TriggerStart)
+			startBG(func() { svcs.CheckForUpdates(appCtx, update.TriggerStart) })
 		})
 	})
 	if probe != nil {
@@ -279,7 +320,9 @@ func run() int {
 			os.Exit(code)
 		}()
 	} else {
-		dayRoll = startDayTimer(clock, emitter, func() { svcs.CheckForUpdates(appCtx, update.TriggerDayRolled) })
+		dayRoll = startDayTimer(clock, emitter, func() {
+			startBG(func() { svcs.CheckForUpdates(appCtx, update.TriggerDayRolled) })
+		})
 	}
 
 	err = wapp.Run()

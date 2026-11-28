@@ -146,13 +146,34 @@ func (s *Store) CopySettingsFrom(ctx context.Context, id, fromID int64) (Ack, er
 		if target.BoardType == "kanban" && next.DoneWindow == "sprint" {
 			next.DoneWindow = "14d" // sprint is invalid on a kanban board
 		}
+		curLabel := map[string]string{}
+		for _, l := range curLanes {
+			curLabel[l.Lane] = l.Label
+		}
 		for i, l := range lanes {
-			if l.Label != "" && !model.IsCustomLane(l.Lane) && labelClash(lanes, next.DoneLabel, l.Lane, l.Label) != "" {
+			if model.IsCustomLane(l.Lane) {
+				continue
+			}
+			eff := l.Label
+			if eff == "" {
+				eff = model.DefaultLaneLabel(l.Lane)
+			}
+			if labelClash(lanes, next.DoneLabel, l.Lane, eff) != "" {
 				lanes[i].Label = ""
+				if labelClash(lanes, next.DoneLabel, l.Lane, model.DefaultLaneLabel(l.Lane)) != "" {
+					lanes[i].Label = curLabel[l.Lane]
+				}
 			}
 		}
-		if next.DoneLabel != "" && labelClash(lanes, "", model.LaneDone, next.DoneLabel) != "" {
+		doneEff := next.DoneLabel
+		if doneEff == "" {
+			doneEff = model.DefaultLaneLabel(model.LaneDone)
+		}
+		if labelClash(lanes, "", model.LaneDone, doneEff) != "" {
 			next.DoneLabel = ""
+			if labelClash(lanes, "", model.LaneDone, model.DefaultLaneLabel(model.LaneDone)) != "" {
+				next.DoneLabel = cur.DoneLabel
+			}
 		}
 		rev, err := BumpRevTx(ctx, tx, id, s.Now())
 		if err != nil {
@@ -364,6 +385,9 @@ func (s *Store) SetSpace(ctx context.Context, id int64, space model.Space) (Ack,
 		}
 		if _, err := tx.ExecContext(ctx, `DELETE FROM standup_column_map WHERE standup_id = ?`, id); err != nil {
 			return dbErr(err)
+		}
+		if err := clearSpeakersTx(ctx, tx, id); err != nil {
+			return err
 		}
 		if err := SetNeedsSyncTx(ctx, tx, id); err != nil {
 			return err

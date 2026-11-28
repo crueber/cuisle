@@ -7,7 +7,9 @@ import { standups } from "../../state/app";
 import { config, createStandup, deleteStandup, duplicateStandup, leaveConfigure, loadConfig } from "../../state/config";
 import { goConfigure, route } from "../../state/route";
 import { flush, retryFailed, saveState } from "../../state/save";
-import { showBanner } from "../../state/ui";
+import { paletteOpen } from "../../state/palette";
+import { keyLegendOpen, showBanner } from "../../state/ui";
+import { updateDialogOpen } from "../../state/update";
 import { configureColumns, mainPadding } from "../../layout/responsive";
 import { useViewport } from "../useViewport";
 import { JumpBar } from "./JumpBar";
@@ -200,9 +202,15 @@ export function ConfigureScreen() {
     return () => void flush();
   }, [r]);
 
+  // Escape leaves Configure unless an open popup/combobox already handled it (defaultPrevented) or an overlay is open.
+  // When focus is outside inputs and global keys are installed, keys.ts handles Escape first and preventDefaults it.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented) void leaveConfigure();
+      if (e.defaultPrevented || e.isComposing || e.key !== "Escape") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (paletteOpen.peek() || updateDialogOpen.peek() || keyLegendOpen.peek()) return;
+      e.preventDefault();
+      void leaveConfigure();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

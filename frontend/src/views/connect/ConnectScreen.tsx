@@ -140,7 +140,15 @@ export function ConnectScreen({ reconnect = false }: ConnectScreenProps) {
             hint="Classic API tokens only. Stored in your system keychain."
           />
           <p class="connect-help">
-            <a href={TOKEN_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              href={TOKEN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                void api().app.openUrl(TOKEN_URL).catch(() => undefined);
+              }}
+            >
               Create an API token ↗
             </a>
           </p>

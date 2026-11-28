@@ -18,14 +18,15 @@ import (
 	"github.com/crueber/cuisle/internal/store"
 )
 
-// cache is the on-disk Cache. Writes, eviction and the orphan sweep are serialised by mu, so a sweep never sees a
-// temp file that a Put is still writing.
+// cache is the on-disk Cache. ioMu prevents an orphan sweep or Clear from racing temp files written by concurrent Puts
+// (Put takes RLock for temp-file I/O and thumbnail scaling; Evict/Clear take Lock). mu serialises commit + DB/evict.
 type cache struct {
 	dir      string
 	db       *store.DB
 	capBytes func() int64
 	now      func() time.Time
 	log      *slog.Logger
+	ioMu     sync.RWMutex
 	mu       sync.Mutex
 }
 
@@ -139,6 +140,8 @@ func (c *cache) Touch(attachmentRowID int64) {
 
 // Clear removes every original and thumbnail, nulls the path columns and zeroes cached_bytes. Rows are kept.
 func (c *cache) Clear(ctx context.Context) error {
+	c.ioMu.Lock()
+	defer c.ioMu.Unlock()
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	err := c.db.WriteTx(ctx, func(tx *sql.Tx) error {

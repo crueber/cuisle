@@ -42,7 +42,6 @@
   font: inherit;
   font-size: calc(var(--scale) * 0.9375rem);
   resize: vertical;
-  box-sizing: border-box;
 }
 
 .cmp-box:focus-visible {
